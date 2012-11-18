@@ -1,0 +1,368 @@
+\documentclass{article}
+
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+
+\usepackage{ amssymb }
+\usepackage{listings}
+\lstloadlanguages{Haskell}
+\lstnewenvironment{code}
+    {\lstset{}%
+      \csname lst@SetFirstLabel\endcsname}
+    {\csname lst@SaveFirstLabel\endcsname}
+    \lstset{
+      basicstyle=\small\ttfamily,
+      flexiblecolumns=false,
+      basewidth={0.5em,0.45em},
+      literate={+}{{$+$}}1 {/}{{$/$}}1 {*}{{$*$}}1 {=}{{$=$}}1
+               {>}{{$>$}}1 {<}{{$<$}}1 {\\}{{$\lambda$}}1
+               {\\\\}{{\char`\\\char`\\}}1
+               {->}{{$\rightarrow$}}2 {>=}{{$\geq$}}2 {<-}{{$\leftarrow$}}2
+               {<=}{{$\leq$}}2 {=>}{{$\Rightarrow$}}2 
+               {\ .}{{$\circ$}}2 {\ .\ }{{$\circ$}}2
+               {>>}{{>>}}2 {>>=}{{>>=}}2
+               {|}{{$\mid$}}1               
+    }
+
+\begin{document}
+
+\newcommand{\learner}{\emph{Learner }}
+\newcommand{\evaluator}{\emph{Evaluator }}
+
+
+
+\section{The Learning Problem}
+We want to characterize the general task of the learner, whom we will
+call Linda. At various intervals, Linda is provided with sensory data
+$x$. In reponse, she is given the opportunity of submitting a program
+$\phi$ to an evaluator, henceforth named Dr. Eval. Dr. Eval produces a
+reward $R(\phi, x; \bar{y})$ which he delivers back to Linda, where
+$\bar{y}$ simply denotes any other variables Linda is not aware of
+that influences Dr. Eval's reward. Linda processes the information,
+hopefully learning from her experience with Dr. Eval.
+
+What kinds of scenarios can this learning paradigm (naturally)
+contain? Most basically, Linda might be a simple organism: the data
+$x$ might be local chemical gradients, the program $\phi$ the motor
+program Linda will execute upon sensing $x$, and Dr. Eval might return
+the cumulative effect upon Linda of executing that motor program. Note
+that in this case $\phi$ does not take $x$ as an input. It has no
+input; it is merely a motor program built anew for each sensory datum
+that Linda receives.
+
+Of course, we might want Linda, the still humble organism, to be
+capable of learning a higher-level planning procedure. Such a
+procedure would be a program that, given sensory data, would produce a
+motor program. In our framework, this would be represented by letting
+$x$ stand for a list of data (maybe several days worth of discrete
+food finding missions) and letting $\phi$ be the planing
+procedure. Dr. Eval would accordingly take $\phi$, apply it to each
+datum in $x$ and return a cumulative reward of some sort. We will
+defer for now the problem of deferred reward, in which most learners
+do not receive immediate signals about the utility of their actions.
+
+Moving upward somewhat in the hierarchy of intelligent beings,
+consider Linda the electrical engineer. She is requested to construct
+a circuit $\phi$ to a certain specification $x$. Dr. Eval, her
+professor tests the circuit against the requested specification and
+gives her a grade. Or perhaps she doubles as the evaluator. As in the
+case of Linda the simple organism, we can conceive of $\phi$ as the
+general circuit creation procedure rather than the circuit, and create
+a higher-level learning problem.
+
+A different perspective on this learning problem is one that is
+removed from this supervised reinforcement paradigm: instead of
+acheiving a reward of some sort, we can imagine that Linda wants to
+find the program $\phi$ which generated the data $x$. Here, Dr. Eval
+is the world or some simulator of the world and a comparator which
+signals to Linda whether she has successfully simulated the data. This
+paradigm corresponds to a deterministic version of the generative
+model learning task common these days in probabilistic machine
+learning and AI.
+
+TODO: concept learning
+TODO: physicist (or scientist in general) 
+
+
+\section{A Universal Basis for Computation}
+Our goal is to explain the minimal conditions necessary for concept
+learning, and to do so we posit a minimal model of
+computation. Various universal models of computation have been
+proposed; the most famous is the Turing machine. Though the Turing
+machine is an intuitive abstract machine, and though its construction
+corresponds to various parts of real-world computing machines,
+formally simpler models of computation have been proposed. Most
+importantly is the Lambda calculus, proposed by Church, and the basis
+of modern functional programming languages. The Lambda calculus is a
+rewrite system that is provably equally powerful to Turing
+machines. Despite its popularity, the implementation of the Lambda
+calculus is complicated by the presence of variables bound by the
+abstracting $\lambda$s. The necessary relationships between variables
+and their binding $\lambda$s means that the syntax of the Lambda
+calculus is not entirely modular. That is, if we represent an
+expression in the lambda calculus as a tree, then every subtree of this
+expression tree is not itself a valid expression tree in the langauge. 
+
+An alternative to the $\lambda$ calculus we use the variable-free
+model of computation known as Combinatory Logic (CL). CL was
+introduced by Shonfinkel in order to avoid of the mathematical
+complexities of $\lambda$-calculus. The CL has a simpler syntax than
+$lambda$-calculus: a combinator $C$ is merely the application of two
+other combinators $ C = A B$. The semantics of the language is defined
+by the primitive combinators chosen for the particular instance of
+$CL$. It is well known that a universal basis of two primitive
+combinators exists, the $SK$ basis. However, expressions in CL are
+much more readible if we extend this primitive basis with a few other
+high order combinators. Namely, we include identity $I$, and two
+composition combinators $B$ and $C$.
+
+\section{History and related literature}
+Angluin 1988~\cite{angluin1988queries}: investigates the complexity of
+learning concepts that are subsets of a hypothesis space via a number
+of primitive queries such as membership, equivalence, subset, etc. \\
+
+Valiant 1984~\cite{valiant1984theory}: original paper on Valiant's
+computational learning theory.
+
+Shapiro 1981~\cite{shapiro1981algorithm}: on the model inference
+problem. Focused on learning programs or axioms from a set of positive
+and negative examples. Explicitly related to Kuhnian philosophy of
+science.
+
+Inferring a program for computing a recursive function: 
+Gold 65~\cite{gold1965limiting}, 
+Gold 67~\cite{gold1967language},
+Gold 78 ~\cite{gold1978complexity},
+Blum  Blum 75~\cite{blum1975toward}
+
+Inductive Logic Programming (ILP): ILP has a rich history and
+literature, and in some sense its goals are quite close to ours. In
+recent years, Genetic Programming style techniques have been applied
+to ILP; see~\cite{divina2006evolutionary}.
+
+\section{Type Theory}
+In using type theory to facilitate program induction we will mostly be
+concerned with using the types of subprograms to determine how
+subprograms can be glued together. This focus is nicely stated by Girard~\cite{girard1989proofs}:
+
+\begin{quote}
+At a more general level, abstracting away from any peculiar syntactic
+choice, one should see a type as an instruction for \emph{plugging}
+things together. let us imagine that we program with \emph{modules},
+\emph{i.e.} closed units, which we can plug together. A module is
+absolutely closed, we have no right to open it. We just have the
+ability to use it or not, and to choose the manner of use
+(plugging). The type of module is a of course completley determined by
+all the possibling \emph{pluggings} it allows without crashing. In
+parcticular, one can always susbtitute a module with another of the
+same type, in the vent of a breakdown, or for the purpose of
+optimisation.
+\end{quote}
+
+\section{Domains for concept learning}
+
+\section{Coding Theory}
+Consider a distribution $P(\cdot)$ over strings in some set $X \in
+\{0, 1\}^*$. Our goal is to find a code $D$ that minimizes the
+expected length of a sample from $X$.
+
+\section{Learnable Curriculum}
+We would like to formally characterize when a program can be learned
+that represents elements in a given dataset. In general such programs
+always exist; we can simply iterate over all recursive functions until
+we find a set that evaluates to each element in the dataset. However,
+such a search will usually take a prohibitively long time, so we wish
+to restrict our search to short programs.  Thus, we say that a datum
+is learnable if a sufficiently short program exists that evaluates to
+it. This is simply the statement that the Kolmogorov complexity
+$K_U(x)$ of a datum $x$ (relative to our universal computer $U$) is
+less than some fixed number of bits $r$. 
+
+Moreover, we should be able to use previously learned programs to help
+us search for new programs. This phenomenon, in which a previously
+learned datum is used to represent a later learned datum, we will term
+\emph{bootstrapping}. We say that $x$ \empth{bootstraps} $y$ if the
+conditional Kolmogorov complexity $K(y|p_x) < r$ when $U(p_x) = x$ and
+$r$ is again our resource bound. 
+
+Let $D= \{d_1, \dots, d_N\}$ be a \emph{dataset}. A \emph{curriculum}
+$C$ for $D$ is an ordered tuple $C = (c_1, \dots, c_M)$ of elements in
+$D$. Not all data $d_i$ must appear in $C$, and each $d_i$ can appear
+more than once.
+
+\section{Model of Computation: Combinatory Logic}
+The representational language and related computational model used to
+implement our learner is a typed Combinatory Logic
+(CL)~\cite{hindley1972introduction}. CL is symbolic model of
+computation that is similar to the more popular $\lambda$-calculus,
+but, for our purposes, has one very significant difference: it does
+not contain variables. $\lambda$-calculus has three basic syntactic
+features -- variables, applications, and abstractions -- that
+correspond appealingly with intuitions from mathematics and functional
+programming. But besides the semantic difficulties that variables
+cause (documented elsewhere), variables additionally complicate the
+modularity and compositionality of expressions written in
+$\lambda$-calculus. Program induction requires the efficient search
+over expressions in the chosen model of computation; being able to
+treat most subexpressions of well-formed expressions as themselves
+well-formed expressions makes things easier. This was first noticed by
+Briggs and O'Neill in using combinators for genetic
+programming~\cite{briggs2006functioinal}. 
+
+Example: Consider the function $f = \lambda y. \lambda x. +\,
+(*\, x\, x) (*\, x\, x)$ (note that all functions we are considering
+will be \emph{curried}; that is, all functions will be functions of
+only one argument, and functions of multiple arguments will be
+represented by higher-order functions of a single argument such that
+the application of the function to an argument returns a function
+whose argument is the next argument in the original series of
+arguments.)
+
+
+
+\section{Intuitive Psychology}
+How can we express the knowledge and relationships of intuitive
+psychology as a set of expressions in combinatory logic? To simplify
+this task, we will attempt to express these relationships in Haskell,
+a sugared and polymorphically typed lambda calculus, knowing that any
+expression in this lambda calculus can be systematically translated
+into combinatory logic. Most importantly, any modularization and
+compositional structure present in the Haskell code will remain
+present in its CL translation.
+
+Let's imagine the following situation. You observe several agents
+(say, Josh, Max, and Chris) in various scenarios in which they choose,
+from among the various options, one of three bars (say, a Zone bar, a
+Luna bar and a dark chocolate bar). We will try to represent our
+knowledge about these agents, their propensities, and the properties
+of these bars in Haskell, as a demonstration that such a
+representation is both possible in this langauge, and can be somewhat
+natural.
+
+Let's first define the primitive types and combinators at our disposal:
+
+
+\begin{lstlisting}[mathescape]
+-- | Primitive Types
+-------------------------
+Int -- integers 1, 2, etc.
+Bool -- {True, False}
+Person $\triangleq$ Int
+Object $\triangleq$ Int
+Scenario  $\triangleq$ (Person, [Object])
+
+-- | Primitive Combinators
+------------------------
+-- List Combinators:
+map :: (a -> b) -> [b] -> [a]
+foldl1 :: (a -> a -> a) -> [a] -> a
+elem :: a -> [a] -> Bool
+head :: [a] -> a
+tail :: [a] -> [a]
+case :: [(Bool, a)] -- a set of boolean tests and the result if True
+        -> a -- the default result (else clause) 
+        -> a
+(:) :: a -> [a] -> [a] -- cons
+(++) :: [a] -> [a] -> [a] -- concatenate
+
+-- Boolean Combinators
+If _ Then _ Else :: Bool -> a -> a
+And :: Bool -> Bool -> Bool
+Or ::  Bool -> Bool -> Bool
+Not ::  Bool -> Bool -> Bool
+
+-- Arithmetic Combinators
+(>) :: Int -> Int -> Bool
+(<) :: Int -> Int -> Bool
+(==) :: Int -> Int -> Bool
+(+) ::  Int -> Int -> Bool
+(-) :: Int -> Int -> Bool
+1, 2, $\dots$, 10 :: Int -- | the integers, 1 through 10
+
+-- Givens
+------------
+
+Josh :: Person -- | this is just shorthand, i.e., Josh would be mapped
+                  to some integer, say, 1, Max to 2, etc..
+Max :: Person
+Chris :: Person
+
+ZoneBar :: Object
+LunaBar :: Object
+ChocolateBar :: Object
+
+-- Learned representation
+-------------------------
+choose' :: Scenario -> Object
+choose' (person, objs) = max' (map (util' person) objs)
+
+max' :: [Int] -> Int
+max = foldl1 (>)
+
+util' = Person -> Object -> Int
+util' person obj = case (utilityCases' person obj) 0 -- | 0 is the default utility in this case
+
+utilityCases' :: [Person -> Object -> (Bool, Int)]
+utilityCases' = \p -> \o -> (
+                     \p -> \o -> (isHealthyPerson p, healthyPersonCalculus o)
+
+
+
+\end{lstlisting}
+
+\section{Algorithm}
+In this section, I describe the program learning algorithm. The
+algorithm is parameterized by the following parameters: 
+
+\begin{itemize}
+\item depth $d$: this bounds the search over expressions at each
+  iterations to expressions of depth $\leq d$;
+\item log likelihood search bound $l$: this bounds the search over
+  expressions at each iteration to expressions whose log likelihood is
+  $\geq l$;
+\item library prior $\mathcal{L}^0$: this data structure contains the
+  primitive combinators and associated pseudo-counts that represent
+  the background knowledge of the algorithm. This should also include
+  any necessary base combinators (e.g. S, K, I, etc.).
+\end{itemize}
+
+The inputs to the algorithm are:
+\begin{itemize}
+\item a dataset $\mathcal{D} = (D_1, \dots, D_M)$, each of which is an
+  expression in the language;
+\item a evaluator $\mathcal{E}$ which is a function taking a datum
+  $D_i$ and an associated expression $\phi_i$ and returns a reward
+  signal $\mathcal{E}(D_i, \phi_i)$.
+\end{itemize}
+
+\begin{minipage}{.7\linewidth}
+  \begin{algorithm}[H]
+    \SetAlgoLined 
+    \SetKwFunction{EnumerateCombinators}{EnumerateCombinators}
+    \SetKwFunction{IsSuccessful}{IsSuccessful}
+    \SetKwFunction{filter}{filter}
+    \SetKwFunction{FindBestNewCombinator}{FindBestNewCombinator}
+    \SetKwFunction{ReEstimateLibrary}{ReEstimateLibrary}
+    \KwData{$\mathcal{D}=(D_1, \dots, D_M)$,
+      $\mathcal{E}$, $\mathcal{L}^{t-1}$, $d$, $l$} 
+    \KwResult{updated library $\mathcal{L}^t$}
+    $E \leftarrow $ \EnumerateCombinators{$d$, $l$, $\mathcal{L}^{t-1}$}\;
+    $E' \leftarrow $ 
+      \filter{$\lambda e.$ \IsSuccessful{$\mathcal{E}$, $\mathcal{D}$, $e$}, $E$}\;
+    $C \leftarrow$ \FindBestNewCombinator{$E'$}\;
+    $\mathcal{L}^t \leftarrow$ \ReEstimateLibrary{$\mathcal{L}^{t-1}$, $C$, $E'$}\;
+    \caption{OneStep}
+  \end{algorithm}
+\end{minipage}
+
+
+
+\section{Language Implementation}
+I've found various resources to guide implementation of typed
+languages.  A simple guide to the implementation of dependently typed
+programming languages is found in Loh et al.~\cite{lowsimply}.
+
+
+\bibliographystyle{plain}
+\bibliography{bibliography}
+
+\end{document}
