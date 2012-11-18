@@ -1,0 +1,5 @@
+# Tex auxiliaries
+*.pdf
+*.log
+*.aux
+*.blg
