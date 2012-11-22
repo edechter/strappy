@@ -80,19 +80,12 @@ dOp2C opString op = CNode opString func (Map Rtype (Map Rtype Rtype))
 
 -- | Type checking combinators. 
 typeCheck :: Comb -> TI Type
-typeCheck (CNode _ _ t) = return t
+typeCheck (CNode _ _ t) = do s <- getSubst
+                             return $ apply s t
 typeCheck c@(CApp c1 c2 _ ) = do
   t1 <- typeCheck c1
   t2 <- typeCheck c2
   typeCheckApp t1 t2
-
--- typeCheck' :: Comb -> Type
--- typeCheck' = extractValue . typeCheck
-
--- doesTypeCheck :: Comb -> Bool
--- doesTypeCheck c = case typeCheck c of
---                   Right _ -> True
---                   Left _ -> False
 
 
 -- | Convert combinator to lambda expressions.

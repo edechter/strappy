@@ -18,6 +18,8 @@ import CLError
 -- | define a type scheme
 
 data TyVar = TyVar Int deriving (Eq, Ord, Show)
+mkTVar :: Int -> Type
+mkTVar i = TVar (TyVar i)
 
 data Type = Map {fromType :: Type,
                  toType :: Type} 

@@ -9,33 +9,32 @@ import Type
 import CL
 import Expr
 import qualified CombTrie as CT
+
+-- | define some oft used type variables
+tv0 = mkTVar 0
+tv1 = mkTVar 1
+tv2 = mkTVar 2
+tv3 = mkTVar 3
+
  
 -- | define common combinators
-cI = CNode "I" (Func id) (Map (TVar 0) (TVar 0))
+cI = CNode "I" (Func id) (Map tv0 tv0)
 cS = CNode "S" (Func $ \f -> Func $ \g -> Func $ \x -> (App (App f x) (App g x))) typeS 
     where typeS = Map t1 (Map t2 t3)
-          t1 = Map a (Map b c)
-          t2 = Map a b
-          t3 = Map a c
-          a = TVar 2
-          b = TVar 1
-          c = TVar 0
+          t1 = Map tv2 (Map tv1 tv0)
+          t2 = Map tv2 tv1
+          t3 = Map tv2 tv0
+
 cB = CNode "B" (Func $ \f -> Func $ \g -> Func $ \x -> (App f (App g x))) typeB 
-    where typeB = (Map (Map t1 t0) 
-                       (Map (Map t2 t1)
-                            (Map t2 t0)))
-          t2 = TVar 2
-          t1= TVar 1
-          t0 = TVar 0
+    where typeB = (Map (Map tv1 tv0) 
+                       (Map (Map tv2 tv1)
+                            (Map tv2 tv0)))
+
 cC = CNode "C" (Func $ \f -> Func $ \g -> Func $ \x -> (App (App f x) g )) typeC 
     where typeC = Map t1 (Map t2 t3)
-          t1 = Map a (Map b c)
-          t2 = b
-          t3 = Map a c
-          a = TVar 2
-          b = TVar 1
-          c = TVar 0
-
+          t1 = Map tv2 (Map tv1 tv0)
+          t2 = tv1
+          t3 = Map tv2 tv0
 
 cPrim = CNode "PrimRec" prim primType
         where prim = Func $ \c -> Func $ \f -> Func $ \(R i) ->
@@ -43,13 +42,13 @@ cPrim = CNode "PrimRec" prim primType
                          i <= 0 
                       then c
                       else (App f (App (App (App prim c) f) (R $ i - 1)))
-              primType = Map (TVar 0) 
-                         (Map (Map (TVar 0) (TVar 0)) (Map Rtype (TVar 0)))
+              primType = Map tv0 
+                         (Map (Map tv0 tv0) (Map Rtype tv0 ))
 
 cIfThenElse = CNode "If-Then-Else" (Func $ \(B f) -> Func $ \g -> Func $ \x -> 
                                                  if f then g else x) typeIf
-              where typeIf = Map Btype (Map t (Map t t))
-                    t = TVar 0
+              where typeIf = Map Btype (Map tv0 (Map tv0 tv0))
+
 
 cGT = CNode ">" (Func $ \(R x) ->
                      Func $ \(R y) ->
