@@ -27,7 +27,7 @@ data Type = Map {fromType :: Type,
                   projr :: Type}
           | Sum {outl :: Type,
                  outr :: Type} 
-          | List Type
+          | TyIntList 
           | Rtype 
           | Btype 
           | TVar TyVar deriving (Eq, Ord)
@@ -36,7 +36,7 @@ instance Show Type where
     show (Map t1 t2) = "(" ++ show t1 ++ " -> " ++ show t2 ++ ")"
     show (Prod t1 t2) = "(" ++ show t1 ++ ", " ++ show t2 ++ ")"
     show (Sum t1 t2) = "(" ++ show t1 ++ " | " ++ show t2 ++ ")"
-    show (List t) = "[" ++ show t ++ "]"
+    show (TyIntList) = "[R]"
     show Rtype = "R"
     show Btype = "B" 
     show (TVar (TyVar i)) = "a" ++ show i
@@ -58,7 +58,6 @@ apply s (TVar u) = case lookup u s of
 apply s (Map l r) = Map (apply s l) (apply s r)
 apply s (Prod l r) = Prod (apply s l) (apply s r)
 apply s (Sum l r) = Sum (apply s l) (apply s r)
-apply s (List t) = List (apply s t)
 apply s t = t
 
 -- extract all type variables from a type
@@ -66,7 +65,6 @@ tv (TVar u) = [u]
 tv (Map l r) = tv l `union` tv r
 tv (Prod l r) = tv l `union` tv r
 tv (Sum l r) = tv l `union` tv r
-tv (List t) = tv t
 tv _ = []
 
 -- combine two substitutions into one
@@ -119,7 +117,6 @@ match :: Type -> Type -> Maybe Subst
 match (Map l r) (Map l' r') = match' l r l' r'
 match (Prod l r) (Prod l' r') = match' l r l' r'
 match (Sum l r) (Sum l' r') = match' l r l' r'
-match (List t1) (List t2) = match t1 t2
 match (TVar u) t = Just $ u --> t
 match _ _ = Nothing
                               
@@ -137,8 +134,14 @@ instance Monad TI where
                           fx s' m
 
 runTI :: TI a -> a
-runTI (TI c) = result
-    where Right (s, n, result) = c nullSubst 0
+runTI (TI c) = case c nullSubst 0 of 
+                      Right (s, n, result) -> result
+                      Left err -> error $ showError err
+
+hasTIError :: TI a -> Bool
+hasTIError (TI c) = case c nullSubst 0 of
+                      Right _ -> True
+                      Left _ -> False
 
 getSubst :: TI Subst
 getSubst = TI (\s n -> Right (s, n, s))
@@ -149,11 +152,21 @@ extSubst s' = TI (\s n -> Right (s'@@s, n, ()))
 throwTIError :: CLError -> TI a
 throwTIError e = TI (\s n -> Left e)
 
+
+-- ^ Try to unify and return whether succeeded or not. 
+unify' :: Type -> Type -> TI Bool
+unify' t1 t2 = do s <- getSubst
+                  case mgu (apply s t1) (apply s t2) of
+                    Just u -> extSubst u >> return True
+                    Nothing -> return False
+
 unify :: Type -> Type -> TI ()
-unify t1 t2 = do s <- getSubst
-                 case mgu (apply s t1) (apply s t2) of
-                   Just u -> extSubst u
-                   Nothing -> throwTIError $ TypeError "Unification error."
+unify t1 t2 = do succ <-  unify' t1 t2 
+                 case succ of 
+                   True -> return ()
+                   False -> throwTIError $ TypeError "Unification error."
+                     
+
 
 newTVar :: TI Type 
 newTVar = TI (\s n -> 

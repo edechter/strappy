@@ -87,6 +87,10 @@ typeCheck c@(CApp c1 c2 _ ) = do
   t2 <- typeCheck c2
   typeCheckApp t1 t2
 
+-- ^ Create an instantiation of the combinator with a fresh type.
+freshInstComb :: Comb -> TI Comb
+freshInstComb c = do t' <- freshInst $ cType c
+                     return $ c{cType=t'}
 
 -- | Convert combinator to lambda expressions.
 comb2Expr c@(CApp c1 c2 _ ) = do typeCheck c
@@ -102,16 +106,32 @@ traceIf _ =  False
 comb2Expr' c@(CApp c1 c2 _) = App (comb2Expr' c1) (comb2Expr' c2)
                            
 comb2Expr' c@(CNode _ e _) = e
+
+-- | Add library functions into TI monad
+addLibToTI :: [Comb] -> TI [Comb]
+addLibToTI (c:cc) = do c' <- freshInstComb c 
+                       rest <- addLibToTI cc
+                       return (c':rest)
+addLibToTI [] = return []
+
+isCombOfType :: Comb -> Type -> TI Bool
+isCombOfType c t = do c' <- freshInstComb c
+                      t' <- freshInst t
+                      tc <- typeCheck c
+                      unify' tc t'
                                
--- -- | Filter combinators by their types, using unification
--- filterCombinatorsByType :: [Comb] -> Type -> [(Comb, Type)]
--- filterCombinatorsByType (c:cc) tp =
---     case unify tp cTp of
---         (Right subs) -> ((c, applySubs subs cTp) : rest)
---         (Left _) -> rest
---       where cTp = standardize_apart tp (typeCheck' c)
---             rest = filterCombinatorsByType cc tp
--- filterCombinatorsByType [] tp = []
+-- | Filter combinators by their types, using unification
+filterCombinatorsByType :: [Comb] -> Type -> [TI Comb]
+filterCombinatorsByType (c:cc) t 
+    = let rest = filterCombinatorsByType cc t
+          a = do succ <- isCombOfType c t
+                 case succ of 
+                   True-> return $ Just c
+                   False -> return $ Nothing
+      in case runTI a of 
+           (Just v) -> (a >> return v) : rest
+           otherwise -> rest
+filterCombinatorsByType [] tp = []
 
       
 

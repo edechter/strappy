@@ -16,49 +16,61 @@ import Expr
 import CLError
 import qualified CombTrie as CT
 
-enumCombsToDepth :: [Comb] -> Int -- ^ max depth of combinator
-                      -> Type -> [(Comb, Type)]
-enumCombsToDepth lib 0 tp 
-    = filterCombinatorsByType lib tp
+k :: TI [TI a] -> [ TI a ]
+k m = let ms = runTI m
+      in map (\n -> m >> n) ms
+         
 
-enumCombsToDepth lib d tp =  enumCombsToDepth lib 0 tp ++ f (d-1) tp
-    where f b tp = do
-            let tp' = Map (getNewTVar tp) tp
-            (a, atype) <- enumCombsToDepth lib b (normalizeType tp')
-            (b, btype) <- enumCombsToDepth lib b (fromType atype) 
-            let outComb = CApp a b []
-                outType =  case typeCheckTypeApp atype btype  of 
-                             (Right  t) -> t
-                             (Left err) -> error $ "Error in enumCombs: " 
-                                           ++ "\n" ++ showError err 
-            return $! (outComb, outType)
+enumCombsToDepth :: [Comb] -> Int -> Type -> [TI Comb]
+enumCombsToDepth lib 0 t = filterCombinatorsByType lib t
 
-enumCombsToProb :: CT.CombTrie Int -- ^ library
-                -> Double -- ^ log prob minimum
-                -> Int -- ^ max depth
-                -> Type 
-                -> [(Comb, Type, Double)]
-enumCombsToProb lib ll 0 tp 
-    = [(c, t, ll) | (c, t) <- xs | ll <- lls]
-      where xs = filterCombinatorsByType (CT.keys lib) tp
-            counts = [ fromJust $ CT.lookup lib x | (x, _) <- xs]
-            sumcounts = sum counts
-            lls  = [ (log (fromIntegral $ fromJust $ CT.lookup lib x)) 
-                     - log (fromIntegral sumcounts) | (x, _) <- xs]
+enumCombsToDepth lib d tp = enumCombsToDepth lib 0 tp ++ f
+    where 
+      ti = newTVar
+      f = do 
+        a <- k $ do t <- ti
+                    tp' <- freshInst tp
+                    return $ join [enumCombsToDepth lib i (Map t tp') 
+                                  | i <- [0..d-1]]
+        b <- k $ do t <- ti
+                    return $ join [enumCombsToDepth lib i t 
+                                   | i <- [0..d-1]]
+        let c = do t <- ti
+                   cl <- a
+                   cr <- b
+                   let c = CApp cl cr []
+                   newT <- typeCheck c
+                   return c
+        guard( hasTIError c)
+        return c
+        
+
+-- enumCombsToProb :: CT.CombTrie Int -- ^ library
+--                 -> Double -- ^ log prob minimum
+--                 -> Int -- ^ max depth
+--                 -> Type 
+--                 -> [TI (Comb, Double)]
+-- enumCombsToProb lib ll 0 tp 
+--     = [(c, ll) | (c, t) <- xs | ll <- lls]
+--       where xs = filterCombinatorsByType (CT.keys lib) tp
+--             counts = [ fromJust $ CT.lookup lib x | (x, _) <- xs]
+--             sumcounts = sum counts
+--             lls  = [ (log (fromIntegral $ fromJust $ CT.lookup lib x)) 
+--                      - log (fromIntegral sumcounts) | (x, _) <- xs]
       
-enumCombsToProb lib ll d tp = enumCombsToProb lib ll 0 tp 
-                              ++ f ll (d-1) tp
-    where f ll b tp = do
-            let tp' = Map (getNewTVar tp) tp
-            (a, atype, all) <-  enumCombsToProb lib ll b (normalizeType tp') 
-            guard $ all > ll
-            (b, btype, bll) <-  enumCombsToProb lib (ll - all) b (fromType atype) 
-            let outComb = CApp a b []
-                outType =  case typeCheckTypeApp atype btype  of 
-                             (Right  t) -> t
-                             (Left err) -> error $ "Error in enumCombs: " 
-                                           ++ "\n" ++ showError err 
-            return $! (outComb, outType, bll + all)
+-- enumCombsToProb lib ll d tp = enumCombsToProb lib ll 0 tp 
+--                               ++ f ll (d-1) tp
+--     where f ll b tp = do
+--             let tp' = Map (getNewTVar tp) tp
+--             (a, atype, all) <-  enumCombsToProb lib ll b (normalizeType tp') 
+--             guard $ all > ll
+--             (b, btype, bll) <-  enumCombsToProb lib (ll - all) b (fromType atype) 
+--             let outComb = CApp a b []
+--                 outType =  case typeCheckTypeApp atype btype  of 
+--                              (Right  t) -> t
+--                              (Left err) -> error $ "Error in enumCombs: " 
+--                                            ++ "\n" ++ showError err 
+--             return $! (outComb, outType, bll + all)
 
 -- | Enumerate a given number of combinators via iterative deepening
 -- on the loglikelihood cost of the combinators.  The algorithm uses

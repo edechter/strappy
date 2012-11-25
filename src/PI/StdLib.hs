@@ -75,6 +75,12 @@ cOR = CNode "|" (Func $ \(B x) ->
                          B $ x || y) tp
       where tp = Map Btype (Map Btype Btype)
 
+cCONS = CNode ":" (Func $ \(R r) -> Func $ \(IntList rs) -> IntList (r:rs)) tp
+        where tp = Map Rtype (Map TyIntList TyIntList)
+
+cEmpty = CNode "[]" (IntList []) tp
+         where tp = TyIntList
+
 -- cPair = CApp cIfThenElse True
 
 true = CNode "True" (B True) Btype
@@ -94,10 +100,12 @@ stdlib = Map.fromList $
         , (">", cGT)
         , ("==", cEQ)
          , ("+", dOp2C "+" (+))
---         , ("-", dOp2C "-" (-))
---         , ("*", dOp2C "*" (*))
+         , ("-", dOp2C "-" (-))
+         , ("*", dOp2C "*" (*))
          , ("1", num2C 1)
-         , ("primRec", cPrim)   
+         , ("primRec", cPrim) 
+         , (":", cCONS)
+         , ("[]", cEmpty)
            ]
 
 stdMultinomialLib = Map.fromList $ [(c, (1::Int)) | c <- Map.elems stdlib]

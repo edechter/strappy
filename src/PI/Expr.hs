@@ -12,6 +12,7 @@ data Expr  = App Expr Expr
            | Var Int -- variable indexed by de'brujn notation
            | R Double
            | B Bool 
+           | IntList [Double]
 
 instance Show Expr where
     show (Func _) = "<function>"
@@ -21,6 +22,7 @@ instance Show Expr where
     show (Lam expr) = 
         "( L: " ++ show expr ++ ")"
     show (Var id) = "var_" ++ show id
+    show (IntList xs) = show xs
 
 instance Eq Expr where
     (App l1 r1) == (App l2 r2) = (l1 == l2) && (r1 == r2)
@@ -28,6 +30,7 @@ instance Eq Expr where
     (B i) == (B j)               = i == j
     (Lam e) == (Lam f) = (e == f)
     (Var i) == (Var j) = i == j
+    (IntList xs) == (IntList ys) = xs == ys
     _ == _ = False
 
 
