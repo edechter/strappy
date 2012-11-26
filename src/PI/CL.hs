@@ -5,6 +5,7 @@ module CL where
 -- | standard library imports
 import qualified Data.Map as Map
 import Data.Map ((!), keys)
+import Control.Monad(foldM)
 import Debug.Trace
 
 -- | local imports
@@ -89,8 +90,18 @@ typeCheck c@(CApp c1 c2 _ ) = do
 
 -- ^ Create an instantiation of the combinator with a fresh type.
 freshInstComb :: Comb -> TI Comb
-freshInstComb c = do t' <- freshInst $ cType c
-                     return $ c{cType=t'}
+freshInstComb c@(CNode _ _ _) = do t' <- freshInst $ cType c
+                                   return $ c{cType=t'}
+freshInstComb c@(CApp c1 c2 _ ) = foldM f c ts
+    where ts = getTvs c
+          f c s = do (TVar u) <- newTVar
+                     let c' = sub s (TVar u) c 
+                     return c'
+          sub u t c@(CNode _ _ _) = if cType c == (TVar u) then c{cType=t} else c
+          sub u t c@(CApp cl cr n) = CApp (sub u t cl) (sub u t cr) n
+          getTvs (CNode _ _ t) = tv t
+          getTvs (CApp cl cr _) = getTvs cl ++ getTvs cr
+                                     
 
 -- | Convert combinator to lambda expressions.
 comb2Expr c@(CApp c1 c2 _ ) = do typeCheck c

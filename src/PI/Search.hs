@@ -20,27 +20,29 @@ import CLError
 import Enumerate
 import StdLib
 import Similarity
+import Evaluator
+import Data
 import qualified CombTrie as CT
+import Experiment
 
-type DataSet = [Expr]
-type Datum = Expr
-type Cost = ([Comb] -> Int)
 
 -- | For each data point in a dataset list all the expressions that
 -- evaluate to that datapoint. 
-findCombinatorsForEachDatum :: DataSet
-                           -> CT.CombTrie Int -- ^ library
-                           -> Double -- ^ log prob minimum
-                           -> Int            -- ^ Maximum Depth
-                           -> Int -- ^ reduction step limit
-                           -> Type
-                           -> [(Datum, [Comb])]
-findCombinatorsForEachDatum dataSet lib ll maxDepth rlimit tp
-    = out 
-      where cs = map (\(a, _, _) -> a) $ enumCombsToProb lib ll maxDepth tp
-            out = [(d, [ c | c <- cs, (((reduceWithLimit rlimit) . comb2Expr') c) == Just d]) 
-                   | d<- dataSet] 
-
+findCombinatorsForEachDatum :: Experiment 
+                            -> CT.CombTrie Int -- ^ current lib
+                            -> [(Datum, [Comb])]
+findCombinatorsForEachDatum ex lib 
+    = [(d, [ c | c <- cs, eval d c <= eps ]) | d <- dataSet]
+      where cs = map (fst . runTI) $ enumCombsToProb lib ll maxDepth tp
+            -- vars
+            dataSet = expDataSet ex
+            eval = expEval ex
+            eps = expEps ex
+            ll = expLogLikeBound ex
+            maxDepth = expDepthBound ex
+            tp = expDataType ex
+            
+            
 -- | Choose best combinator for each datum in a greedy fashion. Remove
 -- datums that don't have valid combinators. Sort datums by by number
 -- of valid combinators. Successively choose combinator for each datum
@@ -54,9 +56,8 @@ chooseCombinatorForEachDatumGreedy xs
                   where ord (_, xs) (_, ys) = compare (length xs) (length ys)
                                               
             -- | returns (a, b) where a is best combinator, b is addition subcombs
-            h combTrie c = combTrie'
-                where combTrie' = CT.mergeWith (+) combTrie 
-                                  $ countSubcombinators c
+            h combTrie c = CT.mergeWith (+) combTrie $ countSubcombinators c
+                                  
             f combTrie cs = argmaxWithMaxBy 
                                       (\x y -> compare 
                                                (negate . CT.length $ x) 
@@ -98,25 +99,22 @@ countSubTreesInComb lib c = CT.single c 1
 showL (x:xs) = show x ++ "\n" ++ showL xs
 showL [] = ""
 
-oneStep :: DataSet 
-        -> CT.CombTrie Int -- ^ prior
-        -> CT.CombTrie Int -- ^ current library
-        -> Double
-        -> Int
-        -> Int -- ^ reduction step limit
-        -> Type
+oneStep :: Experiment 
+        -> CT.CombTrie Int -- ^ current lib
         -> CT.CombTrie Int
-oneStep ds prior lib ll maxDepth rlimit tp = CT.mergeWith (+) out prior
-                                
-    where y = findCombinatorsForEachDatum ds lib ll maxDepth rlimit tp
-          w =  (trace $ "Hit data: " ++
-                      show (map fst $ filter ( not . null . snd) y))
+oneStep ex lib = CT.mergeWith (+) out prior
+    where y = findCombinatorsForEachDatum ex lib
+          
+          w =  (trace $ "Number of hit examples: " ++
+                      show (length $ filter ( not . null . snd) y)
+                ++ "/" ++ show (length y)
+               )
                       chooseCombinatorForEachDatumGreedy y
           best = chooseBestSubcombinator $ snd w
           bestCount = fromJust $ CT.lookup (snd w) best
           lib' = (trace $ "Best  : " ++ show best
---                        ++ "\n --> lib: " ++ show (CT.keys lib)
-                               ++ "\n --> inserting : " ++ show best
+            --            ++ "\n --> lib: " ++ show (CT.keys lib)
+--                               ++ "\n --> inserting : " ++ show best
                                ++ "\n --> with key : " ++ show bestCount
                  ) 
                  $ CT.insert best bestCount lib
@@ -127,18 +125,32 @@ oneStep ds prior lib ll maxDepth rlimit tp = CT.mergeWith (+) out prior
           giveNamesTo cs = CT.fromList $ zip cs' vals
               where cs' = [ if cName c == "" then c {cName = "c"} else c | c <- CT.keys cs]
                     vals = CT.toList cs
+          -- vars
+          ds = expDataSet ex
+          eval = expEval ex
+          eps = expEps ex
+          ll = expLogLikeBound ex
+          maxDepth = expDepthBound ex
+          tp = expDataType ex
+          prior = expPrior ex
 
-loop :: DataSet 
-     -> CT.CombTrie Int -- ^ prior
-     -> CT.CombTrie Int -- ^ current library
-     -> Double
-     -> Int
-     -> Int -- ^ redution step limit
-     -> Type
-     -> Int -- ^ number of iterations
-     -> CT.CombTrie Int
-loop ds prior lib ll maxDepth rlimit tp reps 
-    = foldl (\l _ -> oneStep ds prior l ll maxDepth rlimit tp) lib [0..reps]
+                           
+
+loop :: Experiment -> CT.CombTrie Int
+loop ex
+    = foldl (\l _ -> oneStep ex l) lib [0..reps]
+      where           
+        -- vars
+        ds = expDataSet ex
+        eval = expEval ex
+        eps = expEps ex
+        ll = expLogLikeBound ex
+        maxDepth = expDepthBound ex
+        tp = expDataType ex
+        prior = expPrior ex
+        lib = expInitLib ex
+        reps = expReps ex
+
 
 
 

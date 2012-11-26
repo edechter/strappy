@@ -3,7 +3,10 @@
 
 module Data where
 
+
 import Expr
 import CL
+import Type
 
-type DataSet = [(Expr, Type)]
+type Datum = [Comb]
+type DataSet = [Datum]
