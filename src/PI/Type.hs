@@ -1,6 +1,7 @@
 -- Type.hs
 -- Eyal Dechhter
-{-# Language GeneralizedNewtypeDeriving, BangPatterns #-}
+{-# Language GeneralizedNewtypeDeriving, BangPatterns,
+  DeriveFunctor #-}
 
 -- | This module defines a simple type system for use with the
 -- combinatory logic implemented in this package. 
@@ -124,7 +125,7 @@ match _ _ = Nothing
 -- | type inference monad
 data TI a = TI (Subst -- ^ current set of substitutions 
                     -> Int -- ^ increment integer for new types variables
-                    -> ThrowsError (Subst, Int, a))
+                    -> ThrowsError (Subst, Int, a)) deriving (Functor)
 
 instance Monad TI where
     return x = TI (\c -> \i -> Right (c, i, x))
@@ -138,6 +139,10 @@ runTI (TI c) = case c nullSubst 0 of
                       Right (s, n, result) -> result
                       Left err -> error $ showError err
 
+runTISafe (TI c) = case c nullSubst 0 of
+                     Right (_, _, result) -> Right result
+                     Left err -> Left err
+
 hasTIError :: TI a -> Bool
 hasTIError (TI c) = case c nullSubst 0 of
                       Right _ -> True
@@ -145,6 +150,9 @@ hasTIError (TI c) = case c nullSubst 0 of
 
 getSubst :: TI Subst
 getSubst = TI (\s n -> Right (s, n, s))
+
+getVarInt :: TI Int
+getVarInt = TI (\s n -> Right (s, n, n))
 
 extSubst :: Subst -> TI ()
 extSubst s' = TI (\s n -> Right (s'@@s, n, ()))
@@ -162,9 +170,17 @@ unify' t1 t2 = do s <- getSubst
 
 unify :: Type -> Type -> TI ()
 unify t1 t2 = do succ <-  unify' t1 t2 
+                 s <- getSubst
                  case succ of 
                    True -> return ()
-                   False -> throwTIError $ TypeError "Unification error."
+                   False -> throwTIError $ TypeError err
+                       where err = "Unification error:" 
+                                   ++ "Can't unify " 
+                                   ++ show t1
+                                   ++ " and "
+                                   ++ show t2 ++ ".\n"
+                                   ++ "Current subst: " 
+                                   ++ show s
                      
 
 
@@ -191,7 +207,6 @@ freshInst t = foldM f t ts
                      let t' = apply [(s, TVar u)] t
                      return t'
                 
-                  
-                        
+                                        
                      
 

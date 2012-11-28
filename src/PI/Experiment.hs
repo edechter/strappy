@@ -24,7 +24,7 @@ data Experiment = Experiment {expName :: String,
                               expReps :: Int}
 
 ----- Squared Integers -------
-exSquaredInts 
+expSquaredInts 
     = Experiment {
         expName = "Squared Integers",
         expDataSet = [[num2C $i*i] | i <- [1..20]]   ++ [[num2C i] | i <- [1..4]],
@@ -32,10 +32,10 @@ exSquaredInts
         expEps = 0,
         expPrior = stdlibTrie,
         expInitLib = stdlibTrie,
-        expLogLikeBound = (-3),
+        expLogLikeBound = (-4),
         expDepthBound = 3,
         expDataType = Rtype,
-        expReps = 10}
+        expReps = 100}
 
 ------------------------------
 
@@ -43,8 +43,8 @@ exSquaredInts
 
 quad a b c = \i -> a * i^2 + b * i + c
 squares a b = \i -> (a * i + b)^2
-fs = [quad i j k | i <-[0..5], j<- [0..4], k <- [0..4]]
-     ++ [squares i j | i <-[0..5], j <- [0..5]]
+fs = [quad i j k | i <-[0..5], j<- [0..4], k <-[0..4]]
+      ++ [squares i j | i <-[0..10], j <- [0..10]]
 rng = [1..10]
 red = (reduceWithLimit 1000) . comb2Expr'
 
@@ -61,10 +61,10 @@ expIntegerSequences
         expEps = 0,
         expPrior = stdlibTrie,
         expInitLib = stdlibTrie,
-        expLogLikeBound = (-4),
+        expLogLikeBound = (-6),
         expDepthBound = 3,
         expDataType = (Map Rtype Rtype),
-        expReps=20
+        expReps=100
       }
         
         

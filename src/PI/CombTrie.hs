@@ -65,11 +65,11 @@ keys (CombTrie v rest)
             l <- (keys $ fromJust t)
             return $ CApp l r ""
 
-     
-                     
-
 toList :: CombTrie a -> [a]
 toList = Fold.toList
+
+toAscList :: CombTrie a -> [(Comb, a)]
+toAscList ct = zip (keys ct) (toList ct)
 
 
 -- | Instances

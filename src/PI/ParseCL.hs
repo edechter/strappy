@@ -15,17 +15,18 @@ import Data.Char
 
 -- | local imports
 
+import Type
 import CL
 import Expr
 import CLError
-import StdLib
+import StdLib 
 
 eval :: (Map.Map String Comb) -> String -> ThrowsError Expr
-eval lib s =  fmap reduce $ parseExpr lib s >>= comb2Expr 
+eval lib s =  runTISafe (fmap reduce $ parseExpr lib s >>= comb2Expr)
 
-parseExpr :: (Map.Map String Comb) -> String -> ThrowsError Comb
+parseExpr :: (Map.Map String Comb) -> String -> TI Comb
 parseExpr combLib s = case P.parse (expr combLib) "expr" s of
-                        Left err -> throwError $ Parser err
+                        Left err -> throwTIError $ Parser err
                         Right val -> return val
 
 lexer = makeTokenParser haskellDef

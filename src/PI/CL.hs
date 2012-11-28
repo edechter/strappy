@@ -5,6 +5,7 @@ module CL where
 -- | standard library imports
 import qualified Data.Map as Map
 import Data.Map ((!), keys)
+import Data.List (union)
 import Control.Monad(foldM)
 import Debug.Trace
 
@@ -97,10 +98,11 @@ freshInstComb c@(CApp c1 c2 _ ) = foldM f c ts
           f c s = do (TVar u) <- newTVar
                      let c' = sub s (TVar u) c 
                      return c'
-          sub u t c@(CNode _ _ _) = if cType c == (TVar u) then c{cType=t} else c
-          sub u t c@(CApp cl cr n) = CApp (sub u t cl) (sub u t cr) n
+          sub s (TVar u) c@(CNode _ _ t) = c{cType = apply [(s, TVar u)] t}
+          sub s t@(TVar u) c@(CApp cl cr n) = CApp (sub s t cl) (sub s t cr) n 
+                                     
           getTvs (CNode _ _ t) = tv t
-          getTvs (CApp cl cr _) = getTvs cl ++ getTvs cr
+          getTvs (CApp cl cr _) = getTvs cl `union` getTvs cr
                                      
 
 -- | Convert combinator to lambda expressions.

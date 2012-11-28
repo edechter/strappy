@@ -93,8 +93,8 @@ enumCombsToProb lib ll d tp = enumCombsToProb lib ll 0 tp
 -- number of combinators. The minimum difference between the costs of
 -- two trees is the minumum difference in the costs of two terminals. 
 enumNCombsViaIterativeDeepening :: CT.CombTrie Int -- ^ library
-                                -> Double
-                                -> Int -- ^ number of trees
+                                -> Double -- ^ cost increment (e.g. 0.5)
+                                -> Int -- ^ number of combinators
                                 -> Type 
                                 -> [TI (Comb, Double)]
 enumNCombsViaIterativeDeepening = undefined

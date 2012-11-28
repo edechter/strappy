@@ -23,6 +23,6 @@ main = do
   let results = loop expIntegerSequences
       ks = CT.keys results
       vs = CT.toList results
-      out = [ show v ++ ": " ++ show' k    | k <- ks | v <- vs]
-  putStrLn $ unlines out
+      out1 = [ show v ++ ": " ++ show' k | k <- ks | v <- vs]
+  putStrLn $ unlines out1
  
