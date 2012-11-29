@@ -155,10 +155,10 @@ oneStep ex lib = CT.mergeWith (+) out prior
 --          best = chooseBestSubcombinator counts
 --          bestCount = fromJust $ CT.lookup counts best
           lib' = (trace $ "Best  : " ++ show best
-                        ++ "\n --> lib: " ++ (unlines $ map show (CT.toAscList lib))
+                        ++ "\n --> lib:\n " ++ (unlines $ map (\(a,b) -> show' a ++ ":    " ++ show b) (CT.toAscList lib))
 --                               ++ "\n --> inserting : " ++ show best
                                ++ "\n --> with key : " ++ show bestCount
-                               ++ "\n " ++ (unlines $ map show (fst w))
+                               ++ "\n " ++ (unlines $ map (\(a,b) -> show' b ++ ":    " ++ show a) (fst w))
                  ) 
                  $ CT.insert best bestCount lib
           goodCombs = [c | (d, c) <- (fst w)]

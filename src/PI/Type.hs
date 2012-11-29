@@ -33,6 +33,9 @@ data Type = Map {fromType :: Type,
           | Btype 
           | TVar TyVar deriving (Eq, Ord)
 
+isTVar (TVar _) = True
+isTVar _ = False
+
 instance Show Type where
     show (Map t1 t2) = "(" ++ show t1 ++ " -> " ++ show t2 ++ ")"
     show (Prod t1 t2) = "(" ++ show t1 ++ ", " ++ show t2 ++ ")"
@@ -41,6 +44,13 @@ instance Show Type where
     show Rtype = "R"
     show Btype = "B" 
     show (TVar (TyVar i)) = "a" ++ show i
+
+--  type equality modulo type variables
+eqModTyVars :: Type -> Type -> Bool
+eqModTyVars t1 t2 = case mgu t1 t2 of
+                      Just s -> all (\v -> isTVar (snd v)) s
+                      Nothing -> False
+
 
 -- | Substitutions
 type Subst = [ (TyVar, Type) ] -- ^ list of type variable - type
@@ -62,6 +72,7 @@ apply s (Sum l r) = Sum (apply s l) (apply s r)
 apply s t = t
 
 -- extract all type variables from a type
+tv :: Type -> [TyVar]
 tv (TVar u) = [u]
 tv (Map l r) = tv l `union` tv r
 tv (Prod l r) = tv l `union` tv r
@@ -181,8 +192,6 @@ unify t1 t2 = do succ <-  unify' t1 t2
                                    ++ show t2 ++ ".\n"
                                    ++ "Current subst: " 
                                    ++ show s
-                     
-
 
 newTVar :: TI Type 
 newTVar = TI (\s n -> 

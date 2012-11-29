@@ -44,7 +44,7 @@ expSquaredInts
 quad a b c = \i -> a * i^2 + b * i + c
 squares a b = \i -> (a * i + b)^2
 fs = [quad i j k | i <-[0..5], j<- [0..4], k <-[0..4]]
-      ++ [squares i j | i <-[0..10], j <- [0..10]]
+     ++ [squares i j | i <-[1..4], j <- [0..4]]
 rng = [1..10]
 red = (reduceWithLimit 1000) . comb2Expr'
 
@@ -61,10 +61,10 @@ expIntegerSequences
         expEps = 0,
         expPrior = stdlibTrie,
         expInitLib = stdlibTrie,
-        expLogLikeBound = (-6),
-        expDepthBound = 3,
+        expLogLikeBound = (-10),
+        expDepthBound = 4,
         expDataType = (Map Rtype Rtype),
-        expReps=100
+        expReps=1
       }
         
         
