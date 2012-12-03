@@ -58,18 +58,19 @@ length c = (Prelude.length . Fold.toList) c
 keys :: CombTrie a -> [Comb]
 keys Spot = []
 keys (CombTrie v rest) 
-        = Map.keys v ++ do
+        = do
             r <- keys rest
             let t = lookup rest r
             guard (isJust t)
             l <- (keys $ fromJust t)
             return $ CApp l r ""
+          ++ Map.keys v
 
 toList :: CombTrie a -> [a]
 toList = Fold.toList
 
 toAscList :: CombTrie a -> [(Comb, a)]
-toAscList ct = zip (keys ct) (toList ct)
+toAscList ct = [( k, fromJust $ lookup ct k) | k <- keys ct]
 
 
 -- | Instances

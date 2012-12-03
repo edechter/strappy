@@ -1,6 +1,7 @@
 \documentclass{article}
 
 \usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+\usepackage{amsmath} 
 
 \usepackage{ amssymb }
 \usepackage{listings}
@@ -22,6 +23,8 @@
                {>>}{{>>}}2 {>>=}{{>>=}}2
                {|}{{$\mid$}}1               
     }
+
+\DeclareMathOperator*{\argmax}{arg\,max} 
 
 \begin{document}
 
@@ -309,6 +312,36 @@ utilityCases' = \p -> \o -> (
 
 \end{lstlisting}
 
+
+\section{Algorithm 0}
+In order to motivate our approach, we present the following problem:
+suppose we have a probability model $P(D, E, \mathcal{L}) = P(D|E)
+P(E|L) P(L)$ where $L$ represents the parameters of a latent model,
+$E_i$ are drawn $i.i.d$ from $P(\dot | L)$ and $D_i$ are drawn $i.i.d$
+from $P(\dot|E_i)$. The $E_i$ are hidden, the $D_i$ observed. Suppose
+we are able to 1) draw sampled of $E_i$ given $L$ and 1) we can
+enumerate $E_i$ in order of decreasing probability under $L$. Our goal
+is to determine the most likely $L$ given the data $D$. A rejection
+sampling algorithm approach might involve sampling the $E_i$ from the
+current value of $L$, accepting $E_i$ if  To solve this problem, we propose
+Algorithm~\ref{alg:short}: at each iteration of our algorithm, we
+choose
+
+\begin{minipage}{.7\linewidth}
+  \begin{algorithm}[H]
+    \SetAlgoLined 
+    \KwData{$\mathcal{D}=(D_1, \dots, D_M)$,
+      $\mathcal{L}^{t-1}$ , $0 \geq K \leq 1$} 
+    \KwResult{updated library $\mathcal{L}^t$}
+    $E \leftarrow \{ E_i : p(E_i\, |\, \mathcal{L}^{t-1}) > K\}$\;
+    $S \leftarrow \{ h \in H \cap D \}$\;
+    $\mathcal{L}^t \leftarrow \argmax_L p(L \, | \, S)$
+    \caption{Algorithm 0}
+    \label{alg:short}
+  \end{algorithm}
+\end{minipage}
+
+
 \section{Algorithm}
 In this section, I describe the program learning algorithm. The
 algorithm is parameterized by the following parameters: 
@@ -355,7 +388,6 @@ The inputs to the algorithm are:
 \end{minipage}
 
 
-
 \section{Language Implementation}
 I've found various resources to guide implementation of typed
 languages.  A simple guide to the implementation of dependently typed
@@ -363,6 +395,6 @@ programming languages is found in Loh et al.~\cite{lowsimply}.
 
 
 \bibliographystyle{plain}
-\bibliography{bibliography}
+\bibliography{writeup}
 
 \end{document}

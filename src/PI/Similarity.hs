@@ -43,6 +43,7 @@ additionalUniqueSubcombinators cs c =
 -- | Count subcombinators
 countSubcombinators :: Comb -> CT.CombTrie Int
 countSubcombinators c@(CNode _ _ _) = CT.single c 1
+
 countSubcombinators c@(CApp c1 c2 []) = CT.single c 1 `with`
                                         (countSubcombinators c1) `with`
                                         (countSubcombinators c2)

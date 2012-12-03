@@ -45,23 +45,6 @@ instance Eq Comb where
 eq' a@(CApp c1 c2 (n:ns)) b@(CApp b1 b2 (m:ms)) = eq' (CApp c1 c2 []) (CApp b1 b2 [])
 eq' a b = a == b
 
--- -- | Extensional equality of two combinators. 
--- (<=>) :: Comb -> Comb -> Maybe Bool
--- c1 <=> c2 = case ( typeCheck' c1, typeCheck' c2) of
---               (Rtype, Rtype)
---                   -> Just $ reduceComb c1 == reduceComb c2
---               (Btype, Btype)
---                   -> Just $ reduceComb c1 == reduceComb c2
---               (Map Btype _, Map Btype _)
---                   -> let p1 = (CApp c1 (CNode "True" (B True) Btype) "", 
---                                CApp c1 (CNode "False" (B False) Btype) "") 
---                          p2 = (CApp c2 (CNode "True" (B True) Btype) "", 
---                                CApp c2 (CNode "False" (B False) Btype) "") 
---                      in do a <- fst p1 <=> fst p2
---                            b <- snd p1 <=> snd p2
---                            return $ a && b
---               _ -> Nothing
-
 reduceComb :: Comb -> Expr
 reduceComb = reduce . comb2Expr'
 
