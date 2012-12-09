@@ -9,20 +9,21 @@ import Type
 
 type Reward = Double
 data Task =  Task {taskName :: String, 
-                   task :: (Comb -> Reward)} 
+                   task :: (Comb -> Reward),
+                  taskType :: Type} 
 type TaskSet = [Task]
 
 instance Show Task where
-    show (Task n _) = n
+    show (Task n _ _ ) = n
 
 
 -- | task constructors
 
 mkSingleEqualityTask:: Int -> Double -> Task
 mkSingleEqualityTask rlimit i 
-    = let f c = (-1) * (abs $ a - i)
+    = let f c = (abs $ a - i)
               where Just (R a) = reduceWithLimit rlimit $ comb2Expr' c
-      in Task (show i) f
+      in Task (show i) f Rtype
 
     
 

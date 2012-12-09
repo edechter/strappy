@@ -16,12 +16,14 @@ import qualified CombTrie as CT
 import Experiment
 import qualified Compress as CP
 
-xs = fst 
-     $ runSearch 
-     $ findCombinatorsForEachDatum expIntegerSequences stdlibTrie 
-xs' = filter (\x -> (length $ snd x) > 0)  xs
-(index, rs) = greedyN 5 (sortData xs')
+-- xs = fst 
+--      $ runSearch 
+--      $ findCombinatorsForEachDatum expIntegerSequences stdlibTrie 
+-- xs' = filter (\x -> (length $ snd x) > 0)  xs
+-- (index, rs) = greedyN 5 (sortData xs')
+-- index' = newLibrary $ map snd rs
 
+index = fst $ runSearch $ loop expIntegerSequences
 main = do
 --   let lib = stdlibTrie
 --       c = (map runTI $ enumCombsToProb lib (-10) 3 Rtype)
@@ -35,4 +37,5 @@ main = do
 --   putStrLn $ unlines out1
        
    putStrLn $ unlines $ map (\(c, n) -> show' c ++ ": " ++ show n) (CT.toAscList index)
-   putStrLn $ unlines $ map (\(c, n) -> show' n ++ ": " ++ show c) rs
+--   putStrLn $ unlines $ map (\(c, n) -> show' n ++ ": " ++ show c) rs
+--   putStrLn $ unlines $ map (\(c, n) -> show' c ++ ": " ++ show n) (CT.toAscList index')

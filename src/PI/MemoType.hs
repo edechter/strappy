@@ -7,7 +7,6 @@ import Debug.Trace
 import qualified Data.Map as DMap
 
 import Type
-import CL
 
 
 data TypeTrie v = TypeTrie [(Type, v)] (TypeTrie (TypeTrie v)) deriving Show

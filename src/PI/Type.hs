@@ -12,15 +12,17 @@ module Type where
 import qualified Data.Set as Set
 import Data.List (find, intersect, union)
 import Control.Monad (foldM)
+import Data.MemoTrie
 
 -- -- | local imports
 import CLError
 
 -- | define a type scheme
 
-data TyVar = TyVar Int deriving (Eq, Ord, Show)
 mkTVar :: Int -> Type
 mkTVar i = TVar (TyVar i)
+
+data TyCon = TyCon Int 
 
 data Type = Map {fromType :: Type,
                  toType :: Type} 
@@ -63,6 +65,7 @@ u --> t = [(u, t)]
 
 --  apply a substitution to a type
 apply :: Subst -> Type -> Type
+{-# INLINE apply #-}
 apply s (TVar u) = case lookup u s of
                      Just t -> t
                      Nothing -> TVar u
@@ -82,6 +85,7 @@ tv _ = []
 -- combine two substitutions into one
 infixr 4 @@
 (@@) :: Subst -> Subst -> Subst
+{-# INLINE (@@) #-}
 s1 @@ s2 = [(u, apply s1 t) | (u, t) <- s2] ++ s1
 
 -- merge two substitutions ensuring that both agree on all variables
@@ -215,7 +219,12 @@ freshInst t = foldM f t ts
           f t s = do (TVar u) <- newTVar
                      let t' = apply [(s, TVar u)] t
                      return t'
-                
+
+
+
+
+
+
                                         
                      
 

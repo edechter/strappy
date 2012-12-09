@@ -28,7 +28,7 @@ rlimit = 1000
 
 taskSet :: TaskSet
 taskSet = map (mkSingleEqualityTask rlimit) xs
-    where xs = [i*i | i <- [1..20]]   ++ [ i | i <- [1..4]]
+    where xs = [i |i <-[1..50]] ++ [i*i | i <- [1..50]]
 
 expSquaredInts 
     = Experiment {
@@ -39,9 +39,9 @@ expSquaredInts
         expPrior = stdlibTrie,
         expInitLib = stdlibTrie,
         expLogLikeBound = (-4),
-        expDepthBound = 3,
+        expDepthBound = 4,
         expDataType = Rtype,
-        expReps = 100}
+        expReps = 5}
 
 ------------------------------
 
@@ -56,21 +56,18 @@ eval ds c = sum $ [diff i | i <- rng]
 
 quad a b c = \i -> a * i^2 + b * i + c
 showQuad a b c = show a ++ " x^2 + " ++ show b ++ " x + " ++ show c
-mkQuadTask a b c = Task (showQuad a b c)
-                   f
+mkQuadTask a b c = Task (showQuad a b c) f (Map Rtype  Rtype)
     where f = eval [num2C $ (quad a b c i)| i<-rng]
 
 squares a b = \i -> (a * i + b)^2
 showSquares a b = "(" ++ show a ++ " x + " ++ show b ++ ")^2"
-mkSquaresTask a b = Task (showSquares a b)
-                   f
+mkSquaresTask a b = Task (showSquares a b) f (Map Rtype  Rtype)
+                   
     where f = eval [num2C $ (squares a b) i| i<-rng]
 
 taskSet' = [mkSquaresTask i j | i <- [0..10] , j <- [0..10]]
            ++ [mkQuadTask i j k | i <- [0..10] , j <- [0..10], k <- [0..10]]
-
-
-
+           ++ (concat $ take 3 $ repeat $  map (mkSingleEqualityTask 100) [0..10])
                                     
 expIntegerSequences 
     = Experiment {
@@ -79,11 +76,38 @@ expIntegerSequences
         expEps = 0,
         expPrior = stdlibTrie,
         expInitLib = stdlibTrie,
-        expLogLikeBound = (-6),
-        expDepthBound = 3,
+        expLogLikeBound = (-4),
+        expDepthBound = 4,
         expDataType = (Map Rtype Rtype),
-        expReps=1
+        expReps=20
       }
-        
+ 
+
+----- List Functions ----------
+-- builtins
+-- (++), (:), tail, map, foldr, foldl
+-- 1) length
+-- 2) reverse
+-- 3) concat
+-- 4) isPalindrome
+-- 5) flatten
+-- 6) compress (eliminate consecutive duplicates)
+-- 7) pack (pack consecutive elements of the same type into sublists)
+-- 8) duplicate (duplicate the elements of a list)
+-- 9) replicate (replicate the elements of a list N times)
+-- 10) drop (drop every Nth element of a list)
+-- 11) split ... a list into two parts with the length of the first part given
+-- 12) slice ... a list from the first index to the second
+
+-------------------------
+
+cCONS = CNode ":" (Func $ \(R r) -> Func $ \(IntList rs) -> IntList (r:rs)) tp
+        where tp = Map Rtype (Map TyIntList TyIntList)
+
+cEmpty = CNode "[]" (IntList []) tp
+         where tp = TyIntList
+
+cFoldr = CNode "foldr" (Func $ \f -> 
+
         
     
