@@ -27,7 +27,7 @@ type Index = CT.CombTrie Int
 
 
 incr :: Index -> Comb -> Index
-incr index c@(CApp l r _) 
+incr index c@(CApp l r _ _) 
     = case CT.lookup index c of
         Nothing -> let index' = CT.insert c 1 index
                    in incr (incr index' l) r
@@ -42,7 +42,7 @@ incr index c@(CNode _ _ _) = case CT.lookup index c of
                   
 
 decr :: Index -> Comb -> Index
-decr index c@(CApp l r _) 
+decr index c@(CApp l r _ _ ) 
     = case CT.lookup index c of
         Nothing -> error $  "Cannot find comb " ++ show c
         Just i -> let index' = CT.insert c (i - 1) index
@@ -70,10 +70,10 @@ compress [] = CT.empty
 getUniqueTrees :: Comb -> Index
 getUniqueTrees c@(CNode _ _ _ ) = CT.single c 1 
                   
-getUniqueTrees c@(CApp l r _) = let a = CT.single c 1 
-                                    b = getUniqueTrees  l
-                                    d = getUniqueTrees  r
-                                in d  `with` a `with` b 
+getUniqueTrees c@(CApp l r _ _ ) = let a = CT.single c 1 
+                                       b = getUniqueTrees  l
+                                       d = getUniqueTrees  r
+                                   in d  `with` a `with` b 
     where with = CT.mergeWith (+)
 
 

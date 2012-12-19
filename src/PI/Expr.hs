@@ -5,39 +5,34 @@ module Expr where
 
 import Debug.Trace
 
+import Type
+
+
 -- define an expression
 data Expr  = App Expr Expr
            | Func (Expr -> Expr)
            | Lam Expr
-           | Var Int -- variable indexed by de'brujn notation
-           | R Double
-           | B Bool 
-           | IntList [Double]
+           | N Int
+           | C Char
+           | Var Id -- variable indexed by de'brujn notation
 
 instance Show Expr where
     show (Func _) = "<function>"
     show (App left right) = "(" ++ show left ++ " " ++ show right ++ ")"
-    show (R i) = show i
-    show (B i) = show i
+    show (N i) = show i
+    show (C c) = show c
     show (Lam expr) = 
         "( L: " ++ show expr ++ ")"
     show (Var id) = "var_" ++ show id
-    show (IntList xs) = show xs
 
 instance Eq Expr where
     (App l1 r1) == (App l2 r2) = (l1 == l2) && (r1 == r2)
-    (R i) == (R j)               = i == j
-    (B i) == (B j)               = i == j
     (Lam e) == (Lam f) = (e == f)
     (Var i) == (Var j) = i == j
-    (IntList xs) == (IntList ys) = xs == ys
     _ == _ = False
 
 
 toFloat :: Expr -> Double
-toFloat (R f) = f
-toFloat (B True) = 1
-toFloat (B False) = 0
 toFloat e = error $ "expr cannot be converted to float: " ++ show e
 
 reduce :: Expr -> Expr
@@ -54,7 +49,7 @@ substitute e (App a b) = App a' b' where a' = substitute e a
                                          b' = substitute e b
 substitute e (Lam f) = Lam $ substitute e f
 substitute e a@(Func _) = a
-substitute e v@(Var 0) = e
+substitute e v@(Var "v0") = e
 substitute e v@(Var _) = v
 
 -- | implement reduction with a step limit

@@ -4,6 +4,7 @@
 module Experiment where
 
 import Data.Maybe
+import Debug.Trace
 
 import Type
 import CL
@@ -28,7 +29,7 @@ rlimit = 1000
 
 taskSet :: TaskSet
 taskSet = map (mkSingleEqualityTask rlimit) xs
-    where xs = [i |i <-[1..50]] ++ [i*i | i <- [1..50]]
+    where xs = [i |i <-[1..10]] 
 
 expSquaredInts 
     = Experiment {
@@ -39,8 +40,8 @@ expSquaredInts
         expPrior = stdlibTrie,
         expInitLib = stdlibTrie,
         expLogLikeBound = (-4),
-        expDepthBound = 4,
-        expDataType = Rtype,
+        expDepthBound = 3,
+        expDataType = tInt,
         expReps = 5}
 
 ------------------------------
@@ -49,25 +50,27 @@ expSquaredInts
 rng = [0..10]
 red = (reduceWithLimit 1000) . comb2Expr'
 eval :: [Comb] -> Comb -> Double
-eval ds c = sum $ [diff i | i <- rng]
+eval ds c = fromIntegral $ sum $ [diff i | i <- rng]
          where diff i = abs $ dat i - eval i
-               eval i = y where Just (R y) = red (CApp c (num2C i) [])
-               dat i = y where Just (R y) = red (ds !! (fromIntegral . floor) i)
+               eval i = y where Just (N y) = let x = red  (CApp c (num2C i) [] 0) 
+                                             in  x
+                                             
+               dat i = y where Just (N y) = red (ds !! i)
 
 quad a b c = \i -> a * i^2 + b * i + c
 showQuad a b c = show a ++ " x^2 + " ++ show b ++ " x + " ++ show c
-mkQuadTask a b c = Task (showQuad a b c) f (Map Rtype  Rtype)
+mkQuadTask a b c = Task (showQuad a b c) f (tInt ->- tInt)
     where f = eval [num2C $ (quad a b c i)| i<-rng]
 
 squares a b = \i -> (a * i + b)^2
 showSquares a b = "(" ++ show a ++ " x + " ++ show b ++ ")^2"
-mkSquaresTask a b = Task (showSquares a b) f (Map Rtype  Rtype)
+mkSquaresTask a b = Task (showSquares a b) f (tInt ->- tInt)
                    
     where f = eval [num2C $ (squares a b) i| i<-rng]
 
 taskSet' = [mkSquaresTask i j | i <- [0..10] , j <- [0..10]]
-           ++ [mkQuadTask i j k | i <- [0..10] , j <- [0..10], k <- [0..10]]
-           ++ (concat $ take 3 $ repeat $  map (mkSingleEqualityTask 100) [0..10])
+--           ++ [mkQuadTask i j k | i <- [0..10] , j <- [0..10], k <- [0..10]]
+--           ++ (concat $ take 3 $ repeat $  map (mkSingleEqualityTask 100) [0..10])
                                     
 expIntegerSequences 
     = Experiment {
@@ -76,10 +79,10 @@ expIntegerSequences
         expEps = 0,
         expPrior = stdlibTrie,
         expInitLib = stdlibTrie,
-        expLogLikeBound = (-4),
-        expDepthBound = 4,
-        expDataType = (Map Rtype Rtype),
-        expReps=20
+        expLogLikeBound = (-6),
+        expDepthBound = 2,
+        expDataType = (tInt ->- tInt),
+        expReps=3
       }
  
 
@@ -101,13 +104,12 @@ expIntegerSequences
 
 -------------------------
 
-cCONS = CNode ":" (Func $ \(R r) -> Func $ \(IntList rs) -> IntList (r:rs)) tp
-        where tp = Map Rtype (Map TyIntList TyIntList)
+-- cCONS = CNode ":" (Func $ \(R r) -> Func $ \(IntList rs) -> IntList (r:rs)) tp
+--         where tp = Map Rtype (Map TyIntList TyIntList)
 
-cEmpty = CNode "[]" (IntList []) tp
-         where tp = TyIntList
+-- cEmpty = CNode "[]" (IntList []) tp
+--          where tp = TyIntList
 
-cFoldr = CNode "foldr" (Func $ \f -> 
 
         
     

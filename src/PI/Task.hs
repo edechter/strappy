@@ -19,11 +19,11 @@ instance Show Task where
 
 -- | task constructors
 
-mkSingleEqualityTask:: Int -> Double -> Task
+mkSingleEqualityTask:: Int -> Int -> Task
 mkSingleEqualityTask rlimit i 
-    = let f c = (abs $ a - i)
-              where Just (R a) = reduceWithLimit rlimit $ comb2Expr' c
-      in Task (show i) f Rtype
+    = let f c = fromIntegral $ (abs $ a - i)
+              where Just (N a) = reduceWithLimit rlimit $ comb2Expr' c
+      in Task (show i) f tInt
 
     
 

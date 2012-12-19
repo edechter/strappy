@@ -19,8 +19,8 @@ import qualified CombTrie as CT
 -- into named compound combinators.
 subcombinators :: Comb -> [Comb]
 subcombinators c@(CNode _ _ _) = [c]
-subcombinators c@(CApp c1 c2 []) = c:(subcombinators c1 ++ subcombinators c2)
-subcombinators c@(CApp c1 c2 _)   = [c]
+subcombinators c@(CApp c1 c2 [] _) = c:(subcombinators c1 ++ subcombinators c2)
+subcombinators c@(CApp c1 c2 _ _)   = [c]
 
 -- | Return unique elements in list. 
 nubOrd :: Ord a => [a] -> [a] 
@@ -44,11 +44,11 @@ additionalUniqueSubcombinators cs c =
 countSubcombinators :: Comb -> CT.CombTrie Int
 countSubcombinators c@(CNode _ _ _) = CT.single c 1
 
-countSubcombinators c@(CApp c1 c2 []) = CT.single c 1 `with`
+countSubcombinators c@(CApp c1 c2 [] _) = CT.single c 1 `with`
                                         (countSubcombinators c1) `with`
                                         (countSubcombinators c2)
                                         where with = CT.mergeWith (+)
-countSubcombinators c@(CApp c1 c2 name) = CT.single c 1
+countSubcombinators c@(CApp c1 c2 name _) = CT.single c 1
 
 
 

@@ -22,7 +22,7 @@ import CLError
 import StdLib 
 
 eval :: (Map.Map String Comb) -> String -> ThrowsError Expr
-eval lib s =  runTISafe (fmap reduce $ parseExpr lib s >>= comb2Expr)
+eval lib s =  runTISafe (fmap reduce $ parseExpr lib s >>= comb2Expr) nullSubst 0
 
 parseExpr :: (Map.Map String Comb) -> String -> TI Comb
 parseExpr combLib s = case P.parse (expr combLib) "expr" s of
@@ -36,7 +36,7 @@ expr lib = P.spaces *> do { x<- singleton lib ; rest x}
        where 
          rest x = P.try (do { f <- spaceOp 
                             ; y <- singleton lib
-                            ; rest (f x y "")
+                            ; rest (f x y "" (mkAppDepth x y))
                             })
                           <|> return x
 
@@ -52,10 +52,7 @@ node lib = P.try (do { x <- P.many1 $ P.noneOf "() "
               ; case Map.lookup x lib of
                   (Just cNode) -> return cNode
                   Nothing -> fail  $ " Cannot find combinator " ++ show x})
-           <|> P.try (num2C <$> (float lexer))
            <|> P.try (num2C <$> (fromInteger <$> integer lexer))
-
-
 
 singleton :: (Map.Map String Comb) ->  P.CharParser () Comb
 singleton lib = (node lib) <|> (p_expr lib)

@@ -24,7 +24,7 @@ import StdLib
 import Similarity
 import Task
 import Data
-import ParseCL
+-- import ParseCL
 import qualified CombTrie as CT
 import qualified Compress as CP (getUniqueTrees, incr)
 import Compress (Index)
@@ -40,9 +40,9 @@ data SearchLogEntry = SearchLogEntry { searchIter :: Int,
 mkEmptySearchLog :: SearchLogEntry
 mkEmptySearchLog  = SearchLogEntry 0 CT.empty [] 0 [] CT.empty
 
-type Search a = State [SearchLogEntry] a 
+type Search a = State SearchLogEntry a 
 
-runSearch :: Search a -> (a, [SearchLogEntry])
+runSearch :: Search a -> (a, SearchLogEntry)
 runSearch s = runState s mkEmptySearchLog 
 
 -- | Sort data by number of combinators matching each
@@ -103,7 +103,7 @@ newLibrary :: [Comb] -> Index
 newLibrary cs = CT.fromList $  map g $ filter (\(_, i) -> i > 1) xs
     where ind = foldl' CP.incr CT.empty cs
           xs = CT.toAscList ind
-          g (c@(CApp _ _ _) , i) = (c{cName="c"}, i)
+          g (c@(CApp _ _ _ _ ) , i) = (c{cName="c"}, i)
           g x = x
 
 -- | Adjust with prior
@@ -121,7 +121,7 @@ findCombinatorsForEachDatum ex lib
          return $ [(t, [ c | c <- db Map.! tp, 
                                   f c <= eps ]) | t@(Task n f tp) <- taskSet]
       where 
-            cs = \t -> map (fst . runTI) $ enumCombsToProbMemo lib ll maxDepth t
+            cs = \t -> toList $ enum (CT.keys lib) maxDepth t
             db = foldl' (\m (k, a) -> Map.insert k a m) Map.empty 
                  [(t, cs t) | t <- ts]
             ts = nub [t | (Task _ _ t) <- taskSet]
@@ -141,7 +141,7 @@ oneStep ex lib = do xs <- findCombinatorsForEachDatum ex lib
 --                        (index , rs) = (trace $  "Hit: " ++ show (length xs')) 
 --                                        $ dfsN  (sortData xs') 20
                         (index , rs) = (trace $  "Hit: " ++ show (length xs')) 
-                                       $greedyN 1 lib (sortData xs')
+                                       $ greedyN 1 lib (sortData xs')
                         index' =  newLibrary $ map snd rs
                         index'' = adjust index' prior
                     return index''

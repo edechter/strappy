@@ -11,86 +11,85 @@ import Expr
 import qualified CombTrie as CT
 
 -- | define some oft used type variables
-tv0 = mkTVar 0
-tv1 = mkTVar 1
-tv2 = mkTVar 2
-tv3 = mkTVar 3
+t0 = mkTVar 0 
+t1 = mkTVar 1
+t2 = mkTVar 2
+t3 = mkTVar 3
+t4 = mkTVar 4
+t5 = mkTVar 5
+t6 = mkTVar 6
+t7 = mkTVar 7
+t8 = mkTVar 8
 
  
 -- | define common combinators
-cI = CNode "I" (Func id) (Map tv0 tv0)
+cI = CNode "I" (Func id) ( t0 ->- t0)
 cS = CNode "S" (Func $ \f -> Func $ \g -> Func $ \x -> (App (App f x) (App g x))) typeS 
-    where typeS = Map t1 (Map t2 t3)
-          t1 = Map tv2 (Map tv1 tv0)
-          t2 = Map tv2 tv1
-          t3 = Map tv2 tv0
+    where typeS = (t2 ->- t1 ->- t0) ->- (t2 ->- t1) ->- (t2 ->- t0)
 
 cB = CNode "B" (Func $ \f -> Func $ \g -> Func $ \x -> (App f (App g x))) typeB 
-    where typeB = (Map (Map tv1 tv0) 
-                       (Map (Map tv2 tv1)
-                            (Map tv2 tv0)))
+    where typeB = (t1 ->- t0) ->- (t2 ->- t1) ->- (t2 ->- t0)
 
 cC = CNode "C" (Func $ \f -> Func $ \g -> Func $ \x -> (App (App f x) g )) typeC 
-    where typeC = Map t1 (Map t2 t3)
-          t1 = Map tv2 (Map tv1 tv0)
-          t2 = tv1
-          t3 = Map tv2 tv0
-
-cPrim = CNode "PrimRec" prim primType
-        where prim = Func $ \c -> Func $ \f -> Func $ \(R i) ->
-                      if
-                         i <= 0 
-                      then c
-                      else (App f (App (App (App prim c) f) (R $ i - 1)))
-              primType = Map tv0 
-                         (Map (Map tv0 tv0) (Map Rtype tv0 ))
-
-cIfThenElse = CNode "If-Then-Else" (Func $ \(B f) -> Func $ \g -> Func $ \x -> 
-                                                 if f then g else x) typeIf
-              where typeIf = Map Btype (Map tv0 (Map tv0 tv0))
+    where typeC = (t2 ->- t1 ->- t0) ->- (t2 ->- t1 ->- t0)
 
 
-cGT = CNode ">" (Func $ \(R x) ->
-                     Func $ \(R y) ->
-                         B $ x > y) tp
-      where tp = Map Rtype (Map Rtype Btype)
+-- cPrim = CNode "PrimRec" prim primType
+--         where prim = Func $ \c -> Func $ \f -> Func $ \(R i) ->
+--                       if
+--                          i <= 0 
+--                       then c
+--                       else (App f (App (App (App prim c) f) (R $ i - 1)))
+--               primType = Map tv0 
+--                          (Map (Map tv0 tv0) (Map Rtype tv0 ))
 
-cLT = CNode "<" (Func $ \(R x) ->
-                     Func $ \(R y) ->
-                         B $ x < y) tp
-      where tp = Map Rtype (Map Rtype Btype)
+-- cIfThenElse = CNode "If-Then-Else" (Func $ \(B f) -> Func $ \g -> Func $ \x -> 
+--                                                  if f then g else x) typeIf
+--               where typeIf = Map Btype (Map tv0 (Map tv0 tv0))
 
-cEQ = CNode "==" (Func $ \(R x) ->
-                     Func $ \(R y) ->
-                         B $ x == y) tp
-      where tp = Map Rtype (Map Rtype Btype)
 
-cAND = CNode "&" (Func $ \(B x) ->
-                     Func $ \(B y) ->
-                         B $ x && y) tp
-      where tp = Map Btype (Map Btype Btype)
+-- cGT = CNode ">" (Func $ \(R x) ->
+--                      Func $ \(R y) ->
+--                          B $ x > y) tp
+--       where tp = Map Rtype (Map Rtype Btype)
 
-cOR = CNode "|" (Func $ \(B x) ->
-                     Func $ \(B y) ->
-                         B $ x || y) tp
-      where tp = Map Btype (Map Btype Btype)
+-- cLT = CNode "<" (Func $ \(R x) ->
+--                      Func $ \(R y) ->
+--                          B $ x < y) tp
+--       where tp = Map Rtype (Map Rtype Btype)
 
-cCONS = CNode ":" (Func $ \(R r) -> Func $ \(IntList rs) -> IntList (r:rs)) tp
-        where tp = Map Rtype (Map TyIntList TyIntList)
+-- cEQ = CNode "==" (Func $ \(R x) ->
+--                      Func $ \(R y) ->
+--                          B $ x == y) tp
+--       where tp = Map Rtype (Map Rtype Btype)
 
-cEmpty = CNode "[]" (IntList []) tp
-         where tp = TyIntList
+-- cAND = CNode "&" (Func $ \(B x) ->
+--                      Func $ \(B y) ->
+--                          B $ x && y) tp
+--       where tp = Map Btype (Map Btype Btype)
+
+-- cOR = CNode "|" (Func $ \(B x) ->
+--                      Func $ \(B y) ->
+--                          B $ x || y) tp
+--       where tp = Map Btype (Map Btype Btype)
+
+-- cCONS = CNode ":" (Func $ \(R r) -> Func $ \(IntList rs) -> IntList (r:rs)) tp
+--         where tp = Map Rtype (Map TyIntList TyIntList)
+
+-- cEmpty = CNode "[]" (IntList []) tp
+--          where tp = TyIntList
 
 -- cPair = CApp cIfThenElse True
 
-true = CNode "True" (B True) Btype
-false = CNode "False" (B False) Btype
+-- true = CNode "True" (B True) Btype
+-- false = CNode "False" (B False) Btype
 
 stdlib = Map.fromList $ 
-         [("I", cI)
+         [
+           ("I", cI)
          , ("S", cS)
          , ("B", cB)
-         , ("C", cC)
+--          , ("C", cC)
 --         , ("IfThenElse", cIfThenElse)
 --         , ("True", true)
 --         , ("False", false)
@@ -99,10 +98,10 @@ stdlib = Map.fromList $
 --         , ("<", cLT)
 --         , (">", cGT)
 --         , ("==", cEQ)
-         , ("+", dOp2C "+" (+))
-         , ("-", dOp2C "-" (-))
-         , ("*", dOp2C "*" (*))
-         , ("1", num2C 1)
+          , ("+", dOp2C "+" (+))
+          , ("-", dOp2C "-" (-))
+          , ("*", dOp2C "*" (*))
+          , ("1", num2C 1)
 --         , ("2", num2C 2)
 --         , ("3", num2C 3)
 --         , ("4", num2C 4)

@@ -23,7 +23,7 @@ import qualified Compress as CP
 -- (index, rs) = greedyN 5 (sortData xs')
 -- index' = newLibrary $ map snd rs
 
-index = fst $ runSearch $ loop expIntegerSequences
+index = fst $ runSearch $ loop expSquaredInts
 main = do
 --   let lib = stdlibTrie
 --       c = (map runTI $ enumCombsToProb lib (-10) 3 Rtype)

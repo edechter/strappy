@@ -10,42 +10,78 @@ module Type where
 
 -- | standard library imports
 import qualified Data.Set as Set
-import Data.List (find, intersect, union)
+import Data.List (find, intersect, union, nub, foldl')
 import Control.Monad (foldM)
-import Data.MemoTrie
+import Control.Monad.Identity
+import Control.Monad.Trans.Class
+import Control.Monad.Error
 
--- -- | local imports
-import CLError
+import Data.MemoTrie
+import Debug.Trace
 
 -- | define a type scheme
+type Id = String
+enumId :: Int -> Id
+enumId n = "v" ++ show n
+readId :: String -> Int
+readId ('v':xs) = read xs
 
-mkTVar :: Int -> Type
-mkTVar i = TVar (TyVar i)
+data Kind = Star | Kfun Kind Kind
+          deriving (Eq, Ord)
 
-data TyCon = TyCon Int 
+data Type = TVar TyVar
+          | TCon TyCon
+          | TAp Type Type
+          deriving (Eq, Ord)
 
-data Type = Map {fromType :: Type,
-                 toType :: Type} 
-          | Prod {projl :: Type, 
-                  projr :: Type}
-          | Sum {outl :: Type,
-                 outr :: Type} 
-          | TyIntList 
-          | Rtype 
-          | Btype 
-          | TVar TyVar deriving (Eq, Ord)
+data TyVar = TyVar Id Kind
+             deriving (Eq, Ord)
+instance Show TyVar where
+    show (TyVar i k) = i
 
+data TyCon = TyCon Id Kind 
+           deriving (Eq, Ord)
+instance Show TyCon where
+    show (TyCon i k) = i
+
+
+class HasKind t where
+    kind :: t -> Kind
+instance HasKind TyVar where
+    kind (TyVar v k) = k
+instance HasKind TyCon where
+    kind (TyCon v k ) = k
+instance HasKind Type where
+    kind (TVar u) = kind u
+    kind (TCon tc) = kind tc
+    kind (TAp t _) = case (kind t) of 
+                       (Kfun _ k) -> k
+
+infixr 4 ->-
+(->-) :: Type -> Type -> Type
+a ->- b = TAp (TAp tArrow a) b
+
+fromType :: Type -> Type
+fromType (TAp (TAp tArrow a) b) = a
+
+toType :: Type -> Type
+toType (TAp (TAp tArrow a) b) = b
+
+mkTVar :: Int -> Type 
+mkTVar i = TVar (TyVar (enumId i) Star)
+
+
+
+isTVar :: Type -> Bool
 isTVar (TVar _) = True
 isTVar _ = False
 
 instance Show Type where
-    show (Map t1 t2) = "(" ++ show t1 ++ " -> " ++ show t2 ++ ")"
-    show (Prod t1 t2) = "(" ++ show t1 ++ ", " ++ show t2 ++ ")"
-    show (Sum t1 t2) = "(" ++ show t1 ++ " | " ++ show t2 ++ ")"
-    show (TyIntList) = "[R]"
-    show Rtype = "R"
-    show Btype = "B" 
-    show (TVar (TyVar i)) = "a" ++ show i
+    show (TVar u) = show u
+    show (TCon tc) = show tc
+    show (TAp t1 t2) = case t1 of
+                         (TAp tArrow a) -> "(" ++ show a ++ " -> " ++ show t2 ++ ")"
+                         otherwise -> "(" ++ show t1 ++ " " ++ show t2 ++ ")" 
 
 --  type equality modulo type variables
 eqModTyVars :: Type -> Type -> Bool
@@ -63,24 +99,27 @@ nullSubst = []
 (-->) :: TyVar -> Type -> Subst
 u --> t = [(u, t)]
 
---  apply a substitution to a type
-apply :: Subst -> Type -> Type
-{-# INLINE apply #-}
-apply s (TVar u) = case lookup u s of
-                     Just t -> t
-                     Nothing -> TVar u
-apply s (Map l r) = Map (apply s l) (apply s r)
-apply s (Prod l r) = Prod (apply s l) (apply s r)
-apply s (Sum l r) = Sum (apply s l) (apply s r)
-apply s t = t
+class Types t where
+    apply :: Subst -> t -> t
+    tv ::  t -> [TyVar]
 
--- extract all type variables from a type
-tv :: Type -> [TyVar]
-tv (TVar u) = [u]
-tv (Map l r) = tv l `union` tv r
-tv (Prod l r) = tv l `union` tv r
-tv (Sum l r) = tv l `union` tv r
-tv _ = []
+instance Types Type where
+    --  apply a substitution to a type
+    {-# INLINE apply #-}
+    apply s (TVar u) = case lookup u s of
+                         Just t -> t
+                         Nothing -> TVar u
+    apply s (TAp l r) = TAp (apply s l) (apply s r)
+    apply s t = t
+
+    -- extract all type variables from a type
+    tv (TVar u) = [u]
+    tv (TAp l r) = tv l `union` tv r
+    tv _ = []
+
+instance Types a => Types [a] where
+    apply s = map (apply s)
+    tv  = nub . concat . map tv
 
 -- combine two substitutions into one
 infixr 4 @@
@@ -99,28 +138,21 @@ merge s1 s2 = if agree then Just s else Nothing
 
 -- most general unifier 
 mgu :: Type -> Type -> Maybe Subst
-mgu (Map l r) (Map l' r') = do s1 <- mgu l l'
-                               s2 <- mgu (apply s1 r)
-                                     (apply s1 r')
-                               Just (s2 @@ s1)
-mgu (Prod l r) (Prod l' r') = do s1 <- mgu l l'
-                                 s2 <- mgu (apply s1 r)
-                                       (apply s1 r')
-                                 Just (s2 @@ s1)
-mgu (Sum l r) (Sum l' r') = do s1 <- mgu l l'
+mgu (TAp l r) (TAp l' r') = do s1 <- mgu l l'
                                s2 <- mgu (apply s1 r)
                                      (apply s1 r')
                                Just (s2 @@ s1)
 mgu (TVar u) t = varBind u t
 mgu t (TVar u) = varBind u t
-mgu t s | t == s = Just nullSubst
-        | otherwise = Nothing
+mgu (TCon tc1) (TCon tc2) | tc1 == tc2 = Just nullSubst
+mgu t s = Nothing
 
 -- bind variable to type, performing occurs check
 varBind :: TyVar -> Type -> Maybe Subst
 varBind u t | t == TVar u  = Just nullSubst
             | u `elem` tv t = Nothing
-            | otherwise = Just $ u --> t
+            | kind u == kind t = Just $ u --> t
+            | otherwise = Nothing
 
 -- matching : given types t1 t2, find substitution s s.t. apply s t1 =
 -- t2
@@ -130,65 +162,120 @@ match' l r l' r' = do s1 <- match l l'
                       merge s1 s2
 
 match :: Type -> Type -> Maybe Subst
-match (Map l r) (Map l' r') = match' l r l' r'
-match (Prod l r) (Prod l' r') = match' l r l' r'
-match (Sum l r) (Sum l' r') = match' l r l' r'
-match (TVar u) t = Just $ u --> t
-match _ _ = Nothing
+match (TAp l r) (TAp l' r') = do sl <- match l l'
+                                 sr <- match r r'
+                                 merge sl sr
+match (TVar u) t 
+    | kind u  == kind t   = Just $ u --> t
+match (TCon tc1) (TCon tc2) | tc1 == tc2 = Just nullSubst
+match t1 t2 = Nothing
+
+-- | type inference monad transformer
+
+type TIError = ErrorT String
+
+data TypeInfT m a 
+    = TypeInfT { runTypeInfT :: (Subst -- ^ current set of substitutions 
+                -> Int -- ^ increment integer for new types variables
+                -> TIError m (Subst, Int, a))}
+
+instance (Monad m) => Monad (TypeInfT m) where
+    return x = TypeInfT (\c -> \i -> (lift . return) (c, i, x))
+    m >>=  f = TypeInfT $ \s -> \i -> do
+                 (s', i', y) <- runTypeInfT m s i
+                 runTypeInfT (f y) s' i'
+
+                 
+instance MonadTrans TypeInfT where
+    lift m = TypeInfT $ \s -> \i ->  lift $ do 
+                               a <- m
+                               return (s, i , a)
+
+instance (MonadPlus m) => MonadPlus (TypeInfT m) where
+    mzero = TypeInfT $ \_ -> \_ -> mzero
+    m `mplus` n = TypeInfT $ \s i -> 
+                  let x = do a <-  runErrorT $ runTypeInfT m s i
+                             case a of 
+                               Left _ -> mzero
+                               Right r -> return r
+                      y = do b <- runErrorT $ runTypeInfT n s i
+                             case b of 
+                               Left _ -> mzero
+                               Right r -> return r
+                  in lift $ x `mplus` y
+                      
+getSubst :: Monad m =>  TypeInfT m Subst
+getSubst = TypeInfT (\s n -> return (s, n, s))
+
+getVarInt :: Monad m => TypeInfT m Int
+getVarInt = TypeInfT (\s n -> return (s, n, n))
+
+putVarInt :: Monad m => Int -> TypeInfT m ()
+putVarInt m  = TypeInfT (\s n -> return (s, m, ()))
+
+putSubst :: Monad m => Subst -> TypeInfT m ()
+putSubst s  = TypeInfT (\_ n -> return (s, n, ()))
+
+extSubst :: Monad m => Subst -> TypeInfT m ()
+extSubst s' = TypeInfT (\s n -> return (s'@@s, n, ()))
+
+throwTIError :: Monad m => String -> TypeInfT m a
+throwTIError e = TypeInfT (\s n -> throwError e)
+
                               
-
 -- | type inference monad
-data TI a = TI (Subst -- ^ current set of substitutions 
-                    -> Int -- ^ increment integer for new types variables
-                    -> ThrowsError (Subst, Int, a)) deriving (Functor)
 
-instance Monad TI where
-    return x = TI (\c -> \i -> Right (c, i, x))
-    (TI c) >>= f = (TI c')
-        where c' s n = do (s', m, x) <- c s n 
-                          let TI fx = f x
-                          fx s' m
+type TI = TypeInfT Identity 
 
-runTI :: TI a -> a
-runTI (TI c) = case c nullSubst 0 of 
-                      Right (s, n, result) -> result
-                      Left err -> error $ showError err
+runTI :: TI a -> Subst -> Int -> (Subst, Int, a)
+runTI ti subst i = case runIdentity $ runErrorT $ runTypeInfT ti subst i of 
+                      Right x -> x
+                      Left err -> error  err
 
-runTISafe (TI c) = case c nullSubst 0 of
-                     Right (_, _, result) -> Right result
-                     Left err -> Left err
+runTI' :: TI a -> a
+runTI' ti = let (_, _, a) = runTI ti nullSubst 0
+                in a
 
-hasTIError :: TI a -> Bool
-hasTIError (TI c) = case c nullSubst 0 of
-                      Right _ -> True
-                      Left _ -> False
+runTISafe ti subst i = runIdentity $ runErrorT $ runTypeInfT ti subst i 
 
-getSubst :: TI Subst
-getSubst = TI (\s n -> Right (s, n, s))
+makeNewTVar :: Type -> TyVar
+makeNewTVar tp = TyVar (enumId ts_next) Star
+    where ts = tv tp
+          ts_next = case map (\(TyVar s k) -> readId s) ts of
+                      [] -> 0
+                      xs -> 1 + maximum xs
 
-getVarInt :: TI Int
-getVarInt = TI (\s n -> Right (s, n, n))
+-- | Type inference monad for backtracking search
 
-extSubst :: Subst -> TI ()
-extSubst s' = TI (\s n -> Right (s'@@s, n, ()))
+type AmbTI = TypeInfT []
 
-throwTIError :: CLError -> TI a
-throwTIError e = TI (\s n -> Left e)
+toList :: AmbTI a -> [a]
+toList x = foldl' g [] $ runErrorT $ runTypeInfT x nullSubst 0
+    where g y (Right (_, _, x)) = (x:y)
+          g y (Left _) = y
+
+takeAmbTI :: AmbTI a -> AmbTI a
+takeAmbTI x = TypeInfT $ \s i -> 
+              (take m) $ runErrorT $ runTypeInfT x s i
+
+
+           
+
 
 
 -- ^ Try to unify and return whether succeeded or not. 
-unify' :: Type -> Type -> TI Bool
+unify' :: Monad m => Type -> Type -> TypeInfT m Bool
 unify' t1 t2 = do s <- getSubst
                   case mgu (apply s t1) (apply s t2) of
                     Just u -> extSubst u >> return True
                     Nothing -> return False
 
-unify :: Type -> Type -> TI ()
+unify :: Monad m => Type -> Type -> TypeInfT m ()
 unify t1 t2 = do succ <-  unify' t1 t2 
                  s <- getSubst
                  case succ of 
                    True -> return ()
-                   False -> throwTIError $ TypeError err
+                   False -> throwTIError err
                        where err = "Unification error:" 
                                    ++ "Can't unify " 
                                    ++ show t1
@@ -197,33 +284,41 @@ unify t1 t2 = do succ <-  unify' t1 t2
                                    ++ "Current subst: " 
                                    ++ show s
 
-newTVar :: TI Type 
-newTVar = TI (\s n -> 
-              let v = TyVar n 
-              in Right (s, n+1, TVar v))
+newTVar :: Monad m => Kind -> TypeInfT m Type 
+newTVar k = TypeInfT (\s n -> 
+              let v = TyVar (enumId n) k
+              in return (s, n+1, TVar v))
 
-typeCheckApp :: Type -> Type -> TI Type
+typeCheckApp :: Monad m => Type -> Type -> TypeInfT m Type
 typeCheckApp t1 t2 = do s <- getSubst
                         let t1' = apply s t1
                             t2' = apply s t2
-                        tvar <- newTVar
-                        unify t1' (Map t2' tvar)
+                        tvar <- newTVar Star
+                        unify t1' (t2' ->- tvar)
                         s' <- getSubst
                         return $ apply s' tvar
                          
 -- ^ change all variables in a type to fresh type variables;
 -- i.e. create a fresh instantiation of the type
-freshInst :: Type -> TI Type
-freshInst t = foldM f t ts
+freshInst :: Monad m => Type -> TypeInfT m Type
+freshInst t = do n <- getVarInt 
+                 let vi = max (ts_maxInt + 1) n
+                 putVarInt vi 
+                 foldM f t ts
     where ts = tv t
-          f t s = do (TVar u) <- newTVar
-                     let t' = apply [(s, TVar u)] t
-                     return t'
+          ts_maxInt = case map (\(TyVar s k) -> readId s) ts of
+                        [] -> 0
+                        xs -> maximum xs
+          f t s = do 
+            (TVar u) <- newTVar (kind t)
+            let t' = apply [(s, TVar u)] t
+            return t'
 
 
-
-
-
+-- | types 
+tChar = TCon (TyCon "Char" Star)
+tInt = TCon (TyCon "Int" Star)
+tArrow = TCon (TyCon "(->)" (Kfun Star (Kfun Star Star)))
 
                                         
                      
