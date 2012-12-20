@@ -254,9 +254,9 @@ toList x = foldl' g [] $ runErrorT $ runTypeInfT x nullSubst 0
     where g y (Right (_, _, x)) = (x:y)
           g y (Left _) = y
 
-takeAmbTI :: AmbTI a -> AmbTI a
-takeAmbTI x = TypeInfT $ \s i -> 
-              (take m) $ runErrorT $ runTypeInfT x s i
+-- takeAmbTI :: AmbTI a -> AmbTI a
+-- takeAmbTI x = TypeInfT $ \s i -> 
+--               (take m) $ runErrorT $ runTypeInfT x s i
 
 
            

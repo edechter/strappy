@@ -34,25 +34,25 @@ enum' xs d t = enum xs 0 t `mplus` do
   let t' = fromType leftType
   right <- enum xs (d-1) t' 
   let combined = CApp left right [] 0 
-  typeCheck combined
+--  typeCheck combined -- | is this necessary?
   return combined
 
 
-type ST = StateT Int AmbTI
-enumN :: [Comb] 
-      -> Int -- max depth
-      -> Int -- max num solutions
-      -> Type
-      -> AmbTI Comb
-enumN xs d n t 
-    = do (a, s) <- runStateT ((lift . freshInst) t >>= enumN' xs d) n
-         return a
+-- type ST = StateT Int AmbTI
+-- enumN :: [Comb] 
+--       -> Int -- max depth
+--       -> Int -- max num solutions
+--       -> Type
+--       -> AmbTI Comb
+-- enumN xs d n t 
+--     = do (a, s) <- runStateT ((lift . freshInst) t >>= enumN' xs d) n
+--          return a
 
-enumN' :: [Comb] -> Int -> Type -> ST Comb
-enumN' xs 0 t 
-    = do m <- get
-         TypeInfT $ \s i -> 
-             Right $ (take m) $ runErrorT $ runTypeInfT (filterCombinatorsByType xs t) s i
+-- enumN' :: [Comb] -> Int -> Type -> ST Comb
+-- enumN' xs 0 t 
+--     = do m <- get
+--          TypeInfT $ \s i -> 
+--              Right $ (take m) $ runErrorT $ runTypeInfT (filterCombinatorsByType xs t) s i
 
 
 

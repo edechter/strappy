@@ -29,7 +29,7 @@ rlimit = 1000
 
 taskSet :: TaskSet
 taskSet = map (mkSingleEqualityTask rlimit) xs
-    where xs = [i |i <-[1..10]] 
+    where xs = [i |i <-[1..100]] 
 
 expSquaredInts 
     = Experiment {
@@ -42,7 +42,7 @@ expSquaredInts
         expLogLikeBound = (-4),
         expDepthBound = 3,
         expDataType = tInt,
-        expReps = 5}
+        expReps = 1}
 
 ------------------------------
 
