@@ -11,10 +11,12 @@ module Type where
 -- | standard library imports
 import qualified Data.Set as Set
 import Data.List (find, intersect, union, nub, foldl')
+import Data.Maybe (fromJust)
 import Control.Monad (foldM)
 import Control.Monad.Identity
 import Control.Monad.Trans.Class
 import Control.Monad.Error
+import Control.Monad.State
 
 import Data.MemoTrie
 import Debug.Trace
@@ -176,6 +178,20 @@ makeNewTVar tp = TyVar (enumId ts_next) Star
           ts_next = case map (\(TyVar s k) -> readId s) ts of
                       [] -> 0
                       xs -> 1 + maximum xs
+
+newTVar :: Monad m => Kind -> StateT Int m Type
+newTVar k = do i <- get
+               put (i+1)
+               return $ mkTVar i
+
+freshInst :: Monad m => Type -> StateT Int m Type
+freshInst t = do let tvs = tv t 
+                 ts <- mapM newTVar (map kind tvs)
+                 let lk = zip (map TVar tvs) ts
+                 return $ inst t lk
+    where inst t@(TVar _) lk = fromJust (lookup t lk)
+          inst (TAp t1 t2) lk= TAp (inst t1 lk) (inst t2 lk)
+          inst t _ = t
 
 -- | types 
 tChar = TCon (TyCon "Char" Star)

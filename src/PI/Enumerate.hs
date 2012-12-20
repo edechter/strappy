@@ -17,24 +17,28 @@ import CL
 import StdLib
 import Expr
 import CLError
-import qualified CombTrie as CT
+-- import qualifiaaed CombTrie as CT
 
-enum :: [Comb] -> Int -> Type -> TypeInfT [] Comb
+enum :: [Comb] -> Int -> Type -> StateT Int [] Comb
 enum xs d t = do
   t' <- freshInst t
   enum' xs d t'
 
-enum' :: [Comb] -> Int -> Type -> TypeInfT [] Comb
+enum' :: [Comb] -> Int -> Type -> StateT Int [] Comb
 enum' xs 0 t = filterCombinatorsByType xs t
 
-enum' xs d t = enum xs 0 t `mplus` do
+enum' xs d t = enum' xs 0 t `mplus` do
   tp <- newTVar Star
-  left <- enum xs (d-1) (tp ->- t) 
-  leftType <- typeCheck left
-  let t' = fromType leftType
-  right <- enum xs (d-1) t' 
-  let combined = CApp left right [] 0 
---  typeCheck combined -- | is this necessary?
+  left <- (trace $ "\nd: " ++ show d) $ enum' xs (d-1) (tp ->- t) 
+  let t' = fromType (cType left)
+  right <- (trace $ "\nrightType:" ++ show t') $ enum' xs (d-1) t' 
+  tp' <- newTVar Star
+  let backsub = fromJust $ mgu (cType left) (cType right ->- tp')
+      t'' = apply backsub (cType left)
+      combined 
+          = CApp left right 
+            (toType t'')
+            (mkAppDepth left right)
   return combined
 
 
