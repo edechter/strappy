@@ -8,7 +8,7 @@ import qualified Data.Map as Map
 import Type
 import CL
 import Expr
-import qualified CombTrie as CT
+-- import qualified CombTrie as CT
 
 -- | define some oft used type variables
 t0 = mkTVar 0 
@@ -111,4 +111,4 @@ stdlib = Map.fromList $
            ]
 
 stdMultinomialLib = Map.fromList $ [(c, (1::Int)) | c <- Map.elems stdlib]
-stdlibTrie = CT.fromList $ [(c, (1::Int)) | c <- Map.elems stdlib]
+-- stdlibTrie = CT.fromList $ [(c, (1::Int)) | c <- Map.elems stdlib]
