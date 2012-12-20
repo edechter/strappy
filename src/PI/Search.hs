@@ -64,15 +64,13 @@ gen [] x = [x]
 -- | Select solution with best score
 select :: [(Index, [(Task, Comb)])] 
        -> (Index, [(Task, Comb)])
-select xs =  a
+select xs = a
           where a = argmax  ( (* (-1)) . length . CT.keys . fst ) xs
-
 
 -- | Depth first search
 dfs :: [(Task, [Comb])] -> (Index, [(Task, Comb)])
 dfs xs = select (gen xs' (CT.empty, []))
-    where xs' = sortData xs
-          
+    where xs' = sortData xs          
 
 -- | Depth first search with bounded number of solutions
 dfsN :: [(Task, [Comb])] 

@@ -21,16 +21,15 @@ data CombTrie a = CombTrie (Map.Map Comb a) (CombTrie (CombTrie a))
                   deriving Eq
 
 lookup :: CombTrie a -> Comb -> Maybe a
-lookup (CombTrie m tr) (CApp l r [] _ ) = do {x <- lookup tr r; lookup x l} 
+lookup (CombTrie m tr) (CApp l r _ _) = do {x <- lookup tr r; lookup x l} 
 lookup (CombTrie m _) c = Map.lookup c m
 lookup Spot _ = Nothing
 
 empty :: CombTrie a
 empty = Spot
 
-
 single :: Comb -> a -> CombTrie a
-single (CApp l r [] _ ) x = CombTrie Map.empty (single r (single l x))
+single (CApp l r _ _) x = CombTrie Map.empty (single r (single l x))
 single c x = CombTrie (Map.fromList $ [(c, x)]) empty
 
 mergeWith :: (a -> a -> a) -> CombTrie a -> CombTrie a -> CombTrie a
@@ -61,7 +60,7 @@ keys (CombTrie v rest)
             let t = lookup rest r
             guard (isJust t)
             l <- (keys $ fromJust t)
-            return $ CApp l r "" ((+) 1 $ max (cDepth l) (cDepth r))
+            return $ CApp l r ((+) 1 $ max (cDepth l) (cDepth r))
           ++ Map.keys v
 
 toList :: CombTrie a -> [a]
@@ -70,9 +69,7 @@ toList = Fold.toList
 toAscList :: CombTrie a -> [(Comb, a)]
 toAscList ct = [( k, fromJust $ lookup ct k) | k <- keys ct]
 
-
 -- | Instances
-
 
 instance (Eq a, Show a) => Show (CombTrie a) where
     show (CombTrie v rest) = show  v ++ " " ++ show rest
