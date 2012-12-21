@@ -4,6 +4,7 @@
 module Main where
 
 import qualified Data.Map as Map
+import Control.Monad.State
 
 import Type
 import CL
@@ -12,7 +13,7 @@ import StdLib
 import Enumerate
 import Task
 import Search
-import qualified CombTrie as CT
+import qualified CombMap as CM
 import Experiment
 import qualified Compress as CP
 
@@ -23,7 +24,8 @@ import qualified Compress as CP
 -- (index, rs) = greedyN 5 (sortData xs')
 -- index' = newLibrary $ map snd rs
 
-index = fst $ runSearch $ loop expSquaredInts
+index = fst $ runSearch $ loop expIntegerSequences
+--y = map reduceComb$ map fst $ runStateT (enum (CM.keys stdlib) 3 tInt) 0
 main = do
 --   let lib = stdlibTrie
 --       c = (map runTI $ enumCombsToProb lib (-10) 3 Rtype)
@@ -36,6 +38,8 @@ main = do
 --       out1 = [ show v ++ ": " ++ show' k | k <- ks | v <- vs]
 --   putStrLn $ unlines out1
        
-   putStrLn $ unlines $ map (\(c, n) -> show' c ++ ": " ++ show n) (CT.toAscList index)
+   putStrLn $ unlines $ map (\(c, n) -> show' c ++ ": " ++ show n) (CM.assocs index)
 --   putStrLn $ unlines $ map (\(c, n) -> show' n ++ ": " ++ show c) rs
 --   putStrLn $ unlines $ map (\(c, n) -> show' c ++ ": " ++ show n) (CT.toAscList index')
+
+--putStrLn $ show y

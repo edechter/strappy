@@ -52,7 +52,7 @@ instance Eq Comb where
     a == b = False
 
 reduceComb :: Comb -> Expr
-reduceComb = reduce . comb2Expr
+reduceComb c =  reduce ( comb2Expr c)
 
 instance Ord Comb where 
     compare c1 c2 = compare (show c1) (show c2)
@@ -67,7 +67,7 @@ dOp2C opString op = CNode opString func (tInt ->-  tInt ->- tInt)
 -- | get type outside type monad
 getType :: Comb -> Type
 getType (CNode _ _ t) = t
-getType c@(CApp c1 c2 _ _) = toType (getType c1)
+-- getType c@(CApp c1 c2 _ _) = case mgu (getType c1) (getType c2 ->- 
 
 sub s (TVar u) c@(CNode _ _ t) = c{cType = apply [(s, TVar u)] (cType c)}
                                       
@@ -79,18 +79,10 @@ comb2Expr c@(CNode _ e _) = e
 
 filterCombinatorsByType :: [Comb] -> Type -> StateT Int [] Comb
 filterCombinatorsByType (c:cs) t  
-    = do ct <- freshInst (getType c)
+    = do ct <- freshInst (cType c)
          case mgu ct t of
-           Just sub -> (trace $ "\nsub: " ++ show sub ++ 
-                       "\nc: " ++ show c ++ 
-                       "\nct : " ++ show ct ++
-                       "\nt : " ++ show t) 
-                       $ (return (c{cType = apply sub ct})) `mplus` rest
-           Nothing -> (trace $ "\nfail\nsub: " ++
-                       "\nc: " ++ show c ++ 
-                       "\nct : " ++ show ct ++
-                       "\nt : " ++ show t) 
-                       $ rest
+           Just sub -> (return  (c{cType = apply sub ct})) `mplus` rest
+           Nothing -> rest
       where rest = filterCombinatorsByType cs t
 filterCombinatorsByType [] t = lift []
 

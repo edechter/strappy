@@ -41,8 +41,8 @@ reduce x@(App (Lam e) f) = let f' = reduce f
                            in reduce $ substitute f' e
 reduce e@(App (Func f) a)  = let z = (reduce a) 
                              in  z `seq` reduce $ f z
-reduce x@(App a b) = -- (trace $ show x) $ 
-                      reduce (App (reduce a) b) 
+reduce x@(App a b) =  reduce (App (reduce a) b) 
+                      
 reduce e = e
 
 substitute e (App a b) = App a' b' where a' = substitute e a
@@ -54,6 +54,7 @@ substitute e v@(Var _) = v
 
 -- | implement reduction with a step limit
 reduceWithLimit :: Int -> Expr -> Maybe Expr
+{-# INLINE reduceWithLimit #-}
 reduceWithLimit 0 e = Nothing
 reduceWithLimit i x@(App (Lam e) f) = 
     do f' <- reduceWithLimit (i-1) f 

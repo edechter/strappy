@@ -12,13 +12,14 @@ import Expr
 import Task
 import StdLib
 import Data
-import qualified CombTrie as CT
+import qualified CombMap as CM
+import  CombMap (CombMap)
 
 data Experiment = Experiment {expName :: String,
                               expTaskSet :: TaskSet,
                               expEps  :: Double,
-                              expPrior :: CT.CombTrie Int,
-                              expInitLib :: CT.CombTrie Int,
+                              expPrior :: CombMap Int,
+                              expInitLib :: CombMap Int,
                               expLogLikeBound :: Double,
                               expDepthBound   :: Int,
                               expDataType :: Type,
@@ -37,23 +38,25 @@ expSquaredInts
         expTaskSet 
             = taskSet,
         expEps = 0,
-        expPrior = stdlibTrie,
-        expInitLib = stdlibTrie,
+        expPrior = stdlib,
+        expInitLib = stdlib,
         expLogLikeBound = (-4),
         expDepthBound = 3,
         expDataType = tInt,
-        expReps = 1}
+        expReps = 10}
 
 ------------------------------
 
 ---- Integer Sequences ----
 rng = [0..10]
-red = (reduceWithLimit 1000) . comb2Expr'
+red = (reduceWithLimit 1000) . comb2Expr
 eval :: [Comb] -> Comb -> Double
-eval ds c = fromIntegral $ sum $ [diff i | i <- rng]
+eval ds c = fromIntegral $ sum $ [(toInteger $ diff i) | i <- rng]
          where diff i = abs $ dat i - eval i
-               eval i = y where Just (N y) = let x = red  (CApp c (num2C i) [] 0) 
-                                             in  x
+               eval i = if y < 0 then 2147483647 else y 
+                   where Just (N y) 
+                             = let x = red  (CApp c (num2C i) tInt 0) 
+                               in x
                                              
                dat i = y where Just (N y) = red (ds !! i)
 
@@ -70,19 +73,19 @@ mkSquaresTask a b = Task (showSquares a b) f (tInt ->- tInt)
 
 taskSet' = [mkSquaresTask i j | i <- [0..10] , j <- [0..10]]
 --           ++ [mkQuadTask i j k | i <- [0..10] , j <- [0..10], k <- [0..10]]
---           ++ (concat $ take 3 $ repeat $  map (mkSingleEqualityTask 100) [0..10])
+           ++ (concat $ take 3 $ repeat $  map (mkSingleEqualityTask 100) [0..10])
                                     
 expIntegerSequences 
     = Experiment {
         expName = "Integer Sequences", 
         expTaskSet = taskSet',
         expEps = 0,
-        expPrior = stdlibTrie,
-        expInitLib = stdlibTrie,
+        expPrior = stdlib,
+        expInitLib = stdlib,
         expLogLikeBound = (-6),
-        expDepthBound = 2,
+        expDepthBound = 3,
         expDataType = (tInt ->- tInt),
-        expReps=3
+        expReps=10
       }
  
 

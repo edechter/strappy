@@ -12,6 +12,7 @@ import Data.List.Extras.Argmax (argmaxWithMaxBy, argmax)
 import Data.List (sortBy, foldl', nub)
 import Control.Monad.State
 import Control.Monad.Writer
+import Control.Monad.Identity
 import Data.Maybe
 import Debug.Trace
 
@@ -21,24 +22,26 @@ import Expr
 import CLError
 import Enumerate
 import StdLib
-import Similarity
+-- import Similarity
 import Task
 import Data
+
 -- import ParseCL
-import qualified CombTrie as CT
+import qualified CombMap as CM
+import CombMap (CombMap)
 import qualified Compress as CP (getUniqueTrees, incr)
 import Compress (Index)
 import Experiment
 
 data SearchLogEntry = SearchLogEntry { searchIter :: Int,
-                                       searchLib :: CT.CombTrie Int,
+                                       searchLib :: CombMap Int,
                                        searchSpace :: [Comb],
                                        searchNumHit :: Int,
                                        searchExplanation :: [(Task, Comb)],
-                                       searchCompression :: CT.CombTrie Int
+                                       searchCompression :: CombMap Int
                                      } deriving Show
 mkEmptySearchLog :: SearchLogEntry
-mkEmptySearchLog  = SearchLogEntry 0 CT.empty [] 0 [] CT.empty
+mkEmptySearchLog  = SearchLogEntry 0 CM.empty [] 0 [] CM.empty
 
 type Search a = State SearchLogEntry a 
 
@@ -58,68 +61,69 @@ gen' [] x = [x]
 gen :: [(Task, [Comb])] -> (Index, [(Task, Comb)]) -> [(Index, [(Task, Comb)])] 
 gen ((d, cs):rest) (index, asc) =  concat vs
     where vs = [gen rest (index `with` CP.getUniqueTrees c, (d, c):asc) | c <- cs]
-          with = CT.mergeWith (+)
+          with = CM.unionWith (+)
 gen [] x = [x]
 
 -- | Select solution with best score
 select :: [(Index, [(Task, Comb)])] 
        -> (Index, [(Task, Comb)])
 select xs = a
-          where a = argmax  ( (* (-1)) . length . CT.keys . fst ) xs
+          where a = argmax  ( (* (-1)) . length . CM.keys . fst ) xs
 
 -- | Depth first search
 dfs :: [(Task, [Comb])] -> (Index, [(Task, Comb)])
-dfs xs = select (gen xs' (CT.empty, []))
+dfs xs = select (gen xs' (CM.empty, []))
     where xs' = sortData xs          
 
 -- | Depth first search with bounded number of solutions
 dfsN :: [(Task, [Comb])] 
     -> Int -- ^ max number of solutions
     -> (Index, [(Task, Comb)])
-dfsN xs n = select $ take n (gen xs' (CT.empty, []))
+dfsN xs n = select $ take n (gen xs' (CM.empty, []))
     where xs' = sortData xs
 
 -- | Greedy 
 greedy :: Index -> [(Task, [Comb])] -> (Index, [(Task, Comb)])
 greedy lib xs = foldl' g (lib, []) xs
     where g (index, asc) (d, cs) = (index', (d, c'):asc)
-              where with = CT.mergeWith (+)
+              where with = CM.unionWith (+)
                     vs = [(index `with` (CP.getUniqueTrees  c), c) | c <- cs]
-                    (index', c') = argmax ( (* (-1)) . length . CT.keys . fst ) vs
+                    (index', c') = argmax ( (* (-1)) . length . CM.keys . fst ) vs
 
 -- | GreedyN 
 greedyN :: Int -> Index -> [(Task, [Comb])] -> (Index, [(Task, Comb)])
 greedyN n lib xs = let xss = take n (List.permutations xs)
                        out = map (greedy lib) xss
-                       best = argmax ((* (-1)) . length . CT.keys . fst) out
+                       best = argmax ((* (-1)) . length . CM.keys . fst) out
                    in (trace $ "best: " ++ 
-                       (unlines $ map (\(t, c) -> show t ++ ":   " ++ show' c) (snd best))) 
+                       (unlines $ map (\(t, c) -> show t ++ ":   " ++ show' c ++ " " 
+                                      ++ "eps : " ++ show ((task t) c)) (snd best))) 
                           $ best
 
 -- | Get new library
 newLibrary :: [Comb] -> Index
-newLibrary cs = CT.fromList $  map g $ filter (\(_, i) -> i > 1) xs
-    where ind = foldl' CP.incr CT.empty cs
-          xs = CT.toAscList ind
-          g (c@(CApp _ _ _ _ ) , i) = (c{cName="c"}, i)
+newLibrary cs = CM.fromList $  map g $ filter (\(_, i) -> i > 1) xs
+    where ind = foldl' CP.incr CM.empty cs
+          xs = CM.assocs ind
+          g (c@(CApp _ _ _ _ ) , i) = (c, i)
           g x = x
 
 -- | Adjust with prior
 adjust :: Index -> Index -> Index
-adjust = CT.mergeWith (+)
+adjust = CM.unionWith (+)
                                 
                              
 -- | For each data point in a dataset list all the expressions that
 -- evaluate to that datapoint. 
 findCombinatorsForEachDatum :: Experiment 
-                            -> CT.CombTrie Int -- ^ current lib
+                            -> CombMap Int -- ^ current lib
                             -> Search [(Task, [Comb])]
 findCombinatorsForEachDatum ex lib 
     = do s <- get
          return $ [(t, [ c | c <- db Map.! tp, 
                                   f c <= eps ]) | t@(Task n f tp) <- taskSet]
       where 
-            cs = \t -> toList $ enum (CT.keys lib) maxDepth t
+            cs = \t -> map fst $ runStateT (enumIB lib maxDepth 5000 t) 0
             db = foldl' (\m (k, a) -> Map.insert k a m) Map.empty 
                  [(t, cs t) | t <- ts]
             ts = nub [t | (Task _ _ t) <- taskSet]
@@ -138,11 +142,11 @@ oneStep ex lib = do xs <- findCombinatorsForEachDatum ex lib
                     let xs' = filter (\x -> (length . snd $ x) > 0) xs
 --                        (index , rs) = (trace $  "Hit: " ++ show (length xs')) 
 --                                        $ dfsN  (sortData xs') 20
-                        (index , rs) = (trace $  "Hit: " ++ show (length xs')) 
-                                       $ greedyN 1 lib (sortData xs')
+                        (index , rs) = (trace $  "Hit: " ++ show (length xs')) $ 
+                                       greedyN 1 lib (sortData xs')
                         index' =  newLibrary $ map snd rs
                         index'' = adjust index' prior
-                    return index''
+                    return ((trace $ show index'')  index'')
           -- vars
     where
       taskSet = expTaskSet ex

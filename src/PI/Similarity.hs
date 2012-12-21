@@ -8,7 +8,7 @@ import qualified Data.Set as Set
 import CL 
 import StdLib (cI, cS)
 import CLError
-import qualified CombTrie as CT
+import qualified CombMap as CM
 
 -- | To get a similarity metric between two combinators we need to
 -- compare the number of common subtrees between them. As a first
@@ -41,14 +41,14 @@ additionalUniqueSubcombinators cs c =
     Set.toList $ Set.difference (Set.fromList $ uniqueSubcombinators [c]) (Set.fromList cs) 
 
 -- | Count subcombinators
-countSubcombinators :: Comb -> CT.CombTrie Int
-countSubcombinators c@(CNode _ _ _) = CT.single c 1
+-- countSubcombinators :: Comb -> CombMap Int
+-- countSubcombinators c@(CNode _ _ _) = CM.singleton c 1
 
-countSubcombinators c@(CApp c1 c2 [] _) = CT.single c 1 `with`
-                                        (countSubcombinators c1) `with`
-                                        (countSubcombinators c2)
-                                        where with = CT.mergeWith (+)
-countSubcombinators c@(CApp c1 c2 name _) = CT.single c 1
+-- countSubcombinators c@(CApp c1 c2 _ _) = CM.singleton c 1 `with`
+--                                         (countSubcombinators c1) `with`
+--                                         (countSubcombinators c2)
+--                                         where with = CM.unionWith (+)
+-- countSubcombinators c@(CApp c1 c2 name _) = CM.singleton c 1
 
 
 

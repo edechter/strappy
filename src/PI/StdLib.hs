@@ -4,7 +4,9 @@
 module StdLib where
 import Debug.Trace
 
-import qualified Data.Map as Map
+import qualified CombMap as CM
+import CombMap (CombMap)
+
 import Type
 import CL
 import Expr
@@ -31,7 +33,7 @@ cB = CNode "B" (Func $ \f -> Func $ \g -> Func $ \x -> (App f (App g x))) typeB
     where typeB = (t1 ->- t0) ->- (t2 ->- t1) ->- (t2 ->- t0)
 
 cC = CNode "C" (Func $ \f -> Func $ \g -> Func $ \x -> (App (App f x) g )) typeC 
-    where typeC = (t2 ->- t1 ->- t0) ->- (t2 ->- t1 ->- t0)
+    where typeC = (t1 ->- t2 ->- t0) ->- (t2 ->- t1 ->- t0)
 
 
 -- cPrim = CNode "PrimRec" prim primType
@@ -84,11 +86,11 @@ cC = CNode "C" (Func $ \f -> Func $ \g -> Func $ \x -> (App (App f x) g )) typeC
 -- true = CNode "True" (B True) Btype
 -- false = CNode "False" (B False) Btype
 
-stdlib = Map.fromList $ 
+stdlib' = CM.fromList $ 
          [
            ("I", cI)
          , ("S", cS)
-        , ("B", cB)
+         , ("B", cB)
          , ("C", cC)
 --         , ("IfThenElse", cIfThenElse)
 --         , ("True", true)
@@ -98,8 +100,8 @@ stdlib = Map.fromList $
 --         , ("<", cLT)
 --         , (">", cGT)
 --         , ("==", cEQ)
---          , ("+", dOp2C "+" (+))
-          , ("-", dOp2C "-" (-))
+          , ("+", dOp2C "+" (+))
+--          , ("-", dOp2C "-" (-))
            , ("*", dOp2C "*" (*))
           ,  ("1", num2C 1)
 --          , ("2", num2C 2)
@@ -110,5 +112,7 @@ stdlib = Map.fromList $
 --           , ("[]", cEmpty)
            ]
 
-stdMultinomialLib = Map.fromList $ [(c, (1::Int)) | c <- Map.elems stdlib]
+stdlib = CM.fromList $ [(c, (1::Int)) | c <- CM.elems stdlib']
 -- stdlibTrie = CT.fromList $ [(c, (1::Int)) | c <- Map.elems stdlib]
+
+
