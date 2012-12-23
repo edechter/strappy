@@ -11,10 +11,10 @@ import ParseCL
 import StdLib (stdlib, stdlibTrie)
 import CL
 import Type
-import qualified CombTrie as CT
+import qualified CombMap as CM
 import Compress
 
-import TestComb
+
 
 
 -- combinators

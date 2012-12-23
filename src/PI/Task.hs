@@ -22,7 +22,9 @@ instance Show Task where
 mkSingleEqualityTask:: Int -> Int -> Task
 mkSingleEqualityTask rlimit i 
     = let f c = fromIntegral $ (abs $ a - i)
-              where Just (N a) = reduceWithLimit rlimit $ comb2Expr c
+              where a = case reduceWithLimit rlimit $ comb2Expr c of
+                          (Just (N x)) -> x
+                          Nothing -> 2147483647                    
       in Task (show i) f tInt
 
     

@@ -9,6 +9,7 @@ import Data.List (union)
 import Control.Monad 
 import Control.Monad.Trans.Class
 import Control.Monad.State
+
 import Debug.Trace
 
 -- | local imports
@@ -33,6 +34,22 @@ cDepth (CApp _ _ _ d) = d
 
 mkAppDepth :: Comb -> Comb -> Int
 mkAppDepth c1 c2 = 1 + (max (cDepth c1) (cDepth c2))
+
+
+app :: Maybe Comb -> Maybe Comb -> Maybe Comb
+app m1 m2 = do c1 <- m1
+               c2 <- m2
+               case getAppType c1 c2 of
+                Nothing -> Nothing
+                Just t -> let d = mkAppDepth c1 c2 
+                          in Just $ CApp c1 c2 t d 
+
+infixl 4 <:>
+(<:>) = app
+
+infixl 4 <$>
+(<$>) = \m1 c2 ->  m1 <:> (Just c2)
+                  
 
 instance Show Comb where
     show (CApp c1 c2 _ _) = "(" ++ show c1 ++ " " ++ show c2 ++ ")"
@@ -65,9 +82,20 @@ dOp2C opString op = CNode opString func (tInt ->-  tInt ->- tInt)
     where func = Func $ \(N !x) -> Func $ \(N !y) -> N $ op x y
 
 -- | get type outside type monad
-getType :: Comb -> Type
-getType (CNode _ _ t) = t
--- getType c@(CApp c1 c2 _ _) = case mgu (getType c1) (getType c2 ->- 
+getType :: Comb -> Maybe Type
+getType (CNode _ _ t) = Just t
+getType c@(CApp c1 c2 _ _) = getAppType c1 c2
+
+getAppType :: Comb -> Comb -> Maybe Type
+getAppType c1 c2  
+    = let st = do t1 <- lift (getType c1) >>= freshInst
+                  t2 <- lift (getType c2) >>= freshInst
+                  t <- newTVar Star
+                  case mgu t1 (t2 ->- t) of 
+                    Nothing -> lift (Nothing)
+                    Just subst -> return $ toType (apply subst t1)
+      in liftM fst $ runStateT st 0
+                                         
 
 sub s (TVar u) c@(CNode _ _ t) = c{cType = apply [(s, TVar u)] (cType c)}
                                       

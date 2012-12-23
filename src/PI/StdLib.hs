@@ -36,14 +36,14 @@ cC = CNode "C" (Func $ \f -> Func $ \g -> Func $ \x -> (App (App f x) g )) typeC
     where typeC = (t1 ->- t2 ->- t0) ->- (t2 ->- t1 ->- t0)
 
 
--- cPrim = CNode "PrimRec" prim primType
---         where prim = Func $ \c -> Func $ \f -> Func $ \(R i) ->
---                       if
---                          i <= 0 
---                       then c
---                       else (App f (App (App (App prim c) f) (R $ i - 1)))
---               primType = Map tv0 
---                          (Map (Map tv0 tv0) (Map Rtype tv0 ))
+cPrim = CNode "PrimRec" prim primType
+        where prim = Func $ \c -> Func $ \f -> Func $ \(N i) ->
+                      if
+                         i <= 0 
+                      then c
+                      else (App f (App (App (App prim c) f) (N $ i - 1)))
+              primType = t0 ->- ((t0 ->- t0) ->- tInt ->- t0)
+
 
 -- cIfThenElse = CNode "If-Then-Else" (Func $ \(B f) -> Func $ \g -> Func $ \x -> 
 --                                                  if f then g else x) typeIf
@@ -89,7 +89,7 @@ cC = CNode "C" (Func $ \f -> Func $ \g -> Func $ \x -> (App (App f x) g )) typeC
 stdlib' = CM.fromList $ 
          [
            ("I", cI)
-         , ("S", cS)
+--         , ("S", cS)
          , ("B", cB)
          , ("C", cC)
 --         , ("IfThenElse", cIfThenElse)
@@ -107,7 +107,7 @@ stdlib' = CM.fromList $
 --          , ("2", num2C 2)
 --         , ("3", num2C 3)
 --         , ("4", num2C 4)
---           , ("primRec", cPrim) 
+           , ("primRec", cPrim) 
 --           , (":", cCONS)
 --           , ("[]", cEmpty)
            ]

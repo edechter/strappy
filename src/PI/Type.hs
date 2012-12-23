@@ -172,9 +172,9 @@ match (TVar u) t
 match (TCon tc1) (TCon tc2) | tc1 == tc2 = Just nullSubst
 match t1 t2 = Nothing
 
-makeNewTVar :: Type -> TyVar
-makeNewTVar tp = TyVar (enumId ts_next) Star
-    where ts = tv tp
+makeNewTVar :: [Type] -> TyVar
+makeNewTVar tps = TyVar (enumId ts_next) Star
+    where ts = concat (map tv tps)
           ts_next = case map (\(TyVar s k) -> readId s) ts of
                       [] -> 0
                       xs -> 1 + maximum xs

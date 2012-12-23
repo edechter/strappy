@@ -123,7 +123,7 @@ findCombinatorsForEachDatum ex lib
          return $ [(t, [ c | c <- db Map.! tp, 
                                   f c <= eps ]) | t@(Task n f tp) <- taskSet]
       where 
-            cs = \t -> map fst $ runStateT (enumIB lib maxDepth 5000 t) 0
+            cs = \t -> map fst $ runStateT (enumIB lib maxDepth 2000 t) 0
             db = foldl' (\m (k, a) -> Map.insert k a m) Map.empty 
                  [(t, cs t) | t <- ts]
             ts = nub [t | (Task _ _ t) <- taskSet]
@@ -140,10 +140,10 @@ oneStep :: Experiment
         -> Search Index
 oneStep ex lib = do xs <- findCombinatorsForEachDatum ex lib
                     let xs' = filter (\x -> (length . snd $ x) > 0) xs
---                        (index , rs) = (trace $  "Hit: " ++ show (length xs')) 
---                                        $ dfsN  (sortData xs') 20
+--                         (index , rs) = (trace $  "Hit: " ++ show (length xs')) 
+--                                        $ dfsN  (sortData xs') 30
                         (index , rs) = (trace $  "Hit: " ++ show (length xs')) $ 
-                                       greedyN 1 lib (sortData xs')
+                                       greedy lib (sortData xs')
                         index' =  newLibrary $ map snd rs
                         index'' = adjust index' prior
                     return ((trace $ show index'')  index'')

@@ -71,9 +71,9 @@ mkSquaresTask a b = Task (showSquares a b) f (tInt ->- tInt)
                    
     where f = eval [num2C $ (squares a b) i| i<-rng]
 
-taskSet' = [mkSquaresTask i j | i <- [0..10] , j <- [0..10]]
+taskSet' = --[mkSquaresTask i j | i <- [0..10] , j <- [0..10]]
 --           ++ [mkQuadTask i j k | i <- [0..10] , j <- [0..10], k <- [0..10]]
-           ++ (concat $ take 3 $ repeat $  map (mkSingleEqualityTask 100) [0..10])
+            map (mkSingleEqualityTask 10000) $ [0..10] ++ [2*i | i <- [0..10]]
                                     
 expIntegerSequences 
     = Experiment {
@@ -85,7 +85,7 @@ expIntegerSequences
         expLogLikeBound = (-6),
         expDepthBound = 3,
         expDataType = (tInt ->- tInt),
-        expReps=10
+        expReps=40
       }
  
 

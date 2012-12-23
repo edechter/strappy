@@ -55,7 +55,7 @@ substitute e v@(Var _) = v
 -- | implement reduction with a step limit
 reduceWithLimit :: Int -> Expr -> Maybe Expr
 {-# INLINE reduceWithLimit #-}
-reduceWithLimit 0 e = Nothing
+reduceWithLimit 0 e = (trace $  "Reduction limit reached.") $ Nothing
 reduceWithLimit i x@(App (Lam e) f) = 
     do f' <- reduceWithLimit (i-1) f 
        reduceWithLimit (i-1) $ substitute f' e
