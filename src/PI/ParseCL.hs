@@ -9,8 +9,11 @@ import Text.ParserCombinators.Parsec.Token
 import Text.ParserCombinators.Parsec ((<|>), (<?>))
 import Text.Parsec.Language (haskellDef)
 import Control.Applicative ((<$>), (<*>), (*>), (<*))
-import qualified Data.Map as Map
+import qualified Data.HashMap as HMap
+import qualified CombMap as CM
+import CombMap (CombMap)
 import Control.Monad.Error
+import Control.Monad.State
 import Data.Char
 
 -- | local imports
@@ -18,25 +21,24 @@ import Data.Char
 import Type
 import CL
 import Expr
-import CLError
 import StdLib 
 
-eval :: (Map.Map String Comb) -> String -> ThrowsError Expr
-eval lib s =  runTISafe (fmap reduce $ parseExpr lib s >>= comb2Expr) nullSubst 0
+eval :: NamedLib -> String -> Either String Expr
+eval lib s =  liftM reduceComb $ parseExpr lib s
 
-parseExpr :: (Map.Map String Comb) -> String -> TI Comb
+parseExpr :: NamedLib -> String -> SynthComb
 parseExpr combLib s = case P.parse (expr combLib) "expr" s of
-                        Left err -> throwTIError $ Parser err
-                        Right val -> return val
+                        Left err -> Left (show err)
+                        Right val -> val
 
 lexer = makeTokenParser haskellDef
 
-expr :: (Map.Map String Comb) -> P.CharParser () Comb
+expr :: NamedLib -> P.CharParser () SynthComb
 expr lib = P.spaces *> do { x<- singleton lib ; rest x}
        where 
          rest x = P.try (do { f <- spaceOp 
                             ; y <- singleton lib
-                            ; rest (f x y "" (mkAppDepth x y))
+                            ; rest $ x <:> y 
                             })
                           <|> return x
 
@@ -47,12 +49,12 @@ open = P.string "("
 close = P.string ")"
 p_expr lib = open *> P.spaces *> expr lib <* P.spaces <* close
 
-node :: (Map.Map String Comb) ->  P.CharParser () Comb
+node :: NamedLib ->  P.CharParser () SynthComb
 node lib = P.try (do { x <- P.many1 $ P.noneOf "() "
-              ; case Map.lookup x lib of
-                  (Just cNode) -> return cNode
+              ; case HMap.lookup x lib of
+                  (Just cNode) -> return (Right cNode)
                   Nothing -> fail  $ " Cannot find combinator " ++ show x})
-           <|> P.try (num2C <$> (fromInteger <$> integer lexer))
+           <|> P.try (return <$> num2C <$> (fromInteger <$> integer lexer))
 
-singleton :: (Map.Map String Comb) ->  P.CharParser () Comb
+singleton :: NamedLib ->  P.CharParser () SynthComb
 singleton lib = (node lib) <|> (p_expr lib)

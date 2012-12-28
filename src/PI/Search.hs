@@ -82,6 +82,7 @@ dfsN :: [(Task, [Comb])]
 dfsN xs n = select $ take n (gen xs' (CM.empty, []))
     where xs' = sortData xs
 
+
 -- | Greedy 
 greedy :: Index -> [(Task, [Comb])] -> (Index, [(Task, Comb)])
 greedy lib xs = foldl' g (lib, []) xs
@@ -140,10 +141,10 @@ oneStep :: Experiment
         -> Search Index
 oneStep ex lib = do xs <- findCombinatorsForEachDatum ex lib
                     let xs' = filter (\x -> (length . snd $ x) > 0) xs
---                         (index , rs) = (trace $  "Hit: " ++ show (length xs')) 
---                                        $ dfsN  (sortData xs') 30
-                        (index , rs) = (trace $  "Hit: " ++ show (length xs')) $ 
-                                       greedy lib (sortData xs')
+                        (index , rs) = (trace $  "Hit: " ++ show (length xs')) 
+                                       $ dfs  (sortData xs') 
+--                         (index , rs) = (trace $  "Hit: " ++ show (length xs')) $ 
+--                                        greedy lib (sortData xs')
                         index' =  newLibrary $ map snd rs
                         index'' = adjust index' prior
                     return ((trace $ show index'')  index'')

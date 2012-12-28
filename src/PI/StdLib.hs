@@ -6,11 +6,14 @@ import Debug.Trace
 
 import qualified CombMap as CM
 import CombMap (CombMap)
+import qualified Data.HashMap as HMap
 
 import Type
 import CL
 import Expr
 -- import qualified CombTrie as CT
+
+type NamedLib = HMap.Map String Comb
 
 -- | define some oft used type variables
 t0 = mkTVar 0 
@@ -86,10 +89,11 @@ cPrim = CNode "PrimRec" prim primType
 -- true = CNode "True" (B True) Btype
 -- false = CNode "False" (B False) Btype
 
+stdlib' :: NamedLib
 stdlib' = CM.fromList $ 
          [
            ("I", cI)
---         , ("S", cS)
+         , ("S", cS)
          , ("B", cB)
          , ("C", cC)
 --         , ("IfThenElse", cIfThenElse)
@@ -104,8 +108,8 @@ stdlib' = CM.fromList $
 --          , ("-", dOp2C "-" (-))
            , ("*", dOp2C "*" (*))
           ,  ("1", num2C 1)
---          , ("2", num2C 2)
---         , ("3", num2C 3)
+          , ("2", num2C 2)
+         , ("3", num2C 3)
 --         , ("4", num2C 4)
            , ("primRec", cPrim) 
 --           , (":", cCONS)

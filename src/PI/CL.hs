@@ -35,20 +35,21 @@ cDepth (CApp _ _ _ d) = d
 mkAppDepth :: Comb -> Comb -> Int
 mkAppDepth c1 c2 = 1 + (max (cDepth c1) (cDepth c2))
 
+type SynthComb = Either String Comb
 
-app :: Maybe Comb -> Maybe Comb -> Maybe Comb
+app :: SynthComb -> SynthComb -> SynthComb
 app m1 m2 = do c1 <- m1
                c2 <- m2
                case getAppType c1 c2 of
-                Nothing -> Nothing
-                Just t -> let d = mkAppDepth c1 c2 
-                          in Just $ CApp c1 c2 t d 
+                Left err -> Left err
+                Right t -> let d = mkAppDepth c1 c2 
+                           in Right $ CApp c1 c2 t d 
 
 infixl 4 <:>
 (<:>) = app
 
-infixl 4 <$>
-(<$>) = \m1 c2 ->  m1 <:> (Just c2)
+infixl 4 <::>
+(<::>) = \m1 c2 ->  m1 <:> (return c2)
                   
 
 instance Show Comb where
@@ -82,17 +83,20 @@ dOp2C opString op = CNode opString func (tInt ->-  tInt ->- tInt)
     where func = Func $ \(N !x) -> Func $ \(N !y) -> N $ op x y
 
 -- | get type outside type monad
-getType :: Comb -> Maybe Type
-getType (CNode _ _ t) = Just t
+getType :: Comb -> Either String Type
+getType (CNode _ _ t) = Right t
 getType c@(CApp c1 c2 _ _) = getAppType c1 c2
 
-getAppType :: Comb -> Comb -> Maybe Type
+getAppType :: Comb -> Comb -> Either String Type
 getAppType c1 c2  
     = let st = do t1 <- lift (getType c1) >>= freshInst
                   t2 <- lift (getType c2) >>= freshInst
                   t <- newTVar Star
                   case mgu t1 (t2 ->- t) of 
-                    Nothing -> lift (Nothing)
+                    Nothing -> lift $ Left $ "Type error: " ++ " unable to unify " 
+                               ++ show t1 ++ " and " ++ show t2 
+                               ++ " when attempting to apply " 
+                              ++  show c1 ++ " to " ++ show c2
                     Just subst -> return $ toType (apply subst t1)
       in liftM fst $ runStateT st 0
                                          
