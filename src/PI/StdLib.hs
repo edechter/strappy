@@ -85,11 +85,10 @@ cFromJust = CNode "FromJust" expr t0
     where expr = Func $ \e -> case e of
                                 App (Const "Just") x -> x
                                 (Const "Nothing") 
-                                     -> error "FromJust applied to Nothing."
+                                     -> ExprError "FromJust applied to Nothing."
 
 ----- List Functions --------
 
--- List constructor
 
 cCons = CNode ":" (Const ":") (t0 ->- (TAp tList t0) ->- (TAp tList t0))
 
@@ -97,14 +96,14 @@ cHead = CNode "head" expr tp
     where expr = Func $ \xs -> case xs of
                                  (App (App (Const ":") x) y) -> x
                                  Const "[]" 
-                                     -> error "head applied to []"
+                                     -> ExprError "head applied to []"
           tp = (TAp tList t0) ->- t0
 
 cTail = CNode "tail" expr tp
     where expr = Func $ \xs -> case xs of
                                  (App (App (Const ":") x) y) -> y
                                  Const "[]" 
-                                     -> error "tail applied to []"
+                                     -> ExprError "tail applied to []"
           tp = (TAp tList t0) ->- t0
 
 cEmpty = CNode "[]" (Const "[]") (TAp tList t0)
