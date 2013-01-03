@@ -22,12 +22,10 @@ import Expr
 import CLError
 import Enumerate
 import StdLib
--- import Similarity
 import Task
 import Data
 import CompressionSearch
 
--- import ParseCL
 import qualified CombMap as CM
 import CombMap (CombMap)
 import qualified Compress as CP (getUniqueTrees, incr)
