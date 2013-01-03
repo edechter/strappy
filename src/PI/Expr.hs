@@ -14,13 +14,19 @@ data Expr  = App Expr Expr
            | Lam Expr
            | N Int
            | C Char
+           | B Bool
            | Var Id -- variable indexed by de'brujn notation
+           | Undef -- undefined expr
+           | Const String
 
 instance Show Expr where
     show (Func _) = "<function>"
     show (App left right) = "(" ++ show left ++ " " ++ show right ++ ")"
     show (N i) = show i
     show (C c) = show c
+    show (B t) = show t -- boolean
+    show Undef = "undefined"
+    show (Const name) = name
     show (Lam expr) = 
         "( L: " ++ show expr ++ ")"
     show (Var id) = "var_" ++ show id
@@ -35,14 +41,23 @@ instance Eq Expr where
 toFloat :: Expr -> Double
 toFloat e = error $ "expr cannot be converted to float: " ++ show e
 
+isRedex :: Expr -> Bool
+{-# INLINE isRedex #-}
+isRedex (App (Const _ ) _) = False
+isRedex (App _ _) = True
+isRedex _ = False
+
 reduce :: Expr -> Expr
 {-# INLINE reduce #-} 
 reduce x@(App (Lam e) f) = let f' = reduce f 
                            in reduce $ substitute f' e
 reduce e@(App (Func f) a)  = let z = (reduce a) 
                              in  z `seq` reduce $ f z
-reduce x@(App a b) =  reduce (App (reduce a) b) 
-                      
+
+reduce e@(App (Const _) _) = (trace $ show e) $ e
+reduce x@(App a b) | isRedex a =  reduce $ App (reduce a) b
+                   | otherwise = x
+
 reduce e = e
 
 substitute e (App a b) = App a' b' where a' = substitute e a
@@ -55,7 +70,7 @@ substitute e v@(Var _) = v
 -- | implement reduction with a step limit
 reduceWithLimit :: Int -> Expr -> Maybe Expr
 {-# INLINE reduceWithLimit #-}
-reduceWithLimit 0 e = (trace $  "Reduction limit reached.") $ Nothing
+reduceWithLimit 0 e = (trace $ "Reduction limit reached.") $ Nothing
 reduceWithLimit i x@(App (Lam e) f) = 
     do f' <- reduceWithLimit (i-1) f 
        reduceWithLimit (i-1) $ substitute f' e

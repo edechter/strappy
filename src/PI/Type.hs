@@ -31,6 +31,10 @@ readId ('v':xs) = read xs
 data Kind = Star | Kfun Kind Kind
           deriving (Eq, Ord)
 
+instance Show Kind where
+    show Star = "*"
+    show (Kfun k k') = "(" ++ show k ++ " -> " ++ show k' ++ ")" 
+
 data Type = TVar TyVar
           | TCon TyCon
           | TAp Type Type
@@ -196,8 +200,9 @@ freshInst t = do let tvs = tv t
 -- | types 
 tChar = TCon (TyCon "Char" Star)
 tInt = TCon (TyCon "Int" Star)
+tBool = TCon (TyCon "Bool" Star)
 tArrow = TCon (TyCon "(->)" (Kfun Star (Kfun Star Star)))
-
-                                        
+tList = TCon $ TyCon "[]" (Kfun Star Star)
+tMaybe = TCon $ TyCon "Maybe" (Kfun Star Star)                                         
                      
 

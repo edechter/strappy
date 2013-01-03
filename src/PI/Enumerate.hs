@@ -91,7 +91,7 @@ enumIB xs d n t = let m = CM.size xs
                   in liftST (take n) $ enumIB' (-1) 0
     where enumIB' last i = let st = enumLB xs d i t
                                num = length (runStateT st 0)
-                           in if (trace $ show num) $ last < num && num < n 
+                           in if (trace $ show i) $ last < num && num < n 
                               then enumIB' num (i+1)
                               else st
 

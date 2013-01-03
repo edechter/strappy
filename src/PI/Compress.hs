@@ -26,6 +26,10 @@ type Index = CombMap Int
 -- a) if it has count 1 set count to 0 and decrement children
 -- b) if it has count 2 or greater, set count (-1) and increment children
 
+showIndex :: CombMap Int -> String
+showIndex ct = unlines $ map (\(c, i) -> show i ++ ": " ++ 
+                               show' c) (CM.toList ct)
+
 
 incr :: Index -> Comb -> Index
 incr index c@(CApp l r _ _) 

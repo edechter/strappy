@@ -16,6 +16,7 @@ import Search
 import qualified CombMap as CM
 import Experiment
 import qualified Compress as CP
+import ListExperiment
 
 -- xs = fst 
 --      $ runSearch 
@@ -24,7 +25,7 @@ import qualified Compress as CP
 -- (index, rs) = greedyN 5 (sortData xs')
 -- index' = newLibrary $ map snd rs
 
-index = fst $ runSearch $ loop expIntegerSequences
+index = fst $ runSearch $ loop expTList1
 --y = map reduceComb$ map fst $ runStateT (enum (CM.keys stdlib) 3 tInt) 0
 main = do
 --   let lib = stdlibTrie

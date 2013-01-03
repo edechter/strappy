@@ -36,11 +36,11 @@ lexer = makeTokenParser haskellDef
 expr :: NamedLib -> P.CharParser () SynthComb
 expr lib = P.spaces *> do { x<- singleton lib ; rest x}
        where 
-         rest x = P.try (do { f <- spaceOp 
+         rest x = do { f <- spaceOp 
                             ; y <- singleton lib
                             ; rest $ x <:> y 
-                            })
-                          <|> return x
+                            }
+                     <|> return x
 
 
 spaceOp = do { P.spaces ; return CApp} 

@@ -25,12 +25,13 @@ import StdLib
 -- import Similarity
 import Task
 import Data
+import CompressionSearch
 
 -- import ParseCL
 import qualified CombMap as CM
 import CombMap (CombMap)
 import qualified Compress as CP (getUniqueTrees, incr)
-import Compress (Index)
+import Compress (Index, showIndex)
 import Experiment
 
 data SearchLogEntry = SearchLogEntry { searchIter :: Int,
@@ -71,9 +72,10 @@ select xs = a
           where a = argmax  ( (* (-1)) . length . CM.keys . fst ) xs
 
 -- | Depth first search
-dfs :: [(Task, [Comb])] -> (Index, [(Task, Comb)])
-dfs xs = select (gen xs' (CM.empty, []))
+dfs :: [(Task, [Comb])] -> [(Task, Comb)]
+dfs xs = zip (map fst xs) cs
     where xs' = sortData xs          
+          cs = nwiseDependencySearch 2 (map snd xs)
 
 -- | Depth first search with bounded number of solutions
 dfsN :: [(Task, [Comb])] 
@@ -141,13 +143,11 @@ oneStep :: Experiment
         -> Search Index
 oneStep ex lib = do xs <- findCombinatorsForEachDatum ex lib
                     let xs' = filter (\x -> (length . snd $ x) > 0) xs
-                        (index , rs) = (trace $  "Hit: " ++ show (length xs')) 
+                        rs = (trace $  "Hit: " ++ show (length xs')) 
                                        $ dfs  (sortData xs') 
---                         (index , rs) = (trace $  "Hit: " ++ show (length xs')) $ 
---                                        greedy lib (sortData xs')
                         index' =  newLibrary $ map snd rs
                         index'' = adjust index' prior
-                    return ((trace $ show index'')  index'')
+                    return ((trace $ showIndex index'')  index'')
           -- vars
     where
       taskSet = expTaskSet ex

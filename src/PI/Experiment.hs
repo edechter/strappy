@@ -26,11 +26,13 @@ data Experiment = Experiment {expName :: String,
                               expReps :: Int}
 
 ----- Squared Integers -------
-rlimit = 1000
+rlimit = 100
 
 taskSet :: TaskSet
 taskSet = map (mkSingleEqualityTask rlimit) xs
-    where xs = [i |i <-[1..100]] 
+    where xs = [i | i <- [1..10]] ++ [i*2 |i <-[1..10]] 
+               ++ [i*3 |i <-[1..10]] 
+               ++ [i*4 |i <-[1..10]] 
 
 expSquaredInts 
     = Experiment {
@@ -43,21 +45,20 @@ expSquaredInts
         expLogLikeBound = (-4),
         expDepthBound = 3,
         expDataType = tInt,
-        expReps = 10}
+        expReps = 20}
 
 ------------------------------
 
 ---- Integer Sequences ----
 rng = [0..10]
-red = (reduceWithLimit 1000) . comb2Expr
+red = (reduceWithLimit 100) . comb2Expr
 eval :: [Comb] -> Comb -> Double
 eval ds c = fromIntegral $ sum $ [(toInteger $ diff i) | i <- rng]
          where diff i = abs $ dat i - eval i
-               eval i = if y < 0 then 2147483647 else y 
-                   where Just (N y) 
-                             = let x = red  (CApp c (num2C i) tInt 0) 
-                               in x
-                                             
+               eval i = if y < 0 then maxBound else y 
+                   where y = case red  (CApp c (num2C i) tInt 0) of
+                               Just (N y) ->  y
+                               Nothing -> maxBound
                dat i = y where Just (N y) = red (ds !! i)
 
 quad a b c = \i -> a * i^2 + b * i + c
@@ -71,9 +72,10 @@ mkSquaresTask a b = Task (showSquares a b) f (tInt ->- tInt)
                    
     where f = eval [num2C $ (squares a b) i| i<-rng]
 
-taskSet' = --[mkSquaresTask i j | i <- [0..10] , j <- [0..10]]
+taskSet' = [mkSquaresTask i j | i <- [0..10] , j <- [0..10]]
+           ++ (map (mkSingleEqualityTask 100) $ [0] ++ [2*i | i <- [0..20]])
 --           ++ [mkQuadTask i j k | i <- [0..10] , j <- [0..10], k <- [0..10]]
-            map (mkSingleEqualityTask 10000) $ [0..10] ++ [2*i | i <- [0..10]]
+            
                                     
 expIntegerSequences 
     = Experiment {

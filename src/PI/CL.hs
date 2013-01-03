@@ -45,6 +45,12 @@ app m1 m2 = do c1 <- m1
                 Right t -> let d = mkAppDepth c1 c2 
                            in Right $ CApp c1 c2 t d 
 
+app' :: Comb -> Comb -> Comb
+app' c1 c2 = case getAppType c1 c2 of
+               Left err -> error $ "Error in app' in CL.hs: " ++ err
+               Right t -> let d = mkAppDepth c1 c2
+                              in CApp c1 c2 t d
+
 infixl 4 <:>
 (<:>) = app
 
@@ -81,6 +87,9 @@ num2C i = CNode (show i) (N i) tInt
 dOp2C :: String -> (Int -> Int -> Int) -> Comb
 dOp2C opString op = CNode opString func (tInt ->-  tInt ->- tInt)
     where func = Func $ \(N !x) -> Func $ \(N !y) -> N $ op x y
+
+bool2C :: Bool -> Comb
+bool2C c = CNode (show c) (B c) tBool
 
 -- | get type outside type monad
 getType :: Comb -> Either String Type
