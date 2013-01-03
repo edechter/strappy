@@ -14,6 +14,7 @@ import Control.Monad.State
 import Control.Monad.Writer
 import Control.Monad.Identity
 import Data.Maybe
+import Data.Function (on)
 import Debug.Trace
 
 import Type
@@ -49,9 +50,9 @@ runSearch s = runState s mkEmptySearchLog
 
 -- | Sort data by number of combinators matching each
 sortData :: [(Task, [Comb])] -> [(Task, [Comb])]
-sortData xs = sortBy 
-              (\x1 x2 -> (length . snd $ x1) `compare` (length . snd $ x2))
-              xs
+sortData = sortBy (compare  `on` (length . snd))
+
+              
 
 gen' (x:xs) cs = join [gen' xs (i:cs) | i <- [0..]]
 gen' [] x = [x]
@@ -88,7 +89,7 @@ greedy :: Index -> [(Task, [Comb])] -> (Index, [(Task, Comb)])
 greedy lib xs = foldl' g (lib, []) xs
     where g (index, asc) (d, cs) = (index', (d, c'):asc)
               where with = CM.unionWith (+)
-                    vs = [(index `with` (CP.getUniqueTrees  c), c) | c <- cs]
+                    vs = [(index `with` CP.getUniqueTrees c, c) | c <- cs]
                     (index', c') = argmax ( (* (-1)) . length . CM.keys . fst ) vs
 
 -- | GreedyN 
@@ -96,17 +97,14 @@ greedyN :: Int -> Index -> [(Task, [Comb])] -> (Index, [(Task, Comb)])
 greedyN n lib xs = let xss = take n (List.permutations xs)
                        out = map (greedy lib) xss
                        best = argmax ((* (-1)) . length . CM.keys . fst) out
-                   in (trace $ "best: " ++ 
-                       (unlines $ map (\(t, c) -> show t ++ ":   " ++ show' c ++ " " 
-                                      ++ "eps : " ++ show ((task t) c)) (snd best))) 
-                          $ best
+                   in best
 
 -- | Get new library
 newLibrary :: [Comb] -> Index
 newLibrary cs = CM.fromList $  map g $ filter (\(_, i) -> i > 1) xs
     where ind = foldl' CP.incr CM.empty cs
           xs = CM.assocs ind
-          g (c@(CApp _ _ _ _ ) , i) = (c, i)
+          g (c@(CApp{}) , i) = (c, i)
           g x = x
 
 -- | Adjust with prior
@@ -121,7 +119,7 @@ findCombinatorsForEachDatum :: Experiment
                             -> Search [(Task, [Comb])]
 findCombinatorsForEachDatum ex lib 
     = do s <- get
-         return $ [(t, [ c | c <- db Map.! tp, 
+         return [(t, [ c | c <- db Map.! tp, 
                                   f c <= eps ]) | t@(Task n f tp) <- taskSet]
       where 
             cs = \t -> map fst $ runStateT (enumIB lib maxDepth 2000 t) 0
@@ -132,7 +130,6 @@ findCombinatorsForEachDatum ex lib
             -- vars
             taskSet = expTaskSet ex
             eps = expEps ex
-            ll = expLogLikeBound ex
             maxDepth = expDepthBound ex
             tp = expDataType ex
             
@@ -140,7 +137,7 @@ oneStep :: Experiment
         -> Index -- ^ current lib
         -> Search Index
 oneStep ex lib = do xs <- findCombinatorsForEachDatum ex lib
-                    let xs' = filter (\x -> (length . snd $ x) > 0) xs
+                    let xs' = filter (not . null . snd) xs
                         rs = (trace $  "Hit: " ++ show (length xs')) 
                                        $ dfs  (sortData xs') 
                         index' =  newLibrary $ map snd rs
@@ -150,7 +147,6 @@ oneStep ex lib = do xs <- findCombinatorsForEachDatum ex lib
     where
       taskSet = expTaskSet ex
       eps = expEps ex
-      ll = expLogLikeBound ex
       maxDepth = expDepthBound ex
       tp = expDataType ex
       prior = expPrior ex
@@ -163,7 +159,6 @@ loop ex
       where           
         -- vars
         eps = expEps ex
-        ll = expLogLikeBound ex
         maxDepth = expDepthBound ex
         tp = expDataType ex
         prior = expPrior ex
