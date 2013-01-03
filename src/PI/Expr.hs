@@ -49,14 +49,24 @@ isRedex _ = False
 
 reduce :: Expr -> Expr
 {-# INLINE reduce #-} 
-reduce x@(App (Lam e) f) = let f' = reduce f 
-                           in reduce $ substitute f' e
-reduce e@(App (Func f) a)  = let z = (reduce a) 
-                             in  z `seq` reduce $ f z
-
-reduce e@(App (Const _) _) = (trace $ show e) $ e
 reduce (App err@(ExprError s) _) = err
-reduce x@(App a b) | isRedex a =  reduce $ App (reduce a) b
+reduce (App _ err@(ExprError s)) = err
+
+reduce x@(App (Lam e) f) = let f' = reduce f 
+                           in case f' of 
+                                err@(ExprError _) -> err
+                                otherwise -> reduce $ substitute f' e
+
+reduce e@(App (Func f) a)  = let z = (reduce a) 
+                             in case z of 
+                                  err@(ExprError _) -> err
+                                  otherwise -> z `seq` reduce $ f z
+
+reduce e@(App (Const _) _) =  e
+reduce x@(App a b) | isRedex a =  let a' = reduce a 
+                                  in case a' of
+                                       err@(ExprError _) -> err
+                                       otherwise -> reduce $ App a' b
                    | otherwise = x
 
 reduce e = e
