@@ -17,6 +17,7 @@ data Expr  = App Expr Expr
            | B Bool
            | Var Id -- variable indexed by de'brujn notation
            | Const String
+           | ExprError String 
 
 instance Show Expr where
     show (Func _) = "<function>"
@@ -28,6 +29,7 @@ instance Show Expr where
     show (Lam expr) = 
         "( L: " ++ show expr ++ ")"
     show (Var id) = "var_" ++ show id
+    show (ExprError s) = "Expr Error: " ++ s
 
 instance Eq Expr where
     (App l1 r1) == (App l2 r2) = (l1 == l2) && (r1 == r2)
@@ -53,6 +55,7 @@ reduce e@(App (Func f) a)  = let z = (reduce a)
                              in  z `seq` reduce $ f z
 
 reduce e@(App (Const _) _) = (trace $ show e) $ e
+reduce (App err@(ExprError s) _) = err
 reduce x@(App a b) | isRedex a =  reduce $ App (reduce a) b
                    | otherwise = x
 
