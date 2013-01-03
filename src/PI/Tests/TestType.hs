@@ -11,7 +11,6 @@ import Debug.Trace
 
 import Type
 
-
 instance Arbitrary TyVar where
     arbitrary = liftM2 TyVar (liftM (enumId . getPositive) arbitrary) (return Star)
 
