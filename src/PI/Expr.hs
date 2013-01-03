@@ -16,7 +16,6 @@ data Expr  = App Expr Expr
            | C Char
            | B Bool
            | Var Id -- variable indexed by de'brujn notation
-           | Undef -- undefined expr
            | Const String
 
 instance Show Expr where
@@ -25,7 +24,6 @@ instance Show Expr where
     show (N i) = show i
     show (C c) = show c
     show (B t) = show t -- boolean
-    show Undef = "undefined"
     show (Const name) = name
     show (Lam expr) = 
         "( L: " ++ show expr ++ ")"
