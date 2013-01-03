@@ -1,6 +1,6 @@
--- GraphSearch2.hs
+-- GraphSearch.hs
 
-module GraphSearch2 where
+module GraphSearch where
 
 import Debug.Trace
 

@@ -17,8 +17,8 @@ import qualified Compress as CP (getUniqueTrees)
 
 import CombMap (CombMap)
 import Task
-import GraphSearch2
-import Infinite
+import GraphSearch
+
 
 nullIndex :: CombMap Int
 nullIndex = CM.empty

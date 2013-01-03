@@ -16,7 +16,7 @@ import Type
 import qualified CombMap as CM
 import CombMap (CombMap)
 import Task
-import GraphSearch2
+import GraphSearch
 import Infinite
 
 fromRight (Right x) = x
