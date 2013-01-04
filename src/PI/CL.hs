@@ -27,13 +27,14 @@ data Comb = CApp {rComb :: Comb,
                    cExpr :: Expr,
                    cType :: Type
                    }
+          | CTerminal {cType :: Type}
 
 cDepth :: Comb -> Int
 cDepth CNode{} = 0
 cDepth (CApp _ _ _ d) = d
 
 mkAppDepth :: Comb -> Comb -> Int
-mkAppDepth c1 c2 = 1 + (max (cDepth c1) (cDepth c2))
+mkAppDepth c1 c2 = 1 + max (cDepth c1) (cDepth c2)
 
 type SynthComb = Either String Comb
 

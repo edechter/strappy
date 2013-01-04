@@ -96,21 +96,10 @@ enumIB xs d n t = let m = CM.size xs
                               else st
 
 
--- type ST = StateT Int AmbTI
--- enumN :: [Comb] 
---       -> Int -- max depth
---       -> Int -- max num solutions
---       -> Type
---       -> AmbTI Comb
--- enumN xs d n t 
---     = do (a, s) <- runStateT ((lift . freshInst) t >>= enumN' xs d) n
---          return a
-
--- enumN' :: [Comb] -> Int -> Type -> ST Comb
--- enumN' xs 0 t 
---     = do m <- get
---          TypeInfT $ \s i -> 
---              Right $ (take m) $ runErrorT $ runTypeInfT (filterCombinatorsByType xs t) s i
-
-
-
+enumBF :: Grammar 
+       -> Int -- max num combinators
+       -> Type
+       -> StateT Int [] Comb
+-- | Bread-first AO enumeration of combinators with highest scores
+-- under the grammar.
+enumBF = undefined
