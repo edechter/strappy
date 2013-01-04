@@ -54,16 +54,6 @@ sortData = sortBy (compare  `on` (length . snd))
 
               
 
-gen' (x:xs) cs = join [gen' xs (i:cs) | i <- [0..]]
-gen' [] x = [x]
-
--- | Generate list of solutions
-gen :: [(Task, [Comb])] -> (Index, [(Task, Comb)]) -> [(Index, [(Task, Comb)])] 
-gen ((d, cs):rest) (index, asc) =  concat vs
-    where vs = [gen rest (index `with` CP.getUniqueTrees c, (d, c):asc) | c <- cs]
-          with = CM.unionWith (+)
-gen [] x = [x]
-
 -- | Select solution with best score
 select :: [(Index, [(Task, Comb)])] 
        -> (Index, [(Task, Comb)])
@@ -76,14 +66,6 @@ dfs xs = zip (map fst xs) cs
     where xs' = sortData xs          
           cs = nwiseDependencySearch 2 (map snd xs)
 
--- | Depth first search with bounded number of solutions
-dfsN :: [(Task, [Comb])] 
-    -> Int -- ^ max number of solutions
-    -> (Index, [(Task, Comb)])
-dfsN xs n = select $ take n (gen xs' (CM.empty, []))
-    where xs' = sortData xs
-
-
 -- | Greedy 
 greedy :: Index -> [(Task, [Comb])] -> (Index, [(Task, Comb)])
 greedy lib xs = foldl' g (lib, []) xs
@@ -91,13 +73,6 @@ greedy lib xs = foldl' g (lib, []) xs
               where with = CM.unionWith (+)
                     vs = [(index `with` CP.getUniqueTrees c, c) | c <- cs]
                     (index', c') = argmax ( (* (-1)) . length . CM.keys . fst ) vs
-
--- | GreedyN 
-greedyN :: Int -> Index -> [(Task, [Comb])] -> (Index, [(Task, Comb)])
-greedyN n lib xs = let xss = take n (List.permutations xs)
-                       out = map (greedy lib) xss
-                       best = argmax ((* (-1)) . length . CM.keys . fst) out
-                   in best
 
 -- | Get new library
 newLibrary :: [Comb] -> Index
