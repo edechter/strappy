@@ -74,11 +74,9 @@ greedy lib xs = foldl' g (lib, []) xs
 
 -- | Get new library
 newLibrary :: [Comb] -> Index
-newLibrary cs = CM.fromList $  map g $ filter (\(_, i) -> i > 1) xs
+newLibrary cs = CM.fromList $  filter (\(_, i) -> i > 1) xs
     where ind = foldl' CP.incr CM.empty cs
           xs = CM.assocs ind
-          g (c@(CApp{}) , i) = (c, i)
-          g x = x
 
 -- | Adjust with prior
 adjust :: Index -> Index -> Index
