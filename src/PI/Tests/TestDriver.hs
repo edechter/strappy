@@ -1,6 +1,5 @@
 -- TestDriver.hs
 
-module TestDriver where
 
 import TestType
 
