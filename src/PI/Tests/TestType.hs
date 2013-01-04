@@ -2,15 +2,38 @@
 
 module TestType where
 
+import Control.Monad
+
+import Test.Framework (defaultMain, testGroup)
+import Test.Framework.Providers.HUnit
+import Test.Framework.Providers.QuickCheck (testProperty)
+
 import Test.QuickCheck
 import Test.HUnit
-import Control.Monad
+
 import StdLib
 import CL
 import qualified Data.Set as Set
 import Debug.Trace
 
 import Type
+
+typeTestGroup = testGroup "Type Testing Group" [
+                testProperty "mkTVar preserves assigned integer " 
+                             prop_mkTVar,
+                testProperty "applying null substitution doesn't do anything" 
+                             prop_applyNullSubst,
+                testProperty "merging 2 identical substitutions just concatenates them"
+                             prop_mergeSameSubst,
+                testCase "mgu of tInt w tInt is empty" test_mgu1,
+                testCase "mgu of tInt w tBool is Nothing" test_mgu2,
+                testCase "mgu 3" test_mgu3,
+                testCase "mgu 4" test_mgu4,
+                testCase "mgu 5" test_mgu5,
+                testCase "mgu 6" test_mgu6
+                
+            ]
+
 
 instance Arbitrary TyVar where
     arbitrary = liftM2 TyVar (liftM (enumId . abs) arbitrary) (return Star)
@@ -56,11 +79,6 @@ test_mgu5 = mgu (t0 ->- t1) (tInt ->- (t2 ->- tInt)) @=? Just [(tv0, tInt), (tv1
                   tv1 = TyVar (enumId 1) Star
 test_mgu6 = mgu (t0 ->- t0) (tInt ->- (t2 ->- tInt)) @=? Nothing
 
-
--- test_unify = TestList [test1]
---     where test1 = TestCase $ assertBool "test_unify 1" 
---                   (not $ runTI $ unify' (t0 ->- t0) (t6 ->- t7 ->- t8))
-                  
 
 -- test_freshInst = TestList [test1, test2, test3, test4]
 --     where t = t0 ->- (t1 ->- t2)
