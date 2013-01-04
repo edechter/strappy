@@ -52,8 +52,6 @@ runSearch s = runState s mkEmptySearchLog
 sortData :: [(Task, [Comb])] -> [(Task, [Comb])]
 sortData = sortBy (compare  `on` (length . snd))
 
-              
-
 -- | Select solution with best score
 select :: [(Index, [(Task, Comb)])] 
        -> (Index, [(Task, Comb)])
