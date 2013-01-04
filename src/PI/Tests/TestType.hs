@@ -1,5 +1,7 @@
 -- TestType.hs
 
+module TestType where
+
 import Test.QuickCheck
 import Test.HUnit
 import Control.Monad
