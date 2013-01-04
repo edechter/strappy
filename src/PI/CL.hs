@@ -29,7 +29,7 @@ data Comb = CApp {rComb :: Comb,
                    }
 
 cDepth :: Comb -> Int
-cDepth (CNode _ _ _) = 0
+cDepth CNode{} = 0
 cDepth (CApp _ _ _ d) = d
 
 mkAppDepth :: Comb -> Comb -> Int
