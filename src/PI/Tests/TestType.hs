@@ -8,7 +8,6 @@ import Control.Monad
 import StdLib
 import CL
 import qualified Data.Set as Set
-
 import Debug.Trace
 
 import Type
@@ -35,13 +34,28 @@ prop_applyNullSubst t = (apply nullSubst t) == t
 prop_mergeSameSubst :: Subst -> Bool
 prop_mergeSameSubst s = merge s s == Just (s ++ s)
 
-test_mgu1 = TestCase $  assertEqual "test mgu" 
+test_mgu1 = assertEqual "test mgu" 
             (mgu tInt tInt) (Just nullSubst)                
-prop_mgu2 t = 
-    mgu ((TVar t) ->- tInt) (tChar ->-  tInt) == Just [(t, tChar)]
+test_mgu2 = mgu tInt tBool @=? Nothing
+test_mgu3 = mgu (t0 ->- t0) (tInt ->- t1) @=? Just [(tv0, tInt), (tv1, tInt)]
+            where t0 = mkTVar 0
+                  t1 = mkTVar 1
+                  tv0 = TyVar (enumId 0) Star
+                  tv1 = TyVar (enumId 1) Star
+test_mgu4 = mgu (t0 ->- t1) (tInt ->- t1) @=? Just [(tv0, tInt)]
+            where t0 = mkTVar 0
+                  t1 = mkTVar 1
+                  tv0 = TyVar (enumId 0) Star
+                  tv1 = TyVar (enumId 1) Star
 
-prop_type :: Type -> Bool
-prop_type t = (trace $ show t) $ True
+test_mgu5 = mgu (t0 ->- t1) (tInt ->- (t2 ->- tInt)) @=? Just [(tv0, tInt), (tv1, (t2 ->- tInt))]
+            where t0 = mkTVar 0
+                  t1 = mkTVar 1
+                  t2 = mkTVar 2
+                  tv0 = TyVar (enumId 0) Star
+                  tv1 = TyVar (enumId 1) Star
+test_mgu6 = mgu (t0 ->- t0) (tInt ->- (t2 ->- tInt)) @=? Nothing
+
 
 -- test_unify = TestList [test1]
 --     where test1 = TestCase $ assertBool "test_unify 1" 
