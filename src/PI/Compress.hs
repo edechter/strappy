@@ -7,6 +7,7 @@
 module Compress where
 
 import Control.Monad.State 
+import Data.List (foldl')
 import Debug.Trace
 
 import CL
@@ -14,7 +15,7 @@ import qualified CombMap as CM
 import CombMap (CombMap)
 
 
--- | Record all unique combinators that satisfy the following pro
+-- | Record all unique combinators that satisfy the following:
 
 type Index = CombMap Int
 
@@ -26,9 +27,6 @@ type Index = CombMap Int
 -- a) if it has count 1 set count to 0 and decrement children
 -- b) if it has count 2 or greater, set count (-1) and increment children
 
-showIndex :: CombMap Int -> String
-showIndex ct = unlines $ map (\(c, i) -> show i ++ ": " ++ 
-                               show' c) (CM.toList ct)
 
 incr :: Index -> Comb -> Index
 incr index c@(CApp l r _ _) 
@@ -57,11 +55,8 @@ decr index c@(CNode _ _ _) = case CM.lookup c index of
                                Nothing -> error $  "Cannot find comb " ++ show c
                                Just i -> CM.insert c (i-1) index
 
-compress1  c = incr CM.empty c
-
 compress :: [Comb] -> Index
-compress (c:cs) = incr (compress cs) c
-compress [] = CM.empty
+compress cs = foldl' incr CM.empty cs
 
 
 -------------------------------
