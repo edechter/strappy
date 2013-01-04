@@ -2,6 +2,8 @@
 
 module Grammar where
 
+import Data.List (intersect)
+
 import CL 
 import qualified CombMap as CM
 import CombMap (CombMap)
@@ -9,11 +11,11 @@ import Compress
 
 
 data Grammar = Grammar { library :: CombMap Int,
-                         expansions :: Int} 
+                         expansions :: Int} deriving Eq
 
 showLibrary :: Show a => CombMap a  -> String
-showLibrary ct = unlines $ map (\(c, i) -> show i ++ ": " ++ 
-                               show' c) (CM.toList ct)
+showLibrary ct = unlines $ map (\(c, i) -> show' c ++ ": " ++ 
+                               show i) (CM.toList ct)
 
 instance Show Grammar where
     show (Grammar lib c) = "Grammar\n------------------------" 
@@ -32,8 +34,10 @@ estimateGrammar cs = Grammar lib c
     where ind = compress cs
           xs = CM.assocs ind
           count = CM.fold (+) 0 ind -- sum of tree counts in index
+          rootOverlap = length $ cs `intersect` (map fst xs)
           lib = CM.fromList $ filter ((>1) . snd) xs 
-          c = count - length cs
+          c = (count - rootOverlap) `div` 2
+
           
     
     

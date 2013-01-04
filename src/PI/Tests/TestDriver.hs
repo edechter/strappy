@@ -2,6 +2,7 @@
 
 
 import TestType(typeTestGroup)
+import TestGrammar(grammarTestGroup)
 
 import Test.Framework (defaultMain, testGroup)
 import Test.Framework.Providers.HUnit
@@ -15,5 +16,6 @@ import Data.List
 
 main = defaultMain tests
 
-tests = [typeTestGroup]
+tests = [typeTestGroup, 
+         grammarTestGroup]
     

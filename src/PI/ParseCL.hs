@@ -31,6 +31,8 @@ parseExpr combLib s = case P.parse (expr combLib) "expr" s of
                         Left err -> Left (show err)
                         Right val -> val
 
+parseExprStd = parseExpr stdlib'
+
 lexer = makeTokenParser haskellDef
 
 expr :: NamedLib -> P.CharParser () SynthComb
@@ -58,3 +60,7 @@ node lib = P.try (do { x <- P.many1 $ P.noneOf "() "
 
 singleton :: NamedLib ->  P.CharParser () SynthComb
 singleton lib = (node lib) <|> (p_expr lib)
+
+
+ 
+
