@@ -11,7 +11,6 @@ import qualified Data.HashMap as HMap
 import Type
 import CL
 import Expr
--- import qualified CombTrie as CT
 
 type NamedLib = HMap.Map String Comb
 
@@ -148,6 +147,5 @@ stdlib' = CM.fromList $
            ]
 
 stdlib = CM.fromList $ [(c, (1::Int)) | c <- CM.elems stdlib']
--- stdlibTrie = CT.fromList $ [(c, (1::Int)) | c <- Map.elems stdlib]
 
 
