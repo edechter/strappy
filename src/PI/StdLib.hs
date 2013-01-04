@@ -104,7 +104,7 @@ cTail = CNode "tail" expr tp
                                  (App (App (Const ":") x) y) -> y
                                  Const "[]" 
                                      -> ExprError "tail applied to []"
-          tp = (TAp tList t0) ->- t0
+          tp = (TAp tList t0) ->- (TAp tList t0)
 
 cEmpty = CNode "[]" (Const "[]") (TAp tList t0)
 
