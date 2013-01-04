@@ -41,10 +41,10 @@ expTList1 = Experiment {
               expName = "List function: first",
               expTaskSet = [tLast],
               expEps = 0,
-              expPrior = stdlib,
-              expInitLib = stdlib,
+              expPrior = stdgrammar,
+              expInitLib = stdgrammar,
               expDepthBound = 2,
               expDataType = (tInt),
-              expReps = 10}
+              expReps = 1}
                       
                    

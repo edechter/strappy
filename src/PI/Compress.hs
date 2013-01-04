@@ -41,7 +41,7 @@ incr index c@(CApp l r _ _)
 incr index c@(CNode _ _ _) = case CM.lookup c index of
                                Nothing -> CM.insert c 1 index
                                Just i -> CM.insert c (i+1) index
-                  
+                 
 
 decr :: Index -> Comb -> Index
 decr index c@(CApp l r _ _ ) 

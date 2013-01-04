@@ -11,6 +11,7 @@ import qualified Data.HashMap as HMap
 import Type
 import CL
 import Expr
+import Grammar
 
 type NamedLib = HMap.Map String Comb
 
@@ -146,6 +147,8 @@ stdlib' = CM.fromList $
            , ("isEmpty", cIsEmpty)
            ]
 
-stdlib = CM.fromList $ [(c, (1::Int)) | c <- CM.elems stdlib']
+stdgrammar = Grammar lib c
+    where lib  = CM.fromList $ [(c, (1::Int)) | c <- CM.elems stdlib']
+          c = 1
 
 

@@ -20,8 +20,11 @@ showLibrary ct = unlines $ map (\(c, i) -> show' c ++ ": " ++
 instance Show Grammar where
     show (Grammar lib c) = "Grammar\n------------------------" 
                            ++ "\nExpansions: " ++ show c
-                           ++ "\n Library: " 
+                           ++ "\n\nLibrary: \n-------\n" 
                            ++ showLibrary lib
+
+nullGrammar :: Grammar
+nullGrammar = Grammar CM.empty 0
 
 estimateGrammar :: [Comb] -> Grammar
 -- | Generate a new grammar from a set of combinators using the
@@ -37,6 +40,11 @@ estimateGrammar cs = Grammar lib c
           rootOverlap = length $ cs `intersect` (map fst xs)
           lib = CM.fromList $ filter ((>1) . snd) xs 
           c = (count - rootOverlap) `div` 2
+
+addGrammars :: Grammar -> Grammar -> Grammar
+-- | Combine 2 grammars, adding their counts where they overlap. 
+addGrammars (Grammar l e) (Grammar l' e') = 
+    Grammar (CM.unionWith (+) l l') ( e + e')
 
           
     

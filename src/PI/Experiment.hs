@@ -14,12 +14,13 @@ import StdLib
 import Data
 import qualified CombMap as CM
 import  CombMap (CombMap)
+import Grammar
 
 data Experiment = Experiment {expName :: String,
                               expTaskSet :: TaskSet,
                               expEps  :: Double,
-                              expPrior :: CombMap Int,
-                              expInitLib :: CombMap Int,
+                              expPrior :: Grammar,
+                              expInitLib :: Grammar,
                               expDepthBound   :: Int,
                               expDataType :: Type,
                               expReps :: Int}
@@ -39,8 +40,8 @@ expSquaredInts
         expTaskSet 
             = taskSet,
         expEps = 0,
-        expPrior = stdlib,
-        expInitLib = stdlib,
+        expPrior = stdgrammar,
+        expInitLib = stdgrammar,
         expDepthBound = 3,
         expDataType = tInt,
         expReps = 20}
@@ -80,8 +81,8 @@ expIntegerSequences
         expName = "Integer Sequences", 
         expTaskSet = taskSet',
         expEps = 0,
-        expPrior = stdlib,
-        expInitLib = stdlib,
+        expPrior = stdgrammar,
+        expInitLib = stdgrammar,
         expDepthBound = 3,
         expDataType = (tInt ->- tInt),
         expReps=40

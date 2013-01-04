@@ -27,22 +27,23 @@ import Task
 import Data
 import CompressionSearch
 import ParseCL
+import Grammar
 
 import qualified CombMap as CM
 import CombMap (CombMap)
 import qualified Compress as CP (getUniqueTrees, incr)
-import Compress (Index, showIndex)
+import Compress (Index)
 import Experiment
 
 data SearchLogEntry = SearchLogEntry { searchIter :: Int,
-                                       searchLib :: CombMap Int,
+                                       searchLib :: Grammar,
                                        searchSpace :: [Comb],
                                        searchNumHit :: Int,
                                        searchExplanation :: [(Task, Comb)],
                                        searchCompression :: CombMap Int
                                      } deriving Show
 mkEmptySearchLog :: SearchLogEntry
-mkEmptySearchLog  = SearchLogEntry 0 CM.empty [] 0 [] CM.empty
+mkEmptySearchLog  = SearchLogEntry 0 nullGrammar [] 0 [] CM.empty
 
 type Search a = State SearchLogEntry a 
 
@@ -73,12 +74,6 @@ greedy lib xs = foldl' g (lib, []) xs
                     vs = [(index `with` CP.getUniqueTrees c, c) | c <- cs]
                     (index', c') = argmax ( (* (-1)) . length . CM.keys . fst ) vs
 
--- | Get new library
-newLibrary :: [Comb] -> Index
-newLibrary cs = CM.fromList $  filter (\(_, i) -> i > 1) xs
-    where ind = foldl' CP.incr CM.empty cs
-          xs = CM.assocs ind
-
 -- | Adjust with prior
 adjust :: Index -> Index -> Index
 adjust = CM.unionWith (+)
@@ -87,14 +82,14 @@ adjust = CM.unionWith (+)
 -- | For each data point in a dataset list all the expressions that
 -- evaluate to that datapoint. 
 findCombinatorsForEachDatum :: Experiment 
-                            -> CombMap Int -- ^ current lib
+                            -> Grammar -- ^ current grammar
                             -> Search [(Task, [Comb])]
-findCombinatorsForEachDatum ex lib 
+findCombinatorsForEachDatum ex grammar
     = do s <- get
          return [(t, [ c | c <- db Map.! tp, 
                                   f c <= eps ]) | t@(Task n f tp) <- taskSet]
       where 
-            cs = \t -> map fst $ runStateT (enumIB lib maxDepth 2000 t) 0
+            cs = \t -> map fst $ runStateT (enumIB (library grammar) maxDepth 2000 t) 0
             db = foldl' (\m (k, a) -> Map.insert k a m) Map.empty 
                  [(t, cs t) | t <- ts]
             ts = nub [t | (Task _ _ t) <- taskSet]
@@ -105,36 +100,36 @@ findCombinatorsForEachDatum ex lib
             maxDepth = expDepthBound ex
             
 oneStep :: Experiment 
-        -> Index -- ^ current lib
-        -> Search Index
+        -> Grammar -- ^ current grammar
+        -> Search Grammar
 oneStep ex lib = do xs <- findCombinatorsForEachDatum ex lib
                     let xs' = filter (not . null . snd) xs
                         rs = (trace $  "Hit: " ++ show (length xs'))
                                        $ dfs  (sortData xs') 
-                        index' =  (trace $ showTaskCombAssignments rs) 
-                                  $ newLibrary $ map snd rs
-                        index'' = adjust index' prior
-                    return ((trace $ showIndex index'')  index'')
+                        grammar' =  (trace $ showTaskCombAssignments rs) 
+                                  $ estimateGrammar $ map snd rs
+                        grammar'' = addGrammars grammar' priorGrammar
+                    return grammar''
           -- vars
     where
       taskSet = expTaskSet ex
       eps = expEps ex
       maxDepth = expDepthBound ex
       tp = expDataType ex
-      prior = expPrior ex
+      priorGrammar = expPrior ex
 
                            
 
-loop :: Experiment -> Search Index
+loop :: Experiment -> Search Grammar
 loop ex
-    = foldM (\l _ -> oneStep ex l) lib [0..reps]
+    = foldM (\l _ -> oneStep ex l) grammar [0..reps]
       where           
         -- vars
         eps = expEps ex
         maxDepth = expDepthBound ex
         tp = expDataType ex
         prior = expPrior ex
-        lib = expInitLib ex
+        grammar = expInitLib ex
         reps = expReps ex
 
 
