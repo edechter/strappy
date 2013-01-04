@@ -20,7 +20,6 @@ data Experiment = Experiment {expName :: String,
                               expEps  :: Double,
                               expPrior :: CombMap Int,
                               expInitLib :: CombMap Int,
-                              expLogLikeBound :: Double,
                               expDepthBound   :: Int,
                               expDataType :: Type,
                               expReps :: Int}
@@ -42,7 +41,6 @@ expSquaredInts
         expEps = 0,
         expPrior = stdlib,
         expInitLib = stdlib,
-        expLogLikeBound = (-4),
         expDepthBound = 3,
         expDataType = tInt,
         expReps = 20}
@@ -84,7 +82,6 @@ expIntegerSequences
         expEps = 0,
         expPrior = stdlib,
         expInitLib = stdlib,
-        expLogLikeBound = (-6),
         expDepthBound = 3,
         expDataType = (tInt ->- tInt),
         expReps=40
