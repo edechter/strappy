@@ -42,6 +42,7 @@ data Type = TVar TyVar
 
 data TyVar = TyVar Id Kind
              deriving (Eq, Ord)
+
 instance Show TyVar where
     show (TyVar i k) = i
 
