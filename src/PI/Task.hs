@@ -27,5 +27,9 @@ mkSingleEqualityTask rlimit i
                           Nothing -> 2147483647                    
       in Task (show i) f tInt
 
+showTaskCombAssignments :: [(Task, Comb)] -> String
+showTaskCombAssignments = unlines . map f
+    where f (t, c) = show t ++ ": " ++ show c
+
     
 

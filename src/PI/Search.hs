@@ -131,16 +131,16 @@ findCombinatorsForEachDatum ex lib
             taskSet = expTaskSet ex
             eps = expEps ex
             maxDepth = expDepthBound ex
-            tp = expDataType ex
             
 oneStep :: Experiment 
         -> Index -- ^ current lib
         -> Search Index
 oneStep ex lib = do xs <- findCombinatorsForEachDatum ex lib
                     let xs' = filter (not . null . snd) xs
-                        rs = (trace $  "Hit: " ++ show (length xs')) 
+                        rs = (trace $  "Hit: " ++ show (length xs'))
                                        $ dfs  (sortData xs') 
-                        index' =  newLibrary $ map snd rs
+                        index' =  (trace $ showTaskCombAssignments rs) 
+                                  $ newLibrary $ map snd rs
                         index'' = adjust index' prior
                     return ((trace $ showIndex index'')  index'')
           -- vars
