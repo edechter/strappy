@@ -30,7 +30,6 @@ showIndex :: CombMap Int -> String
 showIndex ct = unlines $ map (\(c, i) -> show i ++ ": " ++ 
                                show' c) (CM.toList ct)
 
-
 incr :: Index -> Comb -> Index
 incr index c@(CApp l r _ _) 
     = case CM.lookup c index of
