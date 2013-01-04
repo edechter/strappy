@@ -26,6 +26,7 @@ import StdLib
 import Task
 import Data
 import CompressionSearch
+import ParseCL
 
 import qualified CombMap as CM
 import CombMap (CombMap)
