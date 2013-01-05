@@ -62,6 +62,7 @@ infixl 4 <::>
 instance Show Comb where
     show (CApp c1 c2 _ _) = "(" ++ show c1 ++ " " ++ show c2 ++ ")"
     show (CNode n _ _) = n
+    show (CTerminal t) =  "CTerm of type " ++ show t
 
 -- | An alternative to show: if combinator is named and evaluates to a
 -- number or bool, show it an an evaluated expressions.
