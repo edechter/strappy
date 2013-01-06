@@ -3,6 +3,9 @@
 import Data.Function (on)
 import Control.Monad.State
 import Data.Maybe
+import Data.PQueue.Max (MaxQueue)
+import qualified Data.PQueue.Max as PQ
+import Debug.Trace 
 
 import Type
 import CL
@@ -29,16 +32,42 @@ data CombBase = CombBase {comb :: Comb,
 instance Ord CombBase where
     compare = compare `on` value
 
+data CombBaseTuple = CombBaseTuple { combBase :: CombBase, 
+                                     tpVar :: Int} deriving (Show, Eq)
 
-              
+instance Ord CombBaseTuple where
+    compare = compare `on` combBase              
+
+data BFState = BFState {open :: MaxQueue CombBaseTuple, 
+                        closed :: MaxQueue CombBaseTuple} deriving Show
+
+isClosed :: CombBase -> Bool
+isClosed cb | path cb == Nothing  = True
+            | otherwise           = False
+
 
 enumBF :: Grammar 
        -> Int -- max num combinators
        -> Type
-       -> StateT Int [] Comb
--- | Bread-first AO enumeration of combinators with highest scores
+       -> [CombBase]
+-- | Breadth-first AO enumeration of combinators with highest scores
 -- under the grammar.
-enumBF = undefined
+enumBF gr i tp = map combBase (PQ.take i $ closed $ enumBF' gr i tp initBFState)
+    where initBFState = BFState PQ.empty PQ.empty
+
+enumBF' :: Grammar -> Int -> Type -> BFState -> BFState
+enumBF' gr i tp bfState@(BFState openPQ closedPQ) = 
+    if PQ.size closedPQ >= i then bfState else
+        let (cbt, openPQ') = PQ.deleteFindMax openPQ
+            cbs =  map (\(c,i) -> CombBaseTuple c i) 
+                  $ runStateT (expand gr (combBase cbt)) (tpVar cbt)
+            closedCBs = filter (isClosed . combBase) cbs
+            openCBs= filter (not . isClosed . combBase) cbs
+            closedPQ' = (trace $ show closedCBs) 
+                        $ (PQ.fromList closedCBs) `PQ.union` closedPQ
+            openPQ'' = PQ.fromList openCBs `PQ.union` openPQ'
+        in enumBF' gr i tp $ BFState openPQ'' closedPQ'
+        
 
 expandToApp :: Grammar -> CombBase -> StateT Int [] CombBase
 expandToApp gr (CombBase (CTerminal tp) (Just []) v) = 
@@ -50,7 +79,6 @@ expandToApp gr (CombBase (CTerminal tp) (Just []) v) =
            c = CApp c_left c_right tp 1
            cb = CombBase c (Just [L]) (expansions gr)
        return cb
-
 
 expand :: Grammar 
        -> CombBase 

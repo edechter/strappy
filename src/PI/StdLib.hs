@@ -149,6 +149,6 @@ stdlib' = CM.fromList $
 
 stdgrammar = Grammar lib c
     where lib  = CM.fromList $ [(c, (1::Int)) | c <- CM.elems stdlib']
-          c = 1
+          c = 0
 
 
