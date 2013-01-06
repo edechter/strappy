@@ -10,14 +10,16 @@ import Test.QuickCheck
 import Test.HUnit
 
 import Grammar
+import Type
+import Task
 import ParseCL (parseExprStd)
 import qualified CombMap as CM
 
 grammarTestGroup = testGroup "Grammar Testing Group" [
-                    testCase "estimate grammar 1" test_estimateGrammar1,
-                    testCase "estimate grammar 2" test_estimateGrammar2,
-                    testCase "estimate grammar 3" test_estimateGrammar3
+                    testCase "test counAlts 1" test_countAlts1,
+                    testCase "test estimateGrammar 1" test_estimateGrammar
                    ]
+
 
 fromRight (Right x) = x
 c1 = fromRight $ parseExprStd "+ 1 1"
@@ -29,17 +31,20 @@ c6 = fromRight $ parseExprStd "I (+ 1 1)"
 c7 = fromRight $ parseExprStd "2"
 c8 = fromRight $ parseExprStd "I"
 
-test_estimateGrammar1 = estimateGrammar [c1] @?= Grammar lib c
-    where lib = CM.fromList $ [(c4, 2)]
-          c = 2
 
-test_estimateGrammar2 = estimateGrammar [c1, c1] @?= Grammar lib c
-    where lib = CM.fromList $ [(c1, 2)]
-          c = 0
+test_countAlts1 = countAlts cs (CM.empty) c tInt @?= 
+                   (CM.fromList [(c3,1),(c8,3)], 0)
+    where cs = [c3, c8]
+          c = c6
 
-test_estimateGrammar3 = estimateGrammar [c1, c1, c6] @?= Grammar lib c
-    where lib = CM.fromList $ [(c1, 3)]
-          c = 1
+test_estimateGrammar = estimateGrammar prior 5 ind [(t1, c)] 
+                       @?= Grammar (CM.fromList [(c5, 0)]) 0
+    where t1 = Task "" (\_ -> 0.0) (tInt ->- tInt)
+          c = c5
+          ind = CM.fromList [(c5, 1)]
+          prior = Grammar (CM.fromList [(c8, 0)]) (- log 0.5)
+
+
 
 
 

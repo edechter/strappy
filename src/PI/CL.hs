@@ -18,8 +18,8 @@ import CLError
 import Expr
                           
 -- | Define combinators -------
-data Comb = CApp {rComb :: Comb, 
-                  lComb ::  Comb,
+data Comb = CApp {lComb :: Comb, 
+                  rComb ::  Comb,
                   cType :: Type,
                   cAppDepth :: Int
                   }
