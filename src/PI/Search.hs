@@ -50,23 +50,6 @@ type Search a = State SearchLogEntry a
 runSearch :: Search a -> (a, SearchLogEntry)
 runSearch s = runState s mkEmptySearchLog 
 
--- | Sort data by number of combinators matching each
-sortData :: [(Task, [Comb])] -> [(Task, [Comb])]
-sortData = sortBy (compare  `on` (length . snd))
-
--- | Depth first search
-dfs :: [(Task, [Comb])] -> [(Task, Comb)]
-dfs xs = zip (map fst xs) cs
-    where xs' = sortData xs          
-          cs = nwiseDependencySearch 2 (map snd xs)
-
--- | Greedy 
-greedy :: Index -> [(Task, [Comb])] -> (Index, [(Task, Comb)])
-greedy lib xs = foldl' g (lib, []) xs
-    where g (index, asc) (d, cs) = (index', (d, c'):asc)
-              where with = CM.unionWith (+)
-                    vs = [(index `with` CP.getUniqueTrees c, c) | c <- cs]
-                    (index', c') = argmax ( (* (-1)) . length . CM.keys . fst ) vs
 
 -- | For each data point in a dataset list all the expressions that
 -- evaluate to that datapoint. 

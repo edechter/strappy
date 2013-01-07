@@ -4,10 +4,12 @@
 module CompressionSearch where
 
 import Control.Monad.State
-import Data.List (sortBy)
+import Data.List (sortBy, foldl', nub)
+import Data.List.Extras.Argmax (argmaxWithMaxBy, argmax)
 import Data.Maybe
 import qualified Data.HashMap as HM
 import Data.Hashable
+import Data.Function (on)
 import Debug.Trace
 
 
@@ -68,6 +70,23 @@ nwiseDependencySearch n xs = (extension . fst) results
           eq = nwiseDependencyEq n
           w = nwiseDependencyEdge n
           
+-- | Sort data by number of combinators matching each
+sortData :: [(Task, [Comb])] -> [(Task, [Comb])]
+sortData = sortBy (compare  `on` (length . snd))
+
+-- | Depth first search
+dfs :: [(Task, [Comb])] -> [(Task, Comb)]
+dfs xs = zip (map fst xs) cs
+    where xs' = sortData xs          
+          cs = nwiseDependencySearch 2 (map snd xs)
+
+-- | Greedy 
+greedy :: CombMap Int -> [(Task, [Comb])] -> (CombMap Int, [(Task, Comb)])
+greedy lib xs = foldl' g (lib, []) xs
+    where g (index, asc) (d, cs) = (index', (d, c'):asc)
+              where with = CM.unionWith (+)
+                    vs = [(index `with` CP.getUniqueTrees c, c) | c <- cs]
+                    (index', c') = argmax ( (* (-1)) . length . CM.keys . fst ) vs
           
           
 
