@@ -54,12 +54,6 @@ runSearch s = runState s mkEmptySearchLog
 sortData :: [(Task, [Comb])] -> [(Task, [Comb])]
 sortData = sortBy (compare  `on` (length . snd))
 
--- | Select solution with best score
-select :: [(Index, [(Task, Comb)])] 
-       -> (Index, [(Task, Comb)])
-select xs = a
-          where a = argmax  ( (* (-1)) . length . CM.keys . fst ) xs
-
 -- | Depth first search
 dfs :: [(Task, [Comb])] -> [(Task, Comb)]
 dfs xs = zip (map fst xs) cs
