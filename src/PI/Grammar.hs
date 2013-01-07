@@ -94,8 +94,8 @@ combineGrammars (Grammar lib1 ex1, ob1) (Grammar lib2 ex2, ob2) =
                               / (fromIntegral $ n + m)
               ex = f ex1 ob1 ex2 ob2
 
-calcLogProb :: Int -> Int -> Double
-calcLogProb hits obs = logI hits - logI obs where logI = log . fromIntegral
+bernLogProb :: Int -> Int -> Double
+bernLogProb hits obs = logI hits - logI obs where logI = log . fromIntegral
 
 estimateGrammar :: 
     Grammar -- ^ prior
@@ -109,14 +109,43 @@ estimateGrammar prior psObs ind xs =
         altCounts = foldl1 (CM.unionWith (+)) alts
         nEx = sum exs
         logprobs = CM.mapWithKey f ind
-            where f c v = - calcLogProb (altCounts CM.! c) v
+            where f c v = bernLogProb (altCounts CM.! c) v
         nPossibleExs = nEx + sum (CM.elems ind)
-        logProbEx = - calcLogProb nEx nPossibleExs
+        logProbEx = bernLogProb nEx nPossibleExs
         empiricalGr = Grammar logprobs logProbEx
       in combineGrammars (prior, psObs) (empiricalGr, 1)
 
+calcLogProb :: Grammar 
+            -> Type
+            -> Comb
+            -> Double 
+-- | Returns the log probability of using the given
+-- combinator when prompted by the given type, as prescribed by the
+-- grammar.
+calcLogProb gr tp c 
+    = let m = filterCombinatorsByType (CM.keys $ library gr) tp
+          altCs = map fst $ runStateT m 0
+          logProbAll = (log $ sum $ map (exp . ((library gr) CM.!)) altCs)
+                       + (expansions gr)
+          combLogProb = (library gr) CM.! c - logProbAll
+      in combLogProb
 
-                               
+exLogProb :: Grammar -> Type -> Double
+exLogProb gr tp  
+    = let m = filterCombinatorsByType (CM.keys $ library gr) tp
+          altCs = map fst $ runStateT m 0
+          out = if null altCs then 0 else
+                    expansions gr  - logProbAll
+                        where 
+                          logProbAll = log (exp (expansions gr) 
+                                       + sum ( map (exp . ((library gr) CM.!)) altCs ))
+
+                    
+      in (trace $ show out ++ " " ++ show altCs) $ out
+
+
+          
+                                
                                        
                       
     

@@ -142,9 +142,9 @@ stdlib' = CM.fromList $
            , ("primRec", cPrim) 
            , (":", cCons)
            , ("[]", cEmpty)
-           , ("head", cHead)
-           , ("tail", cTail)
-           , ("isEmpty", cIsEmpty)
+--            , ("head", cHead)
+--            , ("tail", cTail)
+--            , ("isEmpty", cIsEmpty)
            ]
 
 stdgrammar = Grammar lib c

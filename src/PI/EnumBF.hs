@@ -26,7 +26,7 @@ data CombBase = CombBase {comb :: Comb,
                           path :: Maybe Path, -- ^ a path to the
                                               -- current node of
                                               -- interest
-                          value :: Int
+                          value :: Double
                          } deriving (Show, Eq)
 
 instance Ord CombBase where
@@ -52,21 +52,22 @@ enumBF :: Grammar
        -> [CombBase]
 -- | Breadth-first AO enumeration of combinators with highest scores
 -- under the grammar.
-enumBF gr i tp = map combBase (PQ.take i $ closed $ enumBF' gr i tp initBFState)
-    where initBFState = BFState PQ.empty PQ.empty
+enumBF gr i tp = map combBase (PQ.take i $ closed $ enumBF' gr i initBFState)
+    where root = CombBaseTuple (CombBase (CTerminal tp) (Just []) 0) 0
+          initBFState = BFState (PQ.singleton root) PQ.empty
 
-enumBF' :: Grammar -> Int -> Type -> BFState -> BFState
-enumBF' gr i tp bfState@(BFState openPQ closedPQ) = 
+enumBF' :: Grammar -> Int -> BFState -> BFState
+enumBF' gr i bfState@(BFState openPQ closedPQ) = 
     if PQ.size closedPQ >= i then bfState else
         let (cbt, openPQ') = PQ.deleteFindMax openPQ
             cbs =  map (\(c,i) -> CombBaseTuple c i) 
                   $ runStateT (expand gr (combBase cbt)) (tpVar cbt)
             closedCBs = filter (isClosed . combBase) cbs
             openCBs= filter (not . isClosed . combBase) cbs
-            closedPQ' = (trace $ show closedCBs) 
-                        $ (PQ.fromList closedCBs) `PQ.union` closedPQ
+            closedPQ' = (PQ.fromList closedCBs) `PQ.union` closedPQ
+                        
             openPQ'' = PQ.fromList openCBs `PQ.union` openPQ'
-        in enumBF' gr i tp $ BFState openPQ'' closedPQ'
+        in enumBF' gr i $ BFState openPQ'' closedPQ'
         
 
 expandToApp :: Grammar -> CombBase -> StateT Int [] CombBase
@@ -77,7 +78,7 @@ expandToApp gr (CombBase (CTerminal tp) (Just []) v) =
            c_left = (CTerminal t_left) 
            c_right = (CTerminal t_right)
            c = CApp c_left c_right tp 1
-           cb = CombBase c (Just [L]) (expansions gr)
+           cb = CombBase c (Just [L]) (exLogProb gr tp )
        return cb
 
 expand :: Grammar 
@@ -87,7 +88,7 @@ expand gr cb@(CombBase (CTerminal tp) (Just []) v) = cbs `mplus` cbApp
     where primCombs = CM.keys (library gr)
           cs = filterCombinatorsByType primCombs tp
           cbs = do c <- cs
-                   let value = (library gr) CM.! c
+                   let value = (calcLogProb gr tp c)
                        combBase = CombBase c Nothing (v + value)
                    return combBase
           cbApp = expandToApp gr cb 
@@ -96,9 +97,9 @@ expand gr cb@(CombBase (CApp c_left c_right tp d) (Just (L:rest)) v) =
     do (CombBase c_left' rest' v')  <- expand gr 
                                        $ CombBase c_left 
                                              (Just rest) 
-                                             (v - expansions gr)
+                                             (v - (exLogProb gr tp))
        let tp_right' = fromType (cType c_left')
-           c_right' = CTerminal tp_right'
+           c_right' = (trace $ show tp_right') $ CTerminal tp_right'
 
        let path' = case rest' of
                      Nothing -> Just [R]
@@ -106,7 +107,9 @@ expand gr cb@(CombBase (CApp c_left c_right tp d) (Just (L:rest)) v) =
 
        let tp' = toType (cType c_left')
            d' = if (cDepth c_left') + 1 > d then cDepth c_left' + 1 else d
-       return $ CombBase (CApp c_left' c_right' tp' d') path' (v' + expansions gr)
+
+       return $ CombBase (CApp c_left' c_right' tp' d') path' 
+                  (v' + (exLogProb gr tp))
 
 expand gr cb@(CombBase (CApp c_left c_right tp d) (Just (R:rest)) v) = 
     do (CombBase c_right' rest' v')  <- expand gr 
@@ -114,7 +117,7 @@ expand gr cb@(CombBase (CApp c_left c_right tp d) (Just (R:rest)) v) =
                                              (Just rest) 
                                              0
        t <- newTVar Star
-       let backsub = fromJust $ mgu (cType c_left) (cType c_right ->- t)
+       let backsub = fromJust $ mgu (cType c_left) (cType c_right' ->- t)
            tp' = toType (apply backsub (cType c_left))
        let path' = case rest' of
                      Nothing -> Nothing
