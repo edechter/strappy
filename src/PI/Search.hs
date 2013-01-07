@@ -74,11 +74,6 @@ greedy lib xs = foldl' g (lib, []) xs
                     vs = [(index `with` CP.getUniqueTrees c, c) | c <- cs]
                     (index', c') = argmax ( (* (-1)) . length . CM.keys . fst ) vs
 
--- | Adjust with prior
-adjust :: Index -> Index -> Index
-adjust = CM.unionWith (+)
-                                
-                             
 -- | For each data point in a dataset list all the expressions that
 -- evaluate to that datapoint. 
 findCombinatorsForEachDatum :: Experiment 
