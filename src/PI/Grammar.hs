@@ -138,9 +138,7 @@ exLogProb gr tp
                     expansions gr  - logProbAll
                         where 
                           logProbAll = log (exp (expansions gr) 
-                                       + sum ( map (exp . ((library gr) CM.!)) altCs ))
-
-                    
+                                       + sum ( map (exp . ((library gr) CM.!)) altCs ))                    
       in (trace $ show out ++ " " ++ show altCs) $ out
 
 

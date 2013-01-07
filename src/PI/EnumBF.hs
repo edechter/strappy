@@ -57,6 +57,10 @@ enumBF gr i tp = map combBase (PQ.take i $ closed $ enumBF' gr i initBFState)
           initBFState = BFState (PQ.singleton root) PQ.empty
 
 enumBF' :: Grammar -> Int -> BFState -> BFState
+-- | Removes and expands the maximal entry in the OPEN list. The
+-- resulting elements are added either to the open list or to the
+-- closed list. This process is repeated until there are at least i
+-- elements in closed list. 
 enumBF' gr i bfState@(BFState openPQ closedPQ) = 
     if PQ.size closedPQ >= i then bfState else
         let (cbt, openPQ') = PQ.deleteFindMax openPQ
