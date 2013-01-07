@@ -95,7 +95,9 @@ combineGrammars (Grammar lib1 ex1, ob1) (Grammar lib2 ex2, ob2) =
               ex = f ex1 ob1 ex2 ob2
 
 bernLogProb :: Int -> Int -> Double
-bernLogProb hits obs = logI hits - logI obs where logI = log . fromIntegral
+bernLogProb hits obs | obs >= hits = logI hits - logI obs  where logI = log . fromIntegral
+bernLogProb hist obs | otherwise =
+                         error "bernLogProb: # obs must be greater than # of hits"
 
 estimateGrammar :: 
     Grammar -- ^ prior
@@ -125,8 +127,8 @@ calcLogProb :: Grammar
 calcLogProb gr tp c 
     = let m = filterCombinatorsByType (CM.keys $ library gr) tp
           altCs = map fst $ runStateT m 0
-          logProbAll = (log $ sum $ map (exp . ((library gr) CM.!)) altCs)
-                       + (expansions gr)
+          combLps = [exp $ (library gr) CM.! x | x <- altCs] 
+          logProbAll = log $ exp (expansions gr) + sum combLps
           combLogProb = (library gr) CM.! c - logProbAll
       in combLogProb
 
@@ -134,12 +136,12 @@ exLogProb :: Grammar -> Type -> Double
 exLogProb gr tp  
     = let m = filterCombinatorsByType (CM.keys $ library gr) tp
           altCs = map fst $ runStateT m 0
-          out = if null altCs then 0 else
-                    expansions gr  - logProbAll
-                        where 
-                          logProbAll = log (exp (expansions gr) 
-                                       + sum ( map (exp . ((library gr) CM.!)) altCs ))                    
-      in (trace $ show out ++ " " ++ show altCs) $ out
+          combLps = [exp $ (library gr) CM.! x | x <- altCs] 
+          logProbAll = log $ exp (expansions gr) + sum combLps
+          out = if null altCs then 0 else expansions gr  - logProbAll
+      in  out
+
+
 
 
           

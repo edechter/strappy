@@ -71,7 +71,8 @@ enumBF' gr i bfState@(BFState openPQ closedPQ) =
             closedPQ' = (PQ.fromList closedCBs) `PQ.union` closedPQ
                         
             openPQ'' = PQ.fromList openCBs `PQ.union` openPQ'
-        in enumBF' gr i $ BFState openPQ'' closedPQ'
+        in (trace $ "open size: " ++ show (PQ.size openPQ'' )) 
+               $ enumBF' gr i $ BFState openPQ'' closedPQ'
         
 
 expandToApp :: Grammar -> CombBase -> StateT Int [] CombBase
