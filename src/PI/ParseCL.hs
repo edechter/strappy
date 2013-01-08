@@ -22,6 +22,7 @@ import Type
 import CL
 import Expr
 import StdLib 
+import Compress
 
 eval :: NamedLib -> String -> Either String Expr
 eval lib s =  liftM reduceComb $ parseExpr lib s

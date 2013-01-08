@@ -16,14 +16,14 @@ import qualified CombMap as CM
 import  CombMap (CombMap)
 import Grammar
 
-data Experiment = Experiment {expName :: String,
-                              expTaskSet :: TaskSet,
-                              expEps  :: Double,
-                              expPrior :: Grammar,
+data Experiment = Experiment {expName :: String, -- ^ name of experiment
+                              expTaskSet :: TaskSet, -- ^ list of tasks
+                              expEps  :: Double, -- ^ penalty threshold
+                              expPrior :: Grammar, 
                               expInitLib :: Grammar,
-                              expDepthBound   :: Int,
-                              expDataType :: Type,
-                              expReps :: Int}
+                              expDepthBound   :: Int, 
+                              expNumBound :: Int, -- ^ number of combinators to search
+                              expReps :: Int } -- ^ number of iterations
 
 ----- Squared Integers -------
 rlimit = 100
@@ -43,7 +43,7 @@ expSquaredInts
         expPrior = stdgrammar,
         expInitLib = stdgrammar,
         expDepthBound = 3,
-        expDataType = tInt,
+        expNumBound = 100,
         expReps = 20}
 
 ------------------------------
@@ -84,7 +84,7 @@ expIntegerSequences
         expPrior = stdgrammar,
         expInitLib = stdgrammar,
         expDepthBound = 3,
-        expDataType = (tInt ->- tInt),
+        expNumBound = 100,
         expReps=40
       }
  
