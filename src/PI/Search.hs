@@ -21,7 +21,7 @@ import Type
 import CL
 import Expr
 import CLError
-import EnumBF
+import Enumerate
 import StdLib
 import Task
 import Data
@@ -31,7 +31,7 @@ import Grammar
 
 import qualified CombMap as CM
 import CombMap (CombMap)
-import qualified Compress as CP (getUniqueTrees, compress)
+import qualified Compress as CP (getUniqueTrees, incr)
 import Compress (Index)
 import Experiment
 
@@ -50,51 +50,47 @@ type Search a = State SearchLogEntry a
 runSearch :: Search a -> (a, SearchLogEntry)
 runSearch s = runState s mkEmptySearchLog 
 
-mkHypothesisSpace :: Experiment 
-                  -> Grammar 
-                  -> Search (Map.Map Type [Comb])
-mkHypothesisSpace expr gr
-    = do return db
-    where tps = nub [ taskType t | t <- taskSet]
-          cs tp = map comb $ enumBF gr (expNumBound expr) tp
-          db = (trace $ "tps: " ++ show tps) $ foldl' (\m (k, a) -> Map.insert k a m) 
-                       Map.empty [(tp, cs tp) | tp <- tps]
-          taskSet = expTaskSet expr
-
 
 -- | For each data point in a dataset list all the expressions that
 -- evaluate to that datapoint. 
 findCombinatorsForEachDatum :: Experiment 
                             -> Grammar -- ^ current grammar
                             -> Search [(Task, [Comb])]
-findCombinatorsForEachDatum expr gr
+findCombinatorsForEachDatum ex grammar
     = do s <- get
-         db <- mkHypothesisSpace expr gr
-         return $ (trace $ show $ nub [taskType t | t <- taskSet]) $ [(t, [ c | c <- db Map.! tp, 
-                       f c <= eps ]) | t@(Task n f tp) <- taskSet]
+         return [(t, [ c | c <- db Map.! tp, 
+                                  f c <= eps ]) | t@(Task n f tp) <- taskSet]
       where 
-        taskSet = expTaskSet expr
-        eps = expEps expr
-        maxDepth = expDepthBound expr
+            cs = \t -> map fst $ runStateT (enumIB (library grammar) maxDepth 2000 t) 0
+            db = foldl' (\m (k, a) -> Map.insert k a m) Map.empty 
+                 [(t, cs t) | t <- ts]
+            ts = nub [t | (Task _ _ t) <- taskSet]
+
+            -- vars
+            taskSet = expTaskSet ex
+            eps = expEps ex
+            maxDepth = expDepthBound ex
             
 oneStep :: Experiment 
         -> Grammar -- ^ current grammar
         -> Search Grammar
-oneStep ex gr = do xs <- findCombinatorsForEachDatum ex gr
-                   let xs' = filter (not . null . snd) xs
-                       rs = (trace $  "Hit: " ++ show (length xs'))
-                            $ dfs xs'
-                       ind = CP.compress (map snd rs)
-                       grammar' = (trace $ showTaskCombAssignments rs) 
-                                  $ estimateGrammar prior 1 ind rs  
-
-                   return $ combineGrammars (prior, 1) (grammar', 1)
+oneStep ex lib = do xs <- findCombinatorsForEachDatum ex lib
+                    let xs' = filter (not . null . snd) xs
+                        rs = (trace $  "Hit: " ++ show (length xs'))
+                                       $ dfs  (sortData xs') 
+                        grammar' =  (trace $ showTaskCombAssignments rs) 
+                                  $ estimateGrammar $ map snd rs
+                        grammar'' = addGrammars grammar' priorGrammar
+                    return grammar''
           -- vars
     where
       taskSet = expTaskSet ex
       eps = expEps ex
       maxDepth = expDepthBound ex
-      prior = expPrior ex
+      tp = expDataType ex
+      priorGrammar = expPrior ex
+
+                           
 
 loop :: Experiment -> Search Grammar
 loop ex
@@ -103,6 +99,7 @@ loop ex
         -- vars
         eps = expEps ex
         maxDepth = expDepthBound ex
+        tp = expDataType ex
         prior = expPrior ex
         grammar = expInitLib ex
         reps = expReps ex

@@ -66,28 +66,11 @@ countAlts cs ind c tp = let out = map fst $ runStateT (countAlts' cs ind c tp) 0
                         in (indOut, exOut)
 
 countAlts' :: [Comb] -- ^ list of combinator primitives
+          -> CombMap Int -- ^ alternative counts
           -> Comb -- ^ a chosen combinator
           -> Type -- ^ the requesting type
           -> StateT Int [] (CombMap Int, Int) -- ^ alternative counts, num expansions
-countAlts' cs ind c@(CNode{}) tp 
-    = do alt <- filterCombinatorsByType cs tp
-         return $ (CM.singleton alt 1, 0)
-countAlts' cs ind c@(CApp cLeft cRight _ _) tp 
-    = do t <- newTVar Star
-         let t_left0 = (t ->- tp)
-         (left_ind, left_ex) <- countAlts' cs (lComb c) t_left0
-         let t_right0 = toType (cType (lComb c))
-         (right_ind, right_ex) <- countAlts' cs (rComb c) t_right0
-         let newInd = CM.unionWith (+) left_ind right_ind
-             newEx  = 1 + right_ex + left_ex
-         
-         return (newInd, newEx)
-
-alt <- filterCombinatorsByType cs tp
-         return $ (CM.insertWith (+) alt 1 ind, 0)
-
-
-
+countAlts' cs ind c tp 
     | elem c cs = do alt <- filterCombinatorsByType cs tp
                      return $ (CM.insertWith (+) alt 1 ind, 0)
     | otherwise = do t <- newTVar Star
@@ -123,15 +106,12 @@ estimateGrammar ::
     -> [(Task, Comb)]
     -> Grammar
 estimateGrammar prior psObs ind xs = 
-    let ind' = CM.filter (> 0) ind
-        combs = CM.keys ind'
-        (alts, exs) = unzip $ map 
-                      (\(t, c) -> countAlts combs CM.empty c (taskType t)) xs
+    let combs = CM.keys ind
+        (alts, exs) = unzip $ map (\(t, c) -> countAlts combs CM.empty c (taskType t)) xs
         altCounts = foldl1 (CM.unionWith (+)) alts
         nEx = sum exs
-        logprobs = CM.mapWithKey f ind'
-            where f c v = (trace $ show c ++ " --> " ++ show altCounts ++ " " ++ show ind') 
-                          $ bernLogProb v (altCounts CM.! c) 
+        logprobs = CM.mapWithKey f ind
+            where f c v = bernLogProb (altCounts CM.! c) v
         nPossibleExs = nEx + sum (CM.elems ind)
         logProbEx = bernLogProb nEx nPossibleExs
         empiricalGr = Grammar logprobs logProbEx
