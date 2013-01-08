@@ -1,5 +1,7 @@
 -- EnumBF
 
+module EnumBF where 
+
 import Data.Function (on)
 import Control.Monad.State
 import Data.Maybe

@@ -10,7 +10,7 @@ module Type where
 
 -- | standard library imports
 import qualified Data.Set as Set
-import Data.List (find, intersect, union, nub, foldl')
+import Data.List (intersect, union, nub, foldl')
 import Data.Maybe (fromJust)
 import Control.Monad (foldM)
 import Control.Monad.Identity

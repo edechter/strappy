@@ -44,7 +44,7 @@ expTList1 = Experiment {
               expPrior = stdgrammar,
               expInitLib = stdgrammar,
               expDepthBound = 2,
-              expDataType = (tInt),
+              expNumBound = 100,
               expReps = 1}
                       
                    
