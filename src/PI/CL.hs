@@ -21,6 +21,7 @@ import Expr
 data Comb = CApp {lComb :: Comb, 
                   rComb ::  Comb,
                   cType :: Type,
+                  cRooted :: Bool, 
                   cAppDepth :: Int
                   }
           | CNode {cName :: String,
@@ -31,7 +32,7 @@ data Comb = CApp {lComb :: Comb,
 
 cDepth :: Comb -> Int
 cDepth CNode{} = 0
-cDepth (CApp _ _ _ d) = d
+cDepth c@CApp{} = cAppDepth c
 
 mkAppDepth :: Comb -> Comb -> Int
 mkAppDepth c1 c2 = 1 + max (cDepth c1) (cDepth c2)
@@ -44,13 +45,13 @@ app m1 m2 = do c1 <- m1
                case getAppType c1 c2 of
                 Left err -> Left err
                 Right t -> let d = mkAppDepth c1 c2 
-                           in Right $ CApp c1 c2 t d 
+                           in Right $ CApp c1 c2 t False d 
 
 app' :: Comb -> Comb -> Comb
 app' c1 c2 = case getAppType c1 c2 of
                Left err -> error $ "Error in app' in CL.hs: " ++ err
                Right t -> let d = mkAppDepth c1 c2
-                              in CApp c1 c2 t d
+                              in CApp c1 c2 t False d
 
 infixl 4 <:>
 (<:>) = app
@@ -60,20 +61,20 @@ infixl 4 <::>
                   
 
 instance Show Comb where
-    show (CApp c1 c2 _ _) = "(" ++ show c1 ++ " " ++ show c2 ++ ")"
+    show (CApp c1 c2 _ _ _) = "(" ++ show c1 ++ " " ++ show c2 ++ ")"
     show (CNode n _ _) = n
     show (CTerminal t) =  "CTerm of type " ++ show t
 
 -- | An alternative to show: if combinator is named and evaluates to a
 -- number or bool, show it an an evaluated expressions.
 show' (CNode n _ _ ) = n
-show' c@(CApp c1 c2 _ _) = case reduceComb c of
+show' c@(CApp c1 c2 _ _ _) = case reduceComb c of
                              (N i) -> show i
                              (C c) -> show c
                              _     ->  "(" ++ show' c1 ++ " " ++ show' c2 ++ ")"
 
 instance Eq Comb where
-    (CApp c1 c2 _ dl) == (CApp b1 b2 _ dr) = (dl == dr) && (c1 == b1) && (c2 == b2)
+    (CApp c1 c2 _ _ dl) == (CApp b1 b2 _ _ dr) = (dl == dr) && (c1 == b1) && (c2 == b2)
     (CNode n _ _) == (CNode m _ _ ) = (n==m)
     a == b = False
 
@@ -96,7 +97,7 @@ bool2C c = CNode (show c) (B c) tBool
 -- | get type outside type monad
 getType :: Comb -> Either String Type
 getType (CNode _ _ t) = Right t
-getType c@(CApp c1 c2 _ _) = getAppType c1 c2
+getType c@(CApp c1 c2 _ _ _) = getAppType c1 c2
 
 getAppType :: Comb -> Comb -> Either String Type
 getAppType c1 c2  
@@ -115,9 +116,9 @@ getAppType c1 c2
 sub s (TVar u) c@(CNode _ _ t) = c{cType = apply [(s, TVar u)] (cType c)}
                                       
 getTvs (CNode _ _ t) = tv t
-getTvs (CApp cl cr _ _ ) = getTvs cl `union` getTvs cr
+getTvs (CApp cl cr _ _ _ ) = getTvs cl `union` getTvs cr
 
-comb2Expr c@(CApp c1 c2 _ _ ) = App (comb2Expr c1) (comb2Expr c2)
+comb2Expr c@(CApp c1 c2 _ _ _ ) = App (comb2Expr c1) (comb2Expr c2)
 comb2Expr c@(CNode _ e _) = e
 
 filterCombinatorsByType :: [Comb] -> Type -> StateT Int [] Comb
