@@ -31,7 +31,7 @@ import Grammar
 
 import qualified CombMap as CM
 import CombMap (CombMap)
-import qualified Compress as CP (getUniqueTrees, compress)
+import qualified Compress as CP (getUniqueTrees, compress2)
 import Compress (Index)
 import Experiment
 
@@ -57,7 +57,7 @@ mkHypothesisSpace expr gr
     = do return db
     where tps = nub [ taskType t | t <- taskSet]
           cs tp = map comb $ enumBF gr (expNumBound expr) tp
-          db = (trace $ "tps: " ++ show tps) $ foldl' (\m (k, a) -> Map.insert k a m) 
+          db =  foldl' (\m (k, a) -> Map.insert k a m) 
                        Map.empty [(tp, cs tp) | tp <- tps]
           taskSet = expTaskSet expr
 
@@ -70,7 +70,7 @@ findCombinatorsForEachDatum :: Experiment
 findCombinatorsForEachDatum expr gr
     = do s <- get
          db <- mkHypothesisSpace expr gr
-         return $ (trace $ show $ nub [taskType t | t <- taskSet]) $ [(t, [ c | c <- db Map.! tp, 
+         return $ [(t, [ c | c <- db Map.! tp, 
                        f c <= eps ]) | t@(Task n f tp) <- taskSet]
       where 
         taskSet = expTaskSet expr
@@ -84,11 +84,11 @@ oneStep ex gr = do xs <- findCombinatorsForEachDatum ex gr
                    let xs' = filter (not . null . snd) xs
                        rs = (trace $  "Hit: " ++ show (length xs'))
                             $ dfs xs'
-                       ind = CP.compress (map snd rs)
-                       grammar' = (trace $ showTaskCombAssignments rs) 
+                       ind = CP.compress2 (map (\(tsk, c) -> (taskType tsk, c))  rs)
+                       grammar' = (trace $ showTaskCombAssignments rs)
                                   $ estimateGrammar prior 1 ind rs  
+                   return $ (trace $ show grammar') $ grammar'
 
-                   return $ combineGrammars (prior, 1) (grammar', 1)
           -- vars
     where
       taskSet = expTaskSet ex

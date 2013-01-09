@@ -73,8 +73,7 @@ enumBF' gr i bfState@(BFState openPQ closedPQ) =
             closedPQ' = (PQ.fromList closedCBs) `PQ.union` closedPQ
                         
             openPQ'' = PQ.fromList openCBs `PQ.union` openPQ'
-        in (trace $ "open size: " ++ show (PQ.size openPQ'' )) 
-               $ enumBF' gr i $ BFState openPQ'' closedPQ'
+        in enumBF' gr i $ BFState openPQ'' closedPQ'
         
 
 expandToApp :: Grammar -> CombBase -> StateT Int [] CombBase
@@ -106,7 +105,7 @@ expand gr cb@(CombBase (CApp c_left c_right tp d) (Just (L:rest)) v) =
                                              (Just rest) 
                                              (v - (exLogProb gr tp))
        let tp_right' = fromType (cType c_left')
-           c_right' = (trace $ show tp_right') $ CTerminal tp_right'
+           c_right' =  CTerminal tp_right'
 
        let path' = case rest' of
                      Nothing -> Just [R]

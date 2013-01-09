@@ -11,6 +11,7 @@ import Data.List (foldl')
 import Debug.Trace
 
 import CL
+import Type
 import qualified CombMap as CM
 import CombMap (CombMap)
 
@@ -36,27 +37,39 @@ incr index c@(CApp l r _ _)
         Just i -> let index' = CM.insert c (i + 1) index
                   in case i  of
                        0 -> incr (incr index' l) r
-                       1 -> decr (decr index' l) r 
                        otherwise -> index'
 incr index c@(CNode _ _ _) = case CM.lookup c index of
                                Nothing -> CM.insert c 1 index
                                Just i -> CM.insert c (i+1) index
+
                  
-
-decr :: Index -> Comb -> Index
-decr index c@(CApp l r _ _ ) 
-    = case CM.lookup c index of
-        Nothing -> error $  "Cannot find comb " ++ show c
-        Just i -> let index' = CM.insert c (i - 1) index
-                  in case i of 
-                       1 -> decr ( decr index' l) r
-                       otherwise -> incr (incr index' l) r
-decr index c@(CNode _ _ _) = case CM.lookup c index of
-                               Nothing -> error $  "Cannot find comb " ++ show c
-                               Just i -> CM.insert c (i-1) index
-
 compress :: [Comb] -> Index
 compress cs = foldl' incr CM.empty cs
+
+
+
+incr2 :: CombMap [Type] -> Comb -> Type -> State Int (CombMap [Type])
+incr2 index c@(CApp l r _ _) tp 
+    = do t <- newTVar Star
+         let t_left = t ->- tp
+         case CM.lookup c index of
+           Nothing -> do let index' = CM.insert c [tp] index 
+                         l_index <- incr2 index' l t_left
+                         r_index <- incr2 l_index r (fromType (cType l))
+                         return r_index
+           Just (x:[]) -> do let index' = CM.insert c [tp, x] index 
+                             l_index <- incr2 index' l t_left
+                             r_index <- incr2 l_index r (fromType (cType l))
+                             return r_index
+           otherwise -> do let index' = CM.insert c [tp] index 
+                           return index'
+incr2 index c@(CNode _ _ _) tp = return $ CM.insertWith (++) c [tp] index 
+
+compress2 :: [(Type, Comb)] -> CombMap [Type]
+compress2 xs = foldl' f  CM.empty xs
+    where f ind (t, c) = fst $ runState (incr2 ind c t) 0
+
+
 
 
 -------------------------------

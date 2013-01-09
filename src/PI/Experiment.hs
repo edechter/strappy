@@ -30,9 +30,9 @@ rlimit = 100
 
 taskSet :: TaskSet
 taskSet = map (mkSingleEqualityTask rlimit) xs
-    where xs = [i | i <- [1..10]] ++ [i*2 |i <-[1..10]] 
-               ++ [i*3 |i <-[1..10]] 
-               ++ [i*4 |i <-[1..10]] 
+    where xs = [i*2 |i <-[1..10]] 
+--               ++ [i*3 |i <-[1..10]] 
+--               ++ [i*4 |i <-[1..10]] 
 
 expSquaredInts 
     = Experiment {
@@ -72,8 +72,8 @@ mkSquaresTask a b = Task (showSquares a b) f (tInt ->- tInt)
     where f = eval [num2C $ (squares a b) i| i<-rng]
 
 taskSet' = [mkSquaresTask i j | i <- [0..10] , j <- [0..10]]
-           ++ (map (mkSingleEqualityTask 100) $ [0] ++ [2*i | i <- [0..20]])
---           ++ [mkQuadTask i j k | i <- [0..10] , j <- [0..10], k <- [0..10]]
+            ++ (map (mkSingleEqualityTask 100) $ [i | i <- [0..10]])
+           ++ [mkQuadTask i j k | i <- [0..10] , j <- [0..10], k <- [0..10]]
             
                                     
 expIntegerSequences 
@@ -84,7 +84,7 @@ expIntegerSequences
         expPrior = stdgrammar,
         expInitLib = stdgrammar,
         expDepthBound = 3,
-        expNumBound = 100,
+        expNumBound = 500,
         expReps=40
       }
  

@@ -76,7 +76,7 @@ sortData = sortBy (compare  `on` (length . snd))
 
 -- | Depth first search
 dfs :: [(Task, [Comb])] -> [(Task, Comb)]
-dfs xs = zip (map fst xs) cs
+dfs xs =  zip (map fst xs) cs
     where xs' = sortData xs          
           cs = nwiseDependencySearch 2 (map snd xs)
 

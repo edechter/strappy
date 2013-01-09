@@ -87,10 +87,14 @@ module CombMap
 
                     -- * Submap
                     , isSubmapOf, isSubmapOfBy
-                    , isProperSubmapOf, isProperSubmapOfBy) 
+                    , isProperSubmapOf, isProperSubmapOfBy
+
+, showCombMap
+) 
 where
 
 import Prelude hiding (lookup,map,filter,null)
+import qualified Prelude as Prelude
 import Data.HashMap 
 import Data.Hashable
 
@@ -101,4 +105,8 @@ type CombMap a = Map Comb a
 instance Hashable Comb where
     hash (CNode name _ _) = hash name
     hash (CApp rComb lComb _ _) = hash rComb `hashWithSalt` lComb
+
+showCombMap :: Show a => CombMap a -> String
+showCombMap cm = unlines $ Prelude.map (\(k, a) -> show k ++ ": " ++ show a ) 
+                 $ toList cm
 

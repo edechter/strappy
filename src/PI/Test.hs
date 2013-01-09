@@ -18,6 +18,8 @@ import Experiment
 import qualified Compress as CP
 import ListExperiment
 
-grammar = fst $ runSearch $ loop expSquaredInts
+grammar = fst $ runSearch $ loop expIntegerSequences
+
+combs = map comb $ enumBF stdgrammar 1000 (tInt ->- tInt)
 main = do
-   putStrLn $ show grammar    
+   putStrLn $ show grammar

@@ -33,82 +33,86 @@ instance Show Grammar where
 nullGrammar :: Grammar
 nullGrammar = Grammar CM.empty 0
 
--- estimateGrammar :: [Comb] -> Grammar
--- -- | Generate a new grammar from a set of combinators using the
--- -- combinator tree compression scheme defined in Compress.hs
--- -- (compress). Include all trees from the compression that occur more
--- -- than once (i.e. Sequitur / Neville-Manning algorithm). To estimate
--- -- the expansions, take the total number of trees in from the
--- -- compression and subtract the number of input combinators.
--- estimateGrammar cs = Grammar lib c
---     where ind = compress cs
---           xs = CM.assocs ind
---           count = CM.fold (+) 0 ind -- sum of tree counts in index
---           rootOverlap = length $ cs `intersect` (map fst xs)
---           lib = CM.fromList $ filter ((>1) . snd) xs 
---           c = (count - rootOverlap) `div` 2
+logsumexp = log . sum . (map exp)
 
--- addGrammars :: Grammar -> Grammar -> Grammar
--- -- | Combine 2 grammars, adding their counts where they overlap. 
--- addGrammars (Grammar l e) (Grammar l' e') = 
---     Grammar (CM.unionWith (+) l l') ( e + e')
+normalizeGrammar :: Grammar -> Grammar 
+normalizeGrammar (Grammar lib ex)
+    = let logTotalMass = logsumexp $ ex:(CM.elems lib)
+          lib' = CM.map (+ (-logTotalMass)) lib
+          ex' = ex - logTotalMass
+      in Grammar lib' ex'
+          
+sum' (a, b) (c, d) = (a + b, c + d)
 
-countAlts :: [Comb] 
-          -> CombMap Int
-          -> Comb
-          -> Type
-          -> (CombMap Int, Int)
-countAlts cs ind c tp = let out = map fst $ runStateT (countAlts' cs ind c tp) 0
-                            inds = map fst out
-                            exs = map snd out
-                            indOut = foldl1 (CM.unionWith (+)) inds
-                            exOut = sum exs
-                        in (indOut, exOut)
+-- countAllUses :: [Comb] -- ^ count the number of uses of these combs
+--              -> [Comb] -- ^ in these combs
+--              -> CombMap Int
+-- countAllUses cs xs = foldl1 (CM.unionWith (+)) $ map (countUses cs) xs
 
-countAlts' :: [Comb] -- ^ list of combinator primitives
-          -> Comb -- ^ a chosen combinator
-          -> Type -- ^ the requesting type
-          -> StateT Int [] (CombMap Int, Int) -- ^ alternative counts, num expansions
-countAlts' cs ind c@(CNode{}) tp 
-    = do alt <- filterCombinatorsByType cs tp
-         return $ (CM.singleton alt 1, 0)
-countAlts' cs ind c@(CApp cLeft cRight _ _) tp 
-    = do t <- newTVar Star
-         let t_left0 = (t ->- tp)
-         (left_ind, left_ex) <- countAlts' cs (lComb c) t_left0
-         let t_right0 = toType (cType (lComb c))
-         (right_ind, right_ex) <- countAlts' cs (rComb c) t_right0
-         let newInd = CM.unionWith (+) left_ind right_ind
-             newEx  = 1 + right_ex + left_ex
-         
-         return (newInd, newEx)
+-- countAllExpansions :: [Comb] -> [Comb] -> Int
+-- countAllExpansions cs xs = sum $ map (countExpansions cs) xs
 
-alt <- filterCombinatorsByType cs tp
-         return $ (CM.insertWith (+) alt 1 ind, 0)
+-- countAllAlts :: [Comb] -> [(Task, Comb)] -> CombMap Int
+-- countAllAlts cs xs = foldl1 (CM.unionWith (+)) 
+--                      $ map (\(t, c) 
+--                                 -> countAlts cs c (taskType t)) xs
 
+-- countUses :: [Comb] -- ^ the primitive combinators
+--           -> Comb  -- ^ a particular combinator
+--           -> CombMap Int
+-- countUses cs c | elem c cs = CM.singleton c 1
+-- countUses cs c@(CNode {}) = CM.singleton c 1
+-- countUses cs c@(CApp cl cr _ _) = CM.unionWith (+) l r
+--     where l = countUses cs cl
+--           r = countUses cs cr
 
+-- countExpansions :: [Comb] -> Comb -> Int
+-- countExpansions cs c | elem c cs  = 0
+-- countExpansions cs c@(CNode {}) = 0
+-- countExpansions cs c@(CApp cl cr _ _) = 1 + l +  r
+--     where l = countExpansions cs cl 
+--           r = countExpansions cs cr
 
-    | elem c cs = do alt <- filterCombinatorsByType cs tp
-                     return $ (CM.insertWith (+) alt 1 ind, 0)
-    | otherwise = do t <- newTVar Star
-                     let t_left0 = (t ->- tp)
-                     (left_ind, left_ex) <- countAlts' cs ind (lComb c) t_left0
-                     let t_right0 = toType (cType (lComb c))
-                     (right_ind, right_ex) <- countAlts' cs ind (rComb c) t_right0
-                     let newInd = CM.unionWith (+) left_ind right_ind
-                         newEx  = 1 + right_ex + left_ex
-                     return (newInd, newEx)
+-- countAlts :: [Comb] -- ^ number of times any of these
+--           -> Comb -- ^ could have been used in this
+--           -> Type -- ^ where the requested type is this
+--           -> (CombMap Int)
+-- countAlts cs c tp  | elem c cs = foldl1 (CM.unionWith (+))
+--                                         $ map fst $ runStateT ms 0
+--                    where ms = do alt <- filterCombinatorsByType cs tp
+--                                  return $ CM.singleton alt 1
+-- countAlts cs c@(CNode{}) tp  = foldl1 (CM.unionWith (+))
+--                                         $ map fst $ runStateT ms 0
+--                    where ms = do alt <- filterCombinatorsByType cs tp
+--                                  return $ CM.singleton alt 1
+-- countAlts cs (CApp cl cr _ _) tp  = foldl1 (CM.unionWith (+)) 
+--                                     $ map fst $ runStateT ms 0
+--     where ms = do t <- newTVar Star
+--                   let t_left0 = (t ->- tp)
+--                       left_ind = countAlts cs cl t_left0
+--                       t_right0 = fromType (cType cl)
+--                       right_ind = countAlts cs cr t_right0
+--                   return $ CM.unionWith (+) left_ind right_ind
 
+countExpansions :: Comb -> Int
+countExpansions (CNode{}) = 0
+countExpansions (CApp l r _ _) = 1 + countExpansions l  + countExpansions r
+
+countAlts :: [Comb] -> Type -> CombMap Int
+countAlts cs tp = let ms = do tp' <- freshInst tp
+                              alt <- filterCombinatorsByType cs tp'
+                              return $ CM.singleton alt 1
+                  in foldl (CM.unionWith (+)) CM.empty $ map fst $ runStateT ms 0
 
 combineGrammars :: (Grammar, Int) -> (Grammar, Int) -> Grammar
 -- | Combine two grammars weighted by the number of observations (or
 -- pseudo-observations) each has.
 combineGrammars (Grammar lib1 ex1, ob1) (Grammar lib2 ex2, ob2) = 
-    Grammar lib ex
+    normalizeGrammar $ Grammar lib ex
         where lib = CM.unionWith (\a b -> f a ob1 b ob2) lib1 lib2
-              f lp1 n lp2 m = ((exp lp1) * (fromIntegral n) 
+              f lp1 n lp2 m = log $ ((exp lp1) * (fromIntegral n) 
                                + (exp lp1) * (fromIntegral m)) 
-                              / (fromIntegral $ n + m)
+                              
               ex = f ex1 ob1 ex2 ob2
 
 bernLogProb :: Int -> Int -> Double
@@ -119,23 +123,27 @@ bernLogProb hist obs | otherwise =
 estimateGrammar :: 
     Grammar -- ^ prior
     -> Int -- ^ number of pseudo-observations by which to weight the prior 
-    -> CombMap Int -- ^ primitive combinators and their occurance counts
+    -> CombMap [Type] -- ^ primitive combinators and their occurance counts
     -> [(Task, Comb)]
     -> Grammar
 estimateGrammar prior psObs ind xs = 
-    let ind' = CM.filter (> 0) ind
+    let ind' = (trace $ CM.showCombMap ind) $ CM.filter ((> 1) . length) ind
         combs = CM.keys ind'
-        (alts, exs) = unzip $ map 
-                      (\(t, c) -> countAlts combs CM.empty c (taskType t)) xs
-        altCounts = foldl1 (CM.unionWith (+)) alts
-        nEx = sum exs
-        logprobs = CM.mapWithKey f ind'
-            where f c v = (trace $ show c ++ " --> " ++ show altCounts ++ " " ++ show ind') 
-                          $ bernLogProb v (altCounts CM.! c) 
-        nPossibleExs = nEx + sum (CM.elems ind)
-        logProbEx = bernLogProb nEx nPossibleExs
+        uses = CM.map length ind'
+        exs = foldl (\i c -> i + countExpansions c) 0 (combs)
+        alts = foldl1 (CM.unionWith (+)) 
+               $ map (countAlts combs) (concat . CM.elems $ ind')
+        logprobs =  CM.mapWithKey f uses
+            where f c v = bernLogProb v w where
+                      w = case (CM.lookup c alts) of 
+                            Nothing -> error $ "estimateGrammar: cannot find "
+                                       ++ show c ++ " in alternative map " 
+                                      ++ show alts
+                            Just k -> k
+        nPossibleExs = exs + sum (CM.elems uses)
+        logProbEx = bernLogProb exs nPossibleExs
         empiricalGr = Grammar logprobs logProbEx
-      in combineGrammars (prior, psObs) (empiricalGr, 1)
+    in combineGrammars (normalizeGrammar prior, psObs) (normalizeGrammar empiricalGr, 1)
 
 calcLogProb :: Grammar 
             -> Type
@@ -158,7 +166,15 @@ exLogProb gr tp
           altCs = map fst $ runStateT m 0
           combLps = [exp $ (library gr) CM.! x | x <- altCs] 
           logProbAll = log $ exp (expansions gr) + sum combLps
-          out = if null altCs then 0 else expansions gr  - logProbAll
+          out = if null altCs then log (0.5)  -- ^ this log (0.5) is a
+                                              -- hack. it should be 0,
+                                              -- right? since there
+                                              -- are no alternatives,
+                                              -- the probability is
+                                              -- 1. But this causes
+                                              -- infinite expansions
+                                              -- in the best-first search. 
+                else expansions gr  - logProbAll
       in  out
 
 
