@@ -30,6 +30,23 @@ instance Show Grammar where
                            ++ "\n\nLibrary: \n-------\n" 
                            ++ showLibrary lib
 
+findCNodeInGrammar :: Grammar -> Comb -> Maybe Comb
+findCNodeInGrammar gr c@CNode{cName=n} = lookup n asc
+    where cs = CM.keys (library gr)
+          asc = [(cName c, c) | c <- cs, isCNode c]
+findCNodeInGrammar gr c= error $ show c ++ " is not a CNode."
+
+refreshCombFromGrammar :: Grammar -> Comb -> Maybe Comb
+refreshCombFromGrammar gr c@(CNode{cName=n}) = findCNodeInGrammar gr c
+refreshCombFromGrammar gr c@CApp{lComb=cl, rComb=cr} = do cl' <- refreshCombFromGrammar gr cl
+                                                          cr'<-  refreshCombFromGrammar gr cr
+                                                          let c' = c{lComb=cl', rComb=cr'}
+                                                          t <- case getType c' of 
+                                                                 Right x -> Just x
+                                                                 Left _ -> Nothing
+                                                          return $ c'{cType=t}
+refreshCombFromGrammar _ x = Just x
+
 nullGrammar :: Grammar
 nullGrammar = Grammar CM.empty 0
 
@@ -40,59 +57,9 @@ normalizeGrammar (Grammar lib ex)
     = let logTotalMass = logsumexp $ ex:(CM.elems lib)
           lib' = CM.map (+ (-logTotalMass)) lib
           ex' = ex - logTotalMass
-      in Grammar lib' ex'
+      in Grammar lib'  ex'
           
 sum' (a, b) (c, d) = (a + b, c + d)
-
--- countAllUses :: [Comb] -- ^ count the number of uses of these combs
---              -> [Comb] -- ^ in these combs
---              -> CombMap Int
--- countAllUses cs xs = foldl1 (CM.unionWith (+)) $ map (countUses cs) xs
-
--- countAllExpansions :: [Comb] -> [Comb] -> Int
--- countAllExpansions cs xs = sum $ map (countExpansions cs) xs
-
--- countAllAlts :: [Comb] -> [(Task, Comb)] -> CombMap Int
--- countAllAlts cs xs = foldl1 (CM.unionWith (+)) 
---                      $ map (\(t, c) 
---                                 -> countAlts cs c (taskType t)) xs
-
--- countUses :: [Comb] -- ^ the primitive combinators
---           -> Comb  -- ^ a particular combinator
---           -> CombMap Int
--- countUses cs c | elem c cs = CM.singleton c 1
--- countUses cs c@(CNode {}) = CM.singleton c 1
--- countUses cs c@(CApp cl cr _ _) = CM.unionWith (+) l r
---     where l = countUses cs cl
---           r = countUses cs cr
-
--- countExpansions :: [Comb] -> Comb -> Int
--- countExpansions cs c | elem c cs  = 0
--- countExpansions cs c@(CNode {}) = 0
--- countExpansions cs c@(CApp cl cr _ _) = 1 + l +  r
---     where l = countExpansions cs cl 
---           r = countExpansions cs cr
-
--- countAlts :: [Comb] -- ^ number of times any of these
---           -> Comb -- ^ could have been used in this
---           -> Type -- ^ where the requested type is this
---           -> (CombMap Int)
--- countAlts cs c tp  | elem c cs = foldl1 (CM.unionWith (+))
---                                         $ map fst $ runStateT ms 0
---                    where ms = do alt <- filterCombinatorsByType cs tp
---                                  return $ CM.singleton alt 1
--- countAlts cs c@(CNode{}) tp  = foldl1 (CM.unionWith (+))
---                                         $ map fst $ runStateT ms 0
---                    where ms = do alt <- filterCombinatorsByType cs tp
---                                  return $ CM.singleton alt 1
--- countAlts cs (CApp cl cr _ _) tp  = foldl1 (CM.unionWith (+)) 
---                                     $ map fst $ runStateT ms 0
---     where ms = do t <- newTVar Star
---                   let t_left0 = (t ->- tp)
---                       left_ind = countAlts cs cl t_left0
---                       t_right0 = fromType (cType cl)
---                       right_ind = countAlts cs cr t_right0
---                   return $ CM.unionWith (+) left_ind right_ind
 
 countExpansions :: Comb -> Int
 countExpansions (CNode{}) = 0
@@ -104,31 +71,34 @@ countAlts cs tp = let ms = do tp' <- freshInst tp
                               return $ CM.singleton alt 1
                   in foldl (CM.unionWith (+)) CM.empty $ map fst $ runStateT ms 0
 
-combineGrammars :: (Grammar, Int) -> (Grammar, Int) -> Grammar
+combineGrammars :: (Grammar, Double) -> (Grammar, Double) -> Grammar
 -- | Combine two grammars weighted by the number of observations (or
 -- pseudo-observations) each has.
 combineGrammars (Grammar lib1 ex1, ob1) (Grammar lib2 ex2, ob2) = 
     normalizeGrammar $ Grammar lib ex
         where lib = CM.unionWith (\a b -> f a ob1 b ob2) lib1 lib2
-              f lp1 n lp2 m = log $ ((exp lp1) * (fromIntegral n) 
-                               + (exp lp1) * (fromIntegral m)) 
+              f lp1 n lp2 m = log $ ((exp lp1) * ( n) 
+                               + (exp lp2) * ( m)) 
                               
               ex = f ex1 ob1 ex2 ob2
 
 bernLogProb :: Int -> Int -> Double
 bernLogProb hits obs | obs >= hits = logI hits - logI obs  where logI = log . fromIntegral
-bernLogProb hist obs | otherwise =
-                         error "bernLogProb: # obs must be greater than # of hits"
+bernLogProb hits obs | otherwise =
+                         error $ "bernLogProb: # obs " ++ show obs ++ 
+                               " must be greater than # of hits " ++ show hits
+
+showCombWType cs = unlines $ map show [(c, cType c) | c <- cs]
 
 estimateGrammar :: 
     Grammar -- ^ prior
-    -> Int -- ^ number of pseudo-observations by which to weight the prior 
+    -> Double -- ^ number of pseudo-observations by which to weight the prior 
     -> CombMap [Type] -- ^ primitive combinators and their occurance counts
     -> [(Task, Comb)]
     -> Grammar
 estimateGrammar prior psObs ind xs = 
     let ind' = (trace $ CM.showCombMap ind) $ CM.filter ((> 1) . length) ind
-        combs = CM.keys ind'
+        combs = map (fromJust . refreshCombFromGrammar prior) $ CM.keys ind'
         uses = CM.map length ind'
         exs = foldl (\i c -> i + countExpansions c) 0 (combs)
         alts = foldl1 (CM.unionWith (+)) 
@@ -142,8 +112,8 @@ estimateGrammar prior psObs ind xs =
                             Just k -> k
         nPossibleExs = exs + sum (CM.elems uses)
         logProbEx = bernLogProb exs nPossibleExs
-        empiricalGr = Grammar logprobs logProbEx
-    in combineGrammars (normalizeGrammar prior, psObs) (normalizeGrammar empiricalGr, 1)
+        empiricalGr = Grammar logprobs 0 -- logProbEx
+    in combineGrammars (normalizeGrammar prior, psObs) (normalizeGrammar empiricalGr, 1.0)
 
 calcLogProb :: Grammar 
             -> Type
