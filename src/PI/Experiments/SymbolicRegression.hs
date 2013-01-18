@@ -111,11 +111,11 @@ mkSymRegExp name lib frontierSize
                   expInitLib = grammarFromLib lib,
                   expDepthBound = 3,
                   expNumBound = frontierSize,
-                  expReps = 15}
+                  expReps = 25}
 
-libSet = [lib1, lib2] -- lib3, lib123]
-libNames = ["R1", "R2"] -- , "R3", "R<=3"]
-frontierSizeSet = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000]
+libSet = [lib1] -- lib3, lib123]
+libNames = ["R1"] -- , "R3", "R<=3"]
+frontierSizeSet = [9000, 10000]
 
 expSet = concat [[mkSymRegExp (n ++ "_" ++ show f) l f | n <- libNames | l <- libSet]
               | f <- frontierSizeSet]
