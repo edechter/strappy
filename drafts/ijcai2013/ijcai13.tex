@@ -6,12 +6,17 @@
 \usepackage{latexsym} 
 \usepackage{ dsfont }
 \usepackage{tikz}
+\usepackage{graphicx}
+\usepackage{subcaption}
 \usepackage[ruled,vlined,linesnumbered]{algorithm2e}
-\usetikzlibrary{arrows,automata}
+\usetikzlibrary{arrows,automata, positioning}
 
+\newtheorem{definition}{Definition}
 \DeclareMathOperator*{\argmax}{arg\,max} 
 
-\title{The Exploration-Compression Algorithm: how to learn programs by discovering useful subroutines.}
+\title{The E-C Algorithm: conceptual bootstrapping via grammar-based
+  program compression.}
+
 \author{Eyal Dechter \\
 MIT\\
 USA \\
@@ -23,7 +28,7 @@ USA \\
 jbt@mit.edu
 \And 
 Ryan Adams \\
-MIT\\
+Harvard University\\
 USA \\
 rpa@seas.harvard.edu}
 
@@ -32,21 +37,41 @@ rpa@seas.harvard.edu}
 \maketitle
 
 \begin{abstract}
-  Every programmer knows that the abstractions provided by a good
-  function library are not merely a convenience: they usefully
-  constrain the space of implementations and guide the choice of
-  programming patterns. Without these abstractions, whether explicit
-  or implicit, the designer would wander in a sea of
-  detail. Similarly, the learner who wishes to discover the theories
-  and concepts that explain the world must use a set of abstractions
-  to guide their development. But how do those abstractions arise?
-  Here, we show how alternating between a search over program space
-  and a compression of discovered programs allows a learner to build
-  up abstractions that make the learner's search progressively more
-  effective.
+Suppose a learner is faced with a set of problems about which it knows
+nearly nothing: it doesn't know the distribution of problems, or what
+an appropriate loss function might be. For each hypothesized solution
+to a problem it gets a few bits of positive or negative reinforcement,
+but not enough to steer it effectively in the huge space of possible
+solutions. How can such a learner every get off the ground? The key is
+to find, by brute force, a solution to one or more simple problems in
+that domain and use the information thus gained to pursue subsequent
+searches in an informed manner. Here, we formalize this intuition,
+where the solution space is the space of typed functional programs and
+the gained information is stored as a stochastic grammer over
+programs. Specifically, we propose the E-C algorithm, a two step
+iterative procedure for exploring such spaces: in the E step, the
+learner \emph{explores} a finite subset of the domain for solutions,
+guided by a stochastic grammar; in the C step, the learner
+\emph{compresses} the successful solutions from the E step to estimate
+a new stochastic grammar. As we show in several toy domains, iterating
+these two steps quickly propels the learner from a state of solving
+almost no problems to solving a large number of problems by gaining
+abstract knowledge of the structure of the solution space.
 \end{abstract}
 
 \section{Introduction.}
+
+Suppose that, having been shipwrecked and saved by a people with no
+knowledge of your language or culture, you find yourself attempting to
+communicate in a language about which you know nothing. How would you
+go about discovering even the most basic mappings of sounds to
+meanings? Overhearing the native speech, you have a sense of what the
+phonetics might be like, so you might try various common combinations
+of sounds while pointing to things you want. Mostly, you receive
+puzzled looks, but if you are lucky, you might pick up on a few key
+words or phrases, like ``that'' or ``I want.'' Naturally, you will
+proceed to use your discoveries to accelerate your learning, mixing
+and matching known phrases to generate new meanings. 
 
 \section{Related work.}
 
@@ -122,13 +147,22 @@ to update distribution $D$.
 
 \subsection{Representing polymorphically typed programs as binary trees.}
 
-Following~\cite{liang10programs} and~\cite{Briggs:2008}, we use a
+Following~\cite{liang10programs} and~\cite{Briggs:2008}, we use
 combinatory logic -- a variable-free subset of the polymorphic
 simply-typed lambda calculus lambda calculus~\cite{Pierce_2002} -- as
 our program representation language. In short, the combinatory logic
 introduces a \emph{basis} of several primitive \emph{combinators} such
 that any function in the lambda calculus can be alternatively written
-as applications of the basis combinators. The basis combinators can
+as applications of the basis combinators. Some common basis
+combinators are defined as follows:
+\begin{align}
+I\; x &\rightarrow  x \\
+S\; f\; g\; x\; &\rightarrow (f\; x)\; (g\; x) \\ 
+B\; f\; g\; x\; &\rightarrow (f\; x)\; g \\ 
+C\; f\; g\; x\; &\rightarrow f\; (g\; x) \\ 
+\end{align}
+
+The basis combinators can
 themselves been expressed in the lambda calculus. The lambda calculus
 has two basic operation -- application and abstraction -- but in using
 the combinatory logic we sequester uses of the abstraction operation
@@ -140,73 +174,321 @@ is the application of one expression to another -- with this recursion
 bottoming out at the primitive combinators -- each program is a binary
 tree. Most importantly, any subtree is itself a well-formed
 expression; this is not the case in the lambda calculus, since
-abstraction introduces long range dependencies between the $lamdba$-
+abstraction introduces long range dependencies between the $\lambda$
 operator and the variables to which that operator refers. In the
 lambda calculus, then, a subtree might have free variables, not bound
-to any enclosing $lambda$. 
+to any enclosing $\lambda$. 
 
-\subsection{Enumerating the most likely programs.}
-The simplicity of our program representation suggests a simple
-recursive recipe for generating all programs of a given type $\tau$ up
-to some maximal depth $d$: such a program is either one of the atomic
-programs with type in $\tau$, or it is pairing of a left child program
-and a right child program with appropriate types each of which comes
-from corresponding sets of programs with depth up to $d-1$. The left
-child is any program with type $\sigma' \leftarrow \tau'$ which is a
-subset of $\sigma \leftarrow \tau$, where $\sigma$ is a free type
-variable. To match, the right child must have type $\sigma'$. The
-resulting program will have type $\tau'$ which is a subset of $\tau$.
+As a simple example of our representation, consider the squaring
+function $\lamba x. * x x $. Using two of the basis combinators above,
+we can write the squaring function in combinatory logic as $S * I$,
+where application associates to the left, so we drop the
+parentheses. When we apply this combinator to a value $x$, the action
+of the combinator is defined as $S \;*\; I\; x~\rightarrow~(*\; x)\;
+(I\; x)~\rightarrow(*\; x)\; x$. Now, we can extend this
+representation with a simple polymorphic type
+system~\cite{Pierce_2002}. Thus, this combinator can be represented as
+a binary tree~(Figure~\ref{fig:clbintree}) whose leaves are typed
+primitive combinators and whose interior nodes are typed applications of combinators.
 
-  \begin{algorithm}
-    \SetAlgoLined 
-    
-    \KwData{Library of primitive/type pairs: $\mathcal{L} = \{(f_1, \tau_1), \dots,
-        (f_m, \tau_m)\}$. Target type $\tau^*$. Max depth $d$.}
+\begin{figure}
+  \centering
+  \begin{subfigure}{0.2\linewidth}
+    \label{fig:clbintree}
+    \begin{tikzpicture}[scale=.5, transform shape, level/.style={sibling distance=10mm/#1, font=\scriptsize}]
+      \node [font=\scriptsize] (top) {$I$}
+      child {node [above=.3cm] (a) {$(I \rightarrow I) \rightarrow I \rightarrow I$}
+        child {node [left=.5cm, below=1cm, text width=3cm] 
+          {$S : \\(t_2 \rightarrow t_1 \rightarrow t_0)  \rightarrow (t_2 \rightarrow t_1) 
+            \rightarrow \\ t_2 \rightarrow t_0$}}
+        child {node [right=0cm, text width=2cm] {$*: Int \rightarrow Int \rightarrow Int$}}
+      }
+      child {node [below right=.3cm and 1cm] (b) {$I \rightarrow I$}
+        child {node {$I: t_0 \rightarrow t_0 \rightarrow t_0$}}
+      };
 
-    Choose $F$ from $\text{ ENUM}(\mathcal{L}, \tau^*, 0)$, or:
-    
-    Choose $L$ from $\text{ ENUM}( \mathcal{L}, \sigma \rightarrow
-    \tau^*, d-1)$.
+    \end{tikzpicture}
+  \end{subfigure}
 
-    Choose $R$ from $\text{ ENUM}( \mathcal{L}, sourceType(L), d-1)$.
+  \begin{subfigure}[b]{0.2\linewidth}
+    \label{fig:andor}
+    \begin{tikzpicture}[scale=.5, transform shape, level/.style={sibling distance=10mm/#1}]
+      \node [circle,draw] (a) {}
+      child {node [left=0cm] (b) {$f_1$}}
+      child {node [left=.2cm] (c) {\dots} edge from parent[draw=none] }
+      child {node [left=.4cm] (e) {$f_n$}}
+      child {node [circle,draw, left=1cm] (d) {}
+        child {node [circle, draw, left=.25cm] (l) {} edge from parent[draw=none]
+          child {node [left=.5cm] (b) {$f_1$}} 
+          child {node [left=.3cm] (c) {\dots} edge from parent[draw=none] }
+          child {node [left=.3cm] (e) {$f_n$}}
+          child {node [circle, draw, left=.25cm] (and2) {}
+            child {node [circle, draw, left=.25cm](l2) {} edge from parent[draw=none] 
+              child {node [above=.5cm] {\vdots} edge from parent[draw=none]}
+            }
+            child {node [circle, draw] (r2)  {} edge from parent[draw=none] 
+              child {node [above=.5cm] {\vdots} edge from parent[draw=none]}
+            }
+          }
+        }
+        child {node [circle, draw, right=.25cm] (r) {} edge from parent[draw=none]
+          child {node [circle, draw, right=.25cm] (and3) {}
+            child {node [circle, draw ](l3) {} edge from parent[draw=none] 
+              child {node [above=.5cm] {\vdots} edge from parent[draw=none]}
+            }
+            child {node [circle, draw, right=.2cm ] (r3)  {} edge from parent[draw=none] 
+              child {node [above=.5cm] {\vdots} edge from parent[draw=none]}
+            }
+          }
+          child {node [right=.3cm] (b) {$f_1$}} 
+          child {node [right=.4cm] (c) {\dots} edge from parent[draw=none] }
+          child {node [right=.6cm] (e) {$f_n$}}
+        }
+      };
+      
+      \path (d)  edge node[inner sep=0mm,pos=.4] (a1) {} node {} (l);
+      \path (d)  edge node[inner sep=0mm,pos=.4] (b1) {} node {} (r);
+      \path (a1) edge[bend right] (b1) ;
 
-    Return $F = (L\,R)$ with type $targetType(L)$.
-    
-    \caption{ENUM}
-  \end{algorithm}
+      \path (and2)  edge node[inner sep=0mm,pos=.4] (t0) {} node {} (l2);
+      \path (and2)  edge node[inner sep=0mm,pos=.4] (k0) {} node {} (r2);
+      \path (t0) edge[bend right] (k0) ;
 
+      \path (and3)  edge node[inner sep=0mm,pos=.4] (t1) {} node {} (l3);
+      \path (and3)  edge node[inner sep=0mm,pos=.4] (k1) {} node {} (r3);
+      \path (t1) edge[bend right] (k1) ;
+    \end{tikzpicture}
+ 
+    \end{subfigure}
+  \caption{A typed binary tree representation of the combinator $S\;*\;I\;$.}
+\end{figure}
 
+\subsection{Best-first enumeration of most probably programs.}
+In order to explore the frontier of most probable programs, we need a
+procedure that enumerates the $N$ most probable programs. We can
+formulate this naturally as a best-first exploration of an $AND-OR$
+tree (NEED FIGURE). Complete programs are represented by binary trees
+that are valid subtrees of the $AND-OR$ graph. The tree structure is
+shown in Figure~\ref{fig:andor}. The root is an $OR$ node of the
+requisite program type. It's children are the primitives of that type
+and one $AND$ node with two children. Each child has the same
+structure as the root node, except that the types are different. If
+the type of an $OR$ node is $t$, then the type of the left child of
+its $AND$ node child is $\tau \rightarrow t$ (where $\tau$ is a fresh
+type variable). Since the type of the right child is constrained by
+the subtree rooted at the left child, we always expand the left child
+first, and we use the target type of this left subtree to mark the
+type of the right child.
 
-\subsection{Finding the most compressive solutions.}
+\begin{figure}
+\label{fig:andor}
+\begin{tikzpicture}[scale=.5, transform shape, level/.style={sibling distance=10mm/#1}]
+\node [circle,draw] (a) {}
+child {node [left=0cm] (b) {$f_1$}}
+child {node [left=.2cm] (c) {\dots} edge from parent[draw=none] }
+child {node [left=.4cm] (e) {$f_n$}}
+child {node [circle,draw, left=1cm] (d) {}
+  child {node [circle, draw, left=.25cm] (l) {} edge from parent[draw=none]
+    child {node [left=.5cm] (b) {$f_1$}} 
+    child {node [left=.3cm] (c) {\dots} edge from parent[draw=none] }
+    child {node [left=.3cm] (e) {$f_n$}}
+    child {node [circle, draw, left=.25cm] (and2) {}
+          child {node [circle, draw, left=.25cm](l2) {} edge from parent[draw=none] 
+            child {node [above=.5cm] {\vdots} edge from parent[draw=none]}
+          }
+          child {node [circle, draw] (r2)  {} edge from parent[draw=none] 
+            child {node [above=.5cm] {\vdots} edge from parent[draw=none]}
+          }
+    }
+  }
+  child {node [circle, draw, right=.25cm] (r) {} edge from parent[draw=none]
+    child {node [circle, draw, right=.25cm] (and3) {}
+          child {node [circle, draw ](l3) {} edge from parent[draw=none] 
+            child {node [above=.5cm] {\vdots} edge from parent[draw=none]}
+          }
+          child {node [circle, draw, right=.2cm ] (r3)  {} edge from parent[draw=none] 
+            child {node [above=.5cm] {\vdots} edge from parent[draw=none]}
+          }
+    }
+    child {node [right=.3cm] (b) {$f_1$}} 
+    child {node [right=.4cm] (c) {\dots} edge from parent[draw=none] }
+    child {node [right=.6cm] (e) {$f_n$}}
+ }
+};
+      
+\path (d)  edge node[inner sep=0mm,pos=.4] (a1) {} node {} (l);
+\path (d)  edge node[inner sep=0mm,pos=.4] (b1) {} node {} (r);
+\path (a1) edge[bend right] (b1) ;
 
-\subsection{Re-estimating the probabilistic grammar over programs.}
+\path (and2)  edge node[inner sep=0mm,pos=.4] (t0) {} node {} (l2);
+\path (and2)  edge node[inner sep=0mm,pos=.4] (k0) {} node {} (r2);
+\path (t0) edge[bend right] (k0) ;
 
-\section{Experiments.}
-\subsection{Integers: a toy case study.}
-\subsection{Symbolic regression.}
-\subsection{Learning electric circuits.}
-\begin{figure}[h]
-\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=2cm,
-                    , minimum size=.5cm, thick,main node/.style={circle,draw}]
-
-  \node[main node] (S) {$\{\}$};
-  \node[main node] (1) [below left of=S] {$\{a\}$};
-  \node[main node] (2) [below right of=S] {$\{b\}$} ;
-  \node[main node] (3) [below left of=1] {$\{a, a\}$};
-  \node[main node] (4) [below right of=1] {$\{a, b\}$};
-  \node[main node] (5) [below right of=2] {$\{b, b\}$};;
-
-  \path
-    (S) edge node [left] {a} (1)
-        edge node [right] {b} (2)
-    (1) edge node [left] {a} (3)
-        edge node [right] {b} (4)
-    (2) edge node [left] {a} (4)
-        edge node [right] {b} (5)
-
-
+\path (and3)  edge node[inner sep=0mm,pos=.4] (t1) {} node {} (l3);
+\path (and3)  edge node[inner sep=0mm,pos=.4] (k1) {} node {} (r3);
+\path (t1) edge[bend right] (k1) ;
 \end{tikzpicture}
 \end{figure}
+
+In accordance with the stochastic grammar over programs, we weight all
+edges from $OR$ nodes according to the negative log likelihood of
+choosing the associated rule from the stochastic grammar, conditioned
+on the requesting type. Expanding an $AND$ node has zero cost. In the
+case that the stochastic grammar is ill condition, we might have an
+infinitely deep solution tree whose cost does not increase as we
+unfold it; this can occur, for example, if there are no primitives of
+the required type since the log probability of expansion to the next
+$AND$ node is 0. . To avoid this, we simply declare a cost for
+expanding the next $AND$ node when it is the only node available.
+
+\subsection{Finding the most compressive set of solution.}
+
+Once we have enumerated the best $N$ programs from our distribution,
+we will find that some tasks have no solutions and some have one or
+more solutions; for those tasks that have solutions, we want to choose
+a solution for each task such that the complete set of such solutions
+for all the tasks is as compressible as possible.
+
+A natural metric for the compressibility of a set of binary trees is
+the number of unique subtrees that this set contains. Thus, we can
+attempt to find the assignment of solutions to tasks that minimizes
+this value. However, an exact optimization for this problem requires
+examining $O(m^k)$ assignments, where $m$ is the maximum number of
+solutions for any one task and $k$ is the number of tasks. Since this
+is prohibitive, we relax the compressibility metric as follows: we
+define the cost of adding each new solution $s_n$ to a partial set of
+solutions $s_1, \dots, s_{n-1}$ to be the number of additional unique
+subtrees in $s_n$ that are not present in $s_{n-1}$. Our solution thus
+becomes approximate and that approximation is order-dependent, but a
+depth-first search on the defined search space goes from exponential
+in the solution degree to quadratic.
+
+\subsection{Re-estimating the stochastic grammar over programs.}
+
+Given a set of solution programs, we want to re-estimate our
+stochastic grammar. Our algorithm for doing this is based broadly on
+the Neville-Manning algorithm for grammar-based
+compression~\cite{nevill1997identifying}. In our algorithm, we simply
+count the numer of times each unique subtree appears as the child of a
+subtree \emph{not yet encountered} in the solution set. That is, we
+traverse the solution set in depth first order, comparing each tree we
+encounter to all the trees we previously encountered; but if we
+encounter a tree we have already seen, we do not descend into it. In
+this traversal, the set of trees we encounter more than once is the
+set of terminal nodes in our new grammar. To estimate the
+probabilities associated with each node production, we again traverse
+the solution set, but these time for each node where a terminal
+production takes place we count which other terminal productions could
+have taken place. We estimate the terminal production weight to be the
+ratio of the number of times that node was used in the first traversal
+divided by the number of times it was used in the second traversal
+(plus 1, to account for the event of an $AND$ node
+expansion). Likewise, we re-estimate the probability of an $AND$ node
+expansion by diving the number of such expansions in the solution set
+by the number of possible expansions in the solution set.
+
+\section{Experiments.}
+\subsection{Symbolic regression.}
+
+In this section, we walk through the performance of our learning
+algorithm on a symbolic regression problem. In this problem,
+each task is a set of pairs $ (x, f(x))$ where $x \in (0, \dots, 10)$
+and $f$ is a polynomial. The goal is to discover a program for each
+task that outputs the appropriate value $f(x)$ for each input x. We
+assume that the data is noise-free.
+
+The choice of an initial grammar for the algorithm will, of course,
+have a big effect on its performance, and so we would like to
+characterise this effect. We can divide primitives into roughly two
+sets; there are low-level primitives, those that operate on concrete
+types like Bool or Double, and these tend to be domain specific. For
+example, conrete primitives include $1, 2$, etc., and $f(x) = 3x$. The
+other class of primitives are abstract primitives, which can be
+characterized by having arguments whose types are primarily function
+types, like $(t \rightarrow s), (t \rightarrow s) \rightarrow \text{
+  Double },$ etc. Of course, we can construct operators that fall in
+between. 
+
+The most abstract operators are those that Liang et. al refer to as
+``routers''~\cite{liang10programs}. These operators take the place of
+$\lambda$ abstraction in the general lambda calculus: whereas
+$\lambda$ abstraction allows us to bind arguments to variables nested
+deep inside an expression, without them we need to have operators that
+``route'' arguments to the appropriate functions in a nested
+expression. 
+
+\begin{definition}[Router~\cite{liang10programs}] A \emph{router} is a combinator
+represented by a finite sequence of elements from $\{B, C, S\}$. The
+behavior of router $r$ is given by
+\[
+(r \, f \, g \, x_1 \dots x_{|r|}) = (f \, x_{i_1} \dots x_{i_n}) (g
+\, x_{j_1} \dots x_{j_n}),
+\]
+where $i_1 < \dots < i_n$ are indices $i$ such that $r_i \in \{C, S\}$
+and where $j_1 < \dots < j_n$ are indices $j$ such that $r_j \in \{B,
+S\}$. Let $\mathcal{R}_k$ be the set of all routers of length equal to
+$k$. Let $\mathcal{R}_{\leq k}$ be the set of all routers of length
+less than or equal to $k$.
+\end{definition}
+
+To analyze the behavior of our algorithm, we will vary the parameters
+of the problem along two axes while keeping the learning tasks the
+same. Along the first axis, we vary the initial library to which our
+learner has access with respect to the its abstractness (i.e., number
+of routers) and its concreteness (i.e. number of concrete
+primitives). Along the second axis we vary the size of the search
+frontier.
+
+Each task is to predict the value of an unknown polynomial on the
+inputs $0, \dots, 10$. The set of tasks corresponds to the set of
+polynomials $\{ax^2 + bx + c | a, b, c \in \{0, \dots, 10 \}\}$. 
+
+In Figure~\ref{fig:symreg}, we show performance results as we vary
+both the routers included and the frontier size. Each individual plot
+shows how changing the frontier size changes the number of tasks the
+algorithm identifies correctly over the course of ten algorithm
+iterations. In addition, we have a baseline for each curve, visits the
+same number of expressions as the corresponding algorithm run
+(i.e. frontier size $\times$ $\#$ of iterations) but all at once; it
+does not do any learning. Thus, this baseline serves as a brute-force
+control for the learning aspect of the algorithm. 
+
+\begin{figure}
+\label{fig:symreg}
+\includegraphics[width=\linewidth]{figures/learningCurves.pdf}
+\includegraphics[width=\linewidth]{figures/performanceFrontierSize.pdf}
+\caption{E-C learning curves for the symbolic regression task set as
+  we vary the frontier size.}
+\end{figure}
+
+
+Why do the learning curves asymptote early? One might object that a
+learning algorithm should continuously improve, if only slowly, as it
+is given more time. But in these runs we observe a finite and
+permanent performance cap. This is expected: once the learner find a
+set of concepts it can explain, if those concepts fill up the
+frontier, then there is nothing to spur the learner to incorporate as
+yet unsolved tasks. 
+
+To investigate whether this is in fact the case, we can examine the
+proportion of expressions in the frontier that match tasks in our task
+set; that is, is the learning curve plateauing because the frontier is
+heavily redundant, or is it plateuing because the frontier contains
+many expressions that do not hit the task set at
+all. Figure~\ref{fig:plateau_investigation} shows the proportion of
+the expressions in the frontier that hit a task as the frontier sizeincreases.
+
+
+\subsection{Digital arithmetic}
+Having demonstrated the behavior of the E-C algorithm on symbolic
+regression, we analyze its performance on tasks involving digital
+arithmetic, a class of problems with known modular structure. The
+general goal is to discover boolean circuits consisting of a limited
+set of gates that perform arithmetic operations on binary number
+representations. 
+
+
+
 
 %% The file named.bst is a bibliography style file for BibTeX 0.99c
 \bibliographystyle{plain}

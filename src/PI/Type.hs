@@ -205,5 +205,6 @@ tBool = TCon (TyCon "Bool" Star)
 tArrow = TCon (TyCon "(->)" (Kfun Star (Kfun Star Star)))
 tList = TCon $ TyCon "[]" (Kfun Star Star)
 tMaybe = TCon $ TyCon "Maybe" (Kfun Star Star)                                         
+tPair = TCon $ TyCon "(,)" (Kfun Star Star)
                      
 

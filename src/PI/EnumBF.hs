@@ -47,6 +47,9 @@ isClosed :: CombBase -> Bool
 isClosed cb | path cb == Nothing  = True
             | otherwise           = False
 
+-- hack min grammar val
+hackMinGrammarVal = log (0.5)
+
 
 enumBF :: Grammar 
        -> Int -- max num combinators
@@ -71,9 +74,10 @@ enumBF' gr i bfState@(BFState openPQ closedPQ) =
             closedCBs = filter (isClosed . combBase) cbs
             openCBs= filter (not . isClosed . combBase) cbs
             closedPQ' = (PQ.fromList closedCBs) `PQ.union` closedPQ
-                        
             openPQ'' = PQ.fromList openCBs `PQ.union` openPQ'
-        in enumBF' gr i $ BFState openPQ'' closedPQ'
+        in (trace $ "OPEN: " ++ (show $ PQ.size openPQ'')
+            ++ " CLOSED: " ++ (show $ PQ.size closedPQ'))
+           $ enumBF' gr i $ BFState openPQ'' closedPQ'
         
 
 expandToApp :: Grammar -> CombBase -> StateT Int [] CombBase
@@ -84,7 +88,9 @@ expandToApp gr (CombBase (CTerminal tp) (Just []) v) =
            c_left = (CTerminal t_left) 
            c_right = (CTerminal t_right)
            c = CApp c_left c_right tp 1
-           cb = CombBase c (Just [L]) (exLogProb gr tp )
+           minGrammarVal = hackMinGrammarVal
+--           minGrammarVal = minimum (CM.elems (library gr))
+           cb = CombBase c (Just [L]) (2*minGrammarVal)
        return cb
 
 expand :: Grammar 
@@ -93,17 +99,21 @@ expand :: Grammar
 expand gr cb@(CombBase (CTerminal tp) (Just []) v) = cbs `mplus` cbApp
     where primCombs = CM.keys (library gr)
           cs = filterCombinatorsByType primCombs tp
-          cbs = do c <- cs
-                   let value = (calcLogProb gr tp c)
-                       combBase = CombBase c Nothing (v + value)
-                   return combBase
+--          minGrammarVal = minimum (CM.elems (library gr))
+          minGrammarVal = hackMinGrammarVal
+          cbs =   do c <- cs
+                     let value = (calcLogProb gr tp c)
+                         combBase = CombBase c Nothing value
+                     return combBase
           cbApp = expandToApp gr cb 
 
 expand gr cb@(CombBase (CApp c_left c_right tp d) (Just (L:rest)) v) = 
+    let --minGrammarVal = minimum (CM.elems (library gr)) in
+        minGrammarVal = hackMinGrammarVal in
     do (CombBase c_left' rest' v')  <- expand gr 
                                        $ CombBase c_left 
                                              (Just rest) 
-                                             (v - (exLogProb gr tp))
+                                             (v - minGrammarVal)
        let tp_right' = fromType (cType c_left')
            c_right' =  CTerminal tp_right'
 
@@ -115,13 +125,15 @@ expand gr cb@(CombBase (CApp c_left c_right tp d) (Just (L:rest)) v) =
            d' = if (cDepth c_left') + 1 > d then cDepth c_left' + 1 else d
 
        return $ CombBase (CApp c_left' c_right' tp' d') path' 
-                  (v' + (exLogProb gr tp))
+                  (v' + v - minGrammarVal)
 
 expand gr cb@(CombBase (CApp c_left c_right tp d) (Just (R:rest)) v) = 
+    let --minGrammarVal = minimum (CM.elems (library gr)) in
+        minGrammarVal = hackMinGrammarVal in
     do (CombBase c_right' rest' v')  <- expand gr 
                                        $ CombBase c_right 
                                              (Just rest) 
-                                             0
+                                             v 
        t <- newTVar Star
        let backsub = fromJust $ mgu (cType c_left) (cType c_right' ->- t)
            tp' = toType (apply backsub (cType c_left))
@@ -129,7 +141,7 @@ expand gr cb@(CombBase (CApp c_left c_right tp d) (Just (R:rest)) v) =
                      Nothing -> Nothing
                      Just ys -> Just (R:ys)
            d' = if (cDepth c_right') + 1 > d then cDepth c_right' + 1 else d
-       return $ CombBase (CApp c_left c_right' tp' d') path' (v' + v)
+       return $ CombBase (CApp c_left c_right' tp' d') path' (v' + v - minGrammarVal)
 
 
 

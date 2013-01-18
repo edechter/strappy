@@ -61,8 +61,8 @@ incr2 index c@(CApp l r _ _) tp
                              l_index <- incr2 index' l t_left
                              r_index <- incr2 l_index r (fromType (cType l))
                              return r_index
-           otherwise -> do let index' = CM.insert c [tp] index 
-                           return index'
+           Just xs -> do let index' = CM.insert c (tp:xs) index 
+                         return index'
 incr2 index c@(CNode _ _ _) tp = return $ CM.insertWith (++) c [tp] index 
 
 compress2 :: [(Type, Comb)] -> CombMap [Type]

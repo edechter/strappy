@@ -54,10 +54,10 @@ logsumexp = log . sum . (map exp)
 
 normalizeGrammar :: Grammar -> Grammar 
 normalizeGrammar (Grammar lib ex)
-    = let logTotalMass = logsumexp $ ex:(CM.elems lib)
+    = let logTotalMass = logsumexp $ (CM.elems lib)
           lib' = CM.map (+ (-logTotalMass)) lib
           ex' = ex - logTotalMass
-      in Grammar lib'  ex'
+      in Grammar lib'  0 -- ex'
           
 sum' (a, b) (c, d) = (a + b, c + d)
 
@@ -126,26 +126,27 @@ calcLogProb gr tp c
     = let m = filterCombinatorsByType (CM.keys $ library gr) tp
           altCs = map fst $ runStateT m 0
           combLps = [exp $ (library gr) CM.! x | x <- altCs] 
-          logProbAll = log $ exp (expansions gr) + sum combLps
+          logProbAll = log $ sum combLps
           combLogProb = (library gr) CM.! c - logProbAll
-      in combLogProb
+          out = if length altCs < 2 then log (0.5) else combLogProb
+      in out
 
-exLogProb :: Grammar -> Type -> Double
-exLogProb gr tp  
-    = let m = filterCombinatorsByType (CM.keys $ library gr) tp
-          altCs = map fst $ runStateT m 0
-          combLps = [exp $ (library gr) CM.! x | x <- altCs] 
-          logProbAll = log $ exp (expansions gr) + sum combLps
-          out = if null altCs then log (0.5)  -- ^ this log (0.5) is a
-                                              -- hack. it should be 0,
-                                              -- right? since there
-                                              -- are no alternatives,
-                                              -- the probability is
-                                              -- 1. But this causes
-                                              -- infinite expansions
-                                              -- in the best-first search. 
-                else expansions gr  - logProbAll
-      in  out
+-- exLogProb :: Grammar -> Type -> Double
+-- exLogProb gr tp  
+--     = let m = filterCombinatorsByType (CM.keys $ library gr) tp
+--           altCs = map fst $ runStateT m 0
+--           combLps = [exp $ (library gr) CM.! x | x <- altCs] 
+--           logProbAll = log $ exp (expansions gr) + sum combLps
+--           out = if null altCs then log (0.5)  -- ^ this log (0.5) is a
+--                                               -- hack. it should be 0,
+--                                               -- right? since there
+--                                               -- are no alternatives,
+--                                               -- the probability is
+--                                               -- 1. But this causes
+--                                               -- infinite expansions
+--                                               -- in the best-first search. 
+--                 else expansions gr  - logProbAll
+--       in  out
 
 
 

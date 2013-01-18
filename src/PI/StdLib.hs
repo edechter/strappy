@@ -12,6 +12,9 @@ import Type
 import CL
 import Expr
 import Grammar
+import Routers (cS, cB, cC, cSS, cSB, cSC, 
+                  cBS, cBB, cBC, cCS, cCB, cCC,
+                  cSSS, cBCB, routers)
 
 type NamedLib = HMap.Map String Comb
 
@@ -29,14 +32,66 @@ t8 = mkTVar 8
  
 -- | define common combinators
 cI = CNode "I" (Func id) ( t0 ->- t0)
-cS = CNode "S" (Func $ \f -> Func $ \g -> Func $ \x -> (App (App f x) (App g x))) typeS 
-    where typeS = (t2 ->- t1 ->- t0) ->- (t2 ->- t1) ->- (t2 ->- t0)
+cK = CNode "K" (Func $ \a -> Func $ \b -> a)   ( t0 ->- t1 ->- t0)
+-- cS = CNode "S" (Func $ \f -> Func $ \g -> Func $ \x -> (App (App f x) (App g x))) typeS 
+--     where typeS = (t2 ->- t1 ->- t0) ->- (t2 ->- t1) ->- (t2 ->- t0)
 
-cB = CNode "B" (Func $ \f -> Func $ \g -> Func $ \x -> (App f (App g x))) typeB 
-    where typeB = (t1 ->- t0) ->- (t2 ->- t1) ->- (t2 ->- t0)
+-- cB = CNode "B" (Func $ \f -> Func $ \g -> Func $ \x -> (App f (App g x))) typeB 
+--     where typeB = (t1 ->- t0) ->- (t2 ->- t1) ->- (t2 ->- t0)
 
-cC = CNode "C" (Func $ \f -> Func $ \g -> Func $ \x -> (App (App f x) g )) typeC 
-    where typeC = (t1 ->- t2 ->- t0) ->- (t2 ->- t1 ->- t0)
+-- cC = CNode "C" (Func $ \f -> Func $ \g -> Func $ \x -> (App (App f x) g )) typeC 
+--     where typeC = (t1 ->- t2 ->- t0) ->- (t2 ->- t1 ->- t0)
+
+-- cBCS = CNode "BCS" (Func $ \f 
+--                 -> Func $ \g 
+--                 -> Func $ \a 
+--                 -> Func $ \b 
+--                 -> Func $ \x 
+--                 -> ((App (App f b) (App (App g a) x)))) tp 
+--     where tp = (t1 ->- t2 ->- t0) ->- (t3 ->- t4 ->- t2) ->- t3 ->- t1 ->- t4 ->- t0
+
+-- cSS = CNode "SS" (Func $ \f 
+--                 -> Func $ \g 
+--                 -> Func $ \x1 
+--                 -> Func $ \x2
+--                 -> ((App (App x1 x2) (App x1 x2 )) tp 
+--     where tp = undefined
+
+-- cSS = CNode "SR" (Func $ \f 
+--                 -> Func $ \g 
+--                 -> Func $ \x1 
+--                 -> Func $ \x2
+--                 -> ((App (App x1 x2) (App x1 x2 )) tp 
+--     where tp = undefined
+
+-- cSS = CNode "SS" (Func $ \f 
+--                 -> Func $ \g 
+--                 -> Func $ \x1 
+--                 -> Func $ \x2
+--                 -> ((App (App x1 x2) (App x1 x2 )) tp 
+--     where tp = undefined
+
+-- cSS = CNode "SS" (Func $ \f 
+--                 -> Func $ \g 
+--                 -> Func $ \x1 
+--                 -> Func $ \x2
+--                 -> ((App (App x1 x2) (App x1 x2 )) tp 
+--     where tp = undefined
+
+-- cSS = CNode "SS" (Func $ \f 
+--                 -> Func $ \g 
+--                 -> Func $ \x1 
+--                 -> Func $ \x2
+--                 -> ((App (App x1 x2) (App x1 x2 )) tp 
+--     where tp = undefined
+
+-- cSS = CNode "SS" (Func $ \f 
+--                 -> Func $ \g 
+--                 -> Func $ \x1 
+--                 -> Func $ \x2
+--                 -> ((App (App x1 x2) (App x1 x2 )) tp 
+--     where tp = undefined
+
 
 
 cPrim = CNode "PrimRec" prim primType
@@ -115,16 +170,30 @@ cIsEmpty = CNode "isEmpty" expr tp
                                  otherwise -> (B False)
           tp = (TAp tList t0) ->- tBool
 
+
+------ Tuple Functions ----------
+
+cPair = CNode "pair" (Const "pair") (t0 ->- t0 ->- TAp tPair t0)
+cFst = CNode "fst" expr tp
+       where expr = Func $ \pr -> case pr of
+                                    (App (App (Const "pair") x) y) -> x
+                                    otherwise -> error "Error in cFst"
+             tp = (TAp tPair t0) ->- t0
+
+cSnd = CNode "snd" expr tp
+       where expr = Func $ \pr -> case pr of
+                                    (App (App (Const "pair") x) y) -> y
+                                    otherwise -> error "Error in cFst"
+             tp = (TAp tPair t0) ->- t0
+
 stdlib' :: NamedLib
-stdlib' = CM.fromList $ 
+stdlib' = (CM.fromList $ 
          [
            ("I", cI)
-         , ("S", cS)
-         , ("B", cB)
-         , ("C", cC)
+--         , ("K", cK)
 --         , ("cond", cCond)
---         , ("True", cTrue)
---         , ("False", cFalse)
+        , ("True", cTrue)
+        , ("False", cFalse)
 --         , ("|", cOr)
 --         , ("&", cAnd)
 --         , ("not", cNot)
@@ -136,7 +205,7 @@ stdlib' = CM.fromList $
            , ("*", dOp2C "*" (*))
           ,  ("0", num2C 0)
           ,  ("1", num2C 1)
-          , ("2", num2C 2)
+--          , ("2", num2C 2)
 --         , ("3", num2C 3)
 --         , ("4", num2C 4)
 --           , ("primRec", cPrim) 
@@ -145,10 +214,14 @@ stdlib' = CM.fromList $
 --            , ("head", cHead)
 --            , ("tail", cTail)
 --            , ("isEmpty", cIsEmpty)
-           ]
+          , ("pair", cPair)
+          , ("fst", cFst)
+          , ("snd", cSnd)
+           ]) 
+           `CM.union` routers
 
 stdgrammar = Grammar lib c
     where lib  = CM.fromList $ [(c, (-3::Double)) | c <- CM.elems stdlib']
-          c = (-2)
+          c = 0 -- (-2)
 
 

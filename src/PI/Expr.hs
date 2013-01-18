@@ -61,7 +61,6 @@ reduce e@(App (Func f) a)  = let z = (reduce a)
                              in case z of 
                                   err@(ExprError _) -> err
                                   otherwise -> z `seq` reduce $ f z
-
 reduce e@(App (Const _) _) =  e
 reduce x@(App a b) | isRedex a =  let a' = reduce a 
                                   in case a' of

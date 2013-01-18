@@ -3,8 +3,10 @@
 
 module Main where
 
+import System.IO
 import qualified Data.Map as Map
 import Control.Monad.State
+import Debug.Trace
 
 import Type
 import CL
@@ -16,10 +18,15 @@ import Search
 import qualified CombMap as CM
 import Experiment
 import qualified Compress as CP
-import ListExperiment
+-- import Experiments.ListExperiment
+import Experiments.SymbolicRegression
+import PostProcess 
+import Grammar
 
-grammar = fst $ runSearch $ loop expIntegerSequences
+out =  runSearch $ loop expSymReg
+grammar = (trace $ "OUT: " ++  (show $ snd out)) $ fst out
+searchData = snd out
 
 combs = map comb $ enumBF stdgrammar 1000 (tInt ->- tInt)
 main = do
-   putStrLn $ show grammar
+  saveSearchData "data" expSymReg searchData

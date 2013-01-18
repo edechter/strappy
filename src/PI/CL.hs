@@ -40,7 +40,7 @@ isCNode (CNode{}) = True
 isCNode _ = False
 
 type SynthComb = Either String Comb
-
+ 
 app :: SynthComb -> SynthComb -> SynthComb
 app m1 m2 = do c1 <- m1
                c2 <- m2
@@ -65,7 +65,7 @@ infixl 4 <::>
 instance Show Comb where
     show (CApp c1 c2 _ _) = "(" ++ show c1 ++ " " ++ show c2 ++ ")"
     show (CNode n _ _) = n
-    show (CTerminal t) =  "CTerm of type " ++ show t
+    show (CTerminal t) =  "CTerm: " ++ show t
 
 -- | An alternative to show: if combinator is named and evaluates to a
 -- number or bool, show it an an evaluated expressions.
@@ -100,6 +100,7 @@ bool2C c = CNode (show c) (B c) tBool
 getType :: Comb -> Either String Type
 getType (CNode _ _ t) = Right t
 getType c@(CApp c1 c2 _ _) = getAppType c1 c2
+getType c@(CTerminal t) = Right t
 
 getAppType :: Comb -> Comb -> Either String Type
 getAppType c1 c2  

@@ -24,6 +24,7 @@ data Experiment = Experiment {expName :: String, -- ^ name of experiment
                               expDepthBound   :: Int, 
                               expNumBound :: Int, -- ^ number of combinators to search
                               expReps :: Int } -- ^ number of iterations
+                deriving Show
 
 ----- Squared Integers -------
 rlimit = 100
@@ -49,44 +50,44 @@ expSquaredInts
 ------------------------------
 
 ---- Integer Sequences ----
-rng = [0..10]
-red = (reduceWithLimit 100) . comb2Expr
-eval :: [Comb] -> Comb -> Double
-eval ds c = fromIntegral $ sum $ [(toInteger $ diff i) | i <- rng]
-         where diff i = abs $ dat i - eval i
-               eval i = if y < 0 then maxBound else y 
-                   where y = case red  (CApp c (num2C i) tInt 0) of
-                               Just (N y) ->  y
-                               Nothing -> maxBound
-               dat i = y where Just (N y) = red (ds !! i)
+-- rng = [0..10]
+-- red = (reduceWithLimit 100) . comb2Expr
+-- eval :: [Comb] -> Comb -> Double
+-- eval ds c = fromIntegral $ sum $ [(toInteger $ diff i) | i <- rng]
+--          where diff i = abs $ dat i - eval i
+--                eval i = if y < 0 then maxBound else y 
+--                    where y = case red  (CApp c (num2C i) tInt 0) of
+--                                Just (N y) ->  y
+--                                Nothing -> maxBound
+--                dat i = y where Just (N y) = red (ds !! i)
 
-quad a b c = \i -> a * i^2 + b * i + c
-showQuad a b c = show a ++ " x^2 + " ++ show b ++ " x + " ++ show c
-mkQuadTask a b c = Task (showQuad a b c) f (tInt ->- tInt)
-    where f = eval [num2C $ (quad a b c i)| i<-rng]
+-- quad a b c = \i -> a * i^2 + b * i + c
+-- showQuad a b c = show a ++ " x^2 + " ++ show b ++ " x + " ++ show c
+-- mkQuadTask a b c = Task (showQuad a b c) f (tInt ->- tInt)
+--     where f = eval [num2C $ (quad a b c i)| i<-rng]
 
-squares a b = \i -> (a * i + b)^2
-showSquares a b = "(" ++ show a ++ " x + " ++ show b ++ ")^2"
-mkSquaresTask a b = Task (showSquares a b) f (tInt ->- tInt)
+-- squares a b = \i -> (a * i + b)^2
+-- showSquares a b = "(" ++ show a ++ " x + " ++ show b ++ ")^2"
+-- mkSquaresTask a b = Task (showSquares a b) f (tInt ->- tInt)
                    
-    where f = eval [num2C $ (squares a b) i| i<-rng]
+--     where f = eval [num2C $ (squares a b) i| i<-rng]
 
-taskSet' = [mkSquaresTask i j | i <- [0..10] , j <- [0..10]]
-            ++ (map (mkSingleEqualityTask 100) $ [i | i <- [0..10]])
-           ++ [mkQuadTask i j k | i <- [0..10] , j <- [0..10], k <- [0..10]]
+-- taskSet' = --[mkSquaresTask i j | i <- [0..10] , j <- [0..10]]
+--             (map (mkSingleEqualityTask 100) $ [i | i <- [0..10]])
+--            ++ [mkQuadTask i j k | i <- [0..10] , j <- [0..10], k <- [0..10]]
             
                                     
-expIntegerSequences 
-    = Experiment {
-        expName = "Integer Sequences", 
-        expTaskSet = taskSet',
-        expEps = 0,
-        expPrior = stdgrammar,
-        expInitLib = stdgrammar,
-        expDepthBound = 3,
-        expNumBound = 500,
-        expReps=40
-      }
+-- expIntegerSequences 
+--     = Experiment {
+--         expName = "Integer Sequences", 
+--         expTaskSet = taskSet',
+--         expEps = 0,
+--         expPrior = stdgrammar,
+--         expInitLib = stdgrammar,
+--         expDepthBound = 3,
+--         expNumBound = 50,
+--         expReps=20
+--       }
  
 
 ----- List Functions ----------

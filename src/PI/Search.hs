@@ -35,20 +35,15 @@ import qualified Compress as CP (getUniqueTrees, compress2)
 import Compress (Index)
 import Experiment
 
-data SearchLogEntry = SearchLogEntry { searchIter :: Int,
-                                       searchLib :: Grammar,
-                                       searchSpace :: [Comb],
-                                       searchNumHit :: Int,
-                                       searchExplanation :: [(Task, Comb)],
-                                       searchCompression :: CombMap Int
+data SearchLogEntry = SearchLogEntry { searchGrammar :: Grammar,
+                                       searchExplanation :: [(Task, Comb)]
                                      } deriving Show
-mkEmptySearchLog :: SearchLogEntry
-mkEmptySearchLog  = SearchLogEntry 0 nullGrammar [] 0 [] CM.empty
 
-type Search a = State SearchLogEntry a 
 
-runSearch :: Search a -> (a, SearchLogEntry)
-runSearch s = runState s mkEmptySearchLog 
+type Search a = Writer [SearchLogEntry] a 
+
+runSearch :: Search a -> (a, [SearchLogEntry])
+runSearch s = runWriter s 
 
 mkHypothesisSpace :: Experiment 
                   -> Grammar 
@@ -62,16 +57,30 @@ mkHypothesisSpace expr gr
           taskSet = expTaskSet expr
 
 
+
+evalSymReg :: Comb -> [Int]
+evalSymReg c = [ f i | i <- [0..10]]
+    where f i = case reduceComb $ CApp c (num2C i) tInt 0 of 
+                  (N y ) -> y
+                  otherwise -> (maxBound :: Int)
+
+
 -- | For each data point in a dataset list all the expressions that
 -- evaluate to that datapoint. 
 findCombinatorsForEachDatum :: Experiment 
                             -> Grammar -- ^ current grammar
                             -> Search [(Task, [Comb])]
 findCombinatorsForEachDatum expr gr
-    = do s <- get
+    = do 
          db <- mkHypothesisSpace expr gr
-         return $ [(t, [ c | c <- db Map.! tp, 
-                       f c <= eps ]) | t@(Task n f tp) <- taskSet]
+         return $ do 
+           t <- taskSet
+           let cs = case t of 
+                      Task n f tp -> do c <- db Map.! tp
+                                        if f c <= eps then return c else mzero
+                      SymRegTask n vs tp -> do c <- db Map.! tp
+                                               if evalSymReg c == vs then return c else mzero
+           return (t, cs) 
       where 
         taskSet = expTaskSet expr
         eps = expEps expr
@@ -82,11 +91,13 @@ oneStep :: Experiment
         -> Search Grammar
 oneStep ex gr = do xs <- findCombinatorsForEachDatum ex gr
                    let xs' = filter (not . null . snd) xs
-                       rs = (trace $  "Hit: " ++ show (length xs'))
-                            $ dfs xs'
+                       xsShort = map (\(t, cs) -> (t, take 5 cs)) xs'  
+                       rs = (trace $  "Hit: " ++ show (xsShort))
+                            $ dfs xsShort
                        ind = CP.compress2 (map (\(tsk, c) -> (taskType tsk, c))  rs)
                        grammar' = (trace $ showTaskCombAssignments rs)
-                                  $ estimateGrammar prior 1 ind rs  
+                                  $ estimateGrammar prior (0.1) ind rs  
+                   tell $ [SearchLogEntry gr rs]
                    return $ (trace $ show grammar') $ grammar'
 
           -- vars
@@ -98,7 +109,7 @@ oneStep ex gr = do xs <- findCombinatorsForEachDatum ex gr
 
 loop :: Experiment -> Search Grammar
 loop ex
-    = foldM (\l _ -> oneStep ex l) grammar [0..reps]
+    = foldM (\l _ -> oneStep ex l) grammar [0..(reps-1)]
       where           
         -- vars
         eps = expEps ex
@@ -109,7 +120,23 @@ loop ex
 
 
 
-
+bruteForceSearch :: Experiment 
+                 -> Search Grammar
+bruteForceSearch ex 
+    = let n = (expNumBound ex) * (expReps ex)
+          name = (expName ex) ++ "_Brute"
+          exBrute = ex{expName=name,
+                       expNumBound = n,
+                       expReps = 1}
+          gr = expInitLib ex
+      in do xs <- findCombinatorsForEachDatum ex gr
+            let xs' = filter (not . null . snd) xs
+                rs' = map (\(t, (c:cs)) -> (t, c)) xs'
+            tell $ [SearchLogEntry gr rs']
+            return gr
+                    
+                                               
+                                                 
 
 
 
