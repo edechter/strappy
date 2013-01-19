@@ -120,7 +120,12 @@ cOr = CNode "|" expr tp
 cNot = CNode "not" expr tp
     where expr = Func $ \(B x) -> B ( not x)
           tp = tBool ->- tBool
+cNand = CNode "nand" expr tp
+    where expr = Func $ \(B x) -> Func $ \(B y) -> B ( not (x && y))
+          tp = tBool ->- tBool ->- tBool
 
+
+               
 cCond = CNode "Cond" expr tp
     where expr = Func $ \c -> Func $ \t -> Func $ \f
                  -> case c of
@@ -186,6 +191,48 @@ cSnd = CNode "snd" expr tp
                                     otherwise -> error "Error in cFst"
              tp = (TAp tPair t0) ->- t0
 
+cTriple = CNode "triple" (Const "triple") 
+           (t0 ->- t0 ->- t0 ->- TAp tTriple t0)
+
+cFst3 = CNode "fst3" expr tp
+        where expr = Func $ \tr -> case tr of
+                                    (App (App (App (Const "triple") x) y) z) -> x
+                                    otherwise -> error "Error in cFst3"
+              tp = (TAp tTriple t0) ->- t0
+cSnd3 = CNode "snd3" expr tp
+        where expr = Func $ \tr -> case tr of
+                                    (App (App (App (Const "triple") x) y) z) -> y
+                                    otherwise -> error "Error in cFst3"
+              tp = (TAp tTriple t0) ->- t0
+cThrd3 = CNode "thrd3" expr tp
+        where expr = Func $ \tr -> case tr of
+                                    (App (App (App (Const "triple") x) y) z) -> y
+                                    otherwise -> error "Error in cThrd3"
+              tp = (TAp tTriple t0) ->- t0
+
+cQuad = CNode "quad" (Const "quad") 
+           (t0 ->- t0 ->- t0 ->- TAp tTriple t0)
+cFst4 = CNode "fst4" expr tp
+        where expr = Func $ \tr -> case tr of
+                                    (App (App (App (App (Const "quad") x) y) z) w) -> x
+                                    otherwise -> error "Error in cFst4"
+              tp = (TAp tTriple t0) ->- t0
+cSnd4 = CNode "snd4" expr tp
+        where expr = Func $ \tr -> case tr of
+                                    (App (App (App (App (Const "quad") x) y) z) w) -> y
+                                    otherwise -> error "Error in cSnd4"
+              tp = (TAp tTriple t0) ->- t0
+cThrd4 = CNode "thrd4" expr tp
+        where expr = Func $ \tr -> case tr of
+                                    (App (App (App (App (Const "quad") x) y) z) w) -> z
+                                    otherwise -> error "Error in cThrd4"
+              tp = (TAp tTriple t0) ->- t0
+cFrth4 = CNode "frth4" expr tp
+        where expr = Func $ \tr -> case tr of
+                                    (App (App (App (App (Const "quad") x) y) z) w) -> w
+                                    otherwise -> error "Error in cFrth4"
+              tp = (TAp tTriple t0) ->- t0
+
 stdlib' :: NamedLib
 stdlib' = (CM.fromList $ 
          [
@@ -217,6 +264,10 @@ stdlib' = (CM.fromList $
           , ("pair", cPair)
           , ("fst", cFst)
           , ("snd", cSnd)
+          , ("triple", cTriple)
+          , ("fst3", cFst3)
+          , ("snd3", cSnd3)
+          , ("thrd3", cThrd3)
            ]) 
            `CM.union` routers
 

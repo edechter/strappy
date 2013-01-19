@@ -35,6 +35,10 @@ instance Eq Expr where
     (App l1 r1) == (App l2 r2) = (l1 == l2) && (r1 == r2)
     (Lam e) == (Lam f) = (e == f)
     (Var i) == (Var j) = i == j
+    (N i) == (N j) = i == j
+    (C i) == (C j) = i == j
+    (B i) == (B j) = i == j
+    (Const s) == (Const s') = s == s'
     _ == _ = False
 
 

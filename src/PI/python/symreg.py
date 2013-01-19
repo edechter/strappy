@@ -26,6 +26,8 @@ numhitFiles = [
                  "frontier_size" : 7000},
 {"filename" : "../data/R1_8000_2013-01-18_08-57-06.004799_EST/numhit.csv",
                  "frontier_size" : 8000},
+{"filename" : "../data/R1_9000_2013-01-18_11-00-42.396298_EST/numhit.csv",
+                 "frontier_size" : 9000},
 
                 {"filename" : "../data/R1_10000_2013-01-17_15-34-32.810923_EST/numhit.csv",
                  "frontier_size" : 10000},
@@ -55,7 +57,6 @@ def learningCurvesPlot(numhitDict, ax=None):
     ylabel = "% Tasks Solved"
     ax = perc.plot(style="-", 
                    use_index=True,
-                   ax=ax,
                    sort_columns=True,
                    linewidth=2,
                    
@@ -73,7 +74,6 @@ def performanceVsFrontierSize(numhitDict, ax=None):
     xlabel = "Frontier Size"
     ylabel = "% Tasks solved after 15 iterations"
     ax = finalVals.plot(style="-",
-                        ax=ax
                         sort_columns=True,
                         linewidth=2)
     ax.set_xlabel(xlabel)
