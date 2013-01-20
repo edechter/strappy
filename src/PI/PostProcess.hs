@@ -67,11 +67,13 @@ currentExpId exp = do timeStr <- fmap show getZonedTime
                       return expId
 
 
-saveSearchData :: String  -- ^ path to data dir
+saveSearchData :: Show a 
+               => String  -- ^ path to data dir
                -> Experiment 
                -> [SearchLogEntry] 
+               -> a -- ^ Time
                -> IO ()
-saveSearchData datadir exp searchData = 
+saveSearchData datadir exp searchData time = 
     do expDirName <- currentExpId exp
       
        let expPath = joinPath [datadir, expDirName]
@@ -79,19 +81,23 @@ saveSearchData datadir exp searchData =
            numhitFileName = joinPath [expPath, "numhit.csv"]
            explanationsFileName = joinPath [expPath, "explanations.csv"]
            experimentDataFileName = joinPath [expPath, "experimentdata.txt"]
+           timeFileName = joinPath [expPath, "time.txt"]
        createDirectoryIfMissing True expPath
        fgrammar <- openFile grammarFileName WriteMode
        fnumHit <- openFile numhitFileName WriteMode
        fexpl <- openFile explanationsFileName WriteMode
        fexpdata <- openFile experimentDataFileName WriteMode
+       ftime <- openFile timeFileName WriteMode
        hPutStr fgrammar (showLibByIter $ getLibData $ searchData)
        hPutStr fnumHit (showNumHitByIter $ getNumHitByIter $ searchData)
        hPutStr fexpl (showExplanationsByIter $ getExplanationsByIter $ searchData)
        hPutStr fexpdata (show exp)
+       hPutStr ftime (show time)
        hClose fgrammar
        hClose fnumHit
        hClose fexpl
        hClose fexpdata
+       hClose ftime
        
        
        

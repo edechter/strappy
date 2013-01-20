@@ -180,7 +180,7 @@ lambda calculus, then, a subtree might have free variables, not bound
 to any enclosing $\lambda$. 
 
 As a simple example of our representation, consider the squaring
-function $\lamba x. * x x $. Using two of the basis combinators above,
+function $\lambda x. * x\; x $. Using two of the basis combinators above,
 we can write the squaring function in combinatory logic as $S * I$,
 where application associates to the left, so we drop the
 parentheses. When we apply this combinator to a value $x$, the action
@@ -189,13 +189,15 @@ of the combinator is defined as $S \;*\; I\; x~\rightarrow~(*\; x)\;
 representation with a simple polymorphic type
 system~\cite{Pierce_2002}. Thus, this combinator can be represented as
 a binary tree~(Figure~\ref{fig:clbintree}) whose leaves are typed
-primitive combinators and whose interior nodes are typed applications of combinators.
+primitive combinators and whose interior nodes are typed applications
+of combinators.
 
 \begin{figure}
   \centering
-  \begin{subfigure}{0.2\linewidth}
-    \label{fig:clbintree}
-    \begin{tikzpicture}[scale=.5, transform shape, level/.style={sibling distance=10mm/#1, font=\scriptsize}]
+  \begin{subfigure}[Before]{0.5\linewidth}
+    \begin{tikzpicture}[scale=.7,
+        transform shape, level/.style={sibling distance=10mm/#1, font=\scriptsize}
+        ]
       \node [font=\scriptsize] (top) {$I$}
       child {node [above=.3cm] (a) {$(I \rightarrow I) \rightarrow I \rightarrow I$}
         child {node [left=.5cm, below=1cm, text width=3cm] 
@@ -206,22 +208,24 @@ primitive combinators and whose interior nodes are typed applications of combina
       child {node [below right=.3cm and 1cm] (b) {$I \rightarrow I$}
         child {node {$I: t_0 \rightarrow t_0 \rightarrow t_0$}}
       };
-
     \end{tikzpicture}
+    \caption{The typed combinator $S * I$ ($f(x)=x^2$) represented as binary tree.}
+    \label{fig:clbintree}
   \end{subfigure}
-
-  \begin{subfigure}[b]{0.2\linewidth}
-    \label{fig:andor}
-    \begin{tikzpicture}[scale=.5, transform shape, level/.style={sibling distance=10mm/#1}]
+  \begin{subfigure}[After]{0.4\linewidth}
+    \begin{tikzpicture}[scale=.7, transform shape, 
+        level/.style={sibling distance=10mm/#1},
+        every edge/.style={draw, thin}
+      ]
       \node [circle,draw] (a) {}
       child {node [left=0cm] (b) {$f_1$}}
       child {node [left=.2cm] (c) {\dots} edge from parent[draw=none] }
       child {node [left=.4cm] (e) {$f_n$}}
-      child {node [circle,draw, left=1cm] (d) {}
+      child {node [circle,draw, left=1cm] (d) {} edge from parent[very thick]
         child {node [circle, draw, left=.25cm] (l) {} edge from parent[draw=none]
           child {node [left=.5cm] (b) {$f_1$}} 
           child {node [left=.3cm] (c) {\dots} edge from parent[draw=none] }
-          child {node [left=.3cm] (e) {$f_n$}}
+          child {node [left=.3cm] (e) {$f_n$} edge from parent[very thick]}
           child {node [circle, draw, left=.25cm] (and2) {}
             child {node [circle, draw, left=.25cm](l2) {} edge from parent[draw=none] 
               child {node [above=.5cm] {\vdots} edge from parent[draw=none]}
@@ -240,14 +244,14 @@ primitive combinators and whose interior nodes are typed applications of combina
               child {node [above=.5cm] {\vdots} edge from parent[draw=none]}
             }
           }
-          child {node [right=.3cm] (b) {$f_1$}} 
+          child {node [right=.3cm] (b) {$f_1$} edge from parent[very thick]} 
           child {node [right=.4cm] (c) {\dots} edge from parent[draw=none] }
           child {node [right=.6cm] (e) {$f_n$}}
         }
       };
       
-      \path (d)  edge node[inner sep=0mm,pos=.4] (a1) {} node {} (l);
-      \path (d)  edge node[inner sep=0mm,pos=.4] (b1) {} node {} (r);
+      \path (d)  edge[very thick]  node[inner sep=0mm,pos=.4] (a1) {} node {} (l);
+      \path (d)  edge[very thick]  node[inner sep=0mm,pos=.4] (b1) {} node {} (r);
       \path (a1) edge[bend right] (b1) ;
 
       \path (and2)  edge node[inner sep=0mm,pos=.4] (t0) {} node {} (l2);
@@ -258,77 +262,33 @@ primitive combinators and whose interior nodes are typed applications of combina
       \path (and3)  edge node[inner sep=0mm,pos=.4] (k1) {} node {} (r3);
       \path (t1) edge[bend right] (k1) ;
     \end{tikzpicture}
- 
+    \caption{The space of all typed combinators represented as an
+      infinitely deep And-Or tree. Any specific combinator as a
+      sub-binary tree of this And-Or tree whose leaves consist of only
+      the $f_i$ nodes (i.e., the primitive combinators of the
+      grammar).}
+    \label{fig:andor}
     \end{subfigure}
   \caption{A typed binary tree representation of the combinator $S\;*\;I\;$.}
 \end{figure}
 
 \subsection{Best-first enumeration of most probably programs.}
-In order to explore the frontier of most probable programs, we need a
+In order to explore the frontier of most promising programs, we need a
 procedure that enumerates the $N$ most probable programs. We can
-formulate this naturally as a best-first exploration of an $AND-OR$
-tree (NEED FIGURE). Complete programs are represented by binary trees
-that are valid subtrees of the $AND-OR$ graph. The tree structure is
-shown in Figure~\ref{fig:andor}. The root is an $OR$ node of the
-requisite program type. It's children are the primitives of that type
-and one $AND$ node with two children. Each child has the same
-structure as the root node, except that the types are different. If
-the type of an $OR$ node is $t$, then the type of the left child of
-its $AND$ node child is $\tau \rightarrow t$ (where $\tau$ is a fresh
-type variable). Since the type of the right child is constrained by
-the subtree rooted at the left child, we always expand the left child
-first, and we use the target type of this left subtree to mark the
-type of the right child.
-
-\begin{figure}
-\label{fig:andor}
-\begin{tikzpicture}[scale=.5, transform shape, level/.style={sibling distance=10mm/#1}]
-\node [circle,draw] (a) {}
-child {node [left=0cm] (b) {$f_1$}}
-child {node [left=.2cm] (c) {\dots} edge from parent[draw=none] }
-child {node [left=.4cm] (e) {$f_n$}}
-child {node [circle,draw, left=1cm] (d) {}
-  child {node [circle, draw, left=.25cm] (l) {} edge from parent[draw=none]
-    child {node [left=.5cm] (b) {$f_1$}} 
-    child {node [left=.3cm] (c) {\dots} edge from parent[draw=none] }
-    child {node [left=.3cm] (e) {$f_n$}}
-    child {node [circle, draw, left=.25cm] (and2) {}
-          child {node [circle, draw, left=.25cm](l2) {} edge from parent[draw=none] 
-            child {node [above=.5cm] {\vdots} edge from parent[draw=none]}
-          }
-          child {node [circle, draw] (r2)  {} edge from parent[draw=none] 
-            child {node [above=.5cm] {\vdots} edge from parent[draw=none]}
-          }
-    }
-  }
-  child {node [circle, draw, right=.25cm] (r) {} edge from parent[draw=none]
-    child {node [circle, draw, right=.25cm] (and3) {}
-          child {node [circle, draw ](l3) {} edge from parent[draw=none] 
-            child {node [above=.5cm] {\vdots} edge from parent[draw=none]}
-          }
-          child {node [circle, draw, right=.2cm ] (r3)  {} edge from parent[draw=none] 
-            child {node [above=.5cm] {\vdots} edge from parent[draw=none]}
-          }
-    }
-    child {node [right=.3cm] (b) {$f_1$}} 
-    child {node [right=.4cm] (c) {\dots} edge from parent[draw=none] }
-    child {node [right=.6cm] (e) {$f_n$}}
- }
-};
-      
-\path (d)  edge node[inner sep=0mm,pos=.4] (a1) {} node {} (l);
-\path (d)  edge node[inner sep=0mm,pos=.4] (b1) {} node {} (r);
-\path (a1) edge[bend right] (b1) ;
-
-\path (and2)  edge node[inner sep=0mm,pos=.4] (t0) {} node {} (l2);
-\path (and2)  edge node[inner sep=0mm,pos=.4] (k0) {} node {} (r2);
-\path (t0) edge[bend right] (k0) ;
-
-\path (and3)  edge node[inner sep=0mm,pos=.4] (t1) {} node {} (l3);
-\path (and3)  edge node[inner sep=0mm,pos=.4] (k1) {} node {} (r3);
-\path (t1) edge[bend right] (k1) ;
-\end{tikzpicture}
-\end{figure}
+formulate this naturally as a best-first exploration of an $AND/OR$
+tree~\cite{nilsson1982principles}, which we denote $\mathcal{G}$. A
+complete program is any binary subtrees of $\mathcal{G}$ whose leaves
+coincide with the leaves of $\mathcal{G}$. The tree structure is shown
+in Figure~\ref{fig:andor}. The root is an $OR$ node of the requisite
+program type. It's children are the primitives of that type $f_1,
+\dots, f_n$, and one $AND$ node with two children. Each child of an
+$AND$ node has the same structure as the root node, with modified
+types: if the type of an $AND$ node is $t$, then the type of its left
+child is $\tau \rightarrow t$ (where $\tau$ is a fresh type
+variable). Since the type of the right child is constrained by the
+subtree rooted at the left child, we always expand the left child
+first and use the target type of this left subtree to mark the type of
+the right child.
 
 In accordance with the stochastic grammar over programs, we weight all
 edges from $OR$ nodes according to the negative log likelihood of
@@ -366,26 +326,42 @@ in the solution degree to quadratic.
 \subsection{Re-estimating the stochastic grammar over programs.}
 
 Given a set of solution programs, we want to re-estimate our
-stochastic grammar. Our algorithm for doing this is based broadly on
+stochastic grammar. Our inspiration for doing this is based broadly on
 the Neville-Manning algorithm for grammar-based
-compression~\cite{nevill1997identifying}. In our algorithm, we simply
-count the numer of times each unique subtree appears as the child of a
-subtree \emph{not yet encountered} in the solution set. That is, we
-traverse the solution set in depth first order, comparing each tree we
-encounter to all the trees we previously encountered; but if we
-encounter a tree we have already seen, we do not descend into it. In
-this traversal, the set of trees we encounter more than once is the
-set of terminal nodes in our new grammar. To estimate the
-probabilities associated with each node production, we again traverse
-the solution set, but these time for each node where a terminal
-production takes place we count which other terminal productions could
-have taken place. We estimate the terminal production weight to be the
-ratio of the number of times that node was used in the first traversal
-divided by the number of times it was used in the second traversal
-(plus 1, to account for the event of an $AND$ node
-expansion). Likewise, we re-estimate the probability of an $AND$ node
-expansion by diving the number of such expansions in the solution set
-by the number of possible expansions in the solution set.
+compression~\cite{nevill1997identifying}. The idea of that compression
+algorithm is to compress any string by creating a grammar for that
+string such that a) no two symbols appear more than once in the
+grammar and b) every rule is used more than once. From a set of trees
+we generate a grammar according to these criteria (though using a less
+efficient and much simpler algorithm). 
+
+In our algorithm, we traverse a set of combinator binary trees in
+depth first order. We count the occurences of every subtree. Every
+time we encounter a subtree for the second time, we designate it as a
+primitive in our new grammar. Furthermore, during our traversal, we do
+not descend into trees that have been added already to the new
+grammar. Thus, we only count an instance of tree if that instance is
+not a subtree of a primitive element of the new grammar.
+
+We want to count the number of
+times every subtree is encountered when it is not a subtree of a tree
+already encountered in our traversal. we simply count the numer of
+times each unique subtree appears as the child of a subtree \emph{not
+  yet encountered} in the solution set. That is, we traverse the
+solution set in depth first order, comparing each tree we encounter to
+all the trees we previously encountered; but if we encounter a tree we
+have already seen, we do not descend into it. In this traversal, the
+set of trees we encounter more than once is the set of terminal nodes
+in our new grammar. To estimate the probabilities associated with each
+node production, we again traverse the solution set, but these time
+for each node where a terminal production takes place we count which
+other terminal productions could have taken place. We estimate the
+terminal production weight to be the ratio of the number of times that
+node was used in the first traversal divided by the number of times it
+was used in the second traversal (plus 1, to account for the event of
+an $AND$ node expansion). Likewise, we re-estimate the probability of
+an $AND$ node expansion by diving the number of such expansions in the
+solution set by the number of possible expansions in the solution set.
 
 \section{Experiments.}
 \subsection{Symbolic regression.}
@@ -454,11 +430,12 @@ does not do any learning. Thus, this baseline serves as a brute-force
 control for the learning aspect of the algorithm. 
 
 \begin{figure}
-\label{fig:symreg}
+
 \includegraphics[width=\linewidth]{figures/learningCurves.pdf}
 \includegraphics[width=\linewidth]{figures/performanceFrontierSize.pdf}
 \caption{E-C learning curves for the symbolic regression task set as
   we vary the frontier size.}
+\label{fig:symreg} 
 \end{figure}
 
 
@@ -486,8 +463,6 @@ arithmetic, a class of problems with known modular structure. The
 general goal is to discover boolean circuits consisting of a limited
 set of gates that perform arithmetic operations on binary number
 representations. 
-
-
 
 
 %% The file named.bst is a bibliography style file for BibTeX 0.99c

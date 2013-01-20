@@ -3,6 +3,10 @@
 
 module Experiments.SymbolicRegression where
 
+import Control.Monad.Random
+import Control.Monad.State 
+import qualified  Data.HashMap as HMap
+
 import Data.Maybe
 import Debug.Trace
 
@@ -102,6 +106,12 @@ lib123 = lib `CM.union` routers
 
 grammarFromLib lib = normalizeGrammar $ Grammar l 0
     where l = CM.fromList $ [(c, 0) | c <- CM.elems lib]
+
+jitteredGrammarFromLib :: HMap.Map k Comb -> Rand StdGen Grammar
+jitteredGrammarFromLib lib = do 
+  vs <- getRandomRs (-1.0,2.0)
+  let lib' = CM.fromList [(c, 2 + k) | c <- CM.elems lib | k <- vs]
+  return $ normalizeGrammar $ Grammar lib' 0
                      
 mkSymRegExp name lib frontierSize 
     = Experiment {expName = name,
@@ -111,16 +121,42 @@ mkSymRegExp name lib frontierSize
                   expInitLib = grammarFromLib lib,
                   expDepthBound = 3,
                   expNumBound = frontierSize,
-                  expReps = 25}
+                  expReps = 15}
+
+mkSymRegExpM :: String -> HMap.Map String Comb -> Int -> Rand StdGen Experiment
+mkSymRegExpM name lib frontierSize 
+    = do 
+  lib' <- jitteredGrammarFromLib lib
+  return $ Experiment {expName = name ++ "_wjittermany",
+                  expTaskSet = symRegTaskSet',
+                  expEps = 0,
+                  expPrior = lib',
+                  expInitLib = lib',
+                  expDepthBound = 3,
+                  expNumBound = frontierSize,
+                  expReps = 15}
+
+
 
 libSet = [lib1] -- lib3, lib123]
 libNames = ["R1"] -- , "R3", "R<=3"]
-frontierSizeSet = [9000, 10000]
+frontierSizeSet = join [replicate 10 i | i <- [1000, 2000, 3000, 
+                                          4000, 5000, 6000, 
+                                          7000, 8000, 9000, 
+                                          10000]]
 
 expSet = concat [[mkSymRegExp (n ++ "_" ++ show f) l f | n <- libNames | l <- libSet]
               | f <- frontierSizeSet]
 
+expSetRand = sequence $ concat [[mkSymRegExpM (n ++ "_" ++ show f) l f | n <- libNames | l <- libSet]
+              | f <- frontierSizeSet]
+
 runExpSet = sequence $ (map runExp expSet) ++ (map runBruteForceExp expSet)
+
+runExpSetRand = do n <- newStdGen
+                   let (exps, a) = runRand expSetRand n
+                   sequence $ map runExp exps
+
 
 
 expSymReg 
@@ -136,7 +172,7 @@ expSymReg
       }
 
 main = do
-  runExpSet
+  runExpSetRand
 
 
 

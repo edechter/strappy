@@ -35,6 +35,25 @@ numhitFiles = [
                  "frontier_size" : 1000}
              ]
 
+numhitFiles2 = [ 
+    {"filename" : "../data/R2_1000_2013-01-18_00-18-15.884901_EST/numhit.csv",
+     "frontier_size" : 1000},
+    {"filename" : "../data/R2_2000_2013-01-18_00-21-10.850648_EST/numhit.csv",
+     "frontier_size" : 2000},
+    {"filename" : "../data/R2_3000_2013-01-18_00-27-02.711662_EST/numhit.csv",
+     "frontier_size" : 3000},
+    {"filename" : "../data/R2_4000_2013-01-18_06-05-11.35682_EST/numhit.csv",
+     "frontier_size" : 4000},
+    {"filename" : "../data/R2_5000_2013-01-17_15-27-53.396156_EST/numhit.csv",
+     "frontier_size" : 5000},
+    {"filename" : "../data/R2_6000_2013-01-18_07-35-41.597988_EST/numhit.csv",
+     "frontier_size" : 6000},
+    {"filename" : "../data/R2_7000_2013-01-18_08-35-24.45969_EST/numhit.csv",
+     "frontier_size" : 7000},
+    {"filename" : "../data/R2_8000_2013-01-18_10-23-01.714354_EST/numhit.csv",
+     "frontier_size" : 8000},
+    ]
+
 def loadNumhitFile(filename):
     return pd.read_csv(filename, header=None).T
     

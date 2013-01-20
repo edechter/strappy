@@ -35,8 +35,8 @@ import qualified Compress as CP (getUniqueTrees, compress2)
 import Compress (Index)
 import Experiment
 
-data SearchLogEntry = SearchLogEntry { searchGrammar :: Grammar,
-                                       searchExplanation :: [(Task, Comb)]
+data SearchLogEntry = SearchLogEntry { searchGrammar :: ! Grammar,
+                                       searchExplanation :: ! [(Task, Comb)]
                                      } deriving Show
 
 
@@ -73,7 +73,7 @@ findCombinatorsForEachDatum :: Experiment
 findCombinatorsForEachDatum expr gr
     = do 
          db <- mkHypothesisSpace expr gr
-         return $ (trace $ show db) $ do 
+         return $ do 
            t <- taskSet
            let cs = case t of 
                       Task n f tp -> do c <- db Map.! tp
@@ -91,7 +91,7 @@ oneStep :: Experiment
         -> Search Grammar
 oneStep ex gr = do xs <- findCombinatorsForEachDatum ex gr
                    let xs' = filter (not . null . snd) xs
-                       xsShort =  map (\(t, cs) -> (t, take 5 cs)) xs'  
+                       xsShort =  map (\(t, cs) -> (t, take 3 cs)) xs'  
                        rs = (trace $  "Hit: " ++ show (xsShort))
                             $ dfs xsShort
                        ind = CP.compress2 (map (\(tsk, c) -> (taskType tsk, c))  rs)
