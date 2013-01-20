@@ -140,7 +140,7 @@ mkSymRegExpM name lib frontierSize
 
 libSet = [lib1] -- lib3, lib123]
 libNames = ["R1"] -- , "R3", "R<=3"]
-frontierSizeSet = join [replicate 10 i | i <- [1000, 2000, 3000, 
+frontierSizeSet = join [replicate 1 i | i <- [1000, 2000, 3000, 
                                           4000, 5000, 6000, 
                                           7000, 8000, 9000, 
                                           10000]]
