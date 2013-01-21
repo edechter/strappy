@@ -3,6 +3,7 @@
 
 module Experiments.SymbolicRegression where
 
+import System.Environment (getArgs)
 import Control.Monad.Random
 import Control.Monad.State 
 import qualified  Data.HashMap as HMap
@@ -140,22 +141,20 @@ mkSymRegExpM name lib frontierSize
 
 libSet = [lib1] -- lib3, lib123]
 libNames = ["R1"] -- , "R3", "R<=3"]
-frontierSizeSet = join [replicate 1 i | i <- [8000, 9000,
-                                          10000]]
+frontierSizeSet sizes = join [replicate 1 i | i <- sizes]
+                                          
 
-expSet = concat [[mkSymRegExp (n ++ "_" ++ show f) l f | n <- libNames | l <- libSet]
-              | f <- frontierSizeSet]
+expSet sizes = concat [[mkSymRegExp (n ++ "_" ++ show f) l f | n <- libNames | l <- libSet]
+              | f <- frontierSizeSet sizes]
 
-expSetRand = sequence $ concat [[mkSymRegExpM (n ++ "_" ++ show f) l f | n <- libNames | l <- libSet]
-              | f <- frontierSizeSet]
+expSetRand sizes = sequence $ concat [[mkSymRegExpM (n ++ "_" ++ show f) l f | n <- libNames | l <- libSet]
+              | f <- frontierSizeSet sizes]
 
-runExpSet = sequence $ (map runExp expSet) ++ (map runBruteForceExp expSet)
+runExpSet sizes = sequence $ (map runExp (expSet sizes)) ++ (map runBruteForceExp (expSet sizes))
 
-runExpSetRand = do n <- newStdGen
-                   let (exps, a) = runRand expSetRand n
-                   sequence $ map runExp exps
-
-
+runExpSetRand sizes = do n <- newStdGen
+                         let (exps, a) = runRand (expSetRand sizes) n
+                         sequence $ map runExp exps
 
 expSymReg 
     = Experiment {
@@ -170,7 +169,8 @@ expSymReg
       }
 
 main = do
-  runExpSetRand
+  sizes <- fmap (map read) getArgs
+  runExpSetRand sizes
 
 
 

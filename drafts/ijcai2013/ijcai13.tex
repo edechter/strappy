@@ -195,7 +195,7 @@ of combinators.
 \begin{figure}
   \centering
   \begin{subfigure}[Before]{0.5\linewidth}
-    \begin{tikzpicture}[scale=.7,
+    \begin{tikzpicture}[scale=.9,
         transform shape, level/.style={sibling distance=10mm/#1, font=\scriptsize}
         ]
       \node [font=\scriptsize] (top) {$I$}
@@ -209,7 +209,6 @@ of combinators.
         child {node {$I: t_0 \rightarrow t_0 \rightarrow t_0$}}
       };
     \end{tikzpicture}
-    \caption{The typed combinator $S * I$ ($f(x)=x^2$) represented as binary tree.}
     \label{fig:clbintree}
   \end{subfigure}
   \begin{subfigure}[After]{0.4\linewidth}
@@ -262,14 +261,14 @@ of combinators.
       \path (and3)  edge node[inner sep=0mm,pos=.4] (k1) {} node {} (r3);
       \path (t1) edge[bend right] (k1) ;
     \end{tikzpicture}
-    \caption{The space of all typed combinators represented as an
-      infinitely deep And-Or tree. Any specific combinator as a
-      sub-binary tree of this And-Or tree whose leaves consist of only
-      the $f_i$ nodes (i.e., the primitive combinators of the
-      grammar).}
     \label{fig:andor}
     \end{subfigure}
-  \caption{A typed binary tree representation of the combinator $S\;*\;I\;$.}
+  \caption{(a) The typed combinator $S * I$ ($f(x)=x^2$) represented as
+    binary tree. (b) The space of all typed combinators represented as an
+    infinitely deep AND/OR tree. Any specific combinator as a
+    sub-binary tree of this And-Or tree whose leaves consist of only
+    the $f_i$ nodes (i.e., the primitive combinators of the grammar).}
+
 \end{figure}
 
 \subsection{Best-first enumeration of most probably programs.}
@@ -337,31 +336,31 @@ efficient and much simpler algorithm).
 
 In our algorithm, we traverse a set of combinator binary trees in
 depth first order. We count the occurences of every subtree. Every
-time we encounter a subtree for the second time, we designate it as a
-primitive in our new grammar. Furthermore, during our traversal, we do
-not descend into trees that have been added already to the new
+time we encounter a subtree for the \emph{second} time, we designate
+it as a primitive in our new grammar. This ensures that every
+primitive is used more than once. During our traversal, we do not
+descend into trees that have been added already to the new
 grammar. Thus, we only count an instance of tree if that instance is
 not a subtree of a primitive element of the new grammar.
 
-We want to count the number of
-times every subtree is encountered when it is not a subtree of a tree
-already encountered in our traversal. we simply count the numer of
-times each unique subtree appears as the child of a subtree \emph{not
-  yet encountered} in the solution set. That is, we traverse the
-solution set in depth first order, comparing each tree we encounter to
-all the trees we previously encountered; but if we encounter a tree we
-have already seen, we do not descend into it. In this traversal, the
-set of trees we encounter more than once is the set of terminal nodes
-in our new grammar. To estimate the probabilities associated with each
-node production, we again traverse the solution set, but these time
-for each node where a terminal production takes place we count which
-other terminal productions could have taken place. We estimate the
-terminal production weight to be the ratio of the number of times that
-node was used in the first traversal divided by the number of times it
-was used in the second traversal (plus 1, to account for the event of
-an $AND$ node expansion). Likewise, we re-estimate the probability of
-an $AND$ node expansion by diving the number of such expansions in the
-solution set by the number of possible expansions in the solution set.
+At the end of this traversal of the solution programs, we have a parse
+of the solution set with a new set of primitives and we know how many
+times each primitive occured in the solutions et. To estimate the
+probabilities associated with each node production, we again traverse
+the solution set, but this time for each node we count which other
+primitive elements from the new grammar could have been used. We
+estimate the terminal production weight to be the ratio of the number
+of times that node was used in the first traversal divided by the
+number of times it was used in the second traversal. 
+
+Note that this probability estimation procedure was chosen for its
+simplicity, and it is not the maximum likelihood estimator for the
+multinomial distribution according to which we enumerate the
+data. Because the probability we assign to the use of a primitive
+combinator depends on the type of the node, the ML estimator of the
+probability of that combinator is not a simple ratio of counts. It
+would be interesting to determine whether a more accurate estimator
+can improve this algorithm's performance.
 
 \section{Experiments.}
 \subsection{Symbolic regression.}
