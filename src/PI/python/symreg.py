@@ -99,14 +99,13 @@ def performanceVsFrontierSize(numhitDict, ax=None):
     ax.set_ylabel(ylabel)
     return ax
 
-    
+
+
     
     
                    
                    
 
-
-    
 
 
 if __name__ == "__main__":

@@ -49,7 +49,7 @@ mkHypothesisSpace :: Experiment
                   -> Grammar 
                   -> Search (Map.Map Type [Comb])
 mkHypothesisSpace expr gr
-    = do return db
+    = do return $ db
     where tps = nub [ taskType t | t <- taskSet]
           cs tp = map comb $ enumBF gr (expNumBound expr) tp
           db =  foldl' (\m (k, a) -> Map.insert k a m) 
@@ -60,6 +60,12 @@ mkHypothesisSpace expr gr
 
 evalSymReg :: Comb -> [Int]
 evalSymReg c = [ f i | i <- [0..10]]
+    where f i = case reduceComb $ CApp c (num2C i) tInt 0 of 
+                  (N y ) -> y
+                  otherwise -> (maxBound :: Int)
+
+evalDigArith :: Comb -> [Bool]
+evalDigArith c = [ f i | i <- [0..10]]
     where f i = case reduceComb $ CApp c (num2C i) tInt 0 of 
                   (N y ) -> y
                   otherwise -> (maxBound :: Int)
@@ -80,6 +86,8 @@ findCombinatorsForEachDatum expr gr
                                         if f c <= eps then return c else mzero
                       SymRegTask n vs tp -> do c <- db Map.! tp
                                                if evalSymReg c == vs then return c else mzero
+                      DigArithTask n vs tp -> do c <- db Map.! tp
+                                                 if evalDigArith c == vs then return c else mzero
            return (t, cs) 
       where 
         taskSet = expTaskSet expr

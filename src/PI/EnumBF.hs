@@ -96,7 +96,9 @@ expandToApp gr (CombBase (CTerminal tp) (Just []) v) =
 expand :: Grammar 
        -> CombBase 
        -> StateT Int [] CombBase
-expand gr cb@(CombBase (CTerminal tp) (Just []) v) = cbs `mplus` cbApp
+expand gr cb@(CombBase (CTerminal tp) (Just []) v) 
+    = if cs_is_empty then mzero else 
+          cbs `mplus` cbApp
     where primCombs = CM.keys (library gr)
           cs = filterCombinatorsByType primCombs tp
 --          minGrammarVal = minimum (CM.elems (library gr))
@@ -105,6 +107,7 @@ expand gr cb@(CombBase (CTerminal tp) (Just []) v) = cbs `mplus` cbApp
                      let value = (calcLogProb gr tp c)
                          combBase = CombBase c Nothing value
                      return combBase
+          cs_is_empty = False -- (length $  runStateT cs 0) == 0
           cbApp = expandToApp gr cb 
 
 expand gr cb@(CombBase (CApp c_left c_right tp d) (Just (L:rest)) v) = 

@@ -14,11 +14,16 @@ data Task =  Task {taskName :: String,
           | SymRegTask {taskName :: String,
                         taskVals :: [Int],
                         taskType :: Type}
+          | DigArithTask {taskName :: String,
+                          taskVals :: [[Bool]],
+                          taskType :: Type}
+
 type TaskSet = [Task]
 
 instance Show Task where
     show (Task n _ _ ) = n
     show (SymRegTask n _ _ ) = n
+    show (DigArithTask n _ _ ) = n
 
 
 -- | task constructors

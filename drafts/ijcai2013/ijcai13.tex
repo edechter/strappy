@@ -418,24 +418,29 @@ Each task is to predict the value of an unknown polynomial on the
 inputs $0, \dots, 10$. The set of tasks corresponds to the set of
 polynomials $\{ax^2 + bx + c | a, b, c \in \{0, \dots, 10 \}\}$. 
 
-In Figure~\ref{fig:symreg}, we show performance results as we vary
-both the routers included and the frontier size. Each individual plot
-shows how changing the frontier size changes the number of tasks the
-algorithm identifies correctly over the course of ten algorithm
-iterations. In addition, we have a baseline for each curve, visits the
-same number of expressions as the corresponding algorithm run
-(i.e. frontier size $\times$ $\#$ of iterations) but all at once; it
-does not do any learning. Thus, this baseline serves as a brute-force
-control for the learning aspect of the algorithm. 
+In Figure~\ref{fig:symreg}, we show performance results as we vary the
+frontier size. Each individual plot shows how changing the frontier
+size changes the number of tasks the algorithm identifies correctly
+over the course of fifteen algorithm iterations. In addition, we have a
+baseline for each curve, visits the same number of expressions as the
+corresponding algorithm run (i.e. frontier size $\times$ $\#$ of
+iterations) but all at once; it does not do any learning. Thus, this
+baseline serves as a brute-force control for the learning aspect of
+the algorithm.
 
 \begin{figure}
-
-\includegraphics[width=\linewidth]{figures/learningCurves.pdf}
-\includegraphics[width=\linewidth]{figures/performanceFrontierSize.pdf}
+\begin{subfigure}[Before]{0.45\linewidth}
+\includegraphics[width=\linewidth]{figures/learningCurves2.pdf}
+\end{subfigure}
+\begin{subfigure}[After]{0.45\linewidth}
+\includegraphics[width=\linewidth]{figures/performanceVsFrontierSize2.pdf}
+\end{subfigure}
 \caption{E-C learning curves for the symbolic regression task set as
   we vary the frontier size.}
 \label{fig:symreg} 
 \end{figure}
+
+
 
 
 Why do the learning curves asymptote early? One might object that a
