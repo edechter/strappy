@@ -14,7 +14,7 @@ import Type
 
 import Type
 import CL
-import Search
+-- import Search
 import Expr
 import Task
 import StdLib
@@ -27,50 +27,8 @@ import PostProcess
 import EnumBF
 import ParseCL hiding (eval)
 import Run
+import DigArith
 
-numto1dig n = n `mod` 2 
-numto2dig n = let a = n `div` 1 `mod` 2
-                  b = (n-a*1) `div` 2 `mod` 2
-              in (b, a)
-numto3dig n = let a = n `div` 1 `mod` 2
-                  b = (n-a * 1) `div` 2 `mod` 2
-                  c = (n-a * 1 - b*2) `div` 4 `mod` 2
-              in (c, b, a)
-numto4dig n = let a = n `div` 1 `mod` 2
-                  b = (n-a * 1) `div` 2 `mod` 2
-                  c = (n-a * 1 - b*2) `div` 4 `mod` 2
-                  d = (n-a * 1 - b*2 - c*4) `div` 16 `mod` 2
-              in (d, c, b, a)
-numto5dig n = let a = n `div` 1 `mod` 2
-                  b = (n-a * 1) `div` 2 `mod` 2
-                  c = (n-a * 1 - b*2) `div` 4 `mod` 2
-                  d = (n-a * 1 - b*2 - c*4) `div` 16 `mod` 2
-                  e = (n-a * 1 - b*2 - c*4 - d*16) `div` 32 `mod` 2
-              in (e, d, c, b, a)
-
-intToBool 1 = True
-intToBool 0 = False
-intToBool i = error $ "Cannot convert int " ++ show i ++ "to bool."
-
-intTupleToPair :: (Int, Int) -> Comb
-intTupleToPair (i, j) = case parseExprStd ( "pair " ++ show (intToBool i) ++ " " 
-                                            ++ show (intToBool j)) of
-                          Right x -> x
-                          Left _  -> error "Cannot convert in to pair."
-
-
-intTupleToTriple :: (Int, Int, Int) -> Comb
-intTupleToTriple (i, j, k) = case parseExprStd ( "triple " ++ show (intToBool i) ++ " " 
-                                               ++ show (intToBool j) ++ " " 
-                                               ++ show (intToBool k)) of
-                          Right x -> x
-                          Left err  -> error err
-
-pairEq p1 p2 = let eq1 = reduceComb (app' cFst p1) == reduceComb (app' cFst p2)
-                   eq2 = reduceComb (app' cSnd p1) == reduceComb (app' cSnd p2)
-               in eq1 && eq2
-                   
-               
 
 taskIncr1 = Task "pair incr 1"
             f
@@ -122,48 +80,6 @@ taskFalse = Task "false" f tBool
 
 taskTrue = Task "True" f tBool
     where f c = if reduceComb c == reduceComb cTrue then 0 else 1
-
-type TruthTable = [([Bool], Bool)]
-truthTableCardinality :: TruthTable -> Int
-truthTableCardinality [] = 0
-truthTableCardinality ((ass, v):xs) = 
-    let card = length ass
-    in case all ((==card) . length . fst) xs of
-         True -> card
-         False -> error $ "in truthTableCardinality: " 
-                  ++ "all assignments are not of equal length."
-
-mkAllAss 0 = []
-mkAllAss 1 = [[True], [False]]
-mkAllAss n = concat [[True:xs, False:xs] | xs <- mkAllAss $ n - 1]
-
-mkAllTruthTables :: Int -- ^ cardinality
-                 -> [TruthTable]
-mkAllTruthTables n = [[(a, val) | val <- vals | a <- ass] | vals <- allvals]
-    where ass = mkAllAss n
-          allvals = mkAllAss (2^n)
-
-mkTruthTableType tt = foldr1 (->-) $ replicate (card + 1) tBool
-    where card = truthTableCardinality tt
-    
-mkBoolTask :: String -> TruthTable -> Task
-mkBoolTask name tt = Task name f tp
-    where tp = mkTruthTableType tt
-          card = truthTableCardinality tt
-          f c = (trace $  name) $ if all (==True) [ verify_assignment inp out | (inp, out) <- tt] then 0 else 1
-              where verify_assignment vs o 
-                        = reduceComb (cTest $ map bool2C vs) == reduceComb (bool2C o)
-                    cTest vs =  foldl (\x v -> app' x v) c vs
-
-mkAllBoolTasks :: Int -> [Task]
-mkAllBoolTasks n = [mkBoolTask (name i) tt | tt <- mkAllTruthTables n | i <- [0..]]
-                   where name i = "task_boolean" ++ show n ++ "_" ++ show i
-
-evalDigArith :: Comb -> [Bool]
-evalDigArith c = [ f i | i <- [0..10]]
-    where f i = case reduceComb $ CApp c (num2C i) tInt 0 of 
-                  (N y ) -> y
-                  otherwise -> (maxBound :: Int)
 
         
 lib = (CM.fromList $ 
@@ -217,25 +133,19 @@ mkDigArithM name lib frontierSize
     = do 
   lib' <- jitteredGrammarFromLib lib
   return $ Experiment {expName = name ++ "_wjittermany",
-                       expTaskSet = mkAllBoolTasks 3,
---                        expTaskSet = [taskNot, taskNot, 
---                                      taskAnd, taskAnd, 
--- --                                     taskTrue, taskTrue,
--- --                                     taskFalse, taskFalse,
---                                      taskOr, taskOr, 
---                                      taskXor, taskXor,
---                                                 taskIncr1],
+                       expTaskSet = mkAllBoolTasks 2 ++ mkAllBoolTasks 3,
+
                   expEps = 0,
                   expPrior = lib',
                   expInitLib = lib',
                   expDepthBound = 3,
                   expNumBound = frontierSize,
-                  expReps = 5}
+                  expReps = 15}
 
 
 main = do
   n <- newStdGen
-  let (exp, a) = runRand (mkDigArithM "digarith" lib1 100) n
+  let (exp, a) = runRand (mkDigArithM "digarith_ec2_allbool2and3_overnight" lib1 2000) n
   runExp exp
 
 

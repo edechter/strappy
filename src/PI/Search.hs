@@ -28,6 +28,7 @@ import Data
 import CompressionSearch
 import ParseCL
 import Grammar
+import DigArith
 
 import qualified CombMap as CM
 import CombMap (CombMap)
@@ -64,11 +65,6 @@ evalSymReg c = [ f i | i <- [0..10]]
                   (N y ) -> y
                   otherwise -> (maxBound :: Int)
 
-evalDigArith :: Comb -> [Bool]
-evalDigArith c = [ f i | i <- [0..10]]
-    where f i = case reduceComb $ CApp c (num2C i) tInt 0 of 
-                  (N y ) -> y
-                  otherwise -> (maxBound :: Int)
 
 
 -- | For each data point in a dataset list all the expressions that
@@ -81,13 +77,13 @@ findCombinatorsForEachDatum expr gr
          db <- mkHypothesisSpace expr gr
          return $ do 
            t <- taskSet
-           let cs = case t of 
+           let cs = (trace $ show t) $case t of 
                       Task n f tp -> do c <- db Map.! tp
                                         if f c <= eps then return c else mzero
                       SymRegTask n vs tp -> do c <- db Map.! tp
                                                if evalSymReg c == vs then return c else mzero
-                      DigArithTask n vs tp -> do c <- db Map.! tp
-                                                 if evalDigArith c == vs then return c else mzero
+                      DigArithTask n vs card tp -> do c <- db Map.! tp
+                                                      if evalDigArith card c == vs then return c else mzero
            return (t, cs) 
       where 
         taskSet = expTaskSet expr
