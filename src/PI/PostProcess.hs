@@ -7,6 +7,10 @@ import System.Directory
 import System.FilePath
 import Data.Time
 import qualified Data.Text as T
+import Data.List.Split
+import Data.List (isInfixOf)
+import Data.Either.Utils
+import Debug.Trace
 
 import Search
 import CL
@@ -16,6 +20,8 @@ import qualified CombMap as CM
 import CombMap (CombMap)
 import Grammar
 import Experiment
+import StdLib
+import ParseCL
 
 allCombs :: [SearchLogEntry] -> [Comb]
 allCombs ss = CM.keys $ foldl1 CM.union $ map (library . searchGrammar) ss 
@@ -99,5 +105,24 @@ saveSearchData datadir exp searchData time =
        hClose fexpdata
        hClose ftime
        
-       
+getLibFromFile filename = do
+  str <- readFile filename
+  let rows = splitOn "\n" str
+      combs = map head $ map (splitOn ",") rows
+  return combs
+
+getGrammarFromFile lib filename = do
+  str <- readFile filename
+  let rows = splitOn "\n" str
+      splitrows' = map (splitOn ",") rows
+      combstrs = map head $ splitrows'
+      valstrs = map last $ splitrows'
+      pairstrs = filter (not . (\x -> isInfixOf "nan" x || null x) . snd) $ zip combstrs valstrs
+      combs = (trace $ show pairstrs) $ map (fromRight .  parseExpr lib) $ map fst pairstrs
+      vals = map (read .  snd  ) pairstrs :: [Double]
+      lib' = (CM.fromList $ zip combs vals)
+      grammar = Grammar lib' 0
+  return grammar
+
+      
        

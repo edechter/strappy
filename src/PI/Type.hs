@@ -198,6 +198,22 @@ freshInst t = do let tvs = tv t
           inst (TAp t1 t2) lk= TAp (inst t1 lk) (inst t2 lk)
           inst t _ = t
 
+typeLeftDepth :: Type -> Int 
+-- | Returns the number of possible applications onto an expression of
+-- this type.
+typeLeftDepth (TAp t1 t2) = typeLeftDepth t2 + 1
+typeLeftDepth _ = 1
+
+extendTypeOnLeft :: Monad m => Type -> StateT Int m Type
+extendTypeOnLeft t = do tnew <- newTVar Star
+                        return (tnew ->- t)
+
+extendTypeOnLeftN :: Monad m => Type -> Int -> StateT Int m Type
+extendTypeOnLeftN t 0 = return $ t
+extendTypeOnLeftN t n = do t' <- extendTypeOnLeft t
+                           extendTypeOnLeftN t' (n-1)
+
+
 -- | types 
 tChar = TCon (TyCon "Char" Star)
 tInt = TCon (TyCon "Int" Star)

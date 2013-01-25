@@ -8,6 +8,7 @@ import Data.Maybe
 import qualified Data.HashMap as HMap
 import Control.Monad.Random
 import Debug.Trace
+import Data.GraphViz
 
 import Experiment
 import Type
@@ -28,6 +29,7 @@ import EnumBF
 import ParseCL hiding (eval)
 import Run
 import DigArith
+import Visualize
 
 
 taskIncr1 = Task "pair incr 1"
@@ -37,7 +39,7 @@ taskIncr1 = Task "pair incr 1"
                   pairIn0 = intTupleToPair (0, 0)
                   pairOut0 = intTupleToPair (0, 1)
                   pairIn1 = intTupleToPair (0, 1)
-                  pairOut1 = intTupleToPair (0, 0)
+                  pairOut1 = intTupleToPair (1, 0)
                   pairIn2 = intTupleToPair (1, 0)
                   pairOut2 = intTupleToPair (1, 1)
                   points = [(pairIn0, pairOut0),
@@ -85,7 +87,7 @@ taskTrue = Task "True" f tBool
 lib = (CM.fromList $ 
          [
           ("I", cI)
- --        , ("True", cTrue)
+         , ("True", cTrue)
 --        , ("False", cFalse)
          ,("nand", cNand)
 --         , ("&", cAnd)
@@ -141,6 +143,36 @@ mkDigArithM name lib frontierSize
                   expDepthBound = 3,
                   expNumBound = frontierSize,
                   expReps = 15}
+
+
+
+-- Visualization
+fromRight (Right x) = x
+fromRight (Left err) = error err
+
+combstrs = ["((S nand) I)",
+           "B",
+            "(S nand)",
+            "S",
+            "nand",
+            "C",
+            "((S ((B (B nand)) nand)) ((S nand) I))",
+            "(B ((S nand) I))",
+            "(B (B (B ((S nand) I))))",
+            "(B (B ((S nand) I)))",
+            "I"]
+
+
+cs = map (fromRight . parseExpr lib1) combstrs
+combsgr = combsToGraph cs
+
+visualize lib filename = 
+    do combstr <- fmap (filter (not . null)) $ getLibFromFile filename
+       
+       let cs = take 1 $ map (fromRight . parseExpr lib ) combstr
+           gr = combsToGraph cs
+       runGraphviz (graphToDot params gr) Pdf "test.pdf"
+
 
 
 main = do

@@ -66,9 +66,10 @@ enumBF' :: Grammar -> Int -> BFState -> BFState
 -- resulting elements are added either to the open list or to the
 -- closed list. This process is repeated until there are at least i
 -- elements in closed list. 
+enumBF' gr i bfState@(BFState openPQ closedPQ) | PQ.size openPQ == 0 = bfState
 enumBF' gr i bfState@(BFState openPQ closedPQ) = 
     if PQ.size closedPQ >= i then bfState else
-        let (cbt, openPQ') = PQ.deleteFindMax openPQ
+        let (cbt, openPQ') = PQ.deleteFindMax openPQ -- get best open solution
             cbs =  map (\(c,i) -> CombBaseTuple c i) 
                   $ runStateT (expand gr (combBase cbt)) (tpVar cbt)
             closedCBs = filter (isClosed . combBase) cbs
@@ -107,7 +108,7 @@ expand gr cb@(CombBase (CTerminal tp) (Just []) v)
                      let value = (calcLogProb gr tp c)
                          combBase = CombBase c Nothing value
                      return combBase
-          cs_is_empty = False -- (length $  runStateT cs 0) == 0
+          cs_is_empty =  False -- (length $  runStateT cs 0) == 0
           cbApp = expandToApp gr cb 
 
 expand gr cb@(CombBase (CApp c_left c_right tp d) (Just (L:rest)) v) = 
@@ -148,9 +149,11 @@ expand gr cb@(CombBase (CApp c_left c_right tp d) (Just (R:rest)) v) =
 
 
 
-
-        
-
-
+doesCombHaveToType :: Comb -> Type -> Bool
+doesCombHaveToType c t = runStateT m tyInt
+    where (TyVar id _) = makeNewTVar [t]
+          tyInt = readId id
+          m = extendTypeOnLeftN 
+          
 
 

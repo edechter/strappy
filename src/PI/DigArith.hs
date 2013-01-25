@@ -115,3 +115,14 @@ evalDigArith n c = [ toBool $ f vs | vs <- mkAllAss n]
                    (B True) -> True
                    (B False) -> False
 
+taskTruthTable :: Task -> TruthTable
+taskTruthTable tsk = [(tup, v) | v <- vals | tup <- tups]
+    where card = taskCard tsk
+          vals = taskBoolVals tsk
+          tups = mkAllAss card
+
+showTruthTable :: TruthTable -> String
+showTruthTable tt = unlines $ map showRow tt
+    where showRow (tup, v) = (unwords $ map show tup) ++ 
+                             " --> " ++ show v
+

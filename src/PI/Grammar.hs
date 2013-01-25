@@ -2,7 +2,7 @@
 
 module Grammar where
 
-import Data.List (intersect)
+import Data.List (intersect, sortBy)
 import Control.Monad.State
 import Debug.Trace
 import Data.Maybe
@@ -151,7 +151,13 @@ calcLogProb gr tp c
 
 
 
+truncateGrammar :: Grammar -> Int -> Grammar
+truncateGrammar (Grammar lib _) n = Grammar lib' 0
+    where xs = CM.toList lib
+          xs' = take n $ sortBy (\(_, y) (_, x) -> x `compare` y) xs
+          lib' = CM.fromList xs'
           
+    
                                 
                                        
                       
