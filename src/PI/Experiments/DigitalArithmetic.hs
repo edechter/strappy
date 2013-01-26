@@ -164,7 +164,8 @@ combstrs = ["((S nand) I)",
 
 
 cs = map (fromRight . parseExpr lib1) combstrs
-combsgr = combsToGraph cs
+combsgr = combsToGraph c
+
 
 -- visualize lib filename = 
 --     do combstr <- fmap (filter (not . null)) $ getLibFromFile filename
