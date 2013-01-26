@@ -147,24 +147,24 @@ mkDigArithM name lib frontierSize
 
 
 -- Visualization
-fromRight (Right x) = x
-fromRight (Left err) = error err
+-- fromRight (Right x) = x
+-- fromRight (Left err) = error err
 
-combstrs = ["((S nand) I)",
-           "B",
-            "(S nand)",
-            "S",
-            "nand",
-            "C",
-            "((S ((B (B nand)) nand)) ((S nand) I))",
-            "(B ((S nand) I))",
-            "(B (B (B ((S nand) I))))",
-            "(B (B ((S nand) I)))",
-            "I"]
+-- combstrs = ["((S nand) I)",
+--            "B",
+--             "(S nand)",
+--             "S",
+--             "nand",
+--             "C",
+--             "((S ((B (B nand)) nand)) ((S nand) I))",
+--             "(B ((S nand) I))",
+--             "(B (B (B ((S nand) I))))",
+--             "(B (B ((S nand) I)))",
+--             "I"]
 
 
-cs = map (fromRight . parseExpr lib1) combstrs
-combsgr = combsToGraph c
+-- cs = map (fromRight . parseExpr lib1) combstrs
+-- combsgr = combsToGraph c
 
 
 -- visualize lib filename = 
