@@ -29,7 +29,7 @@ import EnumBF
 import ParseCL hiding (eval)
 import Run
 import DigArith
-import Visualize
+-- import Visualize
 
 
 taskIncr1 = Task "pair incr 1"
@@ -166,12 +166,12 @@ combstrs = ["((S nand) I)",
 cs = map (fromRight . parseExpr lib1) combstrs
 combsgr = combsToGraph cs
 
-visualize lib filename = 
-    do combstr <- fmap (filter (not . null)) $ getLibFromFile filename
+-- visualize lib filename = 
+--     do combstr <- fmap (filter (not . null)) $ getLibFromFile filename
        
-       let cs = take 1 $ map (fromRight . parseExpr lib ) combstr
-           gr = combsToGraph cs
-       runGraphviz (graphToDot params gr) Pdf "test.pdf"
+--        let cs = take 1 $ map (fromRight . parseExpr lib ) combstr
+--            gr = combsToGraph cs
+--        runGraphviz (graphToDot params gr) Pdf "test.pdf"
 
 
 
