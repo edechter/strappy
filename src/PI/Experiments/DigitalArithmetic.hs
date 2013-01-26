@@ -8,7 +8,7 @@ import Data.Maybe
 import qualified Data.HashMap as HMap
 import Control.Monad.Random
 import Debug.Trace
-import Data.GraphViz
+-- import Data.GraphViz
 
 import Experiment
 import Type
