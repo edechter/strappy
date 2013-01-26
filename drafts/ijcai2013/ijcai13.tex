@@ -16,7 +16,7 @@
 \newtheorem{definition}{Definition}
 \DeclareMathOperator*{\argmax}{arg\,max} 
 
-\title{Getting off the ground: bootstrap learning via modular concept discovery.}
+\title{Bootstrap learning via modular concept discovery}
 
 \author{Eyal Dechter \\
 MIT\\
@@ -44,27 +44,9 @@ jbt@mit.edu
 \maketitle
 
 \begin{abstract}
- Suppose a learner is faced with a domain of problems about which she
- knows nearly nothing. She does not know the distribution of problems,
- the space of solutions is not smooth, and the reward signal is
- uninformative, providing perhaps a few bits of information but not
- enough to steer her effectively. How can such a learner ever get off
- the ground? A common intuition is that if the solutions to these
- problems share a common structure, and the learner can solve some
- simple problems by luck or brute force, she should be able to extract
- useful modular concepts from these solutions and, by composing them,
- explore the solution space more efficiently. Here, we formalize this
- intuition, where the solution space is the space of typed functional
- programs and the gained information is stored as a stochastic grammar
- over programs. We propose a two step iterative procedure for
- exploring such spaces: in the first step, the learner explores a
- finite subset of the domain, guided by a stochastic grammar; in the
- second step, the learner compresses the successful solutions from the
- first step to estimate a new stochastic grammar. As we show in a
- symbolic regression and a boolean circuit learning example, iterating
- these two steps quickly propels the learner from a state of solving
- almost no problems to solving a large number of problems by gaining
- abstract knowledge of the structure of the solution space.
+ Suppose a learner is faced with a domain of problems about which it knows nearly nothing. It does not know the distribution of problems, the space of solutions is not smooth, and the reward signal is uninformative, providing perhaps a few bits of information but not enough to steer it effectively. How can such a learner ever get off the ground? A common intuition is that if the solutions to these problems share a common structure, and the learner can solve some simple problems by brute force, it should be able to extract useful components from these solutions and, by composing them, explore the solution space more efficiently. Here, we formalize this intuition, where the solution space is the space of typed functional programs and the gained information is stored as a stochastic grammar over programs. We propose an iterative procedure for exploring such spaces: in the first step of each iteration, the learner explores a finite subset of the domain, guided by a stochastic grammar; in the second step, the learner compresses the successful solutions from the first step to estimate a new stochastic grammar. We test this procedure on symbolic regression and boolean circuit learning and show that the learner discovers modular concepts for these domains. Whereas the learner is able to solve almost none of the posed problems in the procedure's first iteration, it rapidly becomes able to solve a large number by gaining abstract knowledge of the structure of the solution space.
+ 
+ 
 \end{abstract}
 
 \section{Introduction}
@@ -304,6 +286,7 @@ of combinators.
       \path (and3)  edge node[inner sep=0mm,pos=.4] (k1) {} node {} (r3);
       \path (t1) edge[bend right] (k1) ;
     \end{tikzpicture}
+    \caption{AND/OR expression search space. }
     \label{fig:andor}
     \end{subfigure}
   \caption{(a) The typed combinator $S * I$ ($f(x)=x^2$) represented as
@@ -315,26 +298,47 @@ of combinators.
 \end{figure}
 
 \subsection{A stochastic grammar over programs.}
+\label{sec:stochgrammar}
 A stochastic grammar over programs represents a distribution over
-expressions in $\mathcal{L}$. We represent our grammar as a
-multinomial distribution over the primitives in our library. Let $p_1,
-\dots, p_m$ be the probabilities associated with primitive combinators
-$c_1, \dots, c_m$. Then we define the probability $p(c_i | t) $ of
-using $c_i$ at a node whose type is $t$ to be $p_i$ normalized by the
-probability mass of all other primitive combinators that could have
-been used at that node. Namely, $p(c_i | t) = \frac{p_i}{\sum_{c_j :
-    type(c_j) \text{ unifies with } t} p_j}$ if type($c_i)$ unifies
-with $t$, 0 otherwise. Note that the distribution thus defined is not
-normalizable if we allow expressions of arbitrary depth, but this is
-not a practicle concern since we are using the distribution mainly as
-a search heuristic.
+expressions in $\mathcal{L}$. We associate with each primitive
+combinator $c_i$ in $\mathcal{L}$ a probability $p_i$,
+$0~\leq~p_i~\leq~1, \sum_i~p_i~=~1 $.
 
+We define the probability of an expression $e$ consisting of primitive
+combinators $c_1, \dots, c_N$ to be $p(e)~=~\prod_{n=1}^N p(c_n |
+t(c_n))$ where $t(c_n)$ is the requested type when $c_n$ was used and
+\[
+p(c_i | t(c_n)) =    \frac{1}{4}\frac{p_i}{\sum_{c_j :
+    type(c_j) \text{ unifies with } t(c_n)} p_j}.
+\]
+That is, $p(c_i | t(c_n)$ is the probability of sampling $c_i$ from
+the multinomial distribution defined by the $p_i$'s, conditioned on
+the requesting type, and then divided by 4. The constant factor of
+$1/4$ is introduced as a simple way to ensure that the sum over the
+probabilities of all expressions converges to finite value (so that
+the distribution over expressions is proper).\footnote{The probability
+  mass $M_d$ of all expressions of depth less than or equal to $d$ can
+  be written with the recurrence relation $M_d \leq M_d^2 + M_1$. This
+  has an asymptotic fixed point if $x = x^2 + M_1$ has a solution,
+  which is true if $M_1 \leq 1/4$.}
 
-\subsection{Best-first enumeration of most probable programs.}
+To estimate the values $p_i$ from set of expressions, we simply divide
+the number of times primitive combinator $c_i$ was used by the number
+of times it could have been used given the requesting types in the
+expression trees. Note that this is not a maximum likelihood estimator
+for this distribution; finding that would require solving a rather
+complex optimization problem because of each choice is conditioned on
+the requesting type. We choose our estimator merely for convenience,
+and find that our empirical results justify this simplicity. It is a
+matter for future research to determine to what extent a more accurate
+estimator would improve performance.
+
+ \subsection{Best-first enumeration of most probable programs.}
 In order to explore the frontier of most promising programs, we need a
 procedure that enumerates the $N$ most probable programs. There has
-been recent interest in this
-problem~\cite{DBLP:conf/sfp/Katayama05}\cite{DBLP:conf/aaip/YakushevJ09}. Our
+been recent interest in this problem, most of it focused on
+enumerating the shortest program satisfying some
+criterion~\cite{DBLP:conf/sfp/Katayama05} \cite{DBLP:conf/aaip/YakushevJ09}. Our
 approach is to formulate the problem as a best-first exploration of an
 AND/OR tree~\cite{nilsson1982principles}, which we denote
 $\mathcal{G}$. A complete program is any binary subtrees of
@@ -350,29 +354,79 @@ the type of the right child is constrained by the subtree rooted at
 the left child, we always expand the left child first and use the
 target type of this left subtree to mark the type of the right child.
 
-In accordance with the stochastic grammar over programs, we weight all
-edges from OR nodes according to the negative log likelihood of
-choosing the associated rule from the stochastic grammar, conditioned
-on the requesting type. Expanding an AND node has zero cost. In the
-case that the stochastic grammar is ill conditioned, we might have an
-infinitely deep solution tree whose cost does not increase as we
-unfold it; this can occur, for example, if there are no primitives of
-the required type since the log probability of expansion to the next
-AND node is 0. To avoid this, we simply declare a cost for
-expanding the next AND node when it is the only node available.
+Recall that a valid partial solution is a subtree of $\mathcal{G}$
+satisfying the following properties: its root is the root
+$\mathcal{G}$ and any OR node has at most one child. A complete
+solution is a partial solution whose leaves are leaves of
+$\mathcal{G}$, whose root is the root of $\mathcal{G}$, in which each
+OR node has exactly one child, and in which each AND node has exactly
+two children. 
+
+The value of a partial solution $G'$ is calculated by summing the
+value of its leaves. If a leaf of $G'$ is a leaf of $G$ then either it
+is an AND node, to which we assign a value of 0, or it corresponds to
+some primitive combinator $c_i$ in the library and is the child of
+some typed OR node with type $t$. We assign its value of $- \log{p(c_i
+  | t)}$, according to the stochastic grammar specified in
+Section~\ref{sec:stochgrammar}. If a leaf $v$ of $G'$ is an OR node,
+then the value of any extension of it to a complete solution is at
+most $-log(1/4)$. Thus, we have defined a value for partial solutions
+that upper bounds the value of any of its extensions. 
+
+Our best-first policy, is to simply expand the next partial solution
+with the highest value. If a partial solution has multiple leaves that
+are not primitive combinators, we expand the left most one first,
+since it is the choice of left combinator that defines the type of its
+right combinator in an application pair. That is, the parent node
+applies its constraint on valid solutions via the left child, not the
+right child. We want to apply constraints as early as possible, so
+expanding left children first prunes more partial solutions.
+
+\textbf{****NEED COMPLEXITY ANALYSIS HERE*******}
 
 \subsection{Finding the most compressive set of solutions.}
 
-Once we have enumerated the best $N$ programs from our distribution,
-we will find that some tasks have no solutions and some have one or
-more solutions; for those tasks that have solutions, we want to choose
-a solution for each task such that the complete set of such solutions
-for all the tasks is as compressible as possible.
+We say that a task is \emph{hit} if it has a solution in the
+frontier. Having enumerated the frontier, we want to assign solutions
+to hit tasks such that this set is maximally compressible. This will
+promote the usage of reusable modular subtrees. 
 
 A natural metric for the compressibility of a set of binary trees is
-the number of unique subtrees that this set contains. Thus, we can
-attempt to find the assignment of solutions to tasks that minimizes
-this value. However, an exact optimization for this problem requires
+the number of unique subtrees that this set contains. As an example of
+this, suppose we had three tasks whose solutions were integers 16, 25,
+and 36, and suppose our frontier contained the six expressions:
+
+\begin{figure}[h]
+    \begin{tikzpicture}[scale=.9,
+        transform shape, level/.style={sibling distance=10mm/#1, font=\scriptsize}
+        ]
+      \node [font=\scriptsize] (top) {}
+      child {node [above=.3cm, text width=2cm] (a) {$(Int \rightarrow Int) \rightarrow Int 
+          \rightarrow Int$}
+        child {node [left=.5cm, below=1cm, text width=3cm] 
+          {$S : \\(t_2 \rightarrow t_1 \rightarrow t_0)  \rightarrow (t_2 \rightarrow t_1) 
+            \rightarrow \\ t_2 \rightarrow t_0$}}
+        child {node [right=0cm, text width=2cm] {$*: Int \rightarrow Int \rightarrow Int$}}
+      }
+      child {node [below right=.3cm and 1cm] (b) {$Int \rightarrow Int$}
+        child {node {$I: t_0 \rightarrow t_0 \rightarrow t_0$}}
+      };
+    \end{tikzpicture}
+\end{figure}
+
+Let $|e|$ be the
+number of unique binary trees in expression $e$. 
+
+we will find that some tasks have no solutions
+and some have one or more solutions; for those tasks that have
+solutions, we want to choose a solution for each task such that the
+complete set of such solutions for all solved tasks is as compressible
+as possible.
+
+
+Thus, we can attempt
+to find the assignment of solutions to tasks that minimizes this
+value. However, an exact optimization for this problem requires
 examining $O(m^k)$ assignments, where $m$ is the maximum number of
 solutions for any one task and $k$ is the number of tasks. Since this
 is prohibitive, we relax the compressibility metric as follows: we
@@ -603,12 +657,14 @@ this component schematically.
 \begin{circuitikz} \draw
 
 %%(1,0) node[nand port, thick] (nor1) {}
-(3, 0)  node[ rotate=0, anchor=east,thick, draw, text width=1cm ] (f) {?} 
+(3, 0)  node[ anchor=east, text align=center, thick, draw, text width=1cm, text height=.25cm, align=center] (f) {?} 
+node [right of=f] (out) {}
 (1, 0) node[nand port, thick] (nor) {}
 (nor.in 1) node[above left=.25cm] (x) {x}
 (nor.in 2) node[below left=.25cm] (y) {y}
-(y) -- (1.71,.5cm)
-(nor) -- (1.72,-.5cm)
+(y) -| (f)
+(nor) -- (f)
+(f) -| (out)
 (x) -| (nor.in 1) 
 (y) -| (nor.in 2);
 \end{circuitikz}

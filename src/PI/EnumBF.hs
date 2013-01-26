@@ -48,7 +48,7 @@ isClosed cb | path cb == Nothing  = True
             | otherwise           = False
 
 -- hack min grammar val
-hackMinGrammarVal = log (0.5)
+hackMinGrammarVal = log (0.25)
 
 
 enumBF :: Grammar 
@@ -105,7 +105,7 @@ expand gr cb@(CombBase (CTerminal tp) (Just []) v)
 --          minGrammarVal = minimum (CM.elems (library gr))
           minGrammarVal = hackMinGrammarVal
           cbs =   do c <- cs
-                     let value = (calcLogProb gr tp c)
+                     let value = (calcLogProb gr tp c) + minGrammarVal
                          combBase = CombBase c Nothing value
                      return combBase
           cs_is_empty =  False -- (length $  runStateT cs 0) == 0
@@ -149,11 +149,11 @@ expand gr cb@(CombBase (CApp c_left c_right tp d) (Just (R:rest)) v) =
 
 
 
-doesCombHaveToType :: Comb -> Type -> Bool
-doesCombHaveToType c t = runStateT m tyInt
-    where (TyVar id _) = makeNewTVar [t]
-          tyInt = readId id
-          m = extendTypeOnLeftN 
+-- doesCombHaveToType :: Comb -> Type -> Bool
+-- doesCombHaveToType c t = runStateT m tyInt
+--     where (TyVar id _) = makeNewTVar [t]
+--           tyInt = readId id
+--           m = extendTypeOnLeftN t
           
 
 

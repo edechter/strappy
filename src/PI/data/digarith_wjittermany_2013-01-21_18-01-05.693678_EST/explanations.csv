@@ -1,0 +1,5 @@
+[(not,(nand True)),(not,(nand True)),(and,((BB (nand True)) nand)),(and,((BB (nand True)) nand)),(or,(((S BS) C) ((BS nand) nand))),(or,(((S BS) C) ((BS nand) nand)))]
+ 
+[(not,(nand True)),(not,(nand True)),(and,((BB (nand True)) nand)),(and,((BB (nand True)) nand)),(or,(((S BS) C) ((BS nand) nand))),(or,(((S BS) C) ((BS nand) nand)))]
+ 
+[(not,(nand True)),(not,(nand True)),(and,((BB (nand True)) nand)),(and,((BB (nand True)) nand)),(or,(((S BS) C) ((BS nand) nand))),(or,(((S BS) C) ((BS nand) nand)))]

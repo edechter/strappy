@@ -1,0 +1,23 @@
+Experiment {expName = "digarith_wjittermany", expTaskSet = [task_boolean2_0,task_boolean2_1,task_boolean2_2,task_boolean2_3,task_boolean2_4,task_boolean2_5,task_boolean2_6,task_boolean2_7,task_boolean2_8,task_boolean2_9,task_boolean2_10,task_boolean2_11,task_boolean2_12,task_boolean2_13,task_boolean2_14,task_boolean2_15], expEps = 0.0, expPrior = Grammar
+------------------------
+Expansions: 0.0
+
+Library: 
+-------
+S: -1.8817216671582997
+I: -1.300284541222037
+C: -2.1130002703238624
+B: -1.6431906204082556
+nand: -1.3433067391728715
+, expInitLib = Grammar
+------------------------
+Expansions: 0.0
+
+Library: 
+-------
+S: -1.8817216671582997
+I: -1.300284541222037
+C: -2.1130002703238624
+B: -1.6431906204082556
+nand: -1.3433067391728715
+, expDepthBound = 3, expNumBound = 1000, expReps = 5}
