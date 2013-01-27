@@ -129,7 +129,7 @@ mkSymRegExpM :: String -> HMap.Map String Comb -> Int -> Rand StdGen Experiment
 mkSymRegExpM name lib frontierSize 
     = do 
   lib' <- jitteredGrammarFromLib lib
-  return $ Experiment {expName = name,
+  return $ Experiment {expName = "EX1_" ++ name,
                   expTaskSet = symRegTaskSet',
                   expEps = 0,
                   expPrior = lib',
