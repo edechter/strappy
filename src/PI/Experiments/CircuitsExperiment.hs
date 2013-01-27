@@ -9,7 +9,6 @@ import qualified Data.HashMap as HMap
 import Control.Monad.Random
 
 import BooleanCircuits
-
 import Type
 import CL
 import Expr
@@ -74,9 +73,9 @@ mkBoolCircuitsExperiment name lib frontierSize taskSet
                       expReps=1}
 
 
-main :: IO ()
-main = do
-  xs <- sampleCircuitTasks  dNumInputs dNumGates dGateType 200
-  let (circuits, tasks) = unzip xs
-  exp <- mkBoolCircuitsExperiment "200circuits_frontier1000" lib1 1000 tasks
-  runExp exp
+-- main :: IO ()
+-- main = do
+--   xs <- sampleCircuitTasks  dNumInputs dNumGates dGateType 200
+--   let (circuits, tasks) = unzip xs
+--   exp <- mkBoolCircuitsExperiment "200circuits_frontier1000" lib1 1000 tasks
+--   runExp exp

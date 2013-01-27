@@ -22,12 +22,13 @@ import qualified Compress as CP
 import PostProcess 
 import Grammar
 
-runExp :: Experiment -> IO ()
-runExp exp =   do startTime <- getCurrentTime 
-                  let ! (_, !searchData) = runSearch $ loop exp
-                  evaluate (last searchData)
-                  endTime <- getCurrentTime
-                  saveSearchData "data" exp searchData (diffUTCTime  endTime startTime)
+runExp :: Experiment -> String -- ^ filename 
+       -> IO ()
+runExp exp filename = do startTime <- getCurrentTime 
+                         let ! (_, !searchData) = runSearch $ loop exp
+                         evaluate (last searchData)
+                         endTime <- getCurrentTime
+                         saveSearchData filename exp searchData (diffUTCTime  endTime startTime)
 
 
 mkBruteForceExp :: Experiment -> Experiment
