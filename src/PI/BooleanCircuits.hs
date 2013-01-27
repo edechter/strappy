@@ -6,6 +6,8 @@ module BooleanCircuits where
 import Control.Monad
 import Control.Monad.Random
 import qualified Data.Set as Set
+import qualified Data.List.Split as Split
+import qualified Data.List as List
 import Debug.Trace
 
 import DigArith
@@ -266,6 +268,76 @@ dGateType = [ (MGate notGate, 1), (BGate andGate, 2), (BGate orGate, 2)] :: [(Ga
 -- circuit = Circuit [not1, x]
 
       
+--- Saving circuits to file ---
+
+writeGateInstance :: GateInstance -> String
+writeGateInstance (MGateInst id gate inp) = "mono " 
+                                       ++ show id ++ " " 
+                                       ++ show gate ++ " "
+                                       ++ show inp
+writeGateInstance (BGateInst id gate inp1 inp2) = "binary " ++ 
+                                             show id ++ " " 
+                                             ++ show gate ++ " "
+                                             ++ show inp1 ++ " "
+                                             ++ show inp2 
+writeGateInstance (ConstInst id _) = "const " ++ show id
+
+writeCircuit :: Circuit -> String
+writeCircuit (Circuit gs) = "circuit start\n" 
+                            ++ unlines (map writeGateInstance gs)
+                            ++ "circuit end"
+
+writeCircuitTask :: (Circuit, Task) -> String
+writeCircuitTask (c, t) = "task name " ++ show t ++ "\n" 
+                          ++ writeCircuit c
+
+writeCircuitTasks :: [(Circuit, Task)] -> String
+writeCircuitTasks xs = unlines $ map (\x -> writeCircuitTask x ++ "\n")
+                       xs
+
+writeCircuitTasksToFile :: [(Circuit, Task)] -> String -> IO ()
+writeCircuitTasksToFile xs file  = writeFile file $ writeCircuitTasks xs
+
+readCircuitTasksFile :: String -- ^ filename
+                        -> IO [(Circuit, String)]
+readCircuitTasksFile filepath = do 
+  str <- readFile filepath
+  return $ readCircuitTasks str
+
+readCircuitTasks :: String -> [(Circuit, String)]
+readCircuitTasks xs = map readCircuitTask $ filter (not . null) $ Split.splitOn "\n\n" xs
+
+readCircuitTask str = (Circuit instances, taskName)
+    where (l:ls) = lines str
+          (Just taskName) = List.stripPrefix "task name " l
+          instances = map fromJust $ filter isJust $ map process ls
+          process x = listToInstance (words x) 
+          isJust (Just x) = True
+          isJust Nothing = False
+          fromJust (Just x) = x
+          
+listToInstance :: [String] -> Maybe GateInstance
+listToInstance [_, outIdstr, "NOT", inIdstr] = Just (MGateInst outId notGate inId)
+                                                where inId = read inIdstr
+                                                      outId = read outIdstr
+listToInstance [_, outIdstr, "AND", inId1str, inId2str] = Just (BGateInst outId andGate inId1 inId2)
+     where inId1 = read inId1str
+           inId2 = read inId2str
+           outId = read outIdstr
+listToInstance [_, outIdstr, "OR", inId1str, inId2str] = Just (BGateInst outId orGate inId1 inId2)
+    where inId1 = read inId1str
+          inId2 = read inId2str
+          outId = read outIdstr
+listToInstance ["const", outIdstr] = Just (ConstInst (read outIdstr) true)
+listToInstance _ = Nothing 
+
+readTasksFromCircuits :: String -- ^ filename
+                      -> IO [Task]
+readTasksFromCircuits filename = do
+  xs <- readCircuitTasksFile filename
+  return $ map (\(c, n) -> fromJust (circuitToTask n c)) xs
+    where fromJust (Just x) = x
+
 
          
                   
