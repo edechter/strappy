@@ -44,7 +44,29 @@ jbt@mit.edu
 \maketitle
 
 \begin{abstract}
- Suppose a learner is faced with a domain of problems about which it knows nearly nothing. It does not know the distribution of problems, the space of solutions is not smooth, and the reward signal is uninformative, providing perhaps a few bits of information but not enough to steer it effectively. How can such a learner ever get off the ground? A common intuition is that if the solutions to these problems share a common structure, and the learner can solve some simple problems by brute force, it should be able to extract useful components from these solutions and, by composing them, explore the solution space more efficiently. Here, we formalize this intuition, where the solution space is the space of typed functional programs and the gained information is stored as a stochastic grammar over programs. We propose an iterative procedure for exploring such spaces: in the first step of each iteration, the learner explores a finite subset of the domain, guided by a stochastic grammar; in the second step, the learner compresses the successful solutions from the first step to estimate a new stochastic grammar. We test this procedure on symbolic regression and boolean circuit learning and show that the learner discovers modular concepts for these domains. Whereas the learner is able to solve almost none of the posed problems in the procedure's first iteration, it rapidly becomes able to solve a large number by gaining abstract knowledge of the structure of the solution space.
+ Suppose a learner is faced with a domain of problems about which it
+ knows nearly nothing. It does not know the distribution of problems,
+ the space of solutions is not smooth, and the reward signal is
+ uninformative, providing perhaps a few bits of information but not
+ enough to steer it effectively. How can such a learner ever get off
+ the ground? A common intuition is that if the solutions to these
+ problems share a common structure, and the learner can solve some
+ simple problems by brute force, it should be able to extract useful
+ components from these solutions and, by composing them, explore the
+ solution space more efficiently. Here, we formalize this intuition,
+ where the solution space is the space of typed functional programs
+ and the gained information is stored as a stochastic grammar over
+ programs. We propose an iterative procedure for exploring such
+ spaces: in the first step of each iteration, the learner explores a
+ finite subset of the domain, guided by a stochastic grammar; in the
+ second step, the learner compresses the successful solutions from the
+ first step to estimate a new stochastic grammar. We test this
+ procedure on symbolic regression and boolean circuit learning and
+ show that the learner discovers modular concepts for these
+ domains. Whereas the learner is able to solve almost none of the
+ posed problems in the procedure's first iteration, it rapidly becomes
+ able to solve a large number by gaining abstract knowledge of the
+ structure of the solution space.
  
  
 \end{abstract}
@@ -61,7 +83,7 @@ all make a huge difference, and the outcome of the baking process is
 mostly all or none. Either the outcome is what you expected or quite
 unlike it. Even if you do create something similar to your intent, it
 is difficult to assign blame for the outcome to any one step or
-decision along the way. 
+decision along the way.
 
 Many difficult learning problems have this structure -- learning
 language, developing technologies and scientific theories, learning to
@@ -94,6 +116,11 @@ of functional programs. These two choices are in contrast to the
 paradigm tackled by most of machine learning, in which a locally
 informative objective function guides search in a space that is
 somewhat smooth.
+
+Let's assume there is a distribution over tasks in our domain
+$p_task(\dot)$. We can frame our goal as finding an ordering on
+programs $w : \mathcal{L} -> (1, \dots)$ such that the expected number
+of programs to find a solution for a task is minimal. 
 
 Formally then, our goal is to solve the following minimal feedback
 multi-task program induction problem: suppose we are
