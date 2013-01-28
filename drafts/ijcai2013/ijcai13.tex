@@ -118,9 +118,16 @@ informative objective function guides search in a space that is
 somewhat smooth.
 
 Let's assume there is a distribution over tasks in our domain
-$p_task(\dot)$. We can frame our goal as finding an ordering on
-programs $w : \mathcal{L} -> (1, \dots)$ such that the expected number
-of programs to find a solution for a task is minimal. 
+$p_{task}(\dot)$ and that these tasks are drawn $i.i.d$ from this
+distribution. We can frame our goal as finding an ordering on programs
+$w : \mathcal{L} \rightarrow (1, \dots)$ such that if we search for programs
+according to $w$ then the expected number of programs we need to
+inspect is minimized. But this ordering is exactly that which is
+defined by $p_{task}$. Namely, let $e_1, e_2 \in \mathcal{L}$ solve
+tasks $t1, t2$ respectively. Then we want $w(e_1) > w(e_2) $ iff $
+p_{task}(t_1) > p_{task}(t_2)$. One way to achieve this is that for every
+$e \in \mathcal{L}$ that solves task $t$, we define $w$ to be ordering
+according to the distribution $p_\mathcal{L}(e) \propto p_{task}(t)$.
 
 Formally then, our goal is to solve the following minimal feedback
 multi-task program induction problem: suppose we are
@@ -580,12 +587,13 @@ over the course of fifteen algorithm iterations. %% In addition, we have a
 %% the algorithm.
 
 \begin{figure}
-\begin{subfigure}[Before]{0.45\linewidth}
-\includegraphics[width=\linewidth]{figures/learningCurves2.pdf}
+\begin{subfigure}[Before]{.6\linewidth}
+%% \includegraphics[width=\linewidth]{figures/learningCurves2.pdf}
+\includegraphics[width=\linewidth]{figures/symreg3frontiers.pdf}
 \end{subfigure}
-\begin{subfigure}[After]{0.45\linewidth}
-\includegraphics[width=\linewidth]{figures/performanceVsFrontierSize2.pdf}
-\end{subfigure}
+%% \begin{subfigure}[After]{0.45\linewidth}
+%% \includegraphics[width=\linewidth]{figures/performanceVsFrontierSize2.pdf}
+%% \end{subfigure}
 \caption{(a) Average learning curves as we vary the frontier size. (b)
   Percent of tasks solved at iteration 15 as a function of frontier
   size.}

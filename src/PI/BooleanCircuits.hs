@@ -189,47 +189,33 @@ isCircuitConnected circ =  (Set.size diff == 1) && (diff == Set.singleton outId)
           diff = Set.difference  allGateIds allInputs
           outId = gateId $ head $ circuitGates circ
 
+sampleConnectedCircuitGivenNumbers :: MonadRandom m 
+                             => Int -- ^ number of inputs
+                          -> Int -- ^ number of gates
+                          -> [(Gate, Rational)]
+                          -> m Circuit
+sampleConnectedCircuitGivenNumbers nI nN dG 
+    = do gates <- sampleGatesFromDistribution dG nN
+         let circ = createInputs nI
+         circ' <- addInstances circ gates
+         if isCircuitConnected circ' then
+             return circ' else
+             sampleConnectedCircuitGivenNumbers nI nN dG
+                             
 
-sampleConnectedCircuitsNGates :: MonadRandom m 
-                                => Int -- ^ number of inputs
-                              -> Int  -- ^ number of gates
-                              -> [(Gate, Rational)]
-                              -> m Circuit -- ^ stream of connected circuits
-sampleConnectedCircuitsNGates nI nG distr  
-    = do circ <- sampleCircuitNGates nI nG distr
-         if isCircuitConnected circ then 
-             return circ else
-             sampleConnectedCircuitsNGates nI nG distr
-                                           
-
-sampleNConnectedCircuits :: MonadRandom m => 
-                            Int -- ^ number of inputs
-                         -> Int -- ^ number of gates
-                         -> [(Gate, Rational)]
-                         -> Int -- ^ number of circuits
-                         -> m [Circuit]
-sampleNConnectedCircuits nI nG distr nC = sequence $ replicate nC$
-                                          sampleConnectedCircuitsNGates nI nG distr
-
-sampleCircuit :: MonadRandom m =>
-                  [(Int, Rational)] -- ^ distribution over number of inputs
-               -> [(Int, Rational)] -- ^ distribution over number of gates
-               -> [(Gate, Rational)] -- ^ distribution over types of gates
-               -> m Circuit
-sampleCircuit dI dN dG = do nI <- fromList dI 
-                            nN <- fromList dN
-                            gates <- sampleGatesFromDistribution dG nN
-                            let circ = createInputs nI
-                            addInstances circ gates
-
-sampleConnectedCircuit dI dN dG = do circ <- sampleCircuit dI dN dG
-                                     if isCircuitConnected circ then 
-                                         return circ else
-                                         sampleConnectedCircuit dI dN dG
+sampleConnectedCircuit dI dN dG 
+    = do nI <- fromList dI
+         nN <- fromList dN
+         if nI > 2 && nN==1 then
+             sampleConnectedCircuit dI dN dG else
+              sampleConnectedCircuitGivenNumbers nI nN dG         
 
 
+         
 sampleConnectedCircuits dI dN dG nC = sequence $ replicate nC 
                                       $ sampleConnectedCircuit dI dN dG
+
+
 
 circuitToTruthTable :: Circuit -> Maybe TruthTable
 circuitToTruthTable circuit  
@@ -248,6 +234,20 @@ sampleCircuitTasks dI dN dG nT
     where fromJust (Just x) = x
 
 
+equiv :: Circuit -> Circuit -> Bool
+equiv c1 c2 = tt1 == tt2
+      where tt1 = circuitToTruthTable c1
+            tt2 = circuitToTruthTable c2
+
+mkEquivClasses :: [Circuit] -> [[Circuit]]
+mkEquivClasses cs = foldl mkEquivClasses' [] cs
+
+mkEquivClasses' :: [[Circuit]] -> Circuit -> [[Circuit]]
+mkEquivClasses' [] c = [[c]]
+mkEquivClasses' (cl:cls) c = if (head cl) `equiv` c then
+                                 (c:cl):cls else
+                                 (cl):(mkEquivClasses' cls c)
+                                     
        
           
 
