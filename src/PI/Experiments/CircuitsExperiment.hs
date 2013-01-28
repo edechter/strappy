@@ -70,7 +70,7 @@ mkBoolCircuitsExperiment name lib frontierSize taskSet
                       expInitLib = lib',
                       expDepthBound=3,
                       expNumBound = frontierSize,
-                      expReps=1}
+                      expReps=15}
 
 
 -- main :: IO ()
