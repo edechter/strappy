@@ -147,7 +147,7 @@ main = do
                               4 -> ("OnlyComplexQuadratic", taskSetOnlyComplexQuadratic)
                               5 -> ("UpToQuadratic", taskSetUpToQuadratic)
                               _ -> error $ "No task name " ++ taskname
-  let frontierSize = 10
+  let frontierSize = 10000
       name = taskname  ++  "_frontier"  ++ show frontierSize
   exp <- mkSymRegExp name lib1 frontierSize taskset
   runExp exp "data/EX5"

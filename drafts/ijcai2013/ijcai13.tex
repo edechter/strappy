@@ -460,6 +460,15 @@ the number of unique subtrees that this set contains. As an example of
 this, suppose we had three tasks whose solutions were integers 16, 25,
 and 36, and suppose our frontier contained the six expressions:
 
+\begin{table}[h]
+  \begin{tabular}{|l|l|l|}
+    ~ & ~ & ~ \\ 
+    ~ & ~ & ~ 
+    \end{tabular}
+  \caption{Two ways to represent 16, 25, 36.}
+  \label{table:compress}
+\end{table}
+
 %% \begin{figure}[h]
 %%     \begin{tikzpicture}[scale=.9,
 %%         transform shape, level/.style={sibling distance=10mm/#1, font=\scriptsize}
@@ -724,7 +733,7 @@ different trajectories to more successful representations.
 
 \begin{table}
 \scriptsize
-  \begin{tabular}{|l|l|l|}
+   \begin{tabular}{|l|l|l|}
     function  & CL expressions & circuit  ~ \\ \hline
         TRUE  & (S NAND) (S NAND I)                   & ~ \\ \hline
         FALSE & (S B (S NAND)) (S NAND I)             & ~ \\ \hline
