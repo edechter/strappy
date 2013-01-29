@@ -1,8 +1,9 @@
--- EX1
--- Symbolic regression 10 run per frontier size experiment on EC2. 
+-- EX5 
+-- symbolic regression with progressively more impoverished task sets
 {-# Language ParallelListComp #-}
 
-module Experiments.EX1 where
+
+module Experiments.EX5 where
 
 import System.Environment (getArgs)
 import Control.Monad.Random
@@ -54,14 +55,18 @@ mkSquaresTask a b = Task (showSquares a b) f (tInt ->- tInt)
                    
     where f = eval [num2C $ (squares a b) i| i<-rng]
 
--- taskSet' = --[mkSquaresTask i j | i <- [0..5] , j <- [0..5]]
---            -- ++  (map (mkSingleEqualityTask 100) $ [i*i | i <- [0..20]])
---            [mkQuadTask i j k | i <- [0..10] , j <- [0..10], k <- [0..10]]
---           ++ [mkQuadTask i j k | i <- [0..0] , j <- [0..5], k <- [0..5]]
+taskSetNoConstants = [mkQuadSymRegTask i j k | i <- [1..9] , j <- [1..9], k <- [0..9]]
+                     ++ [mkQuadSymRegTask i j k | i <- [1..9] , j <- [0], k <- [0..9]]
+                     ++ [mkQuadSymRegTask i j k | i <- [0] , j <- [1..9], k <- [0..9]]
 
-symRegTaskSet' = --[mkSquaresTask i j | i <- [0..5] , j <- [0..5]]
-           -- ++  (map (mkSingleEqualityTask 100) $ [i*i | i <- [0..20]])
-           [mkQuadSymRegTask i j k | i <- [0..9] , j <- [0..9], k <- [0..9]]
+taskSetNoLinear = [mkQuadSymRegTask i j k | i <- [1..9] , j <- [0..9], k <- [0..9]]
+                  ++ [mkQuadSymRegTask i j k | i <- [0] , j <- [1..9], k <- [0..9]]
+
+taskSetOnlyQuadratic = [mkQuadSymRegTask i j k | i <- [1..9] , j <- [0..9], k <- [0..9]]
+taskSetOnlyComplexQuadratic = [mkQuadSymRegTask i j k | i <- [1..9] , j <- [1..9], k <- [1..9]]
+taskSetUpToQuadratic = [mkQuadSymRegTask i j k | i <- [0..9] , j <- [0..9], k <- [0..9]]
+
+
 
 cLin = CNode "Lin" (Func $ \(N a) -> Func $ \(N b) -> Func $ \(N x) 
                               -> (N $ a * x + b )) typeC 
@@ -109,28 +114,22 @@ lib123 = lib `CM.union` routers
 grammarFromLib lib = normalizeGrammar $ Grammar l 0
     where l = CM.fromList $ [(c, 0) | c <- CM.elems lib]
 
-jitteredGrammarFromLib :: HMap.Map k Comb -> Rand StdGen Grammar
+jitteredGrammarFromLib :: MonadRandom m => HMap.Map k Comb -> m Grammar
 jitteredGrammarFromLib lib = do 
   vs <- getRandomRs (-1.0,1.0)
   let lib' = CM.fromList [(c, 2 + k) | c <- CM.elems lib | k <- vs]
   return $ normalizeGrammar $ Grammar lib' 0
                      
-mkSymRegExp name lib frontierSize 
-    = Experiment {expName = name,
-                  expTaskSet = symRegTaskSet',
-                  expEps = 0,
-                  expPrior = grammarFromLib lib,
-                  expInitLib = grammarFromLib lib,
-                  expDepthBound = 3,
-                  expNumBound = frontierSize,
-                  expReps = 15}
-
-mkSymRegExpM :: String -> HMap.Map String Comb -> Int -> Rand StdGen Experiment
-mkSymRegExpM name lib frontierSize 
+mkSymRegExp :: MonadRandom m => String 
+             -> HMap.Map String Comb 
+             -> Int 
+             -> [Task]
+             -> m Experiment
+mkSymRegExp name lib frontierSize taskSet 
     = do 
   lib' <- jitteredGrammarFromLib lib
-  return $ Experiment {expName = "EX1_" ++ name,
-                  expTaskSet = symRegTaskSet',
+  return $ Experiment {expName = "EX5_symreg" ++ name,
+                  expTaskSet = taskSet,
                   expEps = 0,
                   expPrior = lib',
                   expInitLib = lib',
@@ -138,40 +137,20 @@ mkSymRegExpM name lib frontierSize
                   expNumBound = frontierSize,
                   expReps = 15}
 
-
-
-libSet = [lib1] -- lib3, lib123]
-libNames = ["R1"] -- , "R3", "R<=3"]
-frontierSizeSet sizes = join [replicate 1 i | i <- sizes]
-                                          
-
-expSet sizes = concat [[mkSymRegExp (n ++ "_" ++ show f) l f | n <- libNames | l <- libSet]
-              | f <- frontierSizeSet sizes]
-
-expSetRand sizes = sequence $ concat [[mkSymRegExpM (n ++ "_" ++ show f) l f | n <- libNames | l <- libSet]
-              | f <- frontierSizeSet sizes]
-
-runExpSet sizes = sequence $ (map runExp (expSet sizes)) ++ (map runBruteForceExp (expSet sizes))
-
-runExpSetRand sizes = do n <- newStdGen
-                         let (exps, a) = runRand (expSetRand sizes) n
-                         sequence $ map runExp exps
-
--- expSymReg 
---     = Experiment {
---         expName = "EX1", 
---         expTaskSet = taskSet',
---         expEps = 0,
---         expPrior = expGrammar,
---         expInitLib = expGrammar,
---         expDepthBound = 3,
---         expNumBound = 10,
---         expReps=10
---       }
-
+main :: IO ()
 main = do
-  sizes <- fmap (map read) getArgs
-  runExpSetRand sizes
+  switch <- fmap (read . head) getArgs
+  let (taskname, taskset) = case switch of 
+                              1 -> ("NoConstants", taskSetNoConstants)
+                              2 -> ("NoLinear", taskSetNoLinear)
+                              3 -> ("OnlyQuadratic", taskSetOnlyQuadratic)
+                              4 -> ("OnlyComplexQuadratic", taskSetOnlyComplexQuadratic)
+                              5 -> ("UpToQuadratic", taskSetUpToQuadratic)
+                              _ -> error $ "No task name " ++ taskname
+  let frontierSize = 10
+      name = taskname  ++  "_frontier"  ++ show frontierSize
+  exp <- mkSymRegExp name lib1 frontierSize taskset
+  runExp exp "data/EX5"
 
 
 

@@ -14,6 +14,7 @@ import DigArith
 import Task
 
 
+
 data MonoGate = MonoGate {monoGateName :: String, 
                           monoGateFunc :: Bool -> Bool}
 
@@ -255,12 +256,6 @@ dNumInputs = [(1, 1), (2, 2), (3, 4), (4, 4)] :: [(Int, Rational)]
 dNumGates = [(1, 1), (2, 3), (3,  4), (4, 4), (5, 5), (6, 5)] :: [(Int, Rational)]
 dGateType = [ (MGate notGate, 1), (BGate andGate, 2), (BGate orGate, 2)] :: [(Gate, Rational)]
 
-
-
-
-
-                                               
-                                               
 
 -- not1 = MGateInst 2 notGate 1
 -- x = ConstInst 1 (Const True)

@@ -117,44 +117,44 @@ paradigm tackled by most of machine learning, in which a locally
 informative objective function guides search in a space that is
 somewhat smooth.
 
-Let a \emph{task} be a function $t : \mathcal{L} \rightarrow \{0,
-1\}$, where $\mathcal{L}$ is the set of all expressions in our
-representation language. We say that $e \in \mathcal{L}$ \emph{solves}
-task $t$ if $t(e) = 1$. Our goal is to solve as many tasks as
-possible, as efficiently as possible. That is, suppose that there is a
-distribution over tasks $t \sim  p_t(\cdot)$, we would like an ordering $O
-= e_1, \dots $ on expressions in $\mathcal{L}$ such that if $p_t(t_1)
-> p_t(t_2)$ then the first expression in $O$ to solve $t_1$ comes
-before the first expression in $O$ to solve $t_2$.
+%% Let a \emph{task} be a function $t : \mathcal{L} \rightarrow \{0,
+%% 1\}$, where $\mathcal{L}$ is the set of all expressions in our
+%% representation language. We say that $e \in \mathcal{L}$ \emph{solves}
+%% task $t$ if $t(e) = 1$. Our goal is to solve as many tasks as
+%% possible, as efficiently as possible. That is, suppose that there is a
+%% distribution over tasks $t \sim  p_t(\cdot)$, we would like an ordering $O
+%% = e_1, \dots $ on expressions in $\mathcal{L}$ such that if $p_t(t_1)
+%% > p_t(t_2)$ then the first expression in $O$ to solve $t_1$ comes
+%% before the first expression in $O$ to solve $t_2$.
 
-We motivate a solution to this problem by considering a heirarchical
-Bayesian formulation of the task distribution. Suppose we believe that
-there is some underlying structure to $p_t(\cdot)$ that is explained by
-the fact that for each task $t$ there is a latent expressions $e \in
-\mathcal{L}$ drawn from a stochastic grammar $\mathcal{G}$ and that 
+%% We motivate a solution to this problem by considering a heirarchical
+%% Bayesian formulation of the task distribution. Suppose we believe that
+%% there is some underlying structure to $p_t(\cdot)$ that is explained by
+%% the fact that for each task $t$ there is a latent expressions $e \in
+%% \mathcal{L}$ drawn from a stochastic grammar $\mathcal{G}$ and that 
 
-\begin{align}
-e &\sim p_\mathcal{L}(\cdot) = \mathcal{G}\\
-t | e &\sim \text{U}\{ \text{tasks solved by }e\}.
-\end{align}
+%% \begin{align}
+%% e &\sim p_\mathcal{L}(\cdot) = \mathcal{G}\\
+%% t | e &\sim \text{U}\{ \text{tasks solved by }e\}.
+%% \end{align}
 
-Then $p_t(t) = \sum_{e_j \in \mathcal{L} \text{ s.t. } t(e_j) = 1}
-p_\mathcal{L}(e_j)$. If we make the assumption that for the set $E$ of
-expressions in this sum, there is some expression $e^*$ such that
-$p_\mathcal{L}(e^*) >> p_\mathcal{L}(e), e \neq e^*$, then we have, approximately, 
-\[ p_t(t) \propto} p_\mathcal{L}(e^*). \] 
+%% Then $p_t(t) = \sum_{e_j \in \mathcal{L} \text{ s.t. } t(e_j) = 1}
+%% p_\mathcal{L}(e_j)$. If we make the assumption that for the set $E$ of
+%% expressions in this sum, there is some expression $e^*$ such that
+%% $p_\mathcal{L}(e^*) >> p_\mathcal{L}(e), e \neq e^*$, then we have, approximately, 
+%% \[ p_t(t) \propto} p_\mathcal{L}(e^*). \] 
 
-This suggests a way to find the ordering $O$: infer a stochastic
-grammar $G$, under the assumption that $G$ favors one solution to a
-given task over any other, and order the elements of $\mathcal{L}$
-according to $G$.
+%% This suggests a way to find the ordering $O$: infer a stochastic
+%% grammar $G$, under the assumption that $G$ favors one solution to a
+%% given task over any other, and order the elements of $\mathcal{L}$
+%% according to $G$.
 
-Thus, our basic procedure will be to search for a single ``good''
-solution for as many tasks as we can, and to use those solutions to
-estimate a stochastic grammar. Our search will be performed in the
-order of the most recently inferred grammar. So as our ordering
-becomes more efficient and we can solve more tasks, we learn better
-stochastic grammars.
+%% Thus, our basic procedure will be to search for a single ``good''
+%% solution for as many tasks as we can, and to use those solutions to
+%% estimate a stochastic grammar. Our search will be performed in the
+%% order of the most recently inferred grammar. So as our ordering
+%% becomes more efficient and we can solve more tasks, we learn better
+%% stochastic grammars.
 
 %% Formally then, our goal is to solve the following minimal feedback
 %% multi-task program induction problem: suppose we are given set of
@@ -171,7 +171,7 @@ stochastic grammars.
 Based on the motivation set out above, we present an iterative
 strategy. Given a stochastic grammar $\mathcal{G}$ which defines a
 distribution over the primitives from $\mathcal{L}$ and a integer
-\emph{frontier size} $N$, we perform to steps in each iteration.  In
+\emph{frontier size} $N$, we perform two steps in each iteration.  In
 the first step, we explore the $N$ highest probability programs
 according to $\mathcal{G}$. In the second step, we compress the
 programs that solve any of our tasks, and we use that compression to
@@ -460,23 +460,23 @@ the number of unique subtrees that this set contains. As an example of
 this, suppose we had three tasks whose solutions were integers 16, 25,
 and 36, and suppose our frontier contained the six expressions:
 
-\begin{figure}[h]
-    \begin{tikzpicture}[scale=.9,
-        transform shape, level/.style={sibling distance=10mm/#1, font=\scriptsize}
-        ]
-      \node [font=\scriptsize] (top) {}
-      child {node [above=.3cm, text width=2cm] (a) {$(Int \rightarrow Int) \rightarrow Int 
-          \rightarrow Int$}
-        child {node [left=.5cm, below=1cm, text width=3cm] 
-          {$S : \\(t_2 \rightarrow t_1 \rightarrow t_0)  \rightarrow (t_2 \rightarrow t_1) 
-            \rightarrow \\ t_2 \rightarrow t_0$}}
-        child {node [right=0cm, text width=2cm] {$*: Int \rightarrow Int \rightarrow Int$}}
-      }
-      child {node [below right=.3cm and 1cm] (b) {$Int \rightarrow Int$}
-        child {node {$I: t_0 \rightarrow t_0 \rightarrow t_0$}}
-      };
-    \end{tikzpicture}
-\end{figure}
+%% \begin{figure}[h]
+%%     \begin{tikzpicture}[scale=.9,
+%%         transform shape, level/.style={sibling distance=10mm/#1, font=\scriptsize}
+%%         ]
+%%       \node [font=\scriptsize] (top) {}
+%%       child {node [above=.3cm, text width=2cm] (a) {$(Int \rightarrow Int) \rightarrow Int 
+%%           \rightarrow Int$}
+%%         child {node [left=.5cm, below=1cm, text width=3cm] 
+%%           {$S : \\(t_2 \rightarrow t_1 \rightarrow t_0)  \rightarrow (t_2 \rightarrow t_1) 
+%%             \rightarrow \\ t_2 \rightarrow t_0$}}
+%%         child {node [right=0cm, text width=2cm] {$*: Int \rightarrow Int \rightarrow Int$}}
+%%       }
+%%       child {node [below right=.3cm and 1cm] (b) {$Int \rightarrow Int$}
+%%         child {node {$I: t_0 \rightarrow t_0 \rightarrow t_0$}}
+%%       };
+%%     \end{tikzpicture}
+%% \end{figure}
 
 Let $|e|$ be the
 number of unique binary trees in expression $e$. 
@@ -668,9 +668,19 @@ sampling procedure until we had 1000 ``connected'' circuits, i.e.,
 circuits all of whose output are wired to an input except for the last
 one (the output gate). This resulted in $1000$ tasks consisting of
 $82$ unique boolean functions, with a distribution of tasks as shown
-in Figure~\ref{fig:boolhist}. In Figure~\ref{fig:boolLearningCurves1},
+in Figure~\ref{fig:booldistr}. In Figure~\ref{fig:boolLearningCurves1},
 We present learning curves for frontier sizes 100, 500 and 10000,
 using the same procedure as in Section~\ref{sec:symreg}. 
+
+\begin{figure}
+\includegraphics[width=\linewidth]{figures/circuitDistrComp.pdf}
+\label{fig:booldistr}
+\caption{Distribution of boolean functions among (a) the set of 1000
+  circuits randomly constructed from AND, OR and NOT gates; b) the
+  first 1000 expressions from the grammar over programs \emph{before}
+  learning; c) the first 1000 expressions from the grammar over
+  programs \emph{after} learning.}
+\end{figure}
 
 This problem is particularly suitable for inspecting the constituents
 of the induced grammar $\mathcal{G}$. We might hope that our algorithm
@@ -712,35 +722,6 @@ different trajectories to more successful representations.
 
 \end{figure}
 
-
-What kind of solutions does our algorithm find to common boolean
-circuits? We might hope that the circuits it finds are ``simple.'' One
-way to judge this is to compare the circuits it finds with the
-circuits found in digital electronics textbooks. For example, the XOR
-circuit can be drawn as a circuit with only NAND gates as in
-Figure~\ref{fig:xor_circuit}. Our algorithm returns the solution: 
-
-\begin{alltt}
-\small{
-((S (B C (((B (C B nand)) S) 
-(((B (C B nand)) S) (B C 
-((B (B nand)) nand)))))) I)}. 
-\end{alltt}
-This looks more complicated. It should be understood, though, that the
-routing combinators S, B, and C play the role of wiring. Note that
-this solution has four NAND gates, the same number of as in the
-standard circuit. Another interesting feature of this solution is that
-it is not the smallest expression that is equivalent (modulo
-reduction), since we can further reduce it. However, this reduction
-would remove the two uses of \texttt{\small{(B (C B nand) S)}}. This is
-a reused component that appears within the most highly weighted 20
-combinators in the algorithm's induced grammar. We can view it
-schematically with a circuit diagram, but it is not a circuit
-fragment. Rather, it is a function that takes in a circuit of type
-$bool \rightarrow bool \rightarrow bool$ and returns a circuit of type $bool
-\rightarrow bool \rightarrow bool$. Figure~\ref{fig:component} shows
-this component schematically.
-
 \begin{table}
 \scriptsize
   \begin{tabular}{|l|l|l|}
@@ -759,10 +740,6 @@ this component schematically.
 \label{table:boolexpr}
 \end{table}
 
-
-
-
-
 %% \subsection{Digital arithmetic}
 %% Having demonstrated the behavior of the E-C algorithm on symbolic
 %% regression, we analyze its performance on tasks involving digital
@@ -772,6 +749,57 @@ this component schematically.
 %% representations. 
 
 \subsection{Discussion}
+This work attempts to bring together ideas from various areas of
+research -- hierarchical Bayes, learning to learn, minimum description
+length learning -- to provide a proof of concept that learning
+abstractions from programs via compression can rapidly improve search
+performance. We emphasize this by focusing on domains in which the
+solution space is not smooth and the error signal is all or
+none. Thus, the main source of information for learning is the modular
+and compositional structure of the solution space.
+
+Of course, the representations that people use to learn in the world
+often have a partially smooth or local structure. Techniques in AI and
+machine learning commonly use smoothness or local structure to make
+search tractable. But the difference between this kind of learning and
+conceptual learning is undeniable. The former is what the statistician
+or machine learning researcher implements. The latter is what she
+learns as a student and as a practicioner. As researchers, we try
+different models, watch them fail or succeed, and abstract out the
+elements of these models that capture the relevant differences. We mix
+and match parts of different ideas, and utilize succcessful patterns
+of reasoning that can span many problems and domains. 
+
+We believe that the primary characteristic of conceptual learning is
+that it occurs over a modular and compositional computational
+representation that supports higher-order functions. That is why we
+chose a functional programming language as the representational
+language of this work.
+
+The experiments in this work do not contain the richness of real world
+learning, but we believe that the learning algorithm's behavior
+exhibits some of the characteristics we would expect of a conceptual
+learner. 
+
+One characteristic of this algorithm's behavior is a rapid initial
+increase in performance followed by a hard plateau. This plateau is
+expected given the circular nature of the algorithm: the learner
+inspects the region of the solution space that is typical of solutions
+already found. We see in this phenomenon a conceptual demarcation of
+the problem space: a coherent set of concepts or problems solving
+techniques can define by their power the extent of problems a problem
+solver is willing to consider. One might hope, however, that an
+intelligent learner would recognize that such a demarcation has
+occured and attempt to find another class of concepts for the
+remaining unsolved tasks.
+
+Another aspect of conceptual learning that we see present in this
+algorithm's behavior is the importance of a curriculum. By this we do
+not mean an explicit ordering of the problems in the task set, but
+rather that a set of sufficiently simple problems must act as stepping
+stones to the acquisition of complex representations. 
+
+
 
 
 %% The file named.bst is a bibliography style file for BibTeX 0.99c
