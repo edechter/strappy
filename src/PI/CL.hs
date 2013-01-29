@@ -134,6 +134,8 @@ filterCombinatorsByType (c:cs) t
 filterCombinatorsByType [] t = lift []
 
 
+
+
                              
 
                                   

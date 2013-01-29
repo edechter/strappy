@@ -117,37 +117,63 @@ paradigm tackled by most of machine learning, in which a locally
 informative objective function guides search in a space that is
 somewhat smooth.
 
-Let's assume there is a distribution over tasks in our domain
-$p_{task}(\dot)$ and that these tasks are drawn $i.i.d$ from this
-distribution. We can frame our goal as finding an ordering on programs
-$w : \mathcal{L} \rightarrow (1, \dots)$ such that if we search for programs
-according to $w$ then the expected number of programs we need to
-inspect is minimized. But this ordering is exactly that which is
-defined by $p_{task}$. Namely, let $e_1, e_2 \in \mathcal{L}$ solve
-tasks $t1, t2$ respectively. Then we want $w(e_1) > w(e_2) $ iff $
-p_{task}(t_1) > p_{task}(t_2)$. One way to achieve this is that for every
-$e \in \mathcal{L}$ that solves task $t$, we define $w$ to be ordering
-according to the distribution $p_\mathcal{L}(e) \propto p_{task}(t)$.
+Let a \emph{task} be a function $t : \mathcal{L} \rightarrow \{0,
+1\}$, where $\mathcal{L}$ is the set of all expressions in our
+representation language. We say that $e \in \mathcal{L}$ \emph{solves}
+task $t$ if $t(e) = 1$. Our goal is to solve as many tasks as
+possible, as efficiently as possible. That is, suppose that there is a
+distribution over tasks $t \sim  p_t(\cdot)$, we would like an ordering $O
+= e_1, \dots $ on expressions in $\mathcal{L}$ such that if $p_t(t_1)
+> p_t(t_2)$ then the first expression in $O$ to solve $t_1$ comes
+before the first expression in $O$ to solve $t_2$.
 
-Formally then, our goal is to solve the following minimal feedback
-multi-task program induction problem: suppose we are
-given set of \emph{tasks} $T=\{t_k\}_{k=1}^K$ where each task is a
-function $t_i : \mathcal{L} \rightarrow \{0, 1\}$, where $\mathcal{L}$
-is the set of programs in our language.  We say that $ p \in
-\mathcal{L}$ \emph{solves} $t_i$ if $ t_i\; p = 1$. Our
-goal is to find a set of solutions $X = \{x_k\}_{k=1}^k \subset
-\mathcal{L}$ such that
+We motivate a solution to this problem by considering a heirarchical
+Bayesian formulation of the task distribution. Suppose we believe that
+there is some underlying structure to $p_t(\cdot)$ that is explained by
+the fact that for each task $t$ there is a latent expressions $e \in
+\mathcal{L}$ drawn from a stochastic grammar $\mathcal{G}$ and that 
 
-\[
-X = \argmax_{x_1, \dots, x_K \in L} \sum_k t_k(x_k).
-\]
+\begin{align}
+e &\sim p_\mathcal{L}(\cdot) = \mathcal{G}\\
+t | e &\sim \text{U}\{ \text{tasks solved by }e\}.
+\end{align}
 
-Based on the intuition set out above, we present an iterative
+Then $p_t(t) = \sum_{e_j \in \mathcal{L} \text{ s.t. } t(e_j) = 1}
+p_\mathcal{L}(e_j)$. If we make the assumption that for the set $E$ of
+expressions in this sum, there is some expression $e^*$ such that
+$p_\mathcal{L}(e^*) >> p_\mathcal{L}(e), e \neq e^*$, then we have, approximately, 
+\[ p_t(t) \propto} p_\mathcal{L}(e^*). \] 
+
+This suggests a way to find the ordering $O$: infer a stochastic
+grammar $G$, under the assumption that $G$ favors one solution to a
+given task over any other, and order the elements of $\mathcal{L}$
+according to $G$.
+
+Thus, our basic procedure will be to search for a single ``good''
+solution for as many tasks as we can, and to use those solutions to
+estimate a stochastic grammar. Our search will be performed in the
+order of the most recently inferred grammar. So as our ordering
+becomes more efficient and we can solve more tasks, we learn better
+stochastic grammars.
+
+%% Formally then, our goal is to solve the following minimal feedback
+%% multi-task program induction problem: suppose we are given set of
+%% \emph{tasks} $T=\{t_k\}_{k=1}^K$ where each task is a function $t_i :
+%% \mathcal{L} \rightarrow \{0, 1\}$, where $\mathcal{L}$ is the set of
+%% programs in our language.  We say that $ p \in \mathcal{L}$
+%% \emph{solves} $t_i$ if $ t_i\; p = 1$. Our goal is to find a set of
+%% solutions $X = \{x_k\}_{k=1}^k \subset \mathcal{L}$ such that
+
+%% \[
+%% X = \argmax_{x_1, \dots, x_K \in L} \sum_k t_k(x_k).
+%% \]
+
+Based on the motivation set out above, we present an iterative
 strategy. Given a stochastic grammar $\mathcal{G}$ which defines a
 distribution over the primitives from $\mathcal{L}$ and a integer
 \emph{frontier size} $N$, we perform to steps in each iteration.  In
 the first step, we explore the $N$ highest probability programs
-according $\mathcal{G}$. In the second step, we compress the
+according to $\mathcal{G}$. In the second step, we compress the
 programs that solve any of our tasks, and we use that compression to
 define a new grammar. Repeating these two steps, we effectively
 reparameterize our search space to include programs that are more likely
@@ -193,7 +219,7 @@ In order to solve our stated problem, we need to choose a solution
 representation language and a compression criterion, and we need to
 describe the frontier enumeration and compression procedures.
 
-\subsection{Representing typed functional programs as binary trees.}
+\subsection{Representing typed functional programs as binary trees}
 
 Following~\cite{liang10programs} and~\cite{Briggs:2008}, we use
 combinatory logic -- a variable-free subset of the polymorphic
@@ -217,7 +243,7 @@ primitives and, together with the basis combinators, we call these the
 primitive combinators.
 
 The basis combinators can themselves been expressed in the lambda
-calculus. The lambda calculus has two basic operation -- application
+calculus. The lambda calculus has two basic operations -- application
 and abstraction -- but in using the combinatory logic we sequester
 uses of the abstraction operation inside the combinators, and thus
 have a representation language that is effectively abstraction- and,
@@ -245,10 +271,14 @@ value $x$, the action of the combinator is defined as $S \;*\; I\;
 x~\rightarrow~(*\; x)\; (I\; x)~\rightarrow(*\; x)\; x$.
 
 We can extend this representation with a simple polymorphic type
-system~\cite{Pierce_2002}. Thus, this combinator can be represented as
-a binary tree~(Figure~\ref{fig:clbintree}) whose leaves are typed
-primitive combinators and whose interior nodes represent typed applications
-of combinators.
+system~\cite{Pierce_2002}. In this representation, a type is either a
+type primitive (e.g. reals, integers, booleans, etc.), a type variable
+(e.g. $\sigma$), or a function type $ t_1 \rightarrow t_2$ of
+functions from source type $t_1$ to target type $t_2$. Thus, this
+combinator can be represented as a binary
+tree~(Figure~\ref{fig:clbintree}) whose leaves are typed primitive
+combinators and whose interior nodes represent typed applications of
+combinators.
 
 \begin{figure}
   \centering
@@ -513,6 +543,7 @@ can improve this algorithm's performance.
 
 \section{Experiments.}
 \subsection{Symbolic regression.}
+\label{sec:symreg}
 
 In this section, we walk through the performance of our learning
 algorithm on a symbolic regression problem. In this problem,
@@ -617,20 +648,68 @@ over the course of fifteen algorithm iterations. %% In addition, we have a
 %% the expressions in the frontier that hit a task as the frontier size increases.
 
 \subsection{Boolean circuits}
+\label{sec:boolcircuits}
 
-As another demonstration of this approaches learning abilities
-investigate its ability to learn boolean functions using only the
-logical primitive NAND and the basic combinators. In
-Figure~\ref{fig:boolLearningCurves}, 
+As another demonstration of this approach, we investigate the
+procedure's ability to learn boolean functions using only the logical
+primitive NAND and the basic combinators. It is well known that a
+boolean circuit can be constructed for any boolean function given only
+the NAND gate. Here, the basic combinators take the place of the
+wiring normally found in a circuit, the output of element to multiple
+inputs downstream. 
+
+We constructed two task sets. The first of these was constructed
+explicitly to contain familiar module structure. In this set of tasks,
+we sampled $1000$ boolean circuits using AND, OR, and NOT gates. To
+accomplish this, we first sampled either 1, 2, 3 inputs, then between
+1 and 5 gates, randomly wiring the inputs of each new gate to the
+output of one of the existing gates in the circuit. We continued this
+sampling procedure until we had 1000 ``connected'' circuits, i.e.,
+circuits all of whose output are wired to an input except for the last
+one (the output gate). This resulted in $1000$ tasks consisting of
+$82$ unique boolean functions, with a distribution of tasks as shown
+in Figure~\ref{fig:boolhist}. In Figure~\ref{fig:boolLearningCurves1},
+We present learning curves for frontier sizes 100, 500 and 10000,
+using the same procedure as in Section~\ref{sec:symreg}. 
+
+This problem is particularly suitable for inspecting the constituents
+of the induced grammar $\mathcal{G}$. We might hope that our algorithm
+recovers the consituent logic gates that were used to build up the
+problems. Table~\ref{table:bool} shows a few of the top ranked
+expressions in the library. These include the basic logic gates; we
+also include one higher-order expression $F$, to stress that the
+representation we are using allows one to build concepts that are more
+expressive that just sub-circuits.
+
+In a second experiment, we include all $272$ boolean truth tables with
+three or fewer inputs as tasks. This is a more difficult problem. Note
+that in the first boolean function problem, there are two kinds of
+learning that can take place: first, many expressions map to a single
+boolean function, so we need to learn primitives that allow us to span
+many different functions instead of allows generating very simple
+functions over and over again. The second kind of learning involves
+the distribution of the functions themselves. In the first boolean
+experiment, that structure is apparent in the distribution in
+Figure~\ref{fig:boolhist}. In this second experiment, we remove the
+second kind of structure. In Figure~\ref{boolLearningCurves}, we show
+10 runs of the algorithm with a frontier size of $2000$: note how
+there are several local minima that majority of the runs get stuck in
+with performance around $50\%$, but several of the runs seem to take
+different trajectories to more successful representations. 
 
 \begin{figure}
 \begin{subfigure}[Before]{0.45\linewidth}
-\includegraphics[width=\linewidth]{figures/boolLearningCurves.pdf}
+\includegraphics[width=.9\linewidth]{figures/booleancircuitsBars.pdf}
+\end{subfigure}
+\begin{subfigure}[Before]{0.45\linewidth}
+\includegraphics[width=.9\linewidth]{figures/boolLearningCurves.pdf}
 \end{subfigure}
 \caption{(a) Average learning curves as we vary the frontier size. (b)
   Percent of tasks solved at iteration 15 as a function of frontier
   size.}
 \label{fig:boolLearningCurves} 
+
+
 \end{figure}
 
 
@@ -662,51 +741,27 @@ $bool \rightarrow bool \rightarrow bool$ and returns a circuit of type $bool
 \rightarrow bool \rightarrow bool$. Figure~\ref{fig:component} shows
 this component schematically.
 
+\begin{table}
+\scriptsize
+  \begin{tabular}{|l|l|l|}
+    function  & CL expressions & circuit  ~ \\ \hline
+        TRUE  & (S NAND) (S NAND I)                   & ~ \\ \hline
+        FALSE & (S B (S NAND)) (S NAND I)             & ~ \\ \hline
+        NOT   & S NAND I                              & \input{figures/NOT.tex} \\ \hline
+        AND   & ((C B NAND) (B (S NAND I)))           & ~ \\ 
+        OR    & ((B (C (B (S NAND) NAND))) (S NAND I) & ~ \\ 
+        XOR   & ~                                     & ~ \\ 
+        F     & S B (S NAND)                          & \input{figures/F.tex}
+    \end{tabular}
+\caption{Expressions in the induced library on sets of tasks
+  corresponding to boolean circuits synthesized from AND, OR, and NOT
+  gates, with boolean circuits of 1, 2, or 3 inputs.}
+\label{table:boolexpr}
+\end{table}
 
 
-\begin{figure}
-\begin{circuitikz} \draw
-%%(1,0) node[nand port, thick] (nor1) {}
-(1,.75) node[nand port, thick] (nor1) {}
-(3,0) node[nand port, thick] (nor2) {}
-(3,1.5) node[nand port, thick] (nor3) {}
-(5,.75) node[nand port, thick] (nor4) {}
-
-(nor1.in 1) node[above left=.5cm] (x) {x}
-(nor1.in 2) node[below left = .5cm](y) {y}
-(x) -| (nor1.in 1)
-(y) -| (nor1.in 2)
-(x) -| (nor3.in 1)
-(y) -| (nor2.in 2)
-(nor1) -- (1.62, .75) -- (nor2.in 1)
-(nor1) -- (1.62, .75) -- (nor3.in 2)
-(nor2) -| (nor4.in 2)
-(nor3) -| (nor4.in 1);
- \end{circuitikz}
-\caption{A standard XOR circuit built of NAND gates.}
-\label{fig:xor_circuit}
-\end{figure}
 
 
-\begin{figure}
-\begin{circuitikz} \draw
-
-%%(1,0) node[nand port, thick] (nor1) {}
-(3, 0)  node[ anchor=east, text align=center, thick, draw, text width=1cm, text height=.25cm, align=center] (f) {?} 
-node [right of=f] (out) {}
-(1, 0) node[nand port, thick] (nor) {}
-(nor.in 1) node[above left=.25cm] (x) {x}
-(nor.in 2) node[below left=.25cm] (y) {y}
-(y) -| (f)
-(nor) -- (f)
-(f) -| (out)
-(x) -| (nor.in 1) 
-(y) -| (nor.in 2);
-\end{circuitikz}
-\caption{A schematic that represents the reused component
-  \texttt{\small{(B (C B nand) S)}}.}
-\label{fig:component}
-\end{figure}
 
 %% \subsection{Digital arithmetic}
 %% Having demonstrated the behavior of the E-C algorithm on symbolic
@@ -717,7 +772,7 @@ node [right of=f] (out) {}
 %% representations. 
 
 \subsection{Discussion}
-...
+
 
 %% The file named.bst is a bibliography style file for BibTeX 0.99c
 \bibliographystyle{plain}

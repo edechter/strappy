@@ -4,6 +4,7 @@ module EnumBF where
 
 import Data.Function (on)
 import Control.Monad.State
+import Control.Monad.Identity
 import Data.Maybe
 import Data.PQueue.Max (MaxQueue)
 import qualified Data.PQueue.Max as PQ
@@ -98,7 +99,7 @@ expand :: Grammar
        -> CombBase 
        -> StateT Int [] CombBase
 expand gr cb@(CombBase (CTerminal tp) (Just []) v) 
-    = if cs_is_empty then mzero else 
+    = if cs_is_empty then (trace $ "EMPTY") $ mzero else 
           cbs `mplus` cbApp
     where primCombs = CM.keys (library gr)
           cs = filterCombinatorsByType primCombs tp
@@ -108,7 +109,8 @@ expand gr cb@(CombBase (CTerminal tp) (Just []) v)
                      let value = (calcLogProb gr tp c) + minGrammarVal
                          combBase = CombBase c Nothing value
                      return combBase
-          cs_is_empty =  False -- (length $  runStateT cs 0) == 0
+          cs_is_empty =  if not $ isTAp tp then False else
+                             not $ existCombWithToType primCombs (toType tp)
           cbApp = expandToApp gr cb 
 
 expand gr cb@(CombBase (CApp c_left c_right tp d) (Just (L:rest)) v) = 
@@ -149,11 +151,24 @@ expand gr cb@(CombBase (CApp c_left c_right tp d) (Just (R:rest)) v) =
 
 
 
--- doesCombHaveToType :: Comb -> Type -> Bool
--- doesCombHaveToType c t = runStateT m tyInt
---     where (TyVar id _) = makeNewTVar [t]
---           tyInt = readId id
---           m = extendTypeOnLeftN t
+doTypesUnify :: Type -> Type -> Bool
+doTypesUnify t1 t2 = case mgu t1 t2 of
+                       Just _ -> True
+                       Nothing -> False
+
+doesCombHaveToType :: Comb -> Type -> State Int Bool
+doesCombHaveToType c t = do ct <- freshInst (cType c)
+                            if doTypesUnify ct t then 
+                                return True else
+                                case ct of 
+                                  (TAp ct1 ct2) -> return $ doTypesUnify ct2 t
+                                  _ -> return False
+
+existCombWithToType :: [Comb] -> Type -> Bool
+existCombWithToType cs t = any (==True) $ fst $ runState m 0
+    where m = sequence $ do c <- cs
+                            return $ doesCombHaveToType c t
+
           
 
 

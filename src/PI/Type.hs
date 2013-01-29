@@ -77,7 +77,9 @@ toType (TAp (TAp tArrow a) b) = b
 mkTVar :: Int -> Type 
 mkTVar i = TVar (TyVar (enumId i) Star)
 
-
+isTAp :: Type -> Bool
+isTAp (TAp t1 t2) = True
+isTAp _ = False
 
 isTVar :: Type -> Bool
 isTVar (TVar _) = True

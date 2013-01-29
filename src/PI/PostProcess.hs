@@ -2,15 +2,23 @@
 
 module PostProcess where
 
+
 import System.IO
 import System.Directory 
 import System.FilePath
 import Data.Time
-import qualified Data.Text as T
-import Data.List.Split
+import Data.List.Split hiding (oneOf)
 import Data.List (isInfixOf)
 import Data.Either.Utils
 import Debug.Trace
+
+import Text.ParserCombinators.Parsec 
+import Text.Parsec.Token 
+import Text.ParserCombinators.Parsec.Token
+import Text.ParserCombinators.Parsec ((<|>), (<?>))
+import Text.Parsec.Language (haskellDef)
+import Control.Applicative ((<$>), (<*>), (*>), (<*))
+
 
 import Search
 import CL
@@ -22,6 +30,7 @@ import Grammar
 import Experiment
 import StdLib
 import ParseCL
+
 
 allCombs :: [SearchLogEntry] -> [Comb]
 allCombs ss = CM.keys $ foldl1 CM.union $ map (library . searchGrammar) ss 
@@ -124,5 +133,50 @@ getGrammarFromFile lib filename = do
       grammar = Grammar lib' 0
   return grammar
 
-      
+getExplanationsFromFile lib filename 
+    = do  str <- readFile filename
+          let (Right explStrTuples) = parse explFile "" str
+          let combs = map (map (fromRight . (parseExpr lib))) $ map (map snd) explStrTuples
+          return combs
+
+
+explFile :: GenParser Char st [[(String, String)]]
+explFile = 
+    do result <- many line
+       eof
+       return result
+
+line :: GenParser Char st [(String, String)]
+line = 
+    do oneOf "["
+       result <- cells
+       oneOf "]"
+       eol                       -- end of line
+       return result
+
+cells :: GenParser Char st [(String, String)]
+cells = 
+    do first <- cellContent
+       next <- remainingCells
+       return (first : next)
+
+cellContent :: GenParser Char st (String, String)
+cellContent = do a <- oneOf "(" *> many (noneOf ",")
+                 oneOf ","
+                 b <- many (noneOf ",[]") -- <* oneOf ")"
+                 return (a, init b)
+
+remainingCells = (char ',' >> cells) <|> (return [])
+
+eol :: GenParser Char st String
+eol = string "\n \n" <|> string ""
+                      
+
+
+
+-- getExplanationsFromFile lib filename 
+--     = do str <- readFile filename
+--          rows <- splitOn "\n" str
+--          return ()
+  
        

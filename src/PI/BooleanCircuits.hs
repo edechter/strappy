@@ -206,7 +206,7 @@ sampleConnectedCircuitGivenNumbers nI nN dG
 sampleConnectedCircuit dI dN dG 
     = do nI <- fromList dI
          nN <- fromList dN
-         if nI > 2 && nN==1 then
+         if nN < nI then
              sampleConnectedCircuit dI dN dG else
               sampleConnectedCircuitGivenNumbers nI nN dG         
 
@@ -229,8 +229,7 @@ circuitToTask taskname circuit = do tt <- circuitToTruthTable circuit
 
 sampleCircuitTasks dI dN dG nT 
     = do circuits <- sampleConnectedCircuits dI dN dG nT 
-         return (map (\(i, c) -> (c,  fromJust $ circuitToTask ("circuitTask_" ++ show i) c))
-                    $ zip [0..] circuits)
+         return (map (\(i, c) -> (c,  fromJust $ circuitToTask ("circuitTask_" ++ show i) c)) $ zip [0..] circuits)
     where fromJust (Just x) = x
 
 
@@ -252,8 +251,8 @@ mkEquivClasses' (cl:cls) c = if (head cl) `equiv` c then
           
 
 -- DISTRIBUTIONS -- 
-dNumInputs = [(1, 1), (2, 2), (3, 4)] :: [(Int, Rational)]
-dNumGates = [(1, 1), (2, 3), (3,  4), (4, 5), (5, 4)] :: [(Int, Rational)]
+dNumInputs = [(1, 1), (2, 2), (3, 4), (4, 4)] :: [(Int, Rational)]
+dNumGates = [(1, 1), (2, 3), (3,  4), (4, 4), (5, 5), (6, 5)] :: [(Int, Rational)]
 dGateType = [ (MGate notGate, 1), (BGate andGate, 2), (BGate orGate, 2)] :: [(Gate, Rational)]
 
 
