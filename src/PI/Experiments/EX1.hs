@@ -1,6 +1,6 @@
 -- EX1
 -- Symbolic regression 10 run per frontier size experiment on EC2. 
-{-# Language ParallelListComp #-}
+ {-# Language ParallelListComp #-}
 
 module Experiments.EX1 where
 
@@ -145,33 +145,33 @@ libNames = ["R1"] -- , "R3", "R<=3"]
 frontierSizeSet sizes = join [replicate 1 i | i <- sizes]
                                           
 
-expSet sizes = concat [[mkSymRegExp (n ++ "_" ++ show f) l f | n <- libNames | l <- libSet]
-              | f <- frontierSizeSet sizes]
+-- expSet sizes = concat [[mkSymRegExp (n ++ "_" ++ show f) l f | n <- libNames | l <- libSet]
+--               | f <- frontierSizeSet sizes]
 
-expSetRand sizes = sequence $ concat [[mkSymRegExpM (n ++ "_" ++ show f) l f | n <- libNames | l <- libSet]
-              | f <- frontierSizeSet sizes]
+-- expSetRand sizes = sequence $ concat [[mkSymRegExpM (n ++ "_" ++ show f) l f | n <- libNames | l <- libSet]
+--               | f <- frontierSizeSet sizes]
 
-runExpSet sizes = sequence $ (map runExp (expSet sizes)) ++ (map runBruteForceExp (expSet sizes))
+-- runExpSet sizes = sequence $ (map runExp (expSet sizes)) ++ (map runBruteForceExp (expSet sizes))
 
-runExpSetRand sizes = do n <- newStdGen
-                         let (exps, a) = runRand (expSetRand sizes) n
-                         sequence $ map runExp exps
+-- runExpSetRand sizes = do n <- newStdGen
+--                          let (exps, a) = runRand (expSetRand sizes) n
+--                          sequence $ map runExp exps
 
--- expSymReg 
---     = Experiment {
---         expName = "EX1", 
---         expTaskSet = taskSet',
---         expEps = 0,
---         expPrior = expGrammar,
---         expInitLib = expGrammar,
---         expDepthBound = 3,
---         expNumBound = 10,
---         expReps=10
---       }
+-- -- expSymReg 
+-- --     = Experiment {
+-- --         expName = "EX1", 
+-- --         expTaskSet = taskSet',
+-- --         expEps = 0,
+-- --         expPrior = expGrammar,
+-- --         expInitLib = expGrammar,
+-- --         expDepthBound = 3,
+-- --         expNumBound = 10,
+-- --         expReps=10
+-- --       }
 
-main = do
-  sizes <- fmap (map read) getArgs
-  runExpSetRand sizes
+-- main = do
+--   sizes <- fmap (map read) getArgs
+--   runExpSetRand sizes
 
 
 

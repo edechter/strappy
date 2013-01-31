@@ -3,6 +3,7 @@ from glob import glob
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib
 
 import symreg as SR
 
@@ -61,6 +62,8 @@ for label in labels:
 fig.savefig("/Users/edechter/Dropbox/Projects/ProgramInduction/drafts/ijcai2013/figures/performanceVsFrontierSize2.pdf")
 
 
+matplotlib.rcParams.update({'font.size': 15})
+w,h = plt.figaspect(.5)
 fig_lc = plt.figure(figsize=(w,h))
 ax = fig_lc.add_subplot(111)
 ax.set_xlabel("iteration")

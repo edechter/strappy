@@ -64,7 +64,10 @@ taskSetNoLinear = [mkQuadSymRegTask i j k | i <- [1..9] , j <- [0..9], k <- [0..
 
 taskSetOnlyQuadratic = [mkQuadSymRegTask i j k | i <- [1..9] , j <- [0..9], k <- [0..9]]
 taskSetOnlyComplexQuadratic = [mkQuadSymRegTask i j k | i <- [1..9] , j <- [1..9], k <- [1..9]]
+
 taskSetUpToQuadratic = [mkQuadSymRegTask i j k | i <- [0..9] , j <- [0..9], k <- [0..9]]
+
+taskSetHardestQuadratic = [mkQuadSymRegTask i j k | i <- [2..9] , j <- [2..9], k <- [2..9]]
 
 
 
@@ -146,6 +149,7 @@ main = do
                               3 -> ("OnlyQuadratic", taskSetOnlyQuadratic)
                               4 -> ("OnlyComplexQuadratic", taskSetOnlyComplexQuadratic)
                               5 -> ("UpToQuadratic", taskSetUpToQuadratic)
+                              6 -> ("QuadraticCoef2AndGrater", taskSetHardestQuadratic)
                               _ -> error $ "No task name " ++ taskname
   let frontierSize = 10000
       name = taskname  ++  "_frontier"  ++ show frontierSize

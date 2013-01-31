@@ -6,15 +6,20 @@
 \usepackage{latexsym} 
 \usepackage{ dsfont }
 \usepackage{tikz}
+\usepackage{tikz-qtree}
+\usepackage{float}
 \usepackage{circuitikz}
 \usepackage{graphicx}
 \usepackage{subcaption}
 \usepackage{alltt}
+\usepackage{dashrule}
+\usepackage{array}
 \usepackage[ruled,vlined,linesnumbered]{algorithm2e}
-\usetikzlibrary{arrows,automata, positioning, patterns}
+\usetikzlibrary{arrows,automata, positioning, patterns,backgrounds}
 
 \newtheorem{definition}{Definition}
 \DeclareMathOperator*{\argmax}{arg\,max} 
+\DeclareMathOperator*{\argmin}{arg\,min} 
 
 \title{Bootstrap learning via modular concept discovery}
 
@@ -33,7 +38,7 @@ Harvard University\\
 USA \\
 rpa@seas.harvard.edu
 \And
-Josh Tenenbaum \\
+Joshua B. Tenenbaum \\
 MIT\\
 USA \\
 jbt@mit.edu
@@ -72,119 +77,309 @@ jbt@mit.edu
 \end{abstract}
 
 \section{Introduction}
+Many of the problems we want to solve in AI are best cast as search
+problems. There are many search algorithms, but they typically exploit
+local or topological structure in the search space. For example,
+convex optimization and gradient based search methods~\cite{} take
+advantage of local smoothness to move in good directions. Local search
+algorithms move from one candidate solution to a neighboring
+one\cite{}. Heuristic search techniques take advantage of topological
+structure to prune off large parts of the solution space~\cite{}.
 
-Imagine you are trying to learn to bake via trial and error. You know
-what kind of ingredients are used in baking (flour, water, butter,
-sugar, yeast, baking soda, etc.) and you know a bit about how to
-combine these ingredient (mix, whisk, etc.) and how to apply heat
-(oven). But baking is a notoriously fragile process: ratios of
-ingredients, the order of mixing, cooking temperatures, resting times,
-all make a huge difference, and the outcome of the baking process is
-mostly all or none. Either the outcome is what you expected or quite
-unlike it. Even if you do create something similar to your intent, it
-is difficult to assign blame for the outcome to any one step or
-decision along the way.
+However, many of the problems we want solve -- discovering scientific
+theories, developing new technologies, figuring out how to bake -- do
+not come with such a structured search space. This is particularly
+true of problems, as these are, whose solutions can be naturally
+framed as programs. Here we ask how to extract structure from the
+space of programs by attempting to solve multiple related problems in
+a given domain at once.
 
-Many difficult learning problems have this structure -- learning
-language, developing technologies and scientific theories, learning to
-play instruments or execute other complex motor patterns. These are
-problems in which 1) there is a large set of similar tasks; 2) their
-solutions are best described as programs; 3) the solution space is
-not smooth with respect to the outcome; 4) and the outcome is generally
-uninformative unless you are already pretty close to a solution.
+We take as inspiration the programmer who -- having reused several
+motifs, programming patterns, or subroutines to solve different but
+similar simple tasks -- creates a function library to help manage the
+complexity of larger projects. Our algorithm builds a library
+of reusable program components and a distribution over these,
+effectively learning from simple tasks a search space structure which
+enables it to solve more complex tasks.
 
-Intuitively, the way to solve such problems is to stumble on solutions
-to simple cases in the domain and extract conceptual building blocks
-that can be composed to scale up to complex cases. To return to the
-baking example, cookies are much simpler than cakes. There are fewer
-steps to get just right. But once you have figured out a few simple
-pastries, the more complex ones are mostly just variations and
-combinations of techniques learned along the way. 
+In this work, we try to see how far this idea of reusable function
+definition can get us. Our question is, Can an AI system discover the
+structure latent in the solutions to multiple related problems and
+thereby bootstrap effective exploration of the search space? Can
+discovering modular program components transform a problem from one in
+which search is intractable into a problem in which it becomes
+increasingly feasible with experience?
 
-Of course, knowledge is not acquired wholly by trial and error. But in
-many domains, there is at least initially such a period of ignorance,
-and the question we are trying to tackle here is how you ever get off
-the ground.
+Concretely, our algorithm works as follows. It begins with a small
+library of program primitives and a distribution over programs
+synthesized from this library. In each iteration, it generates
+programs in order of highest probability according to the library
+learned in the previous iteration. From the discovered solutions, it
+finds new reusable functions that compress these solutions, and it
+re-estimates the distribution over programs by weighting these new
+functions according to their frequencies.
 
-To frame this learning paradigm computationally, we make two modeling
-choices. First, to emphasize the impoverished reward signals in these
-domains, we model the learning task as an all-or-none optimization
-problem: either the learner gets some reinforcement or she does
-not. Second, to emphasize the lack of locally smooth structure in the
-space of possible solutions, we choose as our solution space the space
-of functional programs. These two choices are in contrast to the
-paradigm tackled by most of machine learning, in which a locally
-informative objective function guides search in a space that is
-somewhat smooth.
+We show that this iterative approach allows us to achieve very high
+performance in tasks where just searching according to the initial
+distribution over program primitives clearly fails.
 
-%% Let a \emph{task} be a function $t : \mathcal{L} \rightarrow \{0,
-%% 1\}$, where $\mathcal{L}$ is the set of all expressions in our
-%% representation language. We say that $e \in \mathcal{L}$ \emph{solves}
-%% task $t$ if $t(e) = 1$. Our goal is to solve as many tasks as
-%% possible, as efficiently as possible. That is, suppose that there is a
-%% distribution over tasks $t \sim  p_t(\cdot)$, we would like an ordering $O
-%% = e_1, \dots $ on expressions in $\mathcal{L}$ such that if $p_t(t_1)
-%% > p_t(t_2)$ then the first expression in $O$ to solve $t_1$ comes
-%% before the first expression in $O$ to solve $t_2$.
 
-%% We motivate a solution to this problem by considering a heirarchical
-%% Bayesian formulation of the task distribution. Suppose we believe that
-%% there is some underlying structure to $p_t(\cdot)$ that is explained by
-%% the fact that for each task $t$ there is a latent expressions $e \in
-%% \mathcal{L}$ drawn from a stochastic grammar $\mathcal{G}$ and that 
+\section{Related Work}
+The idea of discovering and using reusable subcomponents is an old one
+in AI. Rendell's 1985 paper~\cite{DBLP:conf/ijcai/Rendell85},
+``Substantial Constructive Induction Using Layered Information
+Compression: Tractable Feature Formation in Search,'' -- which could
+have been the name of this paper -- did not use programs as its
+solution space representation. Within the Inductive Logic Programming
+literature, researchers have explored ``Constructive Induction,''
+generating new and reusable logic programming
+terms~\cite{DBLP:conf/ijcai/Muggleton87}. We believe that applying
+constructive induction to a compositional functional programming
+paradigm will provide even greater benefits.
 
-%% \begin{align}
-%% e &\sim p_\mathcal{L}(\cdot) = \mathcal{G}\\
-%% t | e &\sim \text{U}\{ \text{tasks solved by }e\}.
-%% \end{align}
+Dicovering useful subroutines has been explored in Genetic
+Programming as
+well~\cite{DBLP:conf/foga/Koza92}~\cite{DBLP:conf/ices/KozaBAK96}. 
 
-%% Then $p_t(t) = \sum_{e_j \in \mathcal{L} \text{ s.t. } t(e_j) = 1}
-%% p_\mathcal{L}(e_j)$. If we make the assumption that for the set $E$ of
-%% expressions in this sum, there is some expression $e^*$ such that
-%% $p_\mathcal{L}(e^*) >> p_\mathcal{L}(e), e \neq e^*$, then we have, approximately, 
-%% \[ p_t(t) \propto} p_\mathcal{L}(e^*). \] 
+The importance of a curriculum has also been explored previously,
+though generally the curriculum has been explicitly given rather than
+discovered. Quinlan and Cameron-Jones~\cite{Quinlan93foil:a} showed
+that a logic program learning algorithm could learn sequentially more
+difficult list programs if the algorithm was provided with its own
+solutions to previously solved simple problems. More recently, several
+researchers have observed that presenting problems to machine learning
+algorithms in order of difficulty results in better
+performance~\cite{Krueger2009380}~\cite{DBLP:conf/icml/BengioLCW09}.
 
-%% This suggests a way to find the ordering $O$: infer a stochastic
-%% grammar $G$, under the assumption that $G$ favors one solution to a
-%% given task over any other, and order the elements of $\mathcal{L}$
-%% according to $G$.
+Our use of a stochastic grammar over combinatory logic is based on
+Liang et al.~\cite{liang10programs}. In that work, a non-parametric
+distribution was placed over combinatory logic expressions, and an
+MCMC algorithm was developed to perform joint inference over these
+expressions and the underlying stochastic grammar. Our approach is
+inspired by this generative model, but avoids the difficulties
+associated with a stochastic local search over programs (the same
+difficulties faced by genetic programming), especially when the
+likelihood function (or the fitness function) are not of much help.
 
-%% Thus, our basic procedure will be to search for a single ``good''
-%% solution for as many tasks as we can, and to use those solutions to
-%% estimate a stochastic grammar. Our search will be performed in the
-%% order of the most recently inferred grammar. So as our ordering
-%% becomes more efficient and we can solve more tasks, we learn better
-%% stochastic grammars.
 
-%% Formally then, our goal is to solve the following minimal feedback
-%% multi-task program induction problem: suppose we are given set of
-%% \emph{tasks} $T=\{t_k\}_{k=1}^K$ where each task is a function $t_i :
-%% \mathcal{L} \rightarrow \{0, 1\}$, where $\mathcal{L}$ is the set of
-%% programs in our language.  We say that $ p \in \mathcal{L}$
-%% \emph{solves} $t_i$ if $ t_i\; p = 1$. Our goal is to find a set of
-%% solutions $X = \{x_k\}_{k=1}^k \subset \mathcal{L}$ such that
+%% AI and machine learning algorithms commonly take advantage of the
+%% relationship between a performance metric (error, reward, fitness,
+%% etc.) and the local or topological structure of the solution
+%% space. Whether in discrete or continuous domains, the key is to design
+%% such a relationship and write a algorithm that either moves in good
+%% directions or prunes off large parts of the solution space. Whether or
+%% not such a relationship exists depends on the representation, and much
+%% work has gone into finding good representations for problem
+%% solving. Recent work, especially in machine learning, has focused on
+%% ``feature learning,'' with the explicit aim of discovered good
+%% representational building blocks in vector-valued solutions spaces.
 
-%% \[
-%% X = \argmax_{x_1, \dots, x_K \in L} \sum_k t_k(x_k).
-%% \]
+%% Many of the most natural solution representations for intelligent
+%% agents, however, are not naturally expressed as vector-valued
+%% spaces. Consider the problems of discovering scientific theories,
+%% inventing new technologies, communicating with others, or executing a
+%% complex motor routine (such as dancing or playing an instrument). The
+%% solutions to these problems are most naturally expressed as programs,
+%% that is, as the composition of modular components whose semantics are
+%% determined by the actions of one component on another.
 
-Based on the motivation set out above, we present an iterative
-strategy. Given a stochastic grammar $\mathcal{G}$ which defines a
-distribution over the primitives from $\mathcal{L}$ and a integer
-\emph{frontier size} $N$, we perform two steps in each iteration.  In
-the first step, we explore the $N$ highest probability programs
-according to $\mathcal{G}$. In the second step, we compress the
-programs that solve any of our tasks, and we use that compression to
-define a new grammar. Repeating these two steps, we effectively
-reparameterize our search space to include programs that are more likely
-to be solutions to our tasks. 
+%% How can we learn good solution representations for these kinds of
+%% tasks without building in the kind of domain knowledge that gives rise
+%% to a useful relationship between representation and performance? How
+%% can we get traction on a set of problems when small tweaks to
+%% solutions give rise to wildly varying performances in an unpredictable
+%% manner, or when, for most problems, most of the solutions fail in a
+%% uniformly bad way? 
 
-The remainder of this paper will include three major sections. First,
-we will describe the representation language we chose and the goals of
-the exploration and compressions steps. Following that, we will
-discuss the algorithmic details that render our procedure
-feasible. Finally, we present results from two experiments, involving
-the domains of symbolic regression and boolean circuit learning.
+%% A popular idea is that good representations are those that encode the
+%% data space in an efficient way, that is, that enable compression of
+%% the data~\cite{}. For program representations, this most naturally
+%% corresponds to defining reusable components so that the total number
+%% of unique expressions for a set of solutions is minimized (i.e., this
+%% is directly akin to the subroutine libraries programmers use to manage
+%% the complexity of their code). 
+
+%% In this work, we try to see how far reusable subroutine definition can
+%% get us on its own. Our question is, Can discovering modular components
+%% transform a problem from one in which brute-force search will not work
+%% to a problem in which it does? 
+
+%% To emphasize an impoverished relationship between reward signals and
+%% program representations, we make our tasks all-or-none: a solution
+%% either solves the problem or it does not, and partial solutions do not
+%% get any credit. 
+
+%% The intuitive approach to applying this idea is simple: if solutions
+%% to problems in the domain share common structure, and there exist
+%% problems whose solutions are simple enough to find by brute force,
+%% then we should be able to extract a distribution over solution
+%% subcomponents from these simple cases that allows us to run subsequent
+%% searches more efficiently. 
+
+%% More concretely, our algorithm works as follows: each iteration, it
+%% first generates programs in order of highest probability according to
+%% a subroutine distribution learned in the previous iteration. From the
+%% discovered solutions, it finds new reusable subroutines that compress
+%% these solutions and estimates their probabilities.
+
+%% We show that this iterative approach allows us to achieve very high
+%% performance in tasks where just searching according to the initial
+%% distribution over program primitives clearly fails.
+
+
+
+%%  \hline
+
+%% AI and machine learning algorithms commonly take advantage of the idea
+%% that local structure in the solution space is related to local
+%% structure in the outcome. In continuous domains, learning algorithms
+%% algorithms use error gradients to guide search. In discrete domains,
+%% whether in heuristic or local search paradigms, knowledge about the
+%% solution space topology and its relation to reward and cost metrics
+%% enables pruning, reasoning, and moving in the solution space more
+%% efficiently. However, choosing the representations that have
+%% beneficial structural properties requires a lot of general and domain
+%% knowledge, and this what researchers do and what they cannot leave up
+%% to their algorithms.
+
+%% What is a good strategy for an agent when its representation of the
+%% solution space is not smooth with respect to the outcome? Many hard
+%% learning problems have this property, especially those in which the
+%% solution space is most naturally represented as a set of
+%% programs. Consider the problems of discovering scientific theories,
+%% inventing new technologies, learning to cook, or learning to
+%% communicate. These are problems in which 1) solutions are best
+%% described as programs (i.e. compositions of modular subroutines at
+%% various levels of abstraction), 2) most of the solution space is bad
+%% in a relatively uninformative way (i.e. it just doesn't work), and
+%% thus 3) outcomes are not informative about how you are doing unless
+%% you are already quite close to a solution.
+
+%% Intuitively, the way to solve such problems is to find solutions to
+%% simple cases in the domain and extract conceptual building blocks that
+%% can be composed to scale up to complex cases. With experience, the
+%% agent may be able to discover local structure in the solution space,
+%% and utilize more traditional AI and machine learning techniques. In
+%% this work, we will be focusing on the first phase of this learning
+%% problem.
+
+%% %% Of course, every learner 
+
+%% %% Choosing the wrong representation, in
+%% %% which local structure is not apparent, is often the difference between
+%% %% a successful learner and an unsuccessful one. In many respects, this
+%% %% may be the kind of situation that adult humans face when confronting
+%% %% new domains: we have a lot of general knowledge of successful
+%% %% representations, useful strategies, etc.
+
+%% %% But suppose that you have very little knowledge of a domain. Your
+%% %% intial representation of the domain is poor: ``nearby'' points in the
+%% %% solutions space ellicit wildly different outcomes in unpredictable
+%% %% ways. Or perhaps nearby points ellicit the same outcome and its not a
+%% %% good one, so you don't know which way to go. Many learning problems,
+%% %% especially those whose solutions are best described as programs, have
+%% %% these qualities: imagine learning to synthesize new sentences
+
+
+
+
+
+%% %% teness. We choose the representations our learners use
+%% %% and these representations generally Imagine you are trying to learn to
+%% %% bake via trial and error. You know what kind of ingredients are used
+%% %% in baking (flour, water, butter, sugar, yeast, baking soda, etc.) and
+%% %% you know a bit about how to combine these ingredient (mix, whisk,
+%% %% etc.) and how to apply heat (oven). But baking is a notoriously
+%% %% fragile process: ratios of ingredients, the order of mixing, cooking
+%% %% temperatures, resting times, all make a huge difference, and the
+%% %% outcome of the baking process is mostly all or none. Either the
+%% %% outcome is what you expected or quite unlike it. Even if you do create
+%% %% something similar to your intent, it is difficult to assign blame for
+%% %% the outcome to any one step or decision along the way.
+
+%% %% Many difficult learning problems have this structure -- learning
+%% %% language, developing technologies and scientific theories, learning to
+%% %% play instruments or execute other complex motor patterns. These are
+%% %% problems in which 1) there is a large set of similar tasks; 2) their
+%% %% solutions are best described as programs; 3) the solution space is
+%% %% not smooth with respect to the outcome; 4) and the outcome is generally
+%% %% uninformative unless you are already pretty close to a solution.
+
+%% %% Of course, knowledge is not acquired wholly by trial and error. But in
+%% %% many domains, there is at least initially such a period of ignorance,
+%% %% and the question we are trying to tackle here is how you ever get off
+%% %% the ground.
+
+
+%% I need help here. 
+
+%% %% Let a \emph{task} be a function $t : \mathcal{L} \rightarrow \{0,
+%% %% 1\}$, where $\mathcal{L}$ is the set of all expressions in our
+%% %% representation language. We say that $e \in \mathcal{L}$ \emph{solves}
+%% %% task $t$ if $t(e) = 1$. Our goal is to solve as many tasks as
+%% %% possible, as efficiently as possible. That is, suppose that there is a
+%% %% distribution over tasks $t \sim  p_t(\cdot)$, we would like an ordering $O
+%% %% = e_1, \dots $ on expressions in $\mathcal{L}$ such that if $p_t(t_1)
+%% %% > p_t(t_2)$ then the first expression in $O$ to solve $t_1$ comes
+%% %% before the first expression in $O$ to solve $t_2$.
+
+%% %% We motivate a solution to this problem by considering a heirarchical
+%% %% Bayesian formulation of the task distribution. Suppose we believe that
+%% %% there is some underlying structure to $p_t(\cdot)$ that is explained by
+%% %% the fact that for each task $t$ there is a latent expressions $e \in
+%% %% \mathcal{L}$ drawn from a stochastic grammar $\mathcal{G}$ and that 
+
+%% %% \begin{align}
+%% %% e &\sim p_\mathcal{L}(\cdot) = \mathcal{G}\\
+%% %% t | e &\sim \text{U}\{ \text{tasks solved by }e\}.
+%% %% \end{align}
+
+%% %% Then $p_t(t) = \sum_{e_j \in \mathcal{L} \text{ s.t. } t(e_j) = 1}
+%% %% p_\mathcal{L}(e_j)$. If we make the assumption that for the set $E$ of
+%% %% expressions in this sum, there is some expression $e^*$ such that
+%% %% $p_\mathcal{L}(e^*) >> p_\mathcal{L}(e), e \neq e^*$, then we have, approximately, 
+%% %% \[ p_t(t) \propto} p_\mathcal{L}(e^*). \] 
+
+%% %% This suggests a way to find the ordering $O$: infer a stochastic
+%% %% grammar $G$, under the assumption that $G$ favors one solution to a
+%% %% given task over any other, and order the elements of $\mathcal{L}$
+%% %% according to $G$.
+
+%% %% Thus, our basic procedure will be to search for a single ``good''
+%% %% solution for as many tasks as we can, and to use those solutions to
+%% %% estimate a stochastic grammar. Our search will be performed in the
+%% %% order of the most recently inferred grammar. So as our ordering
+%% %% becomes more efficient and we can solve more tasks, we learn better
+%% %% stochastic grammars.
+
+%% %% Formally then, our goal is to solve the following minimal feedback
+%% %% multi-task program induction problem: suppose we are given set of
+%% %% \emph{tasks} $T=\{t_k\}_{k=1}^K$ where each task is a function $t_i :
+%% %% \mathcal{L} \rightarrow \{0, 1\}$, where $\mathcal{L}$ is the set of
+%% %% programs in our language.  We say that $ p \in \mathcal{L}$
+%% %% \emph{solves} $t_i$ if $ t_i(p) = 1$. Our goal is to find a set of
+%% %% solutions $X = \{x_k\}_{k=1}^k \subset \mathcal{L}$ such that
+
+%% %% \[
+%% %% X = \argmax_{x_1, \dots, x_K \in L} \sum_k t_k(x_k).
+%% %% \]
+
+%% Based on the motivation set out above, we present an iterative
+%% strategy. Given a stochastic grammar $\mathcal{G}$ which defines a
+%% distribution over the primitives from $\mathcal{L}$ and a integer
+%% \emph{frontier size} $N$, we perform two steps in each iteration.  In
+%% the first step, we explore the $N$ highest probability programs
+%% according to $\mathcal{G}$. In the second step, we compress the
+%% programs that solve any of our tasks, and we use that compression to
+%% define a new grammar. Repeating these two steps, we effectively
+%% reparameterize our search space to include programs that are more likely
+%% to be solutions to our tasks. 
+
+The remainder of this paper will include two major sections.  We will
+first describe the representation language we chose and the details of
+the exploration and compression steps of the algorithm. We will then
+present results from two experiments involving the domains of
+symbolic regression and boolean circuit learning.
 
 %% \section{}
 %% Let $\mathcal{F}$ be a family of distributions over $\mathcal{L}$ such
@@ -213,6 +408,20 @@ the domains of symbolic regression and boolean circuit learning.
 %% language for programs and a family of distributions over expressions
 %% in that language, but we leave these details for the following section
 
+\section{Problem statement and terminology}
+Our goal is to solve the following minimal feedback multi-task program
+induction problem: suppose we are given set of \emph{tasks}
+$T=\{t_k\}_{k=1}^K$ where each task is a function $t_i : \mathcal{L}
+\rightarrow \{0, 1\}$ and where $\mathcal{L}$ is the set of programs
+in our language.  We say that $ p \in \mathcal{L}$ \emph{solves} $t_i$
+if $ t_i(p) = 1$. Our goal is to solve as many of the tasks in $T$ as
+we can.
+
+We will use the following terminology. A \emph{frontier} will be the
+finite set of programs that the algorithm is considering at any one
+time. We will say that a task is \emph{hit} by the frontier if there
+is a program in the frontier that solves it. 
+
 \section{Extracting modular concepts from functional programs}
 
 In order to solve our stated problem, we need to choose a solution
@@ -221,10 +430,10 @@ describe the frontier enumeration and compression procedures.
 
 \subsection{Representing typed functional programs as binary trees}
 
-Following~\cite{liang10programs} and~\cite{Briggs:2008}, we use
-combinatory logic -- a variable-free subset of the polymorphic
-simply-typed lambda calculus~\cite{Pierce_2002} -- as
-our program representation language. In short, the combinatory logic
+Following~\cite{liang10programs} and~\cite{Briggs:2008}, we use a
+simply typed combinatory logic -- a variable-free subset of the
+polymorphic simply-typed lambda calculus~\cite{Pierce_2002} -- as our
+program representation language. In short, the combinatory logic
 introduces a \emph{basis} of several primitive \emph{combinators} such
 that any function in the lambda calculus can be alternatively written
 as applications of the basis combinators. Some common basis
@@ -236,31 +445,35 @@ B\; f\; g\; x\; &\rightarrow (f\; x)\; g \\
 C\; f\; g\; x\; &\rightarrow f\; (g\; x) \\ 
 \end{align}
 
-The basis
-combinators are theoretically enough to express any Turing computable
-function, but we will assume that our language has a variety of
-primitives and, together with the basis combinators, we call these the
-primitive combinators.
+The basis combinators are theoretically enough to express any Turing
+computable function, but we will assume that our language has a
+variety of primitives and, together with the basis combinators, we
+call these the primitive combinators. Note that by default we consider
+all primitives to be in their ``curried'' form (e.g. a function like
+``+'' adds two numbers $x$ and $y$ by being first applied to $x$,
+returning the function $(+\;x)$ and then being applied to $y$,
+returning the object $(+\;x)\;y$).
 
 The basis combinators can themselves been expressed in the lambda
-calculus. The lambda calculus has two basic operations -- application
+calculus (with definitions following directly from the equations
+above). The lambda calculus has two basic operations -- application
 and abstraction -- but in using the combinatory logic we sequester
-uses of the abstraction operation inside the combinators, and thus
-have a representation language that is effectively abstraction- and,
-thus, variable-free. In doing so, we have replaced the variable
-binding of the $\lambda$ operator with the variable \emph{routing} of
-these basis combinators. See~\cite{liang10programs} for a more
-detailed discussion of this routing interpretation. 
+uses of the abstraction operation inside the combinators. In doing so,
+we have replaced the variable binding of the $\lambda$ operator with
+the variable \emph{routing} of these basis combinators. Our
+representation thus becomes variable-free. See Liang et
+al.~\cite{liang10programs} for a more detailed discussion of this
+routing interpretation.
 
-This is very convenient for program synthesis: since every expression
-is the application of one expression to another -- with this recursion
-bottoming out at the primitive combinators -- each program is a binary
-tree. Most importantly, any subtree is itself a well-formed
-expression; this is not the case in the lambda calculus, since
-abstraction introduces long range dependencies between the $\lambda$
-operator and the variables to which that operator refers. In the
-lambda calculus, then, a subtree might have free variables, not bound
-to any enclosing $\lambda$. 
+Using combinatory logic is very convenient for program synthesis:
+since every expression is the application of one expression to another
+-- with this recursion bottoming out at the primitive combinators --
+each program is a binary tree. Most importantly, any subtree is itself
+a well-formed expression; this is not the case in the lambda calculus,
+since abstraction introduces long range dependencies between the
+$\lambda$ operator and the variables to which that operator refers. In
+the lambda calculus, then, a subtree might have free variables, not
+bound to any enclosing $\lambda$.
 
 As a simple example of our representation, consider the squaring
 function $\lambda x. * x\; x $. Using two of the basis combinators
@@ -274,33 +487,34 @@ We can extend this representation with a simple polymorphic type
 system~\cite{Pierce_2002}. In this representation, a type is either a
 type primitive (e.g. reals, integers, booleans, etc.), a type variable
 (e.g. $\sigma$), or a function type $ t_1 \rightarrow t_2$ of
-functions from source type $t_1$ to target type $t_2$. Thus, this
-combinator can be represented as a binary
-tree~(Figure~\ref{fig:clbintree}) whose leaves are typed primitive
-combinators and whose interior nodes represent typed applications of
-combinators.
+functions from source type $t_1$ to target type $t_2$. Any combinator
+can be represented as a binary tree~(Figure~\ref{fig:clbintree}) whose
+leaves are typed primitive combinators and whose interior nodes
+represent typed applications of combinators (we annotate interior
+nodes with their types).
 
 \begin{figure}
-  \centering
-  \begin{subfigure}[Before]{0.5\linewidth}
-    \begin{tikzpicture}[scale=.9,
-        transform shape, level/.style={sibling distance=10mm/#1, font=\scriptsize}
+%%  \centering
+  \begin{subfigure}[]{0.45\linewidth}
+    \begin{tikzpicture}[scale=.8,
+        transform shape, level/.style={sibling distance=5mm/#1, font=\scriptsize}
         ]
-      \node [font=\scriptsize] (top) {$Int$}
-      child {node [above=.3cm, text width=2cm] (a) {$(Int \rightarrow Int) \rightarrow Int 
-          \rightarrow Int$}
-        child {node [left=.5cm, below=1cm, text width=3cm] 
-          {$S : \\(t_2 \rightarrow t_1 \rightarrow t_0)  \rightarrow (t_2 \rightarrow t_1) 
+      \node [font=\scriptsize] (top) {$\mathbb{R}$}
+      child {node [above=.3cm, left=.1cm, text width=1.8cm] (a) {$(\mathbb{R} \rightarrow \mathbb{R}) \rightarrow \mathbb{R} 
+          \rightarrow \mathbb{R}$}
+        child {node [left=.5cm, below=1cm, text width=3.0cm] 
+          {$ \mathbf{S} : (t_2 \rightarrow t_1 \rightarrow t_0)  \rightarrow (t_2 \rightarrow t_1) 
             \rightarrow \\ t_2 \rightarrow t_0$}}
-        child {node [right=0cm, text width=2cm] {$*: Int \rightarrow Int \rightarrow Int$}}
+        child {node [right=0cm, text width=2cm] {$ \mathbf{*}: \mathbb{R} \rightarrow \mathbb{R} \rightarrow \mathbb{R}$}}
       }
-      child {node [below right=.3cm and 1cm] (b) {$Int \rightarrow Int$}
-        child {node {$I: t_0 \rightarrow t_0 \rightarrow t_0$}}
-      };
+      child {node [below right=-.5cm and .2cm] (b) {$\mathbb{R} \rightarrow \mathbb{R}$}
+        child {node [above=.5cm] {$ \mathbf{I}: t_0 \rightarrow t_0 \rightarrow t_0$}}
+      }
     \end{tikzpicture}
+    \caption{}
     \label{fig:clbintree}
   \end{subfigure}
-  \begin{subfigure}[After]{0.4\linewidth}
+  \begin{subfigure}[R]{0.5\linewidth}
     \begin{tikzpicture}[scale=.7, transform shape, 
         level/.style={sibling distance=10mm/#1},
         every edge/.style={draw, thin}
@@ -363,30 +577,52 @@ combinators.
 
 \subsection{A stochastic grammar over programs.}
 \label{sec:stochgrammar}
-A stochastic grammar over programs represents a distribution over
-expressions in $\mathcal{L}$. We associate with each primitive
-combinator $c_i$ in $\mathcal{L}$ a probability $p_i$,
-$0~\leq~p_i~\leq~1, \sum_i~p_i~=~1 $.
+We would like a way to describe how likely we believe a program to be
+given the probabilities we ascribe to its components. Recall that
+$\mathcal{L}$ is the set of all programs.  A stochastic grammar over
+programs represents a distribution over expressions in
+$\mathcal{L}$. We associate with each primitive combinator $c_i$ in
+$\mathcal{L}$ a probability $p_i$, $0~\leq~p_i~\leq~1, \sum_i~p_i~=~1
+$.
 
-We define the probability of an expression $e$ consisting of primitive
-combinators $c_1, \dots, c_N$ to be $p(e)~=~\prod_{n=1}^N p(c_n |
-t(c_n))$ where $t(c_n)$ is the requested type when $c_n$ was used and
+The probability of using a primitive combinator somewhere in a program
+should depend on which other combinators could have been used in its
+place. This, in turn, depends on the type at that particular location
+in the program tree; we call this type the \emph{requesting} type. For
+example, suppose that we have the primitive $(+1)$ of type $Int
+\rightarrow Int$ and the primitive $NOT$ of type $Bool \rightarrow
+Bool$. If the requesting type is $\sigma \rightarrow Int$, then we can
+only use $(+1)$, but if the requesting type is $\sigma \rightarrow
+\sigma$ then we could use either $(+1)$ or $NOT$. Let $C = c_1, \dots,
+c_n$ be the set of primitive combinators in our grammar; we define
+$C_t$ for any type $t$ to be the set of combinators in $C$ that are
+consistent with $t$, that is, whose types \emph{unify} with t (we use
+unification according to the standard type theory
+presentation~\ref{Pierce_2002}).
+
+We define the probability of an expression $e$ from a grammar with
+primitive $C$ to be $p(e)~=~\prod_{n=1}^N p(c_n | t(c_n))$ where
+$p(c_n | t(c_n))$ is the probability of using primitive $c_n$ when the
+requesting type was $t(c_n)$. This definition means that the
+probability of an expression only depends on the probabilities
+assigned to the library primitives. We define these conditional
+probabilities as
 \[
-p(c_i | t(c_n)) =    \frac{1}{4}\frac{p_i}{\sum_{c_j :
-    type(c_j) \text{ unifies with } t(c_n)} p_j}.
+p(c_i | t(c_n)) =    \frac{1}{\epsilon}\frac{p_i}{\sum_{C_{t(c_n)}} p_j}.
 \]
 That is, $p(c_i | t(c_n)$ is the probability of sampling $c_i$ from
 the multinomial distribution defined by the $p_i$'s, conditioned on
-the requesting type, and then divided by 4. The constant factor of
-$1/4$ is introduced as a simple way to ensure that the sum over the
-probabilities of all expressions converges to finite value (so that
-the distribution over expressions is proper).\footnote{The probability
-  mass $M_d$ of all expressions of depth less than or equal to $d$ can
-  be written with the recurrence relation $M_d \leq M_d^2 + M_1$. This
-  has an asymptotic fixed point if $x = x^2 + M_1$ has a solution,
-  which is true if $M_1 \leq 1/4$.}
+the requesting type, with the factor of $\frac{1}{\epsilon}$ added as
+a simple way to ensure that the sum over the probabilities of all
+expressions converges to a finite value (so that the distribution over
+expressions is proper). This is true whenever $\epsilon \geq
+4$\footnote{The probability mass $M_d$ of all expressions of depth
+  less than or equal to $d$ can be written with the recurrence
+  relation $M_d \leq M_{d-1}^2 + M_1$. This has an asymptotic fixed
+  point, as $d \rightarrow \infty$ if $x = x^2 + M_1$ has a solution,
+  which is true if $M_1 \leq 1/4$.}.
 
-To estimate the values $p_i$ from set of expressions, we simply divide
+To estimate the values $p_i$ from a set of expressions, we simply divide
 the number of times primitive combinator $c_i$ was used by the number
 of times it could have been used given the requesting types in the
 expression trees. Note that this is not a maximum likelihood estimator
@@ -397,47 +633,55 @@ and find that our empirical results justify this simplicity. It is a
 matter for future research to determine to what extent a more accurate
 estimator would improve performance.
 
- \subsection{Best-first enumeration of most probable programs.}
+\subsection{Best-first enumeration of most probable programs.}
 In order to explore the frontier of most promising programs, we need a
 procedure that enumerates the $N$ most probable programs. There has
 been recent interest in this problem, most of it focused on
 enumerating the shortest program satisfying some
-criterion~\cite{DBLP:conf/sfp/Katayama05} \cite{DBLP:conf/aaip/YakushevJ09}. Our
-approach is to formulate the problem as a best-first exploration of an
-AND/OR tree~\cite{nilsson1982principles}, which we denote
-$\mathcal{G}$. A complete program is any binary subtrees of
-$\mathcal{G}$ whose leaves coincide with the leaves of
-$\mathcal{G}$. The tree structure is shown in
-Figure~\ref{fig:andor}. The root is an OR node of the requisite
-program type. It's children are the primitives of that type $f_1,
-\dots, f_n$, and one AND node with two children. Each child of an AND
-node has the same structure as the root node, with modified types: if
-the type of an AND node is $t$, then the type of its left child is
-$\tau \rightarrow t$ (where $\tau$ is a fresh type variable). Since
-the type of the right child is constrained by the subtree rooted at
-the left child, we always expand the left child first and use the
-target type of this left subtree to mark the type of the right child.
+criterion~\cite{DBLP:conf/sfp/Katayama05}
+\cite{DBLP:conf/aaip/YakushevJ09}. Our approach is to formulate the
+problem as a best-first exploration of an AND/OR tree
+(Figure~\ref{fig:andor})~\cite{nilsson1982principles}~\cite{DBLP:journals/cacm/Hall73},
+which we denote $\mathcal{G}$. In words, the enumeration procedure is
+best described by the following recursion: every program is either a
+primitive combinator or it a left child program applied to a right
+child program.
 
-Recall that a valid partial solution is a subtree of $\mathcal{G}$
-satisfying the following properties: its root is the root
-$\mathcal{G}$ and any OR node has at most one child. A complete
-solution is a partial solution whose leaves are leaves of
-$\mathcal{G}$, whose root is the root of $\mathcal{G}$, in which each
-OR node has exactly one child, and in which each AND node has exactly
-two children. 
+This translates to the following AND/OR tree. Suppose we want a
+program of type $t$. The root of $\mathcal{G}$ is an OR node of type
+$t$. Its children are elements in $C_t$ (defined in the previous
+section) and one AND node of type $t$ with two children. Each child of
+an AND node has the same structure as the root node, with modified
+types: type of its left child is $\tau \rightarrow t$ (where $\tau$ is
+a fresh type variable). Since the type of the right child is
+constrained by the subtree rooted at the left child, we always expand
+the left child first. Once we have a complete left child program, we
+can use its target type as the type of the right child. 
 
-The value of a partial solution $G'$ is calculated by summing the
-value of its leaves. If a leaf of $G'$ is a leaf of $G$ then either it
-is an AND node, to which we assign a value of 0, or it corresponds to
-some primitive combinator $c_i$ in the library and is the child of
-some typed OR node with type $t$. We assign its value of $- \log{p(c_i
-  | t)}$, according to the stochastic grammar specified in
-Section~\ref{sec:stochgrammar}. If a leaf $v$ of $G'$ is an OR node,
-then the value of any extension of it to a complete solution is at
-most $-log(1/4)$. Thus, we have defined a value for partial solutions
-that upper bounds the value of any of its extensions. 
+Recall that a valid partial solution $\mathcal{H}$ is a subtree of
+$\mathcal{G}$ satisfying the following properties: the root of
+$\mathcal{H}$ is the root $\mathcal{G}$ and any OR node in
+$\mathcal{H}$ has at most one child. $\mathcal{H}$ is a complete
+solution (and thus a complete program) if it is a partial solution
+whose leaves are leaves of $\mathcal{G}$, if each OR node in
+$\mathcal{H}$ has exactly one child, and if each AND node in
+$\mathcal{H}$ is connected to all of that node's children in
+$\mathcal{G}$
 
-Our best-first policy, is to simply expand the next partial solution
+The value of a partial solution $\mathcal{H}$ is calculated by summing
+the value of its leaves, where each such value is the log of the
+probability assigned to that leaf in
+Section~\ref{sec:stochgrammar}. If a leaf of $\mathcal{H}$ is a leaf
+of $\mathcal{G}$ then either it is an AND node, to which we assign a
+value of 0, or it corresponds to some primitive combinator $c_i$ in
+the library and is the child of some typed OR node with type $t$. We
+assign it a value of $\log{p(c_i | t)}$. If a leaf $v$ of
+$\mathcal{H}$ is an OR node, then the value of any extension of it to
+a complete solution is at most $log(1/4)$. Thus, we have defined a
+value for partial solutions that upper bounds the value of any of its
+extensions.
+
+Our best-first policy is to expand the next partial solution
 with the highest value. If a partial solution has multiple leaves that
 are not primitive combinators, we expand the left most one first,
 since it is the choice of left combinator that defines the type of its
@@ -446,121 +690,180 @@ applies its constraint on valid solutions via the left child, not the
 right child. We want to apply constraints as early as possible, so
 expanding left children first prunes more partial solutions.
 
-\textbf{****NEED COMPLEXITY ANALYSIS HERE*******}
+\subsection{Finding the most compressive set of solutions}
 
-\subsection{Finding the most compressive set of solutions.}
-
-We say that a task is \emph{hit} if it has a solution in the
-frontier. Having enumerated the frontier, we want to assign solutions
+Having enumerated the frontier, we want to assign solutions
 to hit tasks such that this set is maximally compressible. This will
 promote the usage of reusable modular subtrees. 
 
 A natural metric for the compressibility of a set of binary trees is
-the number of unique subtrees that this set contains. As an example of
-this, suppose we had three tasks whose solutions were integers 16, 25,
-and 36, and suppose our frontier contained the six expressions:
+the number of unique subtrees (counting leaves as subtrees) that this
+set contains. As an example of this, suppose we had six tasks whose
+solutions were integers $4^2, 5^2, 6^2, 7^2, 8^2$ and suppose our
+frontier contained the 10 expressions:
 
-\begin{table}[h]
-  \begin{tabular}{|l|l|l|}
-    ~ & ~ & ~ \\ 
-    ~ & ~ & ~ 
-    \end{tabular}
-  \caption{Two ways to represent 16, 25, 36.}
-  \label{table:compress}
-\end{table}
+\captionsetup[subfigure]{labelformat=empty} 
+\begin{figure}[h!]
+   \begin{subfigure}{.17\linewidth}
+     \begin{tikzpicture}[scale=.7, background rectangle/.style={fill=lightgray}] 
+       \tikzset{level distance=15pt, sibling distance=10pt}
+       \Tree [[  * 4 ] 4 ]
+     \end{tikzpicture}
+  \end{subfigure}
+  \begin{subfigure}{.17\linewidth}
+     \begin{tikzpicture}[scale=.7]
+       \tikzset{level distance=15pt, sibling distance=10pt}
+       \Tree [[  * 5 ] 5 ]
+     \end{tikzpicture}
+  \end{subfigure}
+   \begin{subfigure}{.17\linewidth}
+     \begin{tikzpicture} [scale=.7]
+       \tikzset{level distance=15pt, sibling distance=10pt}
+       \Tree [[  * 6 ] 6 ]
+     \end{tikzpicture}
+  \end{subfigure}
+   \begin{subfigure}{.17\linewidth}
+     \begin{tikzpicture}[scale=.7] 
+       \tikzset{level distance=15pt, sibling distance=10pt}
+       \Tree [[  * 7 ] 7 ]
+     \end{tikzpicture}
+  \end{subfigure}
+  \begin{subfigure}{.17\linewidth}
+     \begin{tikzpicture}[scale=.7] 
+       \tikzset{level distance=15pt, sibling distance=10pt}
+       \Tree [[  * 8 ] 8 ]
+     \end{tikzpicture}
+  \end{subfigure}
+  \vspace{2mm}
 
-%% \begin{figure}[h]
-%%     \begin{tikzpicture}[scale=.9,
-%%         transform shape, level/.style={sibling distance=10mm/#1, font=\scriptsize}
-%%         ]
-%%       \node [font=\scriptsize] (top) {}
-%%       child {node [above=.3cm, text width=2cm] (a) {$(Int \rightarrow Int) \rightarrow Int 
-%%           \rightarrow Int$}
-%%         child {node [left=.5cm, below=1cm, text width=3cm] 
-%%           {$S : \\(t_2 \rightarrow t_1 \rightarrow t_0)  \rightarrow (t_2 \rightarrow t_1) 
-%%             \rightarrow \\ t_2 \rightarrow t_0$}}
-%%         child {node [right=0cm, text width=2cm] {$*: Int \rightarrow Int \rightarrow Int$}}
-%%       }
-%%       child {node [below right=.3cm and 1cm] (b) {$Int \rightarrow Int$}
-%%         child {node {$I: t_0 \rightarrow t_0 \rightarrow t_0$}}
-%%       };
-%%     \end{tikzpicture}
-%% \end{figure}
-
-Let $|e|$ be the
-number of unique binary trees in expression $e$. 
-
-we will find that some tasks have no solutions
-and some have one or more solutions; for those tasks that have
-solutions, we want to choose a solution for each task such that the
-complete set of such solutions for all solved tasks is as compressible
-as possible.
+  \hdashrule{.9\linewidth}{1pt}{1pt}
 
 
-Thus, we can attempt
-to find the assignment of solutions to tasks that minimizes this
-value. However, an exact optimization for this problem requires
-examining $O(m^k)$ assignments, where $m$ is the maximum number of
-solutions for any one task and $k$ is the number of tasks. Since this
-is prohibitive, we relax the compressibility metric as follows: we
-define the cost of adding each new solution $s_n$ to a partial set of
+  \vspace{2mm}
+  \begin{subfigure}{.17\linewidth}
+     \begin{tikzpicture}[scale=.6] 
+       \tikzset{level distance=15pt, sibling distance=10pt}
+       \Tree [[[  S * ] I ] 4 ]
+     \end{tikzpicture}
+     \caption{(16)}
+  \end{subfigure}
+  \begin{subfigure}{.17\linewidth}
+     \begin{tikzpicture}[scale=.6]
+       \tikzset{level distance=15pt, sibling distance=10pt}
+       \Tree [[[  S * ] I ] 5 ]
+     \end{tikzpicture}
+     \caption{(25)}
+  \end{subfigure}
+   \begin{subfigure}{.17\linewidth}
+     \begin{tikzpicture} [scale=.6]
+       \tikzset{level distance=15pt, sibling distance=10pt}
+       \Tree [[[  S * ] I ] 6 ]
+     \end{tikzpicture}
+     \caption{(36)}
+  \end{subfigure}
+  \begin{subfigure}{.17\linewidth}
+     \begin{tikzpicture}[scale=.6] 
+       \tikzset{level distance=15pt, sibling distance=10pt}
+       \Tree [[[  S * ] I ] 7 ]
+     \end{tikzpicture}
+     \caption{(49)}
+  \end{subfigure}
+  \begin{subfigure}{.17\linewidth}
+     \begin{tikzpicture}[scale=.6] 
+       \tikzset{level distance=15pt, sibling distance=10pt}
+       \Tree [[[  S * ] I ] 8 ]
+     \end{tikzpicture}
+     \caption{(64)}
+  \end{subfigure}
+\end{figure}
+\captionsetup[subfigure]{labelformat=parens} 
+
+The top row consists of one type of representation of an integer
+squared, namely, the integer times itself. The bottom row contains
+another type of representation in which the function $f(x)=x^2$,
+represented in combinatory logic as $S * I$, is applied to the
+integer. The top and bottom row of each expression evaluates to the
+same integer. If we consider only the first column, the top tree has 4
+unique subtrees and the bottom has 7. But each column adds 3 unique
+subtrees to the top row and only 2 to the bottom. So by the fifth
+column the top row has more unique subtrees than the bottom row. The
+increased compressibility of the bottom row is due to the fact that
+the squaring operation has been factored out as an abstraction. This
+is an example, then, of how this compressibility metric favors
+abstraction when multiple expressions are being considered at once.
+
+We want to choose a solution for each hit task such that the complete set
+of such solutions for all solved tasks is as compressible as
+possible. That is, let $t_i$ be a task in the set of hit tasks, and
+let $\{e^k_i\}$ be the expressions in the frontier that solves
+it. Then our goal is to find
+\[
+\{e^*_i\} = \argmin_{\{e^k_i\}} | \cup_i e^k_i |,
+\]
+where $|\cdot|$ denotes the number of unique trees in a set of expressions.
+
+However, an exact optimization of this problem requires examining
+$O(M^K)$ assignments, where $M$ is the maximum number of solutions for
+any one task and $K$ is the number of tasks. Since this is
+prohibitive, we relax the compressibility metric as follows: we define
+the cost of adding each new solution $s_n$ to a partial set of
 solutions $s_1, \dots, s_{n-1}$ to be the number of additional unique
-subtrees in $s_n$ that are not present in $s_{n-1}$. Our solution thus
-becomes approximate and that approximation is order-dependent, but a
+subtrees in $s_n$ that are not present in $s_{n-1}$. That is, the
+penalty of adding a new expression to the set of expressions depends
+only on the last expression we added. Our solution thus becomes
+approximate and that approximation is order-dependent, but a
 depth-first search on the defined search space goes from exponential
-in the solution degree to quadratic.
+in the solution degree to quadratic ($O(KM^2)$). 
+
+However, when the number of solutions in the frontier grows, this
+quadratic computation becomes prohibitive. Therefore, in practice, we
+bound the number of potential expressions we are willing to consider
+at any one iteration to any one task to a small number. We find that a
+setting of this bound to 2 is computationally feasible and large
+enough to guide subcomponent discovery in a reliable way. It may be
+necessary to increase this bound as we scale this algorithm to larger
+problems.
 
 \subsection{Re-estimating the stochastic grammar over programs.}
 
 Given a set of solution programs, we want to re-estimate our
-stochastic grammar. Our inspiration for doing this is based broadly on
+stochastic grammar. Our inspiration for doing this is based on
 the Neville-Manning algorithm for grammar-based
 compression~\cite{nevill1997identifying}. The idea of that compression
 algorithm is to compress any string by creating a grammar for that
 string such that a) no two symbols appear more than once in the
 grammar and b) every rule is used more than once. From a set of trees
-we generate a grammar according to these criteria (though using a less
-efficient and much simpler algorithm). 
+we generate a grammar according to these criteria.
 
-In our algorithm, we traverse a set of combinator binary trees in
-depth first order. We count the occurrences of every subtree. Every
-time we encounter a subtree for the \emph{second} time, we designate
-it as a primitive in our new grammar. This ensures that every
-primitive is used more than once. During our traversal, we do not
-descend into trees that have been added already to the new
-grammar. Thus, we only count an instance of tree if that instance is
-not a subtree of a primitive element of the new grammar.
+%% To do this, we traverse a set of combinator binary trees in
+%% depth first order. We count the occurrences of every subtree. Every
+%% time we encounter a subtree for the \emph{second} time, we designate
+%% it as a primitive in our new grammar. This ensures that every
+%% primitive is used more than once. During our traversal, we do not
+%% descend into trees that have been added already to the new
+%% grammar. Thus, we only count an instance of a tree if that instance is
+%% not a subtree of a primitive element of the new grammar.
 
-At the end of this traversal of the solution programs, we have a parse
-of the solution set with a new set of primitives and we know how many
-times each primitive occurred in the solutions set. To estimate the
-probabilities associated with each node production, we again traverse
-the solution set, but this time for each node we count which other
-primitive elements from the new grammar could have been used. We
-estimate the terminal production weight to be the ratio of the number
-of times that node was used in the first traversal divided by the
-number of times it was used in the second traversal. 
-
-Note that this probability estimation procedure was chosen for its
-simplicity, and it is not the maximum likelihood estimator for the
-multinomial distribution according to which we enumerate the
-data. Because the probability we assign to the use of a primitive
-combinator depends on the type of the node, the ML estimator of the
-probability of that combinator is not a simple ratio of counts. It
-would be interesting to determine whether a more accurate estimator
-can improve this algorithm's performance.
+This procedure generates a parse of the solution set with a new set of
+primitives, and we keep count of how many times each primitive
+occurred in the solutions set. To estimate the probabilities
+associated with each node production, we again traverse the solution
+set, but this time for each node we count which other primitive
+elements from the new grammar could have been used. In accordance with
+Section~\ref{stochgrammar}, we estimate the terminal production weight
+to be the ratio of the number of times that node was used in the first
+traversal divided by the number of times it was used in the second
+traversal.
 
 \section{Experiments.}
 \subsection{Symbolic regression.}
 \label{sec:symreg}
 
-In this section, we walk through the performance of our learning
-algorithm on a symbolic regression problem. In this problem,
-each task is a set of pairs $ (x, f(x))$ where $x \in (0, \dots, 10)$
-and $f$ is a polynomial. The goal is to discover a program for each
-task that outputs the appropriate value $f(x)$ for each input x. We
-assume that the data is noise-free.
-
+In this section, we discuss the performance of our learning algorithm
+on a symbolic regression problem. In this problem, each task is a set
+of pairs $ (x, f(x))$ where $x \in (0, \dots, 9)$ and $f$ is a
+polynomial. The goal is to discover a program for each task that
+outputs the appropriate value $f(x)$ for each input x. 
 
 %% The choice of an initial grammar for the algorithm will, of course,
 %% have a big effect on its performance, and so we would like to
@@ -605,40 +908,48 @@ assume that the data is noise-free.
 %% frontier.
 
 Each task is to predict the value of an unknown polynomial on the
-inputs $0, \dots, 10$. The set of tasks corresponds to the set of
-polynomials $\{ax^2 + bx + c | a, b, c \in \{0, \dots, 10 \}\}$. The
-choice of primitives is going to make a big difference in performance;
-we chose to include the basic combinators I, S, B, C and four
+inputs $0, \dots, 9$. The set of tasks corresponds to the set of
+polynomials $\{ax^2 + bx + c | a, b, c \in \{0, \dots, 9 \}\}$. In the
+initial library, we include the basic combinators I, S, B, C and four
 arithmetic primitives, $1$, $0$, $*$, and $+$. The choice of initial
-weights makes a large difference as well, as it determines the
-relative ordering of combinators in the enumeration step. To get a
-general sense of the algorithm's performance, we set the intial
-weights to be slightly different on each run, jittering them around a
+weights on these primitives can make a difference, as it determines
+the relative ordering of combinators in the enumeration step. To get a
+general sense of the algorithm's performance, we set the initial
+weights to be slightly different on each run, perturbing them around a
 uniform weighting.
 
-In Figure~\ref{fig:symreg}, we show performance results as we vary the
-frontier size. Each individual plot shows how changing the frontier
-size changes the number of tasks the algorithm identifies correctly
-over the course of fifteen algorithm iterations. %% In addition, we have a
-%% baseline for each curve, visits the same number of expressions as the
-%% corresponding algorithm run (i.e. frontier size $\times$ $\#$ of
-%% iterations) but all at once; it does not do any learning. Thus, this
-%% baseline serves as a brute-force control for the learning aspect of
-%% the algorithm.
-
-\begin{figure}
-\begin{subfigure}[Before]{.6\linewidth}
-%% \includegraphics[width=\linewidth]{figures/learningCurves2.pdf}
-\includegraphics[width=\linewidth]{figures/symreg3frontiers.pdf}
+\begin{figure}[h]
+\centering
+\begin{subfigure}[Before]{\linewidth}
+\includegraphics[width=.9\linewidth]{figures/symreg3frontiers.pdf}
+\label{fig:symregLearning}
+\caption{Learning curves as a function of frontier size.  As frontier
+  size is increased, it plateaus closer to $100\%$ performance. A
+  control brute-force search over $150000$ only hits $3\%$ of the
+  tasks.}
 \end{subfigure}
-%% \begin{subfigure}[After]{0.45\linewidth}
-%% \includegraphics[width=\linewidth]{figures/performanceVsFrontierSize2.pdf}
-%% \end{subfigure}
-\caption{(a) Average learning curves as we vary the frontier size. (b)
-  Percent of tasks solved at iteration 15 as a function of frontier
-  size.}
+
+\begin{subfigure}[After]{.65\linewidth}
+\includegraphics[width=.9\linewidth]{figures/symRegDiffCurricula.pdf}
+\caption{How do different task sets affect learning curves? Learning
+  curves at frontier size of $10000$ for different task sets. Note
+  that performance is equally good if either the constant functions of
+  the linear functions are missing, by drops dramatically when both
+  are absent, even though these only account for about $10\%$ of the
+  tasks. Performance drops even lower if we only consider ``complex'' quadratics.}
+\label{fig:symregCurricula}
+\end{subfigure}
+\begin{subfigure}[After]{.3\linewidth}\
+\includegraphics[width=.9\linewidth]{figures/symregCircuitDepths.pdf}
+\caption{Circuit depth as a function of iteration on a typical run.}
+\label{fig:symregDepths}
+\end{subfigure}
+
+
+\caption{Symbolic regression experiment data.}
 \label{fig:symreg} 
 \end{figure}
+
 
 %% Why do the learning curves asymptote early? One might object that a
 %% learning algorithm should continuously improve, if only slowly, as it
@@ -656,6 +967,54 @@ over the course of fifteen algorithm iterations. %% In addition, we have a
 %% all? Figure~\ref{fig:plateau_investigation} shows the proportion of
 %% the expressions in the frontier that hit a task as the frontier size increases.
 
+
+In Figure~\ref{fig:symreg}, we show performance results as we vary the
+frontier size. Each individual plot shows how changing the frontier
+size changes the number of tasks the algorithm identifies correctly
+over the course of fifteen algorithm iterations. As a control, we
+enumerated $10000*15=150000$ expressions from the initial
+grammar. This is the total number of expressions that a run of the
+algorithm sees if it has a frontier size of $10000$ and runs for $15$
+iterations. Thus, if the benefit accruing to the runs with larger
+frontier sizes is due to simple an increase in brute-force search
+ability, rather than increased learning, we should see similarly good
+performance from this control run. In fact, however, the control run
+only hit $27$ of the $1000$ asks ($3\%$), whereas our algorithm nears $100\%$.
+
+We would like to assess to what degree ``conceptual bootstrapping'' is
+responsible for the improved performance. In the next experiment we
+will inspect directly the modular components that are learned by this
+algorithm. Here we look at the idea of a ``learnable'' curriculum,
+that is, the notion that conceptual bootstrapping requires that a
+set of tasks contain a subset of tasks that are sufficiently simple so
+that the learner is able to solve those with its initially
+impoverished library of concepts. 
+
+In Figure~\ref{fig:symregCurricula}, we present learning curves
+(frontier size 10000) corresponding to various versions of our
+original symbolic regression task set. Recall that the original set
+consisted of all polynomials of degree two or less and with
+coefficients between 0 and 9. In the ``no constant'' task set, we
+remove the 9 constant functions in this set. In the ``no linear'' task
+set, we remove 90 linear functions from the set. We observe that
+performance on those task sets does not decrease. However, when we
+remove both the linear functions and the constant function (``only
+quadratics''), we see a sharp drop in the algorithm's
+performance. When we further restrict the task set to only ``complex''
+quadratics (which we are defining as quadratics all of whose
+coefficients are greater than zero), we observe another comparable
+drop in performance. When we go one step further and restrict the task
+set to quadratics with coefficients greater than 1, performance drops
+to 0.
+
+%% In addition, we have a
+%% baseline for each curve, visits the same number of expressions as the
+%% corresponding algorithm run (i.e. frontier size $\times$ $\#$ of
+%% iterations) but all at once; it does not do any learning. Thus, this
+%% baseline serves as a brute-force control for the learning aspect of
+%% the algorithm.
+
+
 \subsection{Boolean circuits}
 \label{sec:boolcircuits}
 
@@ -667,6 +1026,144 @@ the NAND gate. Here, the basic combinators take the place of the
 wiring normally found in a circuit, the output of element to multiple
 inputs downstream. 
 
+
+\begin{table}
+\tiny
+\begin{tabular}[width=\linewidth]{|p{1cm}|p{2cm}|p{3.5cm}|}
+\hline \\
+  function  & CL expression & circuit  ~ \\ \hline
+¬†¬†¬†¬†¬†¬†¬†¬†TRUE¬† & (S NAND) (S NAND I)¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬† & ~ 
+
+%\begin{top}
+\begin{circuitikz}[transform shape] 
+\draw
+(1, 0) node[nand port, scale=.5] (nand1) {}
+(2,.3) node[nand port, scale=.5] (nand2) {}
+(0, 0) node[anchor=east]  (x) {x}
+(x) -- (.3, 0) -| (nand1.in 1)
+(x) -- (.3, 0) -|  (nand1.in 2)
+(x) |- (nand2.in 1)
+(nand1.out) |- (nand2.in 2)
+;
+\end{circuitikz}
+%\end{top}
+\\ \hline
+¬†¬†¬†¬†¬†¬†¬†¬†FALSE & (S B (S NAND)) (S NAND I)¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬† &  ~
+
+%% \begin{circuitikz}[transform shape]
+
+%% ;
+%% \end{circuitikz}
+
+\\ \hline
+¬†¬†¬†¬†¬†¬†¬†¬†NOT¬†¬† & S NAND I¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬† &  ~
+
+\begin{circuitikz}[transform shape]
+\draw
+(1.2,0) node[nand port, scale=.5] (nand1) {}
+(0, 0) node (x) {x}
+(x) -| (nand1.in 1)
+(x) -| (nand1.in 2)
+;
+\end{circuitikz}
+
+\\ \hline
+¬†¬†¬†¬†¬†¬†¬†¬†AND¬†¬† & ((C B NAND) (B (S NAND I)))¬†¬†¬†¬†¬†¬†¬†¬†¬†¬† & ~
+
+\begin{circuitikz}
+\draw
+(1.0,0) node[nand port, scale=.5] (nand1) {}
+(2.0,0) node[nand port, scale=.5] (nand2) {}
+% (0, 0) node (x) {x}
+% (0, 0) node (y) {y}
+node[above left=.2cm and .7cm  of nand1] (x) {x} %-- (nand1.in 1)
+node[below left=.2cm and .7cm  of nand1] (y) {y} %-- (nand1.in 2)
+(x) |- (nand1.in 1)
+(y) |- (nand1.in 2)
+(nand1.out) |- (nand2.in 1)
+(nand1.out) |- (nand2.in 2)
+;
+\end{circuitikz}
+ \\  \hline
+¬†¬†¬†¬†¬†¬†¬†¬†OR¬†¬†¬† & ((B (C (B (S NAND) NAND))) (S NAND I) & ~
+
+\begin{circuitikz}
+\draw
+(0,0) node (x) {x}
+(0,.7) node (y) {y}
+
+node[nand port, scale=.5, right=1cm of x] (nand1) {}
+node[nand port, scale=.5, right=1cm of y] (nand2) {}
+node[nand port, scale=.5, below right=.3cm and 1cm of nand2] (nand3) {}
+(x) -| (nand1.in 1)
+(x) -| (nand1.in 2)
+(y) -| (nand2.in 1)
+(y) -| (nand2.in 2)
+(nand1.out) |- (nand3.in 1)
+(nand2.out) |- (nand3.in 2)
+;
+\end{circuitikz}
+ \\  \hline
+¬†¬†¬†¬†¬†¬†¬†¬†XOR¬†¬† & ((S (B C (((B (C B NAND)) S) (((B (C B NAND)) S) (B C ((B (B NAND)) NAND)))))) I)¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬† & ~
+
+\begin{circuitikz}
+\draw
+node[nand port, scale=.5] (nand1) {}
+node[nand port, scale=.5, above right=.3cm and 1cm of nand1] (nand2) {} 
+node[nand port, scale=.5, below right=.3cm and 1cm of nand1] (nand3) {} 
+node[nand port, scale=.5, right=2cm of nand1] (nand4) {} 
+node[left=1.2cm of nand2.in 1] (x) {x}
+node[left=1.2cm of nand3.in 2] (y) {y}
+node[right=.2cm of nand4] (out) {}
+(x) -| (nand1.in 1)
+(x) -| (nand2.in 1)
+(y) -| (nand1.in 2)
+(y) -| (nand3.in 2)
+(nand1.out) -| (nand2.in 2)
+(nand1.out) -| (nand3.in 1)
+(nand2.out) |- (nand4.in 1)
+(nand3.out) |- (nand4.in 2)
+(nand4.out) -- (out)
+;
+\end{circuitikz}
+
+ \\  \hline
+¬†¬†¬†¬†¬†¬†¬†¬†F¬†¬†¬†  & S B (S NAND)¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬† & ~
+%% \begin{circuitikz}
+%% \draw
+%% (0, 0) node[left=.25) (x) {x}
+
+%% ;
+%% \end{circuitikz}
+
+\\ 
+\hline
+
+\end{tabular}
+\caption{Expressions in the induced library on sets of tasks
+  corresponding to boolean circuits synthesized from AND, OR, and NOT
+  gates, with boolean circuits of 1, 2, or 3 inputs.}
+\label{table:boolexpr}
+
+\end{table}
+
+
+%% \begin{table}[t]
+%% \scriptsize
+%%    \begin{tabular}{|l|l|l|}
+%%     function  & CL expressions & circuit  ~ \\ \hline
+%%         TRUE  & (S NAND) (S NAND I)                   & ~ \\ \hline
+%%         FALSE & (S B (S NAND)) (S NAND I)             & ~ \\ \hline
+%%         NOT   & S NAND I                              & \input{figures/NOT.tex} \\ \hline
+%%         AND   & ((C B NAND) (B (S NAND I)))           & ~ \\ 
+%%         OR    & ((B (C (B (S NAND) NAND))) (S NAND I) & ~ \\ 
+%%         XOR   & ~                                     & ~ \\ 
+%%         F     & S B (S NAND)                          & \input{figures/F.tex}
+%%     \end{tabular}
+%% \end{table}
+
+
+
 We constructed two task sets. The first of these was constructed
 explicitly to contain familiar module structure. In this set of tasks,
 we sampled $1000$ boolean circuits using AND, OR, and NOT gates. To
@@ -677,23 +1174,26 @@ sampling procedure until we had 1000 ``connected'' circuits, i.e.,
 circuits all of whose output are wired to an input except for the last
 one (the output gate). This resulted in $1000$ tasks consisting of
 $82$ unique boolean functions, with a distribution of tasks as shown
-in Figure~\ref{fig:booldistr}. In Figure~\ref{fig:boolLearningCurves1},
+in Figure~\ref{fig:booldistr}. In Figure~\ref{fig:boolLearningCurvesCircuits},
 We present learning curves for frontier sizes 100, 500 and 10000,
 using the same procedure as in Section~\ref{sec:symreg}. 
 
+
 \begin{figure}
 \includegraphics[width=\linewidth]{figures/circuitDistrComp.pdf}
-\label{fig:booldistr}
+\vspace{-10pt}
 \caption{Distribution of boolean functions among (a) the set of 1000
-  circuits randomly constructed from AND, OR and NOT gates; b) the
-  first 1000 expressions from the grammar over programs \emph{before}
-  learning; c) the first 1000 expressions from the grammar over
-  programs \emph{after} learning.}
+  circuits randomly constructed from AND, OR and NOT gates (see text);
+  b) the first 1000 expressions from the grammar over programs
+  \emph{before} learning; c) the first 1000 expressions from the
+  grammar over programs \emph{after} learning. Gray levels indicate
+  percent of instances (circuits/expressions) which evaluate to that
+  function.\label{fig:booldistr}}
 \end{figure}
 
 This problem is particularly suitable for inspecting the constituents
 of the induced grammar $\mathcal{G}$. We might hope that our algorithm
-recovers the consituent logic gates that were used to build up the
+recovers the constituent logic gates that were used to build up the
 problems. Table~\ref{table:bool} shows a few of the top ranked
 expressions in the library. These include the basic logic gates; we
 also include one higher-order expression $F$, to stress that the
@@ -710,44 +1210,32 @@ functions over and over again. The second kind of learning involves
 the distribution of the functions themselves. In the first boolean
 experiment, that structure is apparent in the distribution in
 Figure~\ref{fig:boolhist}. In this second experiment, we remove the
-second kind of structure. In Figure~\ref{boolLearningCurves}, we show
+second kind of structure. In Figure~\ref{fig:boolLearningCurvesUniform}, we show
 10 runs of the algorithm with a frontier size of $2000$: note how
 there are several local minima that majority of the runs get stuck in
 with performance around $50\%$, but several of the runs seem to take
 different trajectories to more successful representations. 
 
-\begin{figure}
-\begin{subfigure}[Before]{0.45\linewidth}
-\includegraphics[width=.9\linewidth]{figures/booleancircuitsBars.pdf}
+\begin{figure}[t]
+\begin{subfigure}[Before]{\linewidth}
+\includegraphics[width=.9\linewidth]{figures/booleancircuits3frontiers.pdf}
+\label{fig:boolLearningCurvesCircuits}
+\caption{Learning curves for various frontier sizes on task set of
+  Boolean functions drawn randomly from a distribution (see text for
+  details) of circuits built up of NOT, AND, OR gates.}
 \end{subfigure}
-\begin{subfigure}[Before]{0.45\linewidth}
-\includegraphics[width=.9\linewidth]{figures/boolLearningCurves.pdf}
+
+\begin{subfigure}[Before]{\linewidth}
+\includegraphics[width=.9\linewidth]{figures/booleanfunctionsUniform.pdf}
+\label{fig:boolLearningCurvesUnifrom}
+\caption{10 learning curves for frontier size of 2000 on a task set
+  consisting of all Boolean functions of cardinality 3 or
+  smaller. Note how most of the trajectories get stuck in a local
+  minimum around $50\%$.}
 \end{subfigure}
-\caption{(a) Average learning curves as we vary the frontier size. (b)
-  Percent of tasks solved at iteration 15 as a function of frontier
-  size.}
 \label{fig:boolLearningCurves} 
-
-
+\caption{Learning curves from Boolean function learning experiment. }
 \end{figure}
-
-\begin{table}
-\scriptsize
-   \begin{tabular}{|l|l|l|}
-    function  & CL expressions & circuit  ~ \\ \hline
-        TRUE  & (S NAND) (S NAND I)                   & ~ \\ \hline
-        FALSE & (S B (S NAND)) (S NAND I)             & ~ \\ \hline
-        NOT   & S NAND I                              & \input{figures/NOT.tex} \\ \hline
-        AND   & ((C B NAND) (B (S NAND I)))           & ~ \\ 
-        OR    & ((B (C (B (S NAND) NAND))) (S NAND I) & ~ \\ 
-        XOR   & ~                                     & ~ \\ 
-        F     & S B (S NAND)                          & \input{figures/F.tex}
-    \end{tabular}
-\caption{Expressions in the induced library on sets of tasks
-  corresponding to boolean circuits synthesized from AND, OR, and NOT
-  gates, with boolean circuits of 1, 2, or 3 inputs.}
-\label{table:boolexpr}
-\end{table}
 
 %% \subsection{Digital arithmetic}
 %% Having demonstrated the behavior of the E-C algorithm on symbolic
@@ -757,7 +1245,8 @@ different trajectories to more successful representations.
 %% set of gates that perform arithmetic operations on binary number
 %% representations. 
 
-\subsection{Discussion}
+
+\section{Discussion}
 This work attempts to bring together ideas from various areas of
 research -- hierarchical Bayes, learning to learn, minimum description
 length learning -- to provide a proof of concept that learning
@@ -814,7 +1303,7 @@ stones to the acquisition of complex representations.
 %% The file named.bst is a bibliography style file for BibTeX 0.99c
 \bibliographystyle{plain}
 \bibliography{ijcai13}
-\nocite{*}
+%% \nocite{*}
 
 \end{document}
 
