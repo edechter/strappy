@@ -1,25 +1,29 @@
-\documentclass{article}
+x\documentclass{article}
 
 \usepackage{ijcai13}
 \usepackage{times}
 \usepackage{amsmath} 
 \usepackage{latexsym} 
 \usepackage{ dsfont }
+\usepackage[usenames,dvipsnames]{xcolor}
 \usepackage{tikz}
 \usepackage{tikz-qtree}
 \usepackage{float}
 \usepackage{circuitikz}
 \usepackage{graphicx}
-\usepackage{subcaption}
+\usepackage[font=small]{subcaption}
+\usepackage[font=small]{caption}
 \usepackage{alltt}
 \usepackage{dashrule}
 \usepackage{array}
 \usepackage[ruled,vlined,linesnumbered]{algorithm2e}
 \usetikzlibrary{arrows,automata, positioning, patterns,backgrounds}
+\usetikzlibrary{arrows,shapes.gates.logic.US,shapes.gates.logic.IEC,calc}
 
 \newtheorem{definition}{Definition}
 \DeclareMathOperator*{\argmax}{arg\,max} 
 \DeclareMathOperator*{\argmin}{arg\,min} 
+
 
 \title{Bootstrap learning via modular concept discovery}
 
@@ -103,12 +107,12 @@ effectively learning from simple tasks a search space structure which
 enables it to solve more complex tasks.
 
 In this work, we try to see how far this idea of reusable function
-definition can get us. Our question is, Can an AI system discover the
-structure latent in the solutions to multiple related problems and
-thereby bootstrap effective exploration of the search space? Can
-discovering modular program components transform a problem from one in
-which search is intractable into a problem in which it becomes
-increasingly feasible with experience?
+definition can get us. We ask the following question: can an AI system
+discover the structure latent in the solutions to multiple related
+problems and thereby bootstrap effective exploration of the search
+space? Can discovering modular program components transform a problem
+from one in which search is intractable into a problem in which it
+becomes increasingly feasible with experience?
 
 Concretely, our algorithm works as follows. It begins with a small
 library of program primitives and a distribution over programs
@@ -117,7 +121,10 @@ programs in order of highest probability according to the library
 learned in the previous iteration. From the discovered solutions, it
 finds new reusable functions that compress these solutions, and it
 re-estimates the distribution over programs by weighting these new
-functions according to their frequencies.
+functions according to their frequencies. In using compression as a
+guide to the choice representation, we instantiate the idea that good
+representations are those which minimize the description length of
+typical elements in the domain.
 
 We show that this iterative approach allows us to achieve very high
 performance in tasks where just searching according to the initial
@@ -128,9 +135,9 @@ distribution over program primitives clearly fails.
 The idea of discovering and using reusable subcomponents is an old one
 in AI. Rendell's 1985 paper~\cite{DBLP:conf/ijcai/Rendell85},
 ``Substantial Constructive Induction Using Layered Information
-Compression: Tractable Feature Formation in Search,'' -- which could
-have been the name of this paper -- did not use programs as its
-solution space representation. Within the Inductive Logic Programming
+Compression: Tractable Feature Formation in Search,'' contained many
+of these ideas. It did not, however, use programs as its solution
+space representation. Within the Inductive Logic Programming
 literature, researchers have explored ``Constructive Induction,''
 generating new and reusable logic programming
 terms~\cite{DBLP:conf/ijcai/Muggleton87}. We believe that applying
@@ -408,25 +415,38 @@ symbolic regression and boolean circuit learning.
 %% language for programs and a family of distributions over expressions
 %% in that language, but we leave these details for the following section
 
-\section{Problem statement and terminology}
-Our goal is to solve the following minimal feedback multi-task program
-induction problem: suppose we are given set of \emph{tasks}
-$T=\{t_k\}_{k=1}^K$ where each task is a function $t_i : \mathcal{L}
-\rightarrow \{0, 1\}$ and where $\mathcal{L}$ is the set of programs
-in our language.  We say that $ p \in \mathcal{L}$ \emph{solves} $t_i$
-if $ t_i(p) = 1$. Our goal is to solve as many of the tasks in $T$ as
-we can.
-
-We will use the following terminology. A \emph{frontier} will be the
-finite set of programs that the algorithm is considering at any one
-time. We will say that a task is \emph{hit} by the frontier if there
-is a program in the frontier that solves it. 
-
 \section{Extracting modular concepts from functional programs}
 
-In order to solve our stated problem, we need to choose a solution
-representation language and a compression criterion, and we need to
-describe the frontier enumeration and compression procedures.
+Our goal is to solve the following minimal feedback multi-task program
+induction problem: suppose we are given set of \textbf{tasks}
+$T=\{t_k\}_{k=1}^K$ where each task is a function $t_i : \mathcal{L}
+\rightarrow \{0, 1\}$ and where $\mathcal{L}$ is the set of programs
+in our language.  We say that $ p \in \mathcal{L}$ \textbf{solves}
+$t_i$ if $ t_i(p) = 1$. Our goal is to solve as many of the tasks in
+$T$ as we can.
+
+We propose the \textbf{E-C algorithm}, an iterative procedure to solve this
+problem. It will be useful in presenting the algorithm to define the
+following terminology: a \textbf{frontier} is the finite set of
+programs that the algorithm considers in any one iteration. The
+\textbf{frontier size} $N$ is the prespecified number of elements in
+the frontier. We will say that a task is \textbf{hit} by the frontier
+if there is a program in the frontier that solves it.
+
+The E-C algorithm maintains a distribution $\mathcal{D}$ over
+expressions in $\mathcal{L}$. At each iteration, it
+\begin{enumerate}
+\item \textbf{explores} the frontier -- enumerating the $N$ most probable expressions
+  from the current distribution $\mathcal{D}$ -- and
+\item \textbf{compresses} the hit tasks in the frontier to estimate a new
+  distribution.
+\end{enumerate}
+
+What remains is to specify a representation language $\mathcal{L}$, a
+form for the distribution $\mathcal{D}$, a compression criterion for a
+set of expressions in $\mathcal{L}$. We also need to describe
+procedures for the enumeration of the frontier, compression of the
+expressions, and re-estimations of $\mathcal{D}$. 
 
 \subsection{Representing typed functional programs as binary trees}
 
@@ -575,65 +595,74 @@ nodes with their types).
 
 \end{figure}
 
-\subsection{A stochastic grammar over programs.}
+\subsection{A stochastic grammar over programs}
 \label{sec:stochgrammar}
-We would like a way to describe how likely we believe a program to be
-given the probabilities we ascribe to its components. Recall that
-$\mathcal{L}$ is the set of all programs.  A stochastic grammar over
-programs represents a distribution over expressions in
-$\mathcal{L}$. We associate with each primitive combinator $c_i$ in
-$\mathcal{L}$ a probability $p_i$, $0~\leq~p_i~\leq~1, \sum_i~p_i~=~1
-$.
 
-The probability of using a primitive combinator somewhere in a program
-should depend on which other combinators could have been used in its
-place. This, in turn, depends on the type at that particular location
-in the program tree; we call this type the \emph{requesting} type. For
-example, suppose that we have the primitive $(+1)$ of type $Int
-\rightarrow Int$ and the primitive $NOT$ of type $Bool \rightarrow
-Bool$. If the requesting type is $\sigma \rightarrow Int$, then we can
-only use $(+1)$, but if the requesting type is $\sigma \rightarrow
-\sigma$ then we could use either $(+1)$ or $NOT$. Let $C = c_1, \dots,
-c_n$ be the set of primitive combinators in our grammar; we define
-$C_t$ for any type $t$ to be the set of combinators in $C$ that are
-consistent with $t$, that is, whose types \emph{unify} with t (we use
+We specify a distribution $\mathcal{D}$ over expressions in
+$\mathcal{L}$ as a stochastic
+grammar~\cite{feldman1969grammatical}. Many stochastic grammars have
+the desirable property that the probability of an expression is the
+product of the probabilities of its subcomponents. The distribution we
+specify will be a particularly simple verson of this, in which the
+probability of an expression is the product of the probability of its
+leaves.
+
+$\mathcal{D}$ will associate with each primitive combinator $c_i$ a
+prior probabilities $p_i$, $0~\leq~p_i~\leq~1, \sum_i~p_i~=~1 $. The
+probability of a leaf withr primitive combinator $c_i$ will depend on
+which other primitive combinators could have been chosen in its
+place. This set will depend on the type that was requested by the
+parent of this leaf when the leaf's primitive was chosen; we call this
+type the \emph{requesting} type of the leaf. For example, suppose that
+we have the primitive $(+1)$ of type $Int \rightarrow Int$ and the
+primitive $NOT$ of type $Bool \rightarrow Bool$. If the requesting
+type is $\sigma \rightarrow Int$, then we can only use $(+1)$, but if
+the requesting type is $\sigma \rightarrow \sigma$ then we could use
+either $(+1)$ or $NOT$. Let $C = c_1, \dots, c_n$ be the set of
+primitive combinators in our grammar; we define $C_t$ for any type
+$\tau$ to be the set of combinators in $C$ that are consistent with
+$\tau$, that is, whose types \emph{unify} with $\tau$ (we use
 unification according to the standard type theory
 presentation~\ref{Pierce_2002}).
 
-We define the probability of an expression $e$ from a grammar with
-primitive $C$ to be $p(e)~=~\prod_{n=1}^N p(c_n | t(c_n))$ where
-$p(c_n | t(c_n))$ is the probability of using primitive $c_n$ when the
-requesting type was $t(c_n)$. This definition means that the
-probability of an expression only depends on the probabilities
-assigned to the library primitives. We define these conditional
-probabilities as
+Given a distribution $\mathcal{D} = (p_1, \dots, p_n)$, we define the
+probability of an expression $e \in \mathcal{L}$ to be
+$p(e)~=~\prod_{n=1}^N p(c_n | \tau(c_n))$ where $p(c_n | \tau(c_n))$ is the
+probability of using primitive $c_n$ when the requesting type is
+$\tau(c_n)$. In turn, we define the conditional probabilities to be
 \[
-p(c_i | t(c_n)) =    \frac{1}{\epsilon}\frac{p_i}{\sum_{C_{t(c_n)}} p_j}.
+p(c_i | \tau(c_n)) \propto \frac{p_i}{\sum_{C_{\tau(c_n)}} p_j}.
 \]
-That is, $p(c_i | t(c_n)$ is the probability of sampling $c_i$ from
-the multinomial distribution defined by the $p_i$'s, conditioned on
-the requesting type, with the factor of $\frac{1}{\epsilon}$ added as
-a simple way to ensure that the sum over the probabilities of all
-expressions converges to a finite value (so that the distribution over
-expressions is proper). This is true whenever $\epsilon \geq
-4$\footnote{The probability mass $M_d$ of all expressions of depth
-  less than or equal to $d$ can be written with the recurrence
-  relation $M_d \leq M_{d-1}^2 + M_1$. This has an asymptotic fixed
-  point, as $d \rightarrow \infty$ if $x = x^2 + M_1$ has a solution,
-  which is true if $M_1 \leq 1/4$.}.
+That is, $p(c_i | \tau(c_n)$ is proportional to the probability of
+sampling $c_i$ from the multinomial distribution defined by the
+$p_i$'s, conditioned on the requesting type, with the constant of
+proportionality chosen to ensure that the sum over the probabilities
+of all expressions converges to a finite value (so that the
+distribution over expressions is proper). For binary trees, this is
+true whenever the constant of proportionality is less than
+$\frac{1}{4}$\footnote{The probability mass $M_d$ of all expressions
+  of depth less than or equal to $d$ can be written with the
+  recurrence relation $M_d \leq M_{d-1}^2 + M_1$. This has an
+  asymptotic fixed point, as $d \rightarrow \infty$ if $x = x^2 + M_1$
+  has a solution, which is true if $M_1 \leq 1/4$.}.
 
-To estimate the values $p_i$ from a set of expressions, we simply divide
-the number of times primitive combinator $c_i$ was used by the number
-of times it could have been used given the requesting types in the
-expression trees. Note that this is not a maximum likelihood estimator
-for this distribution; finding that would require solving a rather
-complex optimization problem because of each choice is conditioned on
-the requesting type. We choose our estimator merely for convenience,
-and find that our empirical results justify this simplicity. It is a
-matter for future research to determine to what extent a more accurate
-estimator would improve performance.
+Now, suppose that we have a set of expressions $\mathcal{E}$, and we
+wish to estimate the maximum likelihood values of the $p_i$'s. If the
+choice of primitive at each leaf were not conditioned on the
+requesting type, we could just count all occurences of each primitive
+in our expression set, and this would be proportional to the maximum
+likelihood estimate. This is ML estimator for a multinomial
+distribution. However, the fact that we condition on the requesting
+type makes this a considerably more difficult optimization task. One
+of the simplest approximations we can make is to calculate the
+frequency with which each primitive combinator appears in
+$\mathcal{E}$ when the requesting type is such that it could have
+been chosen. This is a particularly straightforward calculuation, and
+we use it for its convenience, finding that our empirical results
+justify its use. Future inquiry will be needed to determine to what
+extent a more accurate estimator can improve these results.
 
-\subsection{Best-first enumeration of most probable programs.}
+\subsection{Best-first enumeration of programs}
 In order to explore the frontier of most promising programs, we need a
 procedure that enumerates the $N$ most probable programs. There has
 been recent interest in this problem, most of it focused on
@@ -644,10 +673,10 @@ problem as a best-first exploration of an AND/OR tree
 (Figure~\ref{fig:andor})~\cite{nilsson1982principles}~\cite{DBLP:journals/cacm/Hall73},
 which we denote $\mathcal{G}$. In words, the enumeration procedure is
 best described by the following recursion: every program is either a
-primitive combinator or it a left child program applied to a right
+primitive combinator or it is a left child program applied to a right
 child program.
 
-This translates to the following AND/OR tree. Suppose we want a
+This can framed as the following AND/OR tree. Suppose we want a
 program of type $t$. The root of $\mathcal{G}$ is an OR node of type
 $t$. Its children are elements in $C_t$ (defined in the previous
 section) and one AND node of type $t$ with two children. Each child of
@@ -694,7 +723,7 @@ expanding left children first prunes more partial solutions.
 
 Having enumerated the frontier, we want to assign solutions
 to hit tasks such that this set is maximally compressible. This will
-promote the usage of reusable modular subtrees. 
+promote reusable modular subtrees. 
 
 A natural metric for the compressibility of a set of binary trees is
 the number of unique subtrees (counting leaves as subtrees) that this
@@ -789,7 +818,7 @@ subtrees to the top row and only 2 to the bottom. So by the fifth
 column the top row has more unique subtrees than the bottom row. The
 increased compressibility of the bottom row is due to the fact that
 the squaring operation has been factored out as an abstraction. This
-is an example, then, of how this compressibility metric favors
+is an example of how this compressibility metric favors
 abstraction when multiple expressions are being considered at once.
 
 We want to choose a solution for each hit task such that the complete set
@@ -827,8 +856,8 @@ problems.
 \subsection{Re-estimating the stochastic grammar over programs.}
 
 Given a set of solution programs, we want to re-estimate our
-stochastic grammar. Our inspiration for doing this is based on
-the Neville-Manning algorithm for grammar-based
+stochastic grammar. Our inspiration for doing this is the
+Neville-Manning algorithm for grammar-based
 compression~\cite{nevill1997identifying}. The idea of that compression
 algorithm is to compress any string by creating a grammar for that
 string such that a) no two symbols appear more than once in the
@@ -859,53 +888,17 @@ traversal.
 \subsection{Symbolic regression.}
 \label{sec:symreg}
 
-In this section, we discuss the performance of our learning algorithm
-on a symbolic regression problem. In this problem, each task is a set
-of pairs $ (x, f(x))$ where $x \in (0, \dots, 9)$ and $f$ is a
-polynomial. The goal is to discover a program for each task that
-outputs the appropriate value $f(x)$ for each input x. 
+We first illustrate the performance of our learning algorithm on a
+symbolic regression problem. In task in this problem, we want to find
+an algebraic function, symbolically specified, that maps a set of
+input values to output values. We choose this problem because it has a
+long history in AI, particularly in the genetic programming
+literature~\cite{DBLP:books/daglib/0070933}. 
 
-%% The choice of an initial grammar for the algorithm will, of course,
-%% have a big effect on its performance, and so we would like to
-%% characterize this effect. We can divide primitives into roughly two
-%% sets; there are low-level primitives, those that operate on concrete
-%% types like Bool or Double, and these tend to be domain specific. For
-%% example, concrete primitives include $1, 2$, etc., and $f(x) = 3x$. The
-%% other class of primitives are abstract primitives, which can be
-%% characterized by having arguments whose types are primarily function
-%% types, like $(t \rightarrow s), (t \rightarrow s) \rightarrow \text{
-%%   Double },$ etc. Of course, we can construct operators that fall in
-%% between. 
+In the formulation we consider, each task $t$ corresponds to a
+polynomial $f$, and an expression $e$ solves $t$ if ${ (e\;
+  i)=f(i) }$ for all ${ i=0,\dots,9 }$. 
 
-%% The most abstract operators are those that Liang et. al refer to as
-%% ``routers''~\cite{liang10programs}. These operators take the place of
-%% $\lambda$ abstraction in the general lambda calculus: whereas
-%% $\lambda$ abstraction allows us to bind arguments to variables nested
-%% deep inside an expression, without them we need to have operators that
-%% ``route'' arguments to the appropriate functions in a nested
-%% expression. 
-
-%% \begin{definition}[Router~\cite{liang10programs}] A \emph{router} is a combinator
-%% represented by a finite sequence of elements from $\{B, C, S\}$. The
-%% behavior of router $r$ is given by
-%% \[
-%% (r \, f \, g \, x_1 \dots x_{|r|}) = (f \, x_{i_1} \dots x_{i_n}) (g
-%% \, x_{j_1} \dots x_{j_n}),
-%% \]
-%% where $i_1 < \dots < i_n$ are indices $i$ such that $r_i \in \{C, S\}$
-%% and where $j_1 < \dots < j_n$ are indices $j$ such that $r_j \in \{B,
-%% S\}$. Let $\mathcal{R}_k$ be the set of all routers of length equal to
-%% $k$. Let $\mathcal{R}_{\leq k}$ be the set of all routers of length
-%% less than or equal to $k$.
-%% \end{definition}
-
-%% To analyze the behavior of our algorithm, we will vary the parameters
-%% of the problem along two axes while keeping the learning tasks the
-%% same. Along the first axis, we vary the initial library to which our
-%% learner has access with respect to the its abstractness (i.e., number
-%% of routers) and its concreteness (i.e. number of concrete
-%% primitives). Along the second axis we vary the size of the search
-%% frontier.
 
 Each task is to predict the value of an unknown polynomial on the
 inputs $0, \dots, 9$. The set of tasks corresponds to the set of
@@ -1026,126 +1019,163 @@ the NAND gate. Here, the basic combinators take the place of the
 wiring normally found in a circuit, the output of element to multiple
 inputs downstream. 
 
-
-\begin{table}
-\tiny
-\begin{tabular}[width=\linewidth]{|p{1cm}|p{2cm}|p{3.5cm}|}
-\hline \\
-  function  & CL expression & circuit  ~ \\ \hline
-¬†¬†¬†¬†¬†¬†¬†¬†TRUE¬† & (S NAND) (S NAND I)¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬† & ~ 
-
-%\begin{top}
-\begin{circuitikz}[transform shape] 
-\draw
-(1, 0) node[nand port, scale=.5] (nand1) {}
-(2,.3) node[nand port, scale=.5] (nand2) {}
-(0, 0) node[anchor=east]  (x) {x}
-(x) -- (.3, 0) -| (nand1.in 1)
-(x) -- (.3, 0) -|  (nand1.in 2)
-(x) |- (nand2.in 1)
-(nand1.out) |- (nand2.in 2)
-;
-\end{circuitikz}
-%\end{top}
-\\ \hline
-¬†¬†¬†¬†¬†¬†¬†¬†FALSE & (S B (S NAND)) (S NAND I)¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬† &  ~
+\include{./figures/tablealone}
+%% \begin{table}
+%% \tiny
+%% \begin{tabular}[width=\linewidth]{|p{1cm}|p{2cm}|p{3.5cm}|}
+%% \hline function  & CL expression & circuit  ~ \\ \hline\hline
+%% ¬†¬†¬†¬†¬†¬†¬†¬†NOT¬†¬† & S NAND I¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬† &  ~
 
 %% \begin{circuitikz}[transform shape]
-
+%% \draw
+%% (1.2,0) node[nand port, scale=.3] (nand1) {}
+%% (0, 0) node (x) {x}
+%% (x) -| (nand1.in 1)
+%% (x) -| (nand1.in 2)
 %% ;
 %% \end{circuitikz}
 
-\\ \hline
-¬†¬†¬†¬†¬†¬†¬†¬†NOT¬†¬† & S NAND I¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬† &  ~
+%% \\ \hline
+%% ¬†¬†¬†¬†¬†¬†¬†¬†AND¬†¬† & ((C B NAND) (B (S NAND I)))¬†¬†¬†¬†¬†¬†¬†¬†¬†¬† & ~
 
-\begin{circuitikz}[transform shape]
-\draw
-(1.2,0) node[nand port, scale=.5] (nand1) {}
-(0, 0) node (x) {x}
-(x) -| (nand1.in 1)
-(x) -| (nand1.in 2)
-;
-\end{circuitikz}
-
-\\ \hline
-¬†¬†¬†¬†¬†¬†¬†¬†AND¬†¬† & ((C B NAND) (B (S NAND I)))¬†¬†¬†¬†¬†¬†¬†¬†¬†¬† & ~
-
-\begin{circuitikz}
-\draw
-(1.0,0) node[nand port, scale=.5] (nand1) {}
-(2.0,0) node[nand port, scale=.5] (nand2) {}
-% (0, 0) node (x) {x}
-% (0, 0) node (y) {y}
-node[above left=.2cm and .7cm  of nand1] (x) {x} %-- (nand1.in 1)
-node[below left=.2cm and .7cm  of nand1] (y) {y} %-- (nand1.in 2)
-(x) |- (nand1.in 1)
-(y) |- (nand1.in 2)
-(nand1.out) |- (nand2.in 1)
-(nand1.out) |- (nand2.in 2)
-;
-\end{circuitikz}
- \\  \hline
-¬†¬†¬†¬†¬†¬†¬†¬†OR¬†¬†¬† & ((B (C (B (S NAND) NAND))) (S NAND I) & ~
-
-\begin{circuitikz}
-\draw
-(0,0) node (x) {x}
-(0,.7) node (y) {y}
-
-node[nand port, scale=.5, right=1cm of x] (nand1) {}
-node[nand port, scale=.5, right=1cm of y] (nand2) {}
-node[nand port, scale=.5, below right=.3cm and 1cm of nand2] (nand3) {}
-(x) -| (nand1.in 1)
-(x) -| (nand1.in 2)
-(y) -| (nand2.in 1)
-(y) -| (nand2.in 2)
-(nand1.out) |- (nand3.in 1)
-(nand2.out) |- (nand3.in 2)
-;
-\end{circuitikz}
- \\  \hline
-¬†¬†¬†¬†¬†¬†¬†¬†XOR¬†¬† & ((S (B C (((B (C B NAND)) S) (((B (C B NAND)) S) (B C ((B (B NAND)) NAND)))))) I)¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬† & ~
-
-\begin{circuitikz}
-\draw
-node[nand port, scale=.5] (nand1) {}
-node[nand port, scale=.5, above right=.3cm and 1cm of nand1] (nand2) {} 
-node[nand port, scale=.5, below right=.3cm and 1cm of nand1] (nand3) {} 
-node[nand port, scale=.5, right=2cm of nand1] (nand4) {} 
-node[left=1.2cm of nand2.in 1] (x) {x}
-node[left=1.2cm of nand3.in 2] (y) {y}
-node[right=.2cm of nand4] (out) {}
-(x) -| (nand1.in 1)
-(x) -| (nand2.in 1)
-(y) -| (nand1.in 2)
-(y) -| (nand3.in 2)
-(nand1.out) -| (nand2.in 2)
-(nand1.out) -| (nand3.in 1)
-(nand2.out) |- (nand4.in 1)
-(nand3.out) |- (nand4.in 2)
-(nand4.out) -- (out)
-;
-\end{circuitikz}
-
- \\  \hline
-¬†¬†¬†¬†¬†¬†¬†¬†F¬†¬†¬†  & S B (S NAND)¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬† & ~
 %% \begin{circuitikz}
 %% \draw
-%% (0, 0) node[left=.25) (x) {x}
+%% (1.0,0) node[nand port, scale=.3] (nand1) {}
+%% (2.0,0) node[nand port, scale=.3] (nand2) {}
+%% % (0, 0) node (x) {x}
+%% % (0, 0) node (y) {y}
+%% node[above left=.2cm and .7cm  of nand1] (x) {x} %-- (nand1.in 1)
+%% node[below left=.2cm and .7cm  of nand1] (y) {y} %-- (nand1.in 2)
+%% (x) |- (nand1.in 1)
+%% (y) |- (nand1.in 2)
+%% (nand1.out) |- (nand2.in 1)
+%% (nand1.out) |- (nand2.in 2)
+%% ;
+%% \end{circuitikz}
+%%  \\  \hline
+%% ¬†¬†¬†¬†¬†¬†¬†¬†OR¬†¬†¬† & ((B (C (B (S NAND) NAND))) (S NAND I) & ~
 
+%% \begin{circuitikz}
+%% \draw
+%% (0,0) node (x) {x}
+%% (0,.7) node (y) {y}
+
+%% node[nand port, scale=.3, right=1cm of x] (nand1) {}
+%% node[nand port, scale=.3, right=1cm of y] (nand2) {}
+%% node[nand port, scale=.3, below right=.3cm and 1cm of nand2] (nand3) {}
+%% (x) -| (nand1.in 1)
+%% (x) -| (nand1.in 2)
+%% (y) -| (nand2.in 1)
+%% (y) -| (nand2.in 2)
+%% (nand1.out) |- (nand3.in 1)
+%% (nand2.out) |- (nand3.in 2)
+%% ;
+%% \end{circuitikz}
+%%  \\  \hline\hline
+
+%% ¬†¬†¬†¬†¬†¬†¬†¬†TRUE¬† & (S NAND) (S NAND I)¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬† & ~ 
+
+%% %\begin{top}
+%% \begin{circuitikz}[transform shape] 
+%% \draw
+%% (1, 0) node[nand port, scale=.3] (nand1) {}
+%% (2,.3) node[nand port, scale=.3] (nand2) {}
+%% (0, 0) node[anchor=east]  (x) {x}
+%% (x) -- (.3, 0) -| (nand1.in 1)
+%% (x) -- (.3, 0) -|  (nand1.in 2)
+%% (x) |- (nand2.in 1)
+%% (nand1.out) |- (nand2.in 2)
+%% ;
+%% \end{circuitikz}
+%% %\end{top}
+%% \\ \hline
+%% ¬†¬†¬†¬†¬†¬†¬†¬†FALSE & (S B (S NAND)) (S NAND I)¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬† &  ~
+
+%% \begin{circuitikz}[transform shape] 
+%% \draw
+%% (1, 0) node[nand port, scale=.3] (nand1) {}
+%% (2,.3) node[nand port, scale=.3] (nand2) {}
+%% node[nand port, scale=.3, right=1cm of nand2] (nand3) {} 
+%% (0, 0) node[anchor=east]  (x) {x}
+%% (x) -- (.3, 0) -| (nand1.in 1)
+%% (x) -- (.3, 0) -|  (nand1.in 2)
+%% (x) |- (nand2.in 1)
+%% (nand1.out) |- (nand2.in 2)
+%% (nand2.out) -| (nand3.in 1)
+%% (nand2.out) -| (nand3.in 2)
+%% ;
+%% \end{circuitikz}
+%% \\ \hline
+%% ¬†¬†¬†¬†¬†¬†¬†¬†XOR¬†¬† & ((S (B C (((B (C B NAND)) S) (((B (C B NAND)) S) (B C ((B (B NAND)) NAND)))))) I)¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬† & ~
+
+%% \begin{circuitikz}
+%% \draw
+%% node[nand port, scale=.3] (nand1) {}
+%% node[nand port, scale=.3, above right=.3cm and 1cm of nand1] (nand2) {} 
+%% node[nand port, scale=.3, below right=.3cm and 1cm of nand1] (nand3) {} 
+%% node[nand port, scale=.3, right=2cm of nand1] (nand4) {} 
+%% node[left=1.2cm of nand2.in 1] (x) {x}
+%% node[left=1.2cm of nand3.in 2] (y) {y}
+%% node[right=.2cm of nand4] (out) {}
+%% (x) -| (nand1.in 1)
+%% (x) -| (nand2.in 1)
+%% (y) -| (nand1.in 2)
+%% (y) -| (nand3.in 2)
+%% (nand1.out) -| (nand2.in 2)
+%% (nand1.out) -| (nand3.in 1)
+%% (nand2.out) |- (nand4.in 1)
+%% (nand3.out) |- (nand4.in 2)
+%% (nand4.out) -- (out)
 %% ;
 %% \end{circuitikz}
 
-\\ 
-\hline
+%%  \\  \hline\hline
+%% ¬†¬†¬†¬†¬†¬†¬†¬†$E_1$¬†¬†¬†  & S B (S NAND)¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬† & ~
 
-\end{tabular}
-\caption{Expressions in the induced library on sets of tasks
-  corresponding to boolean circuits synthesized from AND, OR, and NOT
-  gates, with boolean circuits of 1, 2, or 3 inputs.}
-\label{table:boolexpr}
+%% \begin{circuitikz}
+%% \draw
+%% node (x) {x}
+%% node[nand port, scale=.3, right=1.5cm of x] (nand) {} 
+%% node[draw=blue!75, fill=blue!20, thick, 
+%%   above right=.3cm and .2cm of x, anchor=west] (f1) {$g(x)$} 
+%% node[draw=blue!75, fill=blue!20, thick, right=.5cm of nand] (f2) {$g(x)$}
+%% node[right=.1cm of f2] (out) {}
+%% (x) -| (f1.west)
+%% (x) -| (nand.in 2)
+%% (f1) -| (nand.in 1)
+%% (nand.out) -- (f2)
+%% (f2) -- (out);
+%% \end{circuitikz}
 
-\end{table}
+%% \\ \hline
+%% $E_2$¬†¬†¬†  & B (C B NAND) S & ~
+
+%% \begin{circuitikz}
+%% \draw
+%% node (x) {x} 
+%% node[nand port, scale=.3, right=1.5cm of x] (nand) {} 
+%% node[draw=blue!75, fill=blue!20, thick, 
+%%   above right=.2cm and .3cm of x, anchor=west] (g) {$g(x)$} 
+%% node[draw=blue!75, fill=blue!20, thick, 
+%%   below right=.2cm and .3cm of x, anchor=west] (f) {$f(x)$} 
+%% (x) -- [right=.25] (f.west)
+%% (x) |- (g.west)
+%% (f.east) -| (nand.in 1)
+%% (g.east) -| (nand.in 2)
+%% (nand.out) -- (out)
+%% (x)
+%% ;
+%% \end{circuitikz}
+
+%% \\ \hline
+
+%% \end{tabular}
+%% \caption{Expressions in the induced library on sets of tasks
+%%   corresponding to boolean circuits synthesized from AND, OR, and NOT
+%%   gates, with boolean circuits of 1, 2, or 3 inputs.}
+%% \label{table:boolexpr}
+
+%% \end{table}
 
 
 %% \begin{table}[t]
