@@ -20,6 +20,10 @@
 \usetikzlibrary{arrows,automata, positioning, patterns,backgrounds}
 \usetikzlibrary{arrows,shapes.gates.logic.US,shapes.gates.logic.IEC,calc}
 
+\usepackage{titling}
+
+\setlength{\droptitle}{0em}   
+\date{}
 
 \newtheorem{definition}{Definition}
 \DeclareMathOperator*{\argmax}{arg\,max} 
@@ -28,31 +32,30 @@
 
 \title{Bootstrap learning via modular concept discovery}
 
-\author{Eyal Dechter \\
-MIT\\
-USA \\
-edechter@mit.edu
-\And
-Jon Malmaud \\
-MIT \\ 
-USA \\
-malmaud@mit.edu
-\And 
-Ryan P.  Adams \\
-Harvard University\\
-USA \\
-rpa@seas.harvard.edu
-\And
-Joshua B. Tenenbaum \\
-MIT\\
-USA \\
-jbt@mit.edu
-}
+%% \author{Eyal Dechter \\
+%% MIT\\
+%% USA \\
+%% edechter@mit.edu
+%% \And
+%% Jon Malmaud \\
+%% MIT \\ 
+%% USA \\
+%% malmaud@mit.edu
+%% \And 
+%% Ryan P.  Adams \\
+%% Harvard University\\
+%% USA \\
+%% rpa@seas.harvard.edu
+%% \And
+%% Joshua B. Tenenbaum \\
+%% MIT\\
+%% USA \\
+%% jbt@mit.edu
+%% }
 
 \begin{document}
 
 \maketitle
-
 \begin{abstract}
  Suppose a learner is faced with a domain of problems about which it
  knows nearly nothing. It does not know the distribution of problems,
@@ -688,16 +691,16 @@ solution (and thus a complete expression) if it is a partial solution
 whose leaves are leaves of $\mathcal{G}$, if each OR node in
 $\mathcal{H}$ has exactly one child, and if each AND node in
 $\mathcal{H}$ is connected to all of that node's children in
-$\mathcal{G}$
+$\mathcal{G}$.
 
 The value of a partial solution $\mathcal{H}$ is calculated by summing
 the value of its leaves, where each such value is the log of the
 probability assigned to that leaf in
 Section~\ref{sec:stochgrammar}. If a leaf of $\mathcal{H}$ is a leaf
 of $\mathcal{G}$ then either it is an AND node, to which we assign a
-value of 0, or it corresponds to some primitive combinator $c_i$ in
-the library and is the child of some typed OR node with type $t$. We
-assign it a value of $\log{p(c_i | t)}$. If a leaf $v$ of
+value of 0, or it corresponds to some primitive combinator $c_n$ in
+the library and is the child of some typed OR node with type $\tau$. We
+assign it a value of $\log{p(c_n | \tau)}$. If a leaf $v$ of
 $\mathcal{H}$ is an OR node, then the value of any extension of it to
 a complete solution is at most $log(1/4)$. Thus, we have defined a
 value for partial solutions that upper bounds the value of any of its
@@ -710,7 +713,7 @@ since it is the choice of left combinator that defines the type of its
 right combinator in an application pair. That is, the parent node
 applies its constraint on valid solutions via the left child, not the
 right child. We want to apply constraints as early as possible, so
-expanding left children first prunes more partial solutions.
+expanding left child first prunes more partial solutions.
 
 \subsection{Finding the most compressive set of solutions}
 
@@ -719,11 +722,11 @@ to hit tasks such that this set is maximally compressible. This will
 promote reusable modular subtrees. 
 
 A natural metric for the compressibility of a set of binary trees is
-the number of unique subtrees (counting leaves as subtrees) that this
-set contains. As an example of this, suppose we had six tasks whose
-solutions were integers $4^2, 5^2, 6^2, 7^2, 8^2$ and suppose our
-frontier contained the 10 expressions:
-
+the number of unique subtrees (counting leaves) that this
+set contains. As an example of this, suppose we have six tasks whose
+solutions are integers $4^2, 5^2, 6^2, 7^2$, and $8^2$, and suppose our
+frontier contains the $10$ expressions:
+\vspace{-.3cm}
 \captionsetup[subfigure]{labelformat=empty} 
 \begin{figure}[h!]
    \begin{subfigure}{.17\linewidth}
@@ -799,12 +802,12 @@ frontier contained the 10 expressions:
   \end{subfigure}
 \end{figure}
 \captionsetup[subfigure]{labelformat=parens} 
-
+\vspace{-.3cm}
 The top row consists of one type of representation of an integer
 squared, namely, the integer times itself. The bottom row contains
 another type of representation in which the function $f(x)=x^2$,
 represented in combinatory logic as $S * I$, is applied to the
-integer. The top and bottom row of each expression evaluates to the
+integer. The top and bottom row of each expression evaluate to the
 same integer. If we consider only the first column, the top tree has 4
 unique subtrees and the bottom has 7. But each column adds 3 unique
 subtrees to the top row and only 2 to the bottom. So by the fifth
@@ -817,7 +820,7 @@ abstraction when multiple expressions are being considered at once.
 We want to choose a solution for each hit task such that the complete set
 of such solutions for all solved tasks is as compressible as
 possible. That is, let $t_i$ be a task in the set of hit tasks, and
-let $\{e^k_i\}$ be the expressions in the frontier that solves
+let $\{e^k_i\}$ be the expressions in the frontier that solve
 it. Then our goal is to find
 \[
 \{e^*_i\} = \argmin_{\{e^k_i\}} | \cup_i e^k_i |,
@@ -826,14 +829,14 @@ where $|\cdot|$ denotes the number of unique trees in a set of expressions.
 
 However, an exact optimization of this problem requires examining
 $O(M^K)$ assignments, where $M$ is the maximum number of solutions for
-any one task and $K$ is the number of tasks. Since this is
+any one task, and $K$ is the number of tasks. Since this is
 prohibitive, we relax the compressibility metric as follows: we define
 the cost of adding each new solution $s_n$ to a partial set of
 solutions $s_1, \dots, s_{n-1}$ to be the number of additional unique
 subtrees in $s_n$ that are not present in $s_{n-1}$. That is, the
 penalty of adding a new expression to the set of expressions depends
 only on the last expression we added. Our solution thus becomes
-approximate and that approximation is order-dependent, but a
+approximate, and that approximation is order-dependent, but a
 depth-first search on the defined search space goes from exponential
 in the solution degree to quadratic ($O(KM^2)$). 
 
@@ -848,14 +851,14 @@ problems.
 
 \subsection{Re-estimating the stochastic grammar}
 
-Given a set of solution programs, we want to re-estimate our
-stochastic grammar. Our inspiration for doing this is the
-Neville-Manning algorithm for grammar-based
-compression~\cite{nevill1997identifying}. The idea of that compression
-algorithm is to compress any string by creating a grammar for that
-string such that a) no two symbols appear more than once in the
-grammar and b) every rule is used more than once. From a set of trees
-we generate a grammar according to these criteria.
+Given a set of chosen solution expressions, which we will call the
+\emph{solution set}, want to re-estimate our stochastic grammar. Our
+inspiration for doing this is the Neville-Manning algorithm for
+grammar-based compression~\cite{nevill1997identifying}. The idea of
+that compression algorithm is to compress any string by creating a
+grammar for that string such that a) no two symbols appear more than
+once in the grammar and b) every rule is used more than once. From a
+set of expressions we generate a grammar according to these criteria.
 
 %% To do this, we traverse a set of combinator binary trees in
 %% depth first order. We count the occurrences of every subtree. Every
@@ -872,7 +875,7 @@ occurred in the solutions set. To estimate the probabilities
 associated with each node production, we again traverse the solution
 set, but this time for each node we count which other primitive
 elements from the new grammar could have been used. In accordance with
-Section~\ref{stochgrammar}, we estimate the terminal production weight
+Section~\ref{sec:stochgrammar}, we estimate the terminal production weight
 to be the ratio of the number of times that node was used in the first
 traversal divided by the number of times it was used in the second
 traversal.
@@ -882,23 +885,24 @@ traversal.
 \label{sec:symreg}
 
 We first illustrate the performance of our learning algorithm on a
-symbolic regression problem. In task in this problem, we want to find
-an algebraic function, symbolically specified, that maps a set of
+symbolic regression problem. For each task in this problem, we want to
+find an algebraic function, symbolically specified, that maps a set of
 input values to output values. We choose this problem because it has a
 long history in AI, particularly in the genetic programming
-literature~\cite{DBLP:books/daglib/0070933}. 
+literature~\cite{DBLP:books/daglib/0070933}.
 
 In the formulation we consider, each task $t$ corresponds to a
-polynomial $f$, and an expression $e$ solves $t$ if ${ (e\; i)=f(i) }$
-for all ${ i=0,\dots,9 }$. For this experiment, the set of problems
-corresponds to the set of all polynomials with degree less than or
-equal to 2. In the initial library, we include the basic combinators
-I, S, B, C and four arithmetic primitives, $1$, $0$, $*$, and $+$. The
-choice of initial weights on these primitives can make a difference,
-as it determines the relative ordering of combinators in the
-enumeration step. To get a general sense of the algorithm's
-performance, we set the initial weights to be slightly different on
-each run, perturbing them around a uniform weighting.
+polynomial $f$, and an expression $e$ solves $t$ if it returns the
+same value when applied $i \in 0, \dots, 9$ that $f$ does. In the
+experiment shown here, the set of problems corresponds to the set of
+all polynomials with degree less than or equal to 2. In the initial
+library, we include the basic combinators I, S, B, C and four
+arithmetic primitives, $1$, $0$, $*$, and $+$. The choice of initial
+weights on these primitives can make a difference, as it determines
+the relative ordering of combinators in the enumeration step. To get a
+general sense of the algorithm's performance, we set the initial
+weights to be slightly different on each run, perturbing them around a
+uniform weighting.
 
 \setcounter{subfigure}{0} 
 \begin{figure}[ht]
@@ -906,8 +910,8 @@ each run, perturbing them around a uniform weighting.
 \begin{subfigure}[Before]{\linewidth}
 \includegraphics[width=.9\linewidth]{figures/symreg3frontiers.pdf}
 \caption{Learning curves as a function of frontier size.  As frontier
-  size is increased, it plateaus closer to $100\%$ performance. A
-  control brute-force search over $150000$ only hits $3\%$ of the
+  size is increased, curves plateau closer to $100\%$ performance. A
+  baseline search over $150000$ expressions only hits $3\%$ of the
   tasks. \label{fig:symregLearning}}
 \end{subfigure}
 
@@ -950,37 +954,38 @@ each run, perturbing them around a uniform weighting.
 %% the expressions in the frontier that hit a task as the frontier size increases.
 
 
-In Figure~\ref{fig:symregLearning}, we show performance results as we vary the
-frontier size. Each individual plot shows how changing the frontier
-size changes the number of tasks the algorithm identifies correctly
-over the course of fifteen algorithm iterations. As a control, we
-enumerated $10000*15=150000$ expressions from the initial
-grammar. This is the total number of expressions that a run of the
-algorithm sees if it has a frontier size of $10000$ and runs for $15$
-iterations. Thus, if the benefit accruing to the runs with larger
-frontier sizes is due to simple an increase in brute-force search
-ability, rather than increased learning, we should see similarly good
-performance from this control run. In fact, however, the control run
-only hit $27$ of the $1000$ asks ($3\%$), whereas our algorithm nears $100\%$.
+In Figure~\ref{fig:symregLearning}, we show performance results as we
+vary the frontier size.Changing the frontier size changes the number
+of tasks the algorithm identifies correctly over the course of 15
+algorithm iterations (all experiments in this work were run for 15
+iterations). As a baseline, we enumerated $10000*15=150000$
+expressions from the initial grammar. This is the total number of
+expressions that a run of the algorithm sees if it has a frontier size
+of $10000$ and runs for $15$ iterations. Thus, if the benefit accruing
+to the runs with larger frontier sizes is due to simply an increase in
+the number of expressions seen, rather than increased learning, we should
+see similarly good performance from this baseline run. In fact,
+however, the baseline run only hits $27$ of the $1000$ tasks ($3\%$),
+whereas our algorithm nears $100\%$ for a frontier of $10000$.
 
-What kinds of primitives does the E-C algorithm learn in this task?
-Inspecting the top weighted primitives of the final grammars, we find
-many incrementers (e.g. (+1), (+2), etc.), several versions of
-expressions that translate to functions like $x*f(x)$ and $f(x*f(x))$,
-and combinations of these, like $x*(x+3)+3$ and $x*(x+2)$. Informally,
-we see expressions that apply functions to themselves in various ways
-several times, building up complex functions with relatively few
-unique primitives. In the next experiment we will inspect more
-directly the modular components that are learned by this algorithm.
+What does the E-C algorithm learn in this task?  Inspecting the top
+weighted primitives of the final grammars, we find many incrementers
+(e.g. (+1), (+2), etc.), several versions of expressions that
+translate to functions like $x*f(x)$ and $f(x*f(x))$, and combinations
+of these, like $x*(x+3)+3$ and $x*(x+2)$. Informally, we see
+expressions that apply functions to themselves, building up complex
+functions with relatively few unique primitives. 
 
-We would like to assess to what degree ``conceptual bootstrapping'' is
-responsible for the improved performance, that is, to what extent does
-the presence of simple problems account for ability to learn complex
-functions.  One prediction of this idea is that to succeed on a set of
-tasks, the set must contain a ``learnable'' curriculum, a set of tasks
-that serve as stepping stones from an impoverished representation to a
-rich one. We can test this prediction by varying the set of tasks to
-which the E-C algorithm is exposed.
+To what degree is ``conceptual bootstrapping'' responsible for the
+improved performance. That is, to what extent does the presence of
+simple problems account for the ability to learn complex functions?
+One hypothesis is that to succeed on a set of tasks, the set must
+contain a ``learnable'' curriculum, a set of tasks that serve as
+stepping stones from an impoverished representation to a rich one. We
+can test this hypothesis by varying the set of tasks to which the EC
+algorithm is exposed. If it is true, then we should see a nonlinear
+reponse to reducing the number of easy tasks, as the curriculum
+changes from being learnable to being unlearnable.
 
 In Figure~\ref{fig:symregCurricula}, we present learning curves
 (frontier size 10000) corresponding to various versions of our
@@ -993,7 +998,7 @@ performance on those task sets does not decrease. However, when we
 remove both the linear functions and the constant function (``only
 quadratics''), we see a sharp drop in the algorithm's
 performance. When we further restrict the task set to only ``complex''
-quadratics (which we are defining as quadratics all of whose
+quadratics (which we define as quadratics whose
 coefficients are greater than zero), we observe another comparable
 drop in performance. When we go one step further and restrict the task
 set to quadratics with coefficients greater than 1, performance drops
@@ -1015,32 +1020,30 @@ basic shape.
 %% the algorithm.
 
 
-\subsection{Boolean circuits}
+\subsection{Boolean function learning}
 \label{sec:boolcircuits}
 
 \begin{figure}[ht]
 \includegraphics{./tablealonedoc.pdf}
 \vspace{-.5cm}
-\caption{Some learned primitives in Boolean function learning
-  experiment. We highlight compression using $NOT$, $E_1$ and $E_2$ in
-  some of the expressions they are found. \,(a)The three elementary
-  gates used to generate the task set. (b) Two higher-order primitives
-  in the induced grammer. Note how $E_1$ can be used to define FALSE
-  by taking the NOT function as an
-  argument.  \label{table:booleanCircuits}}
+\caption{Some learned primitives from the circuit based Boolean
+  function learning experiment. We highlight compression using $NOT$,
+  $E_1$ and $E_2$. \,(a)The three elementary gates used to generate
+  the task set. (b) Two higher-order primitives in the induced
+  grammer. Note how $E_1$ can be used to define FALSE by taking the
+  NOT function as an argument. (c) Additional common Boolean functions
+  found in the learned grammar.  \label{table:booleanCircuits}}
 \vspace{-.4cm}
 \end{figure}
 
 
 
-As another demonstration of this approach, we investigate the
-procedure's ability to learn boolean functions using only the logical
+As another demonstration of our approach, we investigate the
+EC algorithm's ability to learn Boolean functions using only the logical
 primitive NAND and the basic combinators. It is well known that a
 boolean circuit can be constructed for any boolean function given only
 the NAND gate. Here, the basic combinators take the place of the
-wiring normally found in a circuit, the output of element to multiple
-inputs downstream. 
-
+wiring normally found in a circuit.
 
 %% \begin{table}
 %% \tiny
@@ -1217,19 +1220,22 @@ inputs downstream.
 
 
 We constructed two task sets. The first of these was constructed
-explicitly to contain familiar module structure. In this set of tasks,
-we sampled $1000$ boolean circuits using AND, OR, and NOT gates. To
-accomplish this, we first sampled either 1, 2, 3 inputs, then between
-1 and 5 gates, randomly wiring the inputs of each new gate to the
-output of one of the existing gates in the circuit. We continued this
-sampling procedure until we had 1000 ``connected'' circuits, i.e.,
-circuits all of whose output are wired to an input except for the last
-one (the output gate). This resulted in $1000$ tasks consisting of
-$82$ unique boolean functions, with a distribution of tasks as shown
-in Figure~\ref{fig:booldistr}. In Figure~\ref{fig:boolLearningCurvesCircuits},
-We present learning curves for frontier sizes 100, 500 and 10000,
-using the same procedure as in Section~\ref{sec:symreg}. 
-
+explicitly to contain familiar modular structure. In this set of
+tasks, we sampled $1000$ Boolean circuits using AND, OR, and NOT
+gates. To accomplish this, we first sampled either 1, 2, 3 inputs,
+then between 1 and 5 gates, randomly wiring the inputs of each new
+gate to the output of one of the existing gates in the circuit. We
+continued this sampling procedure until we had 1000 ``connected''
+circuits, i.e., circuits all of whose outputs are wired to an input
+except for the last one (the output gate). This resulted in $1000$
+tasks consisting of $82$ unique Boolean functions, with a distribution
+of tasks as shown in Figure~\ref{fig:booldistr}~(a). In
+Figure~\ref{fig:boolLearningCurvesCircuits}, We present learning
+curves for frontier sizes 100, 500 and 10000, using the same procedure
+as in Section~\ref{sec:symreg}. In Figure~\ref{fig:booldistr}, we show
+that the distribution over Boolean functions enumerated from the
+grammar over expressions is much more similar to the true function
+distribution after learning than before.
 
 \begin{figure}
 \vspace{-.3cm}
@@ -1237,9 +1243,9 @@ using the same procedure as in Section~\ref{sec:symreg}.
 \vspace{-.6cm}
 \caption{Distribution of boolean functions among (a) the set of 1000
   circuits randomly constructed from AND, OR and NOT gates (see text);
-  b) the first 1000 expressions from the grammar over programs
+  b) the first 1000 expressions from the grammar over expressions
   \emph{before} learning; c) the first 1000 expressions from the
-  grammar over programs \emph{after} learning. Gray levels indicate
+  grammar over expressions \emph{after} learning. Gray levels indicate
   percent of instances (circuits/expressions) which evaluate to that
   function.\label{fig:booldistr}}
 \end{figure}
@@ -1247,27 +1253,28 @@ using the same procedure as in Section~\ref{sec:symreg}.
 This problem is particularly suitable for inspecting the constituents
 of the induced grammar $\mathcal{G}$. We might hope that our algorithm
 recovers the constituent logic gates that were used to build up the
-problems. Table~\ref{table:bool} shows a few of the top ranked
+tasks. Table~\ref{table:booleanCircuits} shows a few of the top ranked
 expressions in the library. These include the basic logic gates; we
-also include one higher-order expression $F$, to stress that the
-representation we are using allows one to build concepts that are more
-expressive that just sub-circuits.
+also include two higher-order expression $E_1$ and $E_2$, to stress
+that the representation the EC algorithm is using allows it to build
+concepts that are more expressive that just sub-circuits.
 
-In a second experiment, we include all $272$ boolean truth tables with
-three or fewer inputs as tasks. This is a more difficult problem. Note
-that in the first boolean function problem, there are two kinds of
-learning that can take place: first, many expressions map to a single
-boolean function, so we need to learn primitives that allow us to span
-many different functions instead of allows generating very simple
-functions over and over again. The second kind of learning involves
-the distribution of the functions themselves. In the first boolean
+In a second experiment, we include all $272$ Boolean truth tables with
+three or fewer inputs as tasks. This is a more difficult
+problem. There are two kinds of learning that the EC algorithm might
+accomplish: first, many expressions in $\mathcal{L}$ map to a single
+Boolean function, so it needs to learn primitives that allow it to
+span many different functions instead of generating very simple
+functions redundantly. The second kind of learning involves the
+distribution of the functions themselves. In the circuit based Boolean
 experiment, that structure is apparent in the distribution in
-Figure~\ref{fig:boolhist}. In this second experiment, we remove the
-second kind of structure. In Figure~\ref{fig:boolLearningCurvesUniform}, we show
-10 runs of the algorithm with a frontier size of $2000$: note how
-there are several local minima that majority of the runs get stuck in
-with performance around $50\%$, but several of the runs seem to take
-different trajectories to more successful representations. 
+Figure~\ref{fig:booldistr}. In this second experiment, we remove the
+second kind of structure. In
+Figure~\ref{fig:boolLearningCurvesUniform}, we show 10 runs of the EC
+algorithm on the second experiment with a frontier size of $2000$: note how there are several
+local minima that the majority of the runs get stuck in with performance
+around $50\%$, but several of the runs seem to take different
+trajectories to more successful representations.
 
 \begin{figure}[h]
 \begin{subfigure}{.1\linewidth}
@@ -1279,7 +1286,7 @@ different trajectories to more successful representations.
 
 \vspace{-.2cm}
 \begin{subfigure}{.1\linewidth}
-\caption{\label{fig:boolLearningCurvesUnifrom}}
+\caption{\label{fig:boolLearningCurvesUniform}}
 \end{subfigure}
 \begin{subfigure}[After]{.9\linewidth}
 \includegraphics[width=.9\linewidth]{figures/booleanfunctionsUniform.pdf}
@@ -1287,9 +1294,8 @@ different trajectories to more successful representations.
 \end{subfigure}
 \vspace{-.3cm}
 \caption{Learning curves from Boolean function learning
-  experiment. (a) Learning curves for various frontier sizes on task
-  set of Boolean functions drawn randomly from a distribution (see
-  text for details) of circuits built up of NOT, AND, OR gates. (b) 10
+  experiments. (a) Learning curves for various frontier sizes on task
+  set of circuit based Boolean functions. (b) 10
   learning curves for frontier size of 2000 on a task set consisting
   of all Boolean functions of cardinality 3 or smaller. Note how most
   of the trajectories get stuck in a local minimum around
@@ -1299,6 +1305,46 @@ different trajectories to more successful representations.
 \vspace{-.5cm}
 \end{figure}
 
+\section{Conclusion}
+This work brings together ideas from various areas of research --
+hierarchical Bayes, learning to learn, minimum description length
+learning, and learning programs -- to provide a proof of concept for
+how bootstrap learning of abstract composable concepts can rapidly
+improve search performance.  We show that this approach can learn
+successfully even in domains for which the solution space is not
+smooth and the error signal is all or none, where the only sense of
+locality to guide learning is the modular and compositional structure
+of the solutions that the algorithm itself builds.
+
+Our specific implementation of this approach involved a number of
+choices which should be explored further in future work.  Our claim
+here is not that the EC algorithm is optimal, but that it captures key
+features of how people solve the problem of learning new systems of
+concepts in acquiring deep domain expertise.  Much like a human
+researcher investigating a new area of study, our algorithm tries
+different models, watches them fail or succeed, and abstracts out the
+model elements that capture relevant differences.  It recombines and
+reuses succcessful patterns of reasoning that span many problems in a
+domain.
+
+At their best, human processes of discovery also clearly go beyond
+what our algorithm is capable of.  The algorithm can get stuck in
+plateaus after a rapid initial increase in performance, due to its
+circular nature: it only inspects the region of the solution space
+that is typical of solutions already found.  Humans can become stuck
+in similar ways, but at least sometimes they can realize that they are
+stuck, and attempt to find another class of concepts for the remaining
+unsolved tasks.  Our algorithm requires, as human learners do, a
+sufficiently graded ``curriculum'', or spectrum of problems to solve --
+simple problems provide necessary stepping stones to building complex
+representations.  Also like humans, our algorithm can adaptively
+``self-pace'' its ways through the curriculum, figuring out which
+problems it is ready to tackle when, which problems are appropriate in
+difficulty given what it currently knows.  Yet people can sometimes
+more intelligently compose and modify the set of problems under
+consideration, designing their own stepping stones to expand the set
+of problems they can solve.  Making bootstrap learning systems smarter
+in these more human-like ways is a prime target for future research.
 %% \subsection{Digital arithmetic}
 %% Having demonstrated the behavior of the E-C algorithm on symbolic
 %% regression, we analyze its performance on tasks involving digital
@@ -1308,56 +1354,56 @@ different trajectories to more successful representations.
 %% representations. 
 
 
-\section{Discussion}
-This work attempts to bring together ideas from various areas of
-research -- hierarchical Bayes, learning to learn, minimum description
-length learning -- to provide a proof of concept that learning
-abstractions from programs via compression can rapidly improve search
-performance. We emphasize this by focusing on domains in which the
-solution space is not smooth and the error signal is all or
-none. Thus, the main source of information for learning is the modular
-and compositional structure of the solution space.
+%% \section{Discussion}
+%% This work attempts to bring together ideas from various areas of
+%% research -- hierarchical Bayes, learning to learn, minimum description
+%% length learning -- to provide a proof of concept that learning
+%% abstractions from programs via compression can rapidly improve search
+%% performance. We emphasize this by focusing on domains in which the
+%% solution space is not smooth and the error signal is all or
+%% none. Thus, the main source of information for learning is the modular
+%% and compositional structure of the solution space.
 
-Of course, the representations that people use to learn in the world
-often have a partially smooth or local structure. Techniques in AI and
-machine learning commonly use smoothness or local structure to make
-search tractable. But the difference between this kind of learning and
-conceptual learning is undeniable. The former is what the statistician
-or machine learning researcher implements. The latter is what she
-learns as a student and as a practicioner. As researchers, we try
-different models, watch them fail or succeed, and abstract out the
-elements of these models that capture the relevant differences. We mix
-and match parts of different ideas, and utilize succcessful patterns
-of reasoning that can span many problems and domains. 
+%% Of course, the representations that people use to learn in the world
+%% often have a partially smooth or local structure. Techniques in AI and
+%% machine learning commonly use smoothness or local structure to make
+%% search tractable. But the difference between this kind of learning and
+%% conceptual learning is undeniable. The former is what the statistician
+%% or machine learning researcher implements. The latter is what she
+%% learns as a student and as a practicioner. As researchers, we try
+%% different models, watch them fail or succeed, and abstract out the
+%% elements of these models that capture the relevant differences. We mix
+%% and match parts of different ideas, and utilize succcessful patterns
+%% of reasoning that can span many problems and domains. 
 
-We believe that the primary characteristic of conceptual learning is
-that it occurs over a modular and compositional computational
-representation that supports higher-order functions. That is why we
-chose a functional programming language as the representational
-language of this work.
+%% We believe that the primary characteristic of conceptual learning is
+%% that it occurs over a modular and compositional computational
+%% representation that supports higher-order functions. That is why we
+%% chose a functional programming language as the representational
+%% language of this work.
 
-The experiments in this work do not contain the richness of real world
-learning, but we believe that the learning algorithm's behavior
-exhibits some of the characteristics we would expect of a conceptual
-learner. 
+%% The experiments in this work do not contain the richness of real world
+%% learning, but we believe that the learning algorithm's behavior
+%% exhibits some of the characteristics we would expect of a conceptual
+%% learner. 
 
-One characteristic of this algorithm's behavior is a rapid initial
-increase in performance followed by a hard plateau. This plateau is
-expected given the circular nature of the algorithm: the learner
-inspects the region of the solution space that is typical of solutions
-already found. We see in this phenomenon a conceptual demarcation of
-the problem space: a coherent set of concepts or problems solving
-techniques can define by their power the extent of problems a problem
-solver is willing to consider. One might hope, however, that an
-intelligent learner would recognize that such a demarcation has
-occured and attempt to find another class of concepts for the
-remaining unsolved tasks.
+%% One characteristic of this algorithm's behavior is a rapid initial
+%% increase in performance followed by a hard plateau. This plateau is
+%% expected given the circular nature of the algorithm: the learner
+%% inspects the region of the solution space that is typical of solutions
+%% already found. We see in this phenomenon a conceptual demarcation of
+%% the problem space: a coherent set of concepts or problems solving
+%% techniques can define by their power the extent of problems a problem
+%% solver is willing to consider. One might hope, however, that an
+%% intelligent learner would recognize that such a demarcation has
+%% occured and attempt to find another class of concepts for the
+%% remaining unsolved tasks.
 
-Another aspect of conceptual learning that we see present in this
-algorithm's behavior is the importance of a curriculum. By this we do
-not mean an explicit ordering of the problems in the task set, but
-rather that a set of sufficiently simple problems must act as stepping
-stones to the acquisition of complex representations. 
+%% Another aspect of conceptual learning that we see present in this
+%% algorithm's behavior is the importance of a curriculum. By this we do
+%% not mean an explicit ordering of the problems in the task set, but
+%% rather that a set of sufficiently simple problems must act as stepping
+%% stones to the acquisition of complex representations. 
 
 
 
