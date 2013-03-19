@@ -1,0 +1,127 @@
+Draft responses to IJCAI 2013 Review 
+
+overall common criticisms that should be addressed: 
+1) is the work original (1, 4)?
+2) how is the work related to ILP and predicate invention (1)
+3) how is the work related to Chaitin's Algorithmic Complexity Theory (4)
+4) 
+
+############################## Response to reviewer 1 ##############################
+Main issue: What is the relationship to ILP?
+
+Response: The reviewer is right to raise a connection between our work
+and predicate invention in ILP, and we will revise the paper to note
+this. However, while predicate invention in ILP is motivated by some
+of the same considerations which motivate our work, the
+learning framework in ILP is quite different from ours. ILP concerns
+learning FOL theories from positive and negative
+examples; our framework learns functional programs with respect to a
+blackbox evaluator. This results in two main
+differences. First, our framework is easily applicable to
+both traditional ILP problems (like the boolean circuit learning
+example) and problems more commonly found in statistical learning or
+genetic programming (like the symbolic regression example). The second
+and more crucial difference is that our choice of a functional
+programming language makes it natural to capture reusable concepts as
+higher-order functions (see, for example, the learned concept $E_1$ or
+$E_2$ in Figure 4). 
+
+
+############################## Response to reviewer 2 ##############################
+Main issue: Why not do a proper bayesian thing? Statistical discovery?
+
+Response: The reviewer wonders about the algorithm's scalability and
+points out that a sufficient number of solutions need to be found by
+brute force search for the algorithm to work: we agree with this and
+wish to emphasize that it is precisely the presence of some easy
+problems that enables the algorithm to initially bootstrap an
+effective grammar.
+
+We agree that our approach can be framed as a statistical discovery
+technique in which we iteratively re-estimate a stochastic grammar. We
+are currently investigating this and will revise the paper to note
+this interpretation. However, generating directly from this grammar,
+as the reviewer suggests, instead of enumerating in a best-first
+manner exacerbates the "needle-in-a-haystack" problem that our
+algorithm faces; by enumerating programs, we are able to exhaustively
+cover a large part of the prior mass of our stochastic grammar. We are
+working to determine the advantages and disadvantages of
+these two approaches.
+
+############################## Response to reviewer 3 ##############################
+Main issue: Why not use mdl measure like -log(p) instead of counting nodes.
+
+Response: We would like to respond particularly to the reviewer's
+question of why an mdl measure such as -log p was not used instead of
+counting the nodes of the trees in Section 3.4. We agree with the
+reviewer that this approach would be more elegant, and we will revise
+the paper to make note of this. In order to take into account the
+possibility of new rules (i.e. concept learning), however, we would
+need to place a prior distribution over grammars (see, also, the
+response to reviewer 2). This would likely require an expensive and
+potentially inaccurate Monte Carlo approximation. We found the proxy
+calculation of counting the number of unique subtrees in a set of
+solutions to be a simple, intuitive, and elegant computation that gets
+at the compressibility of the data.
+
+############################## Response to reviewer 4 ##############################
+Main issues: 1) Does this extend to noisy data. 2) What about Chaitin? (refer to response to reviewer 1). 
+
+Response: We understand the reviewer's concerns that a) this work has
+similarities to Chaitin's Algorithmic Information Theory framework and
+that b) that it is not clear in the paper how to extend this work to
+noisy data. The reviewer is right that our approach is similar in
+spirit to some of Chaitin's theoretical work, and his work will be
+cited prominently, but our emphasis here is a novel search algorithm
+that allows us to quickly bootstrap hundreds of programs for many
+related tasks. 
+
+Dealing with noisy data requires one to choose a function that scores
+candidate solutions to a task. We emphasize the aspects of our
+approach that are independent of this, but there are straightforward
+ways to extend our algorithm to noisy data. The most way natural is to
+weight the subtree counting in section 3.4 by the chosen scoring
+function. The paper will be revised to reflect this.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+TODO: implement josh's notes on this:
+
+
+Notes from Josh: "We will revise the paper to note the The reviewers
+are right to raise a connection to ILP and we will revise the paper to
+note this, and we will revise the paper to note this, but we wills
+tress the following differents.
+
+Some of the same considerations not all
+First order logic vs FOL.
+
+We agree with the reviewer and we are currently investigating
+(stochastic model thing) maybe move the we are going to do this part
+to the start.
+
+We will focus on this initially. 
+
+Typo "we would like to respond"
+
+Can we argue about how the number of subtrees relating to the
+nonparametric distribution. We will revise the paper to discuss this.
+We do see what we are doing as an approximation to all that stuff, and
+we will revise the paper to reflect that.
+
+"It was not clear in our paper" instead of "It is not clear." and we
+will revise the paper to reflect this. For the noisy data part. 
+
+Chaitin, should be cited prominently in the paper and we will. 
+
+"We believe there are straightforward ways" --> there are
+straightforward ways and we are currently exploring them, and we will
+revise the paper to reflect this. 
+
+
+
+
+
+
+

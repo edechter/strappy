@@ -1,0 +1,59 @@
+\documentclass{article}
+
+\usepackage{ijcai13}
+\usepackage{times}
+\usepackage{amsmath} 
+\usepackage{latexsym} 
+\usepackage{ dsfont }
+\usepackage{tikz}
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+\usetikzlibrary{arrows,automata}
+
+\DeclareMathOperator*{\argmax}{arg\,max} 
+
+\title{The E-C Algorithm: conceptual bootstrapping via grammar-based
+  program compression.}
+
+%%\title{The Exploration-Compression Algorithm: how to learn programs by discovering useful subroutines.}
+\author{Eyal Dechter \\
+MIT\\
+USA \\
+edechter@mit.edu
+\And
+Josh Tenenbaum \\
+MIT\\
+USA \\
+jbt@mit.edu
+\And 
+Ryan Adams \\
+Harvard University\\
+USA \\
+rpa@seas.harvard.edu}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Suppose a learner is faced with a set of problems about which it knows
+nearly nothing: it doesn't know the distribution of problems, or what
+an appropriate loss function might be. For each hypothesized solution
+to a problem it gets one bit: right or wrong. How can such a learner
+every get off the ground? The key is to find, by brute force, a
+solution to one or more simple problems in that domain and use the
+information thus gained to pursue subsequent searches in an informed
+manner. Here, we formalize this intuition, where the solution space is
+the space of typed functional programs and the gained information is
+stored as a stochastic grammer over programs. Specifically, we propose
+the E-C algorithm, a two step iterative algorithm for exploring such
+spaces: in the E step, the learner \emph{explores} a finite subset of
+the domain for solutions, guided by a stochastic grammar; in the C
+step, the learner \emph{compresses} the successful solutions from the
+E step to estimate a new stochastic grammar. As we show in several toy
+domains, iterating these two steps quickly propels the learner from a
+state of solving almost no problems to solving a large number of
+problems by gaining abstract knowledge of the structure of the
+solution space.
+\end{abstract}
+
+\end{document}
