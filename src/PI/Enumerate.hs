@@ -30,7 +30,7 @@ enum' :: [Comb] -> Int -> Type -> StateT Int [] Comb
 enum' xs 0 t = filterCombinatorsByType xs t
 
 enum' xs d t = enum' xs 0 t `mplus` do
-  tp <- newTVar Star
+  tp <-  newTVar Star
   let t_left0 = tp ->- t
   left <- enum' xs (d-1) t_left0
   let t_left1 = cType left
@@ -96,10 +96,9 @@ enumIB xs d n t = let m = CM.size xs
                               else st
 
 
-enumBF :: Grammar 
-       -> Int -- max num combinators
-       -> Type
-       -> StateT Int [] Comb
--- | Bread-first AO enumeration of combinators with highest scores
--- under the grammar.
-enumBF = undefined
+main :: IO ()
+main = do
+  let combs = map (stdlib' !) ["S", "B", "B", "I", "0", "1", "+", "*"]
+      out = runStateT (enum combs 3 t0) 1
+  putStrLn $ "Number of combinators: " ++ show (length out)
+  return ()
