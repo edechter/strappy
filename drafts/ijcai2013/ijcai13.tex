@@ -22,7 +22,7 @@
 
 \usepackage{titling}
 
-\setlength{\droptitle}{0em}   
+\setlength{\droptitle}{-1em}   
 \date{}
 
 \newtheorem{definition}{Definition}
@@ -57,6 +57,7 @@
 
 \maketitle
 \begin{abstract}
+%\small
  Suppose a learner is faced with a domain of problems about which it
  knows nearly nothing. It does not know the distribution of problems,
  the space of solutions is not smooth, and the reward signal is
@@ -166,11 +167,9 @@ on its own. Such problems rely on domain knowledge -- whether in the
 form of a fitness function or a likelihood function -- to provide
 local structure to the search space.
 
-But thes problems we want AI systems to solve often lack this kind of
-built in structure. These are the kinds of problems more often
-associated with ILP and classical AI than with GP and machine
-learning. 
-\\
+But, as mentioned before, the problems we want AI systems to solve
+often lack this kind of built in structure. Here we attempt to learn
+functional programs to solve those kinds of problems.  \\
 
 %% AI and machine learning algorithms commonly take advantage of the
 %% relationship between a performance metric (error, reward, fitness,
@@ -389,7 +388,7 @@ The remainder of this paper will include two major sections. In the
 first, we describe in detail the EC algorithm and design choices we
 make in implementing it. We will then present results from two
 experiments in the domains of symbolic regression and Boolean
-functioin learning.
+function learning.
 
 %% \section{}
 %% Let $\mathcal{F}$ be a family of distributions over $\mathcal{L}$ such
@@ -428,7 +427,7 @@ expressions in our language.  We say that expression $ e \in
 \mathcal{L}$ \textbf{solves} $t_k$ if $ t_k(p) = 1$. Our goal is to
 solve as many of the tasks in $T$ as we can.
 
-We propose the \textbf{E-C algorithm}, an iterative procedure to solve this
+We propose the \textbf{EC algorithm}, an iterative procedure to solve this
 problem. It will be useful in presenting the algorithm to define the
 following terminology: a \textbf{frontier} is the finite set of
 expressions that the algorithm considers in any one iteration. The
@@ -436,7 +435,7 @@ expressions that the algorithm considers in any one iteration. The
 the frontier. We will say that a task is \textbf{hit} by the frontier
 if there is a expression in the frontier that solves it.
 
-The E-C algorithm maintains a distribution $\mathcal{D}$ over
+The EC algorithm maintains a distribution $\mathcal{D}$ over
 expressions in $\mathcal{L}$. At each iteration, it
 \begin{enumerate}
 \item \textbf{explores} the frontier -- enumerating the $N$ most probable expressions
@@ -445,15 +444,9 @@ expressions in $\mathcal{L}$. At each iteration, it
   distribution.
 \end{enumerate}
 
-Next, we specify a representation language $\mathcal{L}$, a
-form for the distribution $\mathcal{D}$, and a compression criterion for a
-set of expressions in $\mathcal{L}$. We also describe
-procedures for the enumeration of the frontier, compression of the
-expressions, and re-estimation of $\mathcal{D}$. 
-
 \subsection{Representing typed functional programs as binary trees}
 
-Following~\cite{liang10programs} and~\cite{Briggs:2008}, we use a
+Following~\cite{liang10programs} and~\cite{briggs2006functional}, we use a
 simply typed combinatory logic -- a variable-free subset of the
 polymorphic simply-typed lambda calculus~\cite{Pierce_2002} -- as our
 program representation language. In short, the combinatory logic
@@ -479,7 +472,7 @@ returning $(+\,x\,y)$\;).
 The basis combinators can themselves be expressed in the lambda
 calculus (with definitions following directly from the equations
 above). The lambda calculus has two basic operations -- application
-and abstraction (using the $\lambda$ operator -- but in using the
+and abstraction -- but in using the
 combinatory logic we sequester uses of the abstraction operation
 inside the combinators. In doing so, we have replaced the variable
 binding of the $\lambda$ operator with the variable \emph{routing} of
@@ -602,7 +595,7 @@ $\mathcal{L}$ as a stochastic
 grammar~\cite{feldman1969grammatical}. Many stochastic grammars have
 the desirable property that the probability of an expression is the
 product of the probabilities of its subcomponents. The distribution we
-specify will be a simple verson of this, in which the
+specify will be a simple version of this, in which the
 probability of an expression is the product of the probability of its
 leaves.
 
@@ -646,7 +639,7 @@ less than~$\frac{1}{4}$\footnote{The probability mass $M_d$ of all
 Now suppose that we have a set of expressions $\mathcal{E}$, and we
 wish to estimate the maximum likelihood values of the $p_n$'s. If the
 choice of primitive at each leaf were not conditioned on the
-requesting type, we could just count all occurences of each primitive
+requesting type, we could just count all occurrences of each primitive
 in our expression set, and this would be proportional to the maximum
 likelihood estimate. This is the ML estimator for a multinomial
 distribution. However, the fact that we condition on the requesting
@@ -654,14 +647,14 @@ type makes this a considerably more difficult optimization task. One
 of the simplest approximations we can make is to calculate the
 frequency with which each primitive combinator appears in
 $\mathcal{E}$ when the requesting type is such that it could have
-been chosen. This is a straightforward calculuation, and
+been chosen. This is a straightforward calculation, and
 we use it for its convenience, finding that our empirical results
 justify its use. Future inquiry will be needed to determine to what
 extent a more accurate estimator can improve these results.
 
 \subsection{Best-first enumeration of programs}
 In order to explore the frontier of most promising programs, we need a
-procedure that enumerates the $N$ most probable programs. There has
+procedure that enumerates the $N$ most probable expressions. There has
 been recent interest in this problem, most of it focused on
 enumerating the shortest program satisfying some
 criterion~\cite{DBLP:conf/sfp/Katayama05}
@@ -907,34 +900,25 @@ uniform weighting.
 \setcounter{subfigure}{0} 
 \begin{figure}[ht]
 \centering
-\begin{subfigure}[Before]{\linewidth}
-\includegraphics[width=.9\linewidth]{figures/symreg3frontiers.pdf}
+\includegraphics[width=.8\linewidth]{figures/symreg3frontiers.pdf}
+\vspace{-.2cm}
 \caption{Learning curves as a function of frontier size.  As frontier
   size is increased, curves plateau closer to $100\%$ performance. A
   baseline search over $150000$ expressions only hits $3\%$ of the
   tasks. \label{fig:symregLearning}}
-\end{subfigure}
-
-\begin{subfigure}[After]{\linewidth}
-\includegraphics[width=.9\linewidth]{figures/symRegDiffCurricula.pdf}
+\vspace{-.3cm}
+\end{figure}
+\begin{figure}[ht]
+\centering
+\includegraphics[width=.8\linewidth]{figures/symRegDiffCurricula.pdf}
 \caption{How do different task sets affect learning curves? Learning
   curves at frontier size of $10000$ for different task
-  sets. Performance is equally good if either the constant functions
-  of the linear functions are missing, but drops dramatically when both
-  are absent, even though these only account for about $10\%$ of the
-  tasks. Performance drops even lower if we only consider ``complex''
-  quadratics.}
+  sets.} 
 \label{fig:symregCurricula}
-\end{subfigure}
-%% \begin{subfigure}[After]{.3\linewidth}\
-%% \includegraphics[width=.9\linewidth]{figures/symregCircuitDepths.pdf}
-%% \caption{Circuit depth as a function of iteration on a typical run.}
-%% \label{fig:symregDepths}
-%% \end{subfigure}
-\vspace{-.2cm}
-\caption{Symbolic regression experiment results.}
-\label{fig:symreg} 
+\vspace{-.5cm}
 \end{figure}
+
+
 
 
 %% Why do the learning curves asymptote early? One might object that a
@@ -968,7 +952,7 @@ see similarly good performance from this baseline run. In fact,
 however, the baseline run only hits $27$ of the $1000$ tasks ($3\%$),
 whereas our algorithm nears $100\%$ for a frontier of $10000$.
 
-What does the E-C algorithm learn in this task?  Inspecting the top
+What does the EC algorithm learn in this task?  Inspecting the top
 weighted primitives of the final grammars, we find many incrementers
 (e.g. (+1), (+2), etc.), several versions of expressions that
 translate to functions like $x*f(x)$ and $f(x*f(x))$, and combinations
@@ -984,7 +968,7 @@ contain a ``learnable'' curriculum, a set of tasks that serve as
 stepping stones from an impoverished representation to a rich one. We
 can test this hypothesis by varying the set of tasks to which the EC
 algorithm is exposed. If it is true, then we should see a nonlinear
-reponse to reducing the number of easy tasks, as the curriculum
+response to reducing the number of easy tasks, as the curriculum
 changes from being learnable to being unlearnable.
 
 In Figure~\ref{fig:symregCurricula}, we present learning curves
@@ -1023,14 +1007,14 @@ basic shape.
 \subsection{Boolean function learning}
 \label{sec:boolcircuits}
 
-\begin{figure}[ht]
+\begin{figure}[t]
 \includegraphics{./tablealonedoc.pdf}
 \vspace{-.5cm}
 \caption{Some learned primitives from the circuit based Boolean
   function learning experiment. We highlight compression using $NOT$,
   $E_1$ and $E_2$. \,(a)The three elementary gates used to generate
   the task set. (b) Two higher-order primitives in the induced
-  grammer. Note how $E_1$ can be used to define FALSE by taking the
+  grammar. Note how $E_1$ can be used to define FALSE by taking the
   NOT function as an argument. (c) Additional common Boolean functions
   found in the learned grammar.  \label{table:booleanCircuits}}
 \vspace{-.4cm}
@@ -1248,6 +1232,7 @@ distribution after learning than before.
   grammar over expressions \emph{after} learning. Gray levels indicate
   percent of instances (circuits/expressions) which evaluate to that
   function.\label{fig:booldistr}}
+\vspace{-.4cm}
 \end{figure}
 
 This problem is particularly suitable for inspecting the constituents
@@ -1276,6 +1261,7 @@ local minima that the majority of the runs get stuck in with performance
 around $50\%$, but several of the runs seem to take different
 trajectories to more successful representations.
 
+\vspace{-.3cm}
 \begin{figure}[h]
 \begin{subfigure}{.1\linewidth}
 \caption{\label{fig:boolLearningCurvesCircuits} }
@@ -1284,7 +1270,7 @@ trajectories to more successful representations.
 \includegraphics[width=.9\linewidth]{figures/booleancircuits3frontiers.pdf}
 \end{subfigure}
 
-\vspace{-.2cm}
+\vspace{-.32cm}
 \begin{subfigure}{.1\linewidth}
 \caption{\label{fig:boolLearningCurvesUniform}}
 \end{subfigure}
@@ -1324,23 +1310,23 @@ concepts in acquiring deep domain expertise.  Much like a human
 researcher investigating a new area of study, our algorithm tries
 different models, watches them fail or succeed, and abstracts out the
 model elements that capture relevant differences.  It recombines and
-reuses succcessful patterns of reasoning that span many problems in a
+reuses successful patterns of reasoning that span many problems in a
 domain.
 
-At their best, human processes of discovery also clearly go beyond
+At their best, human processes of discovery clearly go beyond
 what our algorithm is capable of.  The algorithm can get stuck in
 plateaus after a rapid initial increase in performance, due to its
 circular nature: it only inspects the region of the solution space
 that is typical of solutions already found.  Humans can become stuck
-in similar ways, but at least sometimes they can realize that they are
-stuck, and attempt to find another class of concepts for the remaining
+in similar ways, but at least sometimes they realize that they are
+stuck and attempt to find another class of concepts for the remaining
 unsolved tasks.  Our algorithm requires, as human learners do, a
 sufficiently graded ``curriculum'', or spectrum of problems to solve --
 simple problems provide necessary stepping stones to building complex
 representations.  Also like humans, our algorithm can adaptively
 ``self-pace'' its ways through the curriculum, figuring out which
-problems it is ready to tackle when, which problems are appropriate in
-difficulty given what it currently knows.  Yet people can sometimes
+problems it is ready to tackle when, which problems are appropriately
+difficult given what it currently knows.  Yet people can sometimes
 more intelligently compose and modify the set of problems under
 consideration, designing their own stepping stones to expand the set
 of problems they can solve.  Making bootstrap learning systems smarter
