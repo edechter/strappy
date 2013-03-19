@@ -1,0 +1,841 @@
+task name circuitTask_0
+circuit start
+binary 4 AND 2 3
+binary 3 OR 0 1
+mono 2 NOT 0
+const 0
+const 1
+circuit end
+
+task name circuitTask_1
+circuit start
+binary 3 AND 0 2
+binary 2 AND 0 1
+mono 1 NOT 0
+const 0
+circuit end
+
+task name circuitTask_2
+circuit start
+binary 4 OR 3 2
+binary 3 AND 2 0
+binary 2 AND 1 0
+const 0
+const 1
+circuit end
+
+task name circuitTask_3
+circuit start
+binary 3 OR 1 2
+binary 2 OR 1 1
+binary 1 AND 0 0
+const 0
+circuit end
+
+task name circuitTask_4
+circuit start
+mono 2 NOT 1
+binary 1 OR 0 0
+const 0
+circuit end
+
+task name circuitTask_5
+circuit start
+binary 2 OR 1 0
+const 0
+const 1
+circuit end
+
+task name circuitTask_6
+circuit start
+binary 4 AND 3 0
+binary 3 OR 1 2
+binary 2 AND 0 0
+const 0
+const 1
+circuit end
+
+task name circuitTask_7
+circuit start
+binary 5 OR 3 4
+binary 4 AND 3 3
+binary 3 AND 2 0
+binary 2 AND 0 1
+const 0
+const 1
+circuit end
+
+task name circuitTask_8
+circuit start
+binary 2 AND 1 0
+mono 1 NOT 0
+const 0
+circuit end
+
+task name circuitTask_9
+circuit start
+binary 1 AND 0 0
+const 0
+circuit end
+
+task name circuitTask_10
+circuit start
+binary 3 AND 1 2
+binary 2 AND 1 0
+const 0
+const 1
+circuit end
+
+task name circuitTask_11
+circuit start
+binary 6 OR 3 5
+binary 5 OR 0 4
+binary 4 AND 1 0
+binary 3 OR 0 2
+binary 2 AND 0 1
+const 0
+const 1
+circuit end
+
+task name circuitTask_12
+circuit start
+binary 4 OR 3 3
+binary 3 OR 0 2
+binary 2 AND 1 1
+const 0
+const 1
+circuit end
+
+task name circuitTask_13
+circuit start
+binary 2 OR 0 1
+const 0
+const 1
+circuit end
+
+task name circuitTask_14
+circuit start
+binary 5 OR 2 4
+mono 4 NOT 3
+binary 3 OR 1 0
+const 0
+const 1
+const 2
+circuit end
+
+task name circuitTask_15
+circuit start
+binary 6 AND 4 5
+binary 5 AND 3 4
+mono 4 NOT 2
+binary 3 AND 2 0
+mono 2 NOT 1
+const 0
+const 1
+circuit end
+
+task name circuitTask_16
+circuit start
+binary 2 AND 1 1
+binary 1 AND 0 0
+const 0
+circuit end
+
+task name circuitTask_17
+circuit start
+binary 4 AND 0 3
+binary 3 OR 2 2
+binary 2 AND 1 1
+const 0
+const 1
+circuit end
+
+task name circuitTask_18
+circuit start
+binary 3 AND 2 0
+binary 2 AND 1 0
+binary 1 OR 0 0
+const 0
+circuit end
+
+task name circuitTask_19
+circuit start
+binary 3 AND 2 1
+binary 2 AND 0 0
+const 0
+const 1
+circuit end
+
+task name circuitTask_20
+circuit start
+binary 5 AND 4 2
+binary 4 AND 2 3
+binary 3 OR 0 0
+binary 2 OR 1 1
+const 0
+const 1
+circuit end
+
+task name circuitTask_21
+circuit start
+binary 4 AND 3 0
+binary 3 AND 1 2
+mono 2 NOT 0
+binary 1 OR 0 0
+const 0
+circuit end
+
+task name circuitTask_22
+circuit start
+mono 3 NOT 2
+binary 2 OR 0 1
+const 0
+const 1
+circuit end
+
+task name circuitTask_23
+circuit start
+binary 4 OR 3 2
+binary 3 AND 1 0
+binary 2 OR 0 0
+const 0
+const 1
+circuit end
+
+task name circuitTask_24
+circuit start
+binary 6 AND 4 5
+binary 5 OR 3 0
+binary 4 OR 0 2
+binary 3 OR 0 0
+binary 2 OR 1 0
+const 0
+const 1
+circuit end
+
+task name circuitTask_25
+circuit start
+binary 2 OR 1 0
+const 0
+const 1
+circuit end
+
+task name circuitTask_26
+circuit start
+binary 6 OR 5 4
+mono 5 NOT 3
+binary 4 OR 2 2
+binary 3 AND 1 0
+binary 2 OR 0 1
+const 0
+const 1
+circuit end
+
+task name circuitTask_27
+circuit start
+binary 4 AND 3 2
+binary 3 OR 0 1
+binary 2 OR 0 0
+binary 1 AND 0 0
+const 0
+circuit end
+
+task name circuitTask_28
+circuit start
+binary 5 AND 0 4
+binary 4 OR 3 0
+binary 3 AND 2 1
+binary 2 AND 1 1
+const 0
+const 1
+circuit end
+
+task name circuitTask_29
+circuit start
+binary 5 OR 1 4
+binary 4 AND 3 0
+binary 3 OR 2 1
+const 0
+const 1
+const 2
+circuit end
+
+task name circuitTask_30
+circuit start
+binary 4 OR 3 2
+binary 3 OR 2 0
+binary 2 OR 1 0
+const 0
+const 1
+circuit end
+
+task name circuitTask_31
+circuit start
+binary 5 OR 4 1
+binary 4 OR 3 2
+binary 3 AND 2 0
+const 0
+const 1
+const 2
+circuit end
+
+task name circuitTask_32
+circuit start
+binary 3 OR 2 1
+binary 2 AND 1 0
+const 0
+const 1
+circuit end
+
+task name circuitTask_33
+circuit start
+binary 4 AND 3 1
+binary 3 OR 2 2
+mono 2 NOT 0
+const 0
+const 1
+circuit end
+
+task name circuitTask_34
+circuit start
+binary 3 AND 2 2
+binary 2 AND 1 0
+binary 1 AND 0 0
+const 0
+circuit end
+
+task name circuitTask_35
+circuit start
+mono 2 NOT 1
+mono 1 NOT 0
+const 0
+circuit end
+
+task name circuitTask_36
+circuit start
+binary 1 OR 0 0
+const 0
+circuit end
+
+task name circuitTask_37
+circuit start
+binary 5 AND 4 2
+mono 4 NOT 3
+binary 3 OR 1 2
+binary 2 OR 0 0
+const 0
+const 1
+circuit end
+
+task name circuitTask_38
+circuit start
+mono 5 NOT 4
+binary 4 OR 3 0
+binary 3 OR 1 2
+const 0
+const 1
+const 2
+circuit end
+
+task name circuitTask_39
+circuit start
+binary 5 AND 0 4
+binary 4 AND 1 3
+binary 3 OR 1 2
+const 0
+const 1
+const 2
+circuit end
+
+task name circuitTask_40
+circuit start
+binary 2 AND 1 1
+binary 1 AND 0 0
+const 0
+circuit end
+
+task name circuitTask_41
+circuit start
+binary 2 AND 1 0
+binary 1 AND 0 0
+const 0
+circuit end
+
+task name circuitTask_42
+circuit start
+binary 2 AND 1 1
+binary 1 OR 0 0
+const 0
+circuit end
+
+task name circuitTask_43
+circuit start
+binary 2 OR 1 0
+const 0
+const 1
+circuit end
+
+task name circuitTask_44
+circuit start
+binary 3 AND 2 0
+binary 2 OR 0 1
+mono 1 NOT 0
+const 0
+circuit end
+
+task name circuitTask_45
+circuit start
+binary 1 OR 0 0
+const 0
+circuit end
+
+task name circuitTask_46
+circuit start
+binary 4 OR 3 1
+binary 3 OR 2 1
+mono 2 NOT 1
+binary 1 AND 0 0
+const 0
+circuit end
+
+task name circuitTask_47
+circuit start
+binary 3 OR 2 2
+binary 2 OR 1 0
+const 0
+const 1
+circuit end
+
+task name circuitTask_48
+circuit start
+binary 6 AND 4 5
+binary 5 OR 3 4
+binary 4 OR 2 2
+binary 3 AND 1 0
+binary 2 AND 0 1
+const 0
+const 1
+circuit end
+
+task name circuitTask_49
+circuit start
+binary 5 OR 0 4
+binary 4 AND 3 2
+binary 3 OR 1 0
+const 0
+const 1
+const 2
+circuit end
+
+task name circuitTask_50
+circuit start
+binary 1 OR 0 0
+const 0
+circuit end
+
+task name circuitTask_51
+circuit start
+binary 3 AND 2 2
+mono 2 NOT 1
+binary 1 OR 0 0
+const 0
+circuit end
+
+task name circuitTask_52
+circuit start
+binary 2 AND 1 1
+mono 1 NOT 0
+const 0
+circuit end
+
+task name circuitTask_53
+circuit start
+binary 1 OR 0 0
+const 0
+circuit end
+
+task name circuitTask_54
+circuit start
+mono 1 NOT 0
+const 0
+circuit end
+
+task name circuitTask_55
+circuit start
+binary 4 AND 2 3
+mono 3 NOT 1
+binary 2 AND 1 0
+binary 1 OR 0 0
+const 0
+circuit end
+
+task name circuitTask_56
+circuit start
+binary 4 OR 2 3
+binary 3 AND 1 0
+binary 2 AND 1 0
+const 0
+const 1
+circuit end
+
+task name circuitTask_57
+circuit start
+binary 4 AND 2 3
+binary 3 OR 0 1
+binary 2 AND 0 1
+const 0
+const 1
+circuit end
+
+task name circuitTask_58
+circuit start
+binary 1 OR 0 0
+const 0
+circuit end
+
+task name circuitTask_59
+circuit start
+binary 5 AND 1 4
+binary 4 OR 2 3
+binary 3 AND 0 0
+mono 2 NOT 0
+const 0
+const 1
+circuit end
+
+task name circuitTask_60
+circuit start
+binary 4 AND 1 3
+binary 3 AND 1 2
+binary 2 OR 1 0
+const 0
+const 1
+circuit end
+
+task name circuitTask_61
+circuit start
+binary 5 AND 4 2
+mono 4 NOT 3
+binary 3 AND 1 0
+const 0
+const 1
+const 2
+circuit end
+
+task name circuitTask_62
+circuit start
+mono 4 NOT 3
+binary 3 OR 0 2
+binary 2 OR 1 0
+const 0
+const 1
+circuit end
+
+task name circuitTask_63
+circuit start
+binary 2 AND 0 1
+binary 1 OR 0 0
+const 0
+circuit end
+
+task name circuitTask_64
+circuit start
+binary 4 OR 3 2
+mono 3 NOT 1
+binary 2 AND 0 0
+binary 1 OR 0 0
+const 0
+circuit end
+
+task name circuitTask_65
+circuit start
+binary 3 OR 2 0
+binary 2 AND 0 1
+binary 1 AND 0 0
+const 0
+circuit end
+
+task name circuitTask_66
+circuit start
+binary 4 OR 3 3
+binary 3 OR 2 0
+binary 2 OR 0 1
+const 0
+const 1
+circuit end
+
+task name circuitTask_67
+circuit start
+binary 5 AND 4 0
+binary 4 AND 3 1
+binary 3 OR 2 0
+binary 2 OR 1 1
+const 0
+const 1
+circuit end
+
+task name circuitTask_68
+circuit start
+binary 4 OR 3 2
+mono 3 NOT 0
+binary 2 AND 0 1
+const 0
+const 1
+circuit end
+
+task name circuitTask_69
+circuit start
+binary 1 OR 0 0
+const 0
+circuit end
+
+task name circuitTask_70
+circuit start
+binary 4 OR 3 1
+mono 3 NOT 2
+mono 2 NOT 0
+binary 1 AND 0 0
+const 0
+circuit end
+
+task name circuitTask_71
+circuit start
+mono 1 NOT 0
+const 0
+circuit end
+
+task name circuitTask_72
+circuit start
+binary 2 AND 1 0
+const 0
+const 1
+circuit end
+
+task name circuitTask_73
+circuit start
+binary 5 OR 4 3
+binary 4 OR 2 3
+binary 3 AND 0 1
+binary 2 OR 0 0
+const 0
+const 1
+circuit end
+
+task name circuitTask_74
+circuit start
+binary 3 AND 2 0
+mono 2 NOT 1
+const 0
+const 1
+circuit end
+
+task name circuitTask_75
+circuit start
+binary 3 AND 2 0
+binary 2 OR 0 1
+mono 1 NOT 0
+const 0
+circuit end
+
+task name circuitTask_76
+circuit start
+binary 4 AND 3 2
+binary 3 AND 2 2
+binary 2 AND 0 1
+const 0
+const 1
+circuit end
+
+task name circuitTask_77
+circuit start
+mono 5 NOT 4
+binary 4 OR 3 2
+binary 3 AND 0 1
+const 0
+const 1
+const 2
+circuit end
+
+task name circuitTask_78
+circuit start
+binary 3 OR 2 0
+binary 2 AND 1 0
+const 0
+const 1
+circuit end
+
+task name circuitTask_79
+circuit start
+binary 3 OR 1 2
+binary 2 AND 0 1
+mono 1 NOT 0
+const 0
+circuit end
+
+task name circuitTask_80
+circuit start
+mono 3 NOT 2
+binary 2 AND 0 1
+const 0
+const 1
+circuit end
+
+task name circuitTask_81
+circuit start
+binary 2 OR 1 0
+mono 1 NOT 0
+const 0
+circuit end
+
+task name circuitTask_82
+circuit start
+mono 3 NOT 2
+binary 2 OR 0 1
+const 0
+const 1
+circuit end
+
+task name circuitTask_83
+circuit start
+binary 4 AND 0 3
+binary 3 AND 1 2
+const 0
+const 1
+const 2
+circuit end
+
+task name circuitTask_84
+circuit start
+binary 4 OR 2 3
+mono 3 NOT 1
+binary 2 OR 1 0
+const 0
+const 1
+circuit end
+
+task name circuitTask_85
+circuit start
+binary 4 OR 1 3
+binary 3 OR 0 2
+mono 2 NOT 0
+const 0
+const 1
+circuit end
+
+task name circuitTask_86
+circuit start
+binary 2 AND 1 0
+binary 1 AND 0 0
+const 0
+circuit end
+
+task name circuitTask_87
+circuit start
+binary 2 AND 1 0
+mono 1 NOT 0
+const 0
+circuit end
+
+task name circuitTask_88
+circuit start
+binary 4 OR 2 3
+binary 3 OR 0 1
+const 0
+const 1
+const 2
+circuit end
+
+task name circuitTask_89
+circuit start
+binary 3 OR 1 2
+binary 2 OR 0 1
+binary 1 AND 0 0
+const 0
+circuit end
+
+task name circuitTask_90
+circuit start
+binary 1 OR 0 0
+const 0
+circuit end
+
+task name circuitTask_91
+circuit start
+binary 5 AND 4 2
+binary 4 OR 3 2
+binary 3 AND 2 1
+mono 2 NOT 0
+const 0
+const 1
+circuit end
+
+task name circuitTask_92
+circuit start
+binary 2 OR 0 1
+const 0
+const 1
+circuit end
+
+task name circuitTask_93
+circuit start
+binary 5 AND 3 4
+mono 4 NOT 0
+binary 3 AND 1 2
+const 0
+const 1
+const 2
+circuit end
+
+task name circuitTask_94
+circuit start
+binary 4 AND 3 2
+binary 3 AND 0 2
+binary 2 AND 1 1
+const 0
+const 1
+circuit end
+
+task name circuitTask_95
+circuit start
+binary 4 AND 2 3
+binary 3 AND 1 0
+binary 2 AND 0 0
+binary 1 AND 0 0
+const 0
+circuit end
+
+task name circuitTask_96
+circuit start
+binary 4 OR 0 3
+binary 3 OR 2 1
+const 0
+const 1
+const 2
+circuit end
+
+task name circuitTask_97
+circuit start
+binary 2 OR 0 1
+const 0
+const 1
+circuit end
+
+task name circuitTask_98
+circuit start
+binary 5 OR 4 2
+binary 4 OR 3 0
+binary 3 AND 1 1
+const 0
+const 1
+const 2
+circuit end
+
+task name circuitTask_99
+circuit start
+binary 4 OR 2 3
+binary 3 OR 0 0
+binary 2 OR 0 1
+const 0
+const 1
+circuit end
+
