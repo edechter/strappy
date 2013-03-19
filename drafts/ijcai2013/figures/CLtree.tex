@@ -1,0 +1,126 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\usepackage{tikz}
+\usepackage{tikz-qtree}
+\usepackage{subcaption}
+\usetikzlibrary{arrows,automata, positioning, patterns}
+
+\begin{document}
+\begin{tikzpicture}
+\node {}
+child { node [minimum size=0pt] {}
+  child { node (S) {S} }
+  child { node (*) {*} }
+  }
+child {node (I) {I}}
+ ;
+
+\end{tikzpicture}
+
+\begin{tikzpicture}
+\node {}
+child { node  {$\lambda x$}
+  child { node (*) {$*$} }
+  child { node (x) {$x$} }
+  }
+child {node (x) {$x$}}
+ ;
+
+\end{tikzpicture}
+
+\begin{align}
+E \rightarrow \;  &( E \; E ) \\
+ & |\; S \;|\; B \;| \;C \;| \;I \\ 
+ & |\; c_i \in \text{ primitives }
+\end{align}
+
+\begin{align}
+T \rightarrow \;  &( T \mapsto  T ) \\
+ & |\; \alpha \;|\; \beta \;|\; \dots \text{ (type variables) }\\
+ & |\; Int \;|\; Bool \;| \; Real \;| \; etc.
+\end{align}
+
+
+\textbf{language} $\mathcal{L}$\\
+ 
+\textbf{tasks} $\{t_k\}_{k=1}^K$\\
+
+$t_k \; : \mathcal{L} \rightarrow \{0, 1\}$\\
+
+$e \in \mathcal{L} \text{\textbf{ solves }} t_k \text{ if } t_k(e) =
+1$\\
+
+\textbf{goal} solve as many tasks in T as possible
+
+\begin{align}
+\mathbf{S}\; f\; g\; x\; &\rightarrow (f\; x)\; (g\; x)\\ 
+\mathbf{K}\; f\; x\; y\; &\rightarrow (f\; x)\\ 
+\mathbf{I}\; x &\rightarrow  x & \text{ (identity) }
+\end{align}
+
+$\lambda x. \; * \; x \; x$\\\\
+
+$S * I $\\
+
+$(+ \; 1)\; : \; Int \rightarrow Int$\\
+
+$NOT \; : \; Bool \rightarrow Bool$\\
+
+$\sigma \rightarrow Int$\\
+
+$\sigma \rightarrow \sigma$\\
+
+
+\textbf{primitive combinators } $C = c_1, \dots, c_N$\\
+
+\textbf{associated probabilities } $D = p_1, \dots, d_N, p_i \in [0,1], \sum_i p_i = 1$\\
+
+set of $c$'s that unify with $\tau(c_n)$\\
+
+
+${ p(e)~=~\prod_{c \in C_e} p(c | \tau(c)) }$\\
+
+$p(c_n| \tau(c_n)) \propto
+\frac{p_n}{\sum_{c_j \in C_{\tau(c_n)}} p_j}$\\
+
+$p(c | \tau(c))$: probability of using primitive $c$ when
+the requesting type is $\tau(c)$. In turn, we define the conditional
+probability for each combinator $c_n$ to be $p(c_n| \tau(c_n)) \propto
+\frac{p}{\sum_{c_j \in C_{\tau(c_n)}} p_j}$.  That is, $p(c_n | \tau(c_n)$ is
+proportional to the probability of sampling $c_n$ from the multinomial
+distribution defined by the $p_n$'s, conditioned on the requesting
+type, with the constant of proportionality chosen to ensure that the\\
+
+\textbf{frontier} $\mathcal{F}$ set of expressions considered\\
+
+\textbf{frontier size} $N$ size of frontier\\
+
+a task $t$ is \textbf{hit} by $\mathcal{F}$ if $e \in \mathcal{F}$ s.t. $e$ solves $t$\\
+
+\begin{itemize}
+\item \textbf{explore} the frontier
+\item \textbf{compress} solutions to hit tasks
+\item repeat
+\end{itemize}
+
+number of unique subtrees in $e$\; $| e |$\\
+
+\begin{itemize}
+\item no application should appear more than once in the grammar
+\item every rule should be used more than once
+\item estimate the $p_i$ for each grammar element by counting
+\end{itemize}
+ 
+
+
+
+
+
+
+
+ 
+\end{document}
+
+

@@ -1,0 +1,20 @@
+\begin{circuitikz} \draw
+%%(1,0) node[nand port, thick] (nor1) {}
+(1,.75) node[nand port, thick] (nor1) {}
+(3,0) node[nand port, thick] (nor2) {}
+(3,1.5) node[nand port, thick] (nor3) {}
+(5,.75) node[nand port, thick] (nor4) {}
+
+(nor1.in 1) node[above left=.5cm] (x) {x}
+(nor1.in 2) node[below left = .5cm](y) {y}
+(x) -| (nor1.in 1)
+(y) -| (nor1.in 2)
+(x) -| (nor3.in 1)
+(y) -| (nor2.in 2)
+(nor1) -- (1.62, .75) -- (nor2.in 1)
+(nor1) -- (1.62, .75) -- (nor3.in 2)
+(nor2) -| (nor4.in 2)
+(nor3) -| (nor4.in 1);
+ \end{circuitikz}
+\caption{A standard XOR circuit built of NAND gates.}
+\label{fig:xor_circuit}

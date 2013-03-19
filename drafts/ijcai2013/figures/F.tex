@@ -1,0 +1,15 @@
+\begin{circuitikz} \draw
+(1, 0) node[left=.25] (x) {x}
+(x) node[right=.4cm, text_align=center, draw, text width=.5cm, 
+    text height=.25cm, align=center] (f1) {f}
+node[below right=0.25cm and 1.0cm of f1, nand port, thick, scale=.5] (nand) {}
+(nand) node[right=.4cm, text_align=center, draw, text width=.5cm, 
+  text height=.25cm, align=center] (f2) {f}
+(f2) node[right=.4cm] (out) {}
+
+(x) -- (f1)
+(f1) -| (nand.in 1)
+(x) -| (1, -.63) -- (nand.in 2)
+(nand) -- (f2)
+(f2) -- (out);
+\end{circuitikz}

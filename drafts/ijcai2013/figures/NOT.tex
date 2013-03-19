@@ -1,0 +1,8 @@
+\begin{circuitikz}[scale=1, transform shape] \draw
+(0, 0) node[left=.25] (x) {x}
+(x) node[right=1cm, nand port, thick, scale=.5] (nand) {}
+(nand) node[right=1cm] (out) {}
+(x) -| (nand.in 1)
+(x) -| (nand.in 2)
+(nand) -- (out);
+\end{circuitikz}
