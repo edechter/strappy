@@ -1,5 +1,0 @@
-[(not,(nand True)),(not,(nand True)),(and,((BB (nand True)) nand)),(and,((BB (nand True)) nand))]
- 
-[(not,(nand True)),(not,(nand True)),(and,((BB (nand True)) nand)),(and,((BB (nand True)) nand))]
- 
-[(not,(nand True)),(not,(nand True)),(and,((BB (nand True)) nand)),(and,((BB (nand True)) nand))]

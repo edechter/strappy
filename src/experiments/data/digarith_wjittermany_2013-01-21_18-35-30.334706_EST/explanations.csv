@@ -1,9 +1,0 @@
-[(not,((S nand) I)),(not,((S nand) I))]
- 
-[(not,((S nand) I)),(not,((S nand) I)),(and,((B (B ((S nand) I))) nand)),(and,((B (B ((S nand) I))) nand)),(or,((BC ((B (S nand)) nand)) ((S nand) I))),(or,((BC ((BC (S nand)) ((S nand) I))) nand))]
- 
-[(not,((S nand) I)),(not,((S nand) I)),(and,((B (B ((S nand) I))) nand)),(and,((B (B ((S nand) I))) nand))]
- 
-[(not,((S nand) I)),(not,((S nand) I)),(and,((B (B ((S nand) I))) nand)),(and,((B (B ((S nand) I))) nand))]
- 
-[(not,((S nand) I)),(not,((S nand) I)),(and,((B (B ((S nand) I))) nand)),(and,((B (B ((S nand) I))) nand))]
