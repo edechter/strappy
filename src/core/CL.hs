@@ -21,12 +21,10 @@ import Expr
 data Comb = CApp {lComb :: Comb, 
                   rComb ::  Comb,
                   cType :: Type,
-                  cAppDepth :: Int
-                  }
+                  cAppDepth :: Int}
           | CNode {cName :: String,
                    cExpr :: Expr,
-                   cType :: Type
-                   }
+                   cType :: Type}
           | CTerminal {cType :: Type}
 
 cDepth :: Comb -> Int
