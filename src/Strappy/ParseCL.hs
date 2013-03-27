@@ -10,8 +10,6 @@ import Text.ParserCombinators.Parsec ((<|>), (<?>))
 import Text.Parsec.Language (haskellDef)
 import Control.Applicative ((<$>), (<*>), (*>), (<*))
 import qualified Data.HashMap as HMap
-import qualified CombMap as CM
-import CombMap (CombMap)
 import Control.Monad.Error
 import Control.Monad.State
 import Data.Char
@@ -23,6 +21,9 @@ import Strappy.CL
 import Strappy.Expr
 import Strappy.StdLib 
 import Strappy.Compress
+import qualified Strappy.CombMap as CM
+import CombMap (CombMap)
+
 
 eval :: NamedLib -> String -> Either String Expr
 eval lib s =  liftM reduceComb $ parseExpr lib s

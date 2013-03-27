@@ -13,7 +13,7 @@ import Strappy.Task
 import Strappy.StdLib
 import Strappy.Data
 import qualified Strappy.CombMap as CM
-import  Strappy.CombMap (CombMap)
+import Strappy.CombMap (CombMap)
 import Strappy.Grammar
 
 data Experiment = Experiment {expName :: String, -- ^ name of experiment

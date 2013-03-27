@@ -4,16 +4,16 @@
 -- | This module contains functions for compressing a set of
 -- combinators.
 
-module Compress where
+module Strappy.Compress where
 
 import Control.Monad.State 
 import Data.List (foldl')
 import Debug.Trace
 
-import CL
-import Type
-import qualified CombMap as CM
-import CombMap (CombMap)
+import Strappy.CL
+import Strappy.Type
+import qualified Strappy.CombMap as CM
+import Strappy.CombMap (CombMap)
 
 
 -- | Record all unique combinators that satisfy the following:

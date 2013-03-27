@@ -1,6 +1,6 @@
 -- CombMap.hs
 
-module CombMap 
+module Strappy.CombMap 
 (
 
  CombMap
@@ -98,7 +98,7 @@ import qualified Prelude as Prelude
 import Data.HashMap 
 import Data.Hashable
 
-import CL
+import Strappy.CL
 
 type CombMap a = Map Comb a
 

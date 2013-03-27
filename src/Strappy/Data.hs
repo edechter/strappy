@@ -1,12 +1,12 @@
 -- Data.hs
 -- Eyal Dechter
 
-module Data where
+module Strappy.Data where
 
 
-import Expr
-import CL
-import Type
+import Strappy.Expr
+import Strappy.CL
+import Strappy.Type
 
 type Datum = [Comb]
 type DataSet = [Datum]

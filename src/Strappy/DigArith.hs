@@ -1,7 +1,7 @@
 -- DigArith.hs
 {-# Language ParallelListComp #-} 
 
-module DigArith where
+module Strappy.DigArith where
 
 import Control.Monad.State
 import Data.Maybe
@@ -9,21 +9,21 @@ import qualified Data.HashMap as HMap
 import Control.Monad.Random
 import Debug.Trace
 
-import Experiment
-import Type
+import Strappy.Experiment
+import Strappy.Type
 
-import Type
-import CL
-import Expr
-import Task
-import StdLib
-import Data
-import qualified CombMap as CM
-import CombMap (CombMap)
-import Grammar
-import Routers 
-import EnumBF
-import ParseCL hiding (eval)
+import Strappy.Type
+import Strappy.CL
+import Strappy.Expr
+import Strappy.Task
+import Strappy.StdLib
+import Strappy.Data
+import qualified Strappy.CombMap as CM
+import Strappy.CombMap (CombMap)
+import Strappy.Grammar
+import Strappy.Routers 
+import Strappy.EnumBF
+import Strappy.ParseCL hiding (eval)
 
 
 
