@@ -1,6 +1,6 @@
 -- ParseCL.hs
 
-module ParseCL where
+module Strappy.ParseCL where
 
 -- | standard library imports
 import qualified Text.ParserCombinators.Parsec as P
@@ -18,11 +18,11 @@ import Data.Char
 
 -- | local imports
 
-import Type
-import CL
-import Expr
-import StdLib 
-import Compress
+import Strappy.Type
+import Strappy.CL
+import Strappy.Expr
+import Strappy.StdLib 
+import Strappy.Compress
 
 eval :: NamedLib -> String -> Either String Expr
 eval lib s =  liftM reduceComb $ parseExpr lib s

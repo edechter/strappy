@@ -13,9 +13,9 @@ import Control.Monad.State
 import Debug.Trace
 
 -- | local imports
-import Type
-import CLError
-import Expr
+import Strappy.Type
+import Strappy.CLError
+import Strappy.Expr
                           
 -- | Define combinators -------
 data Comb = CApp {lComb :: Comb, 

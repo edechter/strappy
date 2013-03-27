@@ -1,11 +1,11 @@
 -- Expr.hs
 {-# Language BangPatterns #-}
 
-module Expr where
+module Strappy.Expr where
 
 import Debug.Trace
 
-import Type
+import Strappy.Type
 
 
 -- define an expression

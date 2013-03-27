@@ -1,18 +1,18 @@
 -- StdLib (Standard Combinator Library)
 {-# Language BangPatterns #-}
 
-module StdLib where
+module Strappy.StdLib where
 import Debug.Trace
 
-import qualified CombMap as CM
-import CombMap (CombMap)
 import qualified Data.HashMap as HMap
 
-import Type
-import CL
-import Expr
-import Grammar
-import Routers (cS, cB, cC, cSS, cSB, cSC, 
+import qualified Strappy.CombMap as CM
+import Strappy.CombMap (CombMap)
+import Strappy.Type
+import Strappy.CL
+import Strappy.Expr
+import Strappy.Grammar
+import Strappy.Routers (cS, cB, cC, cSS, cSB, cSC, 
                   cBS, cBB, cBC, cCS, cCB, cCC,
                   cSSS, cBCB, routers)
 

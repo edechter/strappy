@@ -1,6 +1,6 @@
 -- EnumBF
 
-module EnumBF where 
+module Strappy.EnumBF where 
 
 import Data.Function (on)
 import Control.Monad.State
@@ -10,14 +10,14 @@ import Data.PQueue.Max (MaxQueue)
 import qualified Data.PQueue.Max as PQ
 import Debug.Trace 
 
-import Type
-import CL
-import StdLib
-import Expr
-import CLError
-import CombMap (CombMap, (!))
-import qualified CombMap as CM
-import Grammar
+import Strappy.Type
+import Strappy.CL
+import Strappy.StdLib
+import Strappy.Expr
+import Strappy.CLError
+import Strappy.CombMap (CombMap, (!))
+import qualified Strappy.CombMap as CM
+import Strappy.Grammar
 
 
 data Turn = L | R deriving (Show, Eq)

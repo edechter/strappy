@@ -1,6 +1,6 @@
 -- GraphSearch.hs
 
-module GraphSearch where
+module Strappy.GraphSearch where
 
 import Debug.Trace
 

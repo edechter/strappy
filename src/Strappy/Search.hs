@@ -4,7 +4,7 @@
 -- | This module contains functions for searching over CL libraries
 -- given a dataset.
 
-module Search where
+module Strappy.Search where
 
 import qualified Data.Map as Map
 import qualified Data.List as List
@@ -17,24 +17,24 @@ import Data.Maybe
 import Data.Function (on)
 import Debug.Trace
 
-import Type
-import CL
-import Expr
-import CLError
-import EnumBF
-import StdLib
-import Task
-import Data
-import CompressionSearch
-import ParseCL
-import Grammar
-import DigArith
+import Strappy.Type
+import Strappy.CL
+import Strappy.Expr
+import Strappy.CLError
+import Strappy.EnumBF
+import Strappy.StdLib
+import Strappy.Task
+import Strappy.Data
+import Strappy.CompressionSearch
+import Strappy.ParseCL
+import Strappy.Grammar
+import Strappy.DigArith
 
-import qualified CombMap as CM
-import CombMap (CombMap)
-import qualified Compress as CP (getUniqueTrees, compress2)
-import Compress (Index)
-import Experiment
+import qualified Strappy.CombMap as CM
+import Strappy.CombMap (CombMap)
+import qualified Strappy.Compress as CP (getUniqueTrees, compress2)
+import Strappy.Compress (Index)
+import Strappy.Experiment
 
 data SearchLogEntry = SearchLogEntry { searchGrammar :: ! Grammar,
                                        searchExplanation :: ! [(Task, Comb)]

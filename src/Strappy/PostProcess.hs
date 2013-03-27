@@ -1,6 +1,6 @@
 --PostProcess.hs
 
-module PostProcess where
+module Strappy.PostProcess where
 
 
 import System.IO
@@ -20,16 +20,16 @@ import Text.Parsec.Language (haskellDef)
 import Control.Applicative ((<$>), (<*>), (*>), (<*))
 
 
-import Search
-import CL
-import Task
-import Type
-import qualified CombMap as CM
-import CombMap (CombMap)
-import Grammar
-import Experiment
-import StdLib
-import ParseCL
+import Strappy.Search
+import Strappy.CL
+import Strappy.Task
+import Strappy.Type
+import qualified Strappy.CombMap as CM
+import Strappy.CombMap (CombMap)
+import Strappy.Grammar
+import Strappy.Experiment
+import Strappy.StdLib
+import Strappy.ParseCL
 
 
 allCombs :: [SearchLogEntry] -> [Comb]

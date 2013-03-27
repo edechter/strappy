@@ -1,7 +1,7 @@
 -- CompressionSearch.hs
 {-# Language FlexibleInstances #-}
 
-module CompressionSearch where
+module Strappy.CompressionSearch where
 
 import Control.Monad.State
 import Data.List (sortBy, foldl', nub)
@@ -13,13 +13,13 @@ import Data.Function (on)
 import Debug.Trace
 
 
-import CL
-import qualified CombMap as CM
-import qualified Compress as CP (getUniqueTrees)
+import Strappy.CL
+import qualified Strappy.CombMap as CM
+import qualified Strappy.Compress as CP (getUniqueTrees)
 
-import CombMap (CombMap)
-import Task
-import GraphSearch
+import Strappy.CombMap (CombMap)
+import Strappy.Task
+import Strappy.GraphSearch
 
 
 nullIndex :: CombMap Int

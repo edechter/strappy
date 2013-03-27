@@ -1,11 +1,11 @@
 -- Routers.hs
 
-module Routers where
+module Strappy.Routers where
 
-import Type
-import CL
-import Expr
-import qualified CombMap  as CM
+import Strappy.Type
+import Strappy.CL
+import Strappy.Expr
+import qualified Strappy.CombMap  as CM
 
 
 -- | define some oft used type variables

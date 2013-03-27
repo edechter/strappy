@@ -1,7 +1,7 @@
 -- CLError.hs
 -- | Defines errors for the CL library. 
 
-module CLError where
+module Strappy.CLError where
 
 import Control.Monad.Error
 import Text.ParserCombinators.Parsec

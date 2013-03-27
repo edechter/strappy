@@ -1,18 +1,18 @@
 -- Grammar.hs
 
-module Grammar where
+module Strappy.Grammar where
 
 import Data.List (intersect, sortBy)
 import Control.Monad.State
 import Debug.Trace
 import Data.Maybe
 
-import CL 
-import Type
-import qualified CombMap as CM
-import CombMap (CombMap)
-import Compress
-import Task
+import Strappy.CL 
+import Strappy.Type
+import qualified Strappy.CombMap as CM
+import Strappy.CombMap (CombMap)
+import Strappy.Compress
+import Strappy.Task
 
 
 

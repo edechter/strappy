@@ -1,6 +1,6 @@
 -- Runs.hs
 {-# Language BangPatterns #-}
-module Run where
+module Strappy.Run where
 
 import System.IO
 import qualified Data.Map as Map
@@ -9,18 +9,18 @@ import Control.Exception (evaluate)
 import Data.Time.Clock
 import Debug.Trace
 
-import Type
-import CL
-import Expr
-import StdLib
-import EnumBF
-import Task
-import Search
-import qualified CombMap as CM
-import Experiment
-import qualified Compress as CP
-import PostProcess 
-import Grammar
+import Strappy.Type
+import Strappy.CL
+import Strappy.Expr
+import Strappy.StdLib
+import Strappy.EnumBF
+import Strappy.Task
+import Strappy.Search
+import qualified Strappy.CombMap as CM
+import Strappy.Experiment
+import qualified Strappy.Compress as CP
+import Strappy.PostProcess 
+import Strappy.Grammar
 
 runExp :: Experiment -> String -- ^ filename 
        -> IO ()

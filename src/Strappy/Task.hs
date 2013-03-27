@@ -1,11 +1,11 @@
 -- Task.hs
 
 -- | A task is a function from a combinator to a reward. 
-module Task where
+module Strappy.Task where
 
-import Expr
-import CL
-import Type
+import Strappy.Expr
+import Strappy.CL
+import Strappy.Type
 
 type Reward = Double
 data Task =  Task {taskName :: String, 

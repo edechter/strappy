@@ -1,17 +1,17 @@
 -- Visualize.hs
 
-module Visualize where
+module Strappy.Visualize where
 
 import Data.GraphViz
 import Data.Graph.Inductive
 
-import StdLib
-import Routers
-import CL
-import qualified Expr as Expr
-import Type
-import ParseCL
-import CombMap (CombMap)
+import Strappy.StdLib
+import Strappy.Routers
+import Strappy.CL
+import qualified Strappy.Expr as Expr
+import Strappy.Type
+import Strappy.ParseCL
+import Strappy.CombMap (CombMap)
 
 import Debug.Trace
 

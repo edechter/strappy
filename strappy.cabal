@@ -42,7 +42,25 @@ library
            mtl          >= 2.0.1.0,
            transformers >= 0.2.2.0,
            containers   >= 0.4.2.1 
-        exposed-modules: Strappy.Type
+        exposed-modules: 
+            Strappy.Type,
+            Strappy.CL,
+            Strappy.Expr,
+            Strappy.Grammar,
+            Strappy.Routers,
+            Strappy.StdLib,     
+            Strappy.EnumBF,
+            Strappy.CompressionSearch,
+            Strappy.GraphSearch,
+            Strappy.Run,
+            Strappy.Task,
+            Strappy.Compress,
+            Strappy.Experiment,
+            Strappy.ParseCL,
+            Strappy.Search,
+            Strappy.Visualize,
+            Strappy.CLError.hs
+            Strappy.PostProcess
         ghc-options: -Wall -fwarn-tabs -O2
         hs-source-dirs: src    
 
