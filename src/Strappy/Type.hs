@@ -6,7 +6,7 @@
 -- | This module defines a simple type system for use with the
 -- combinatory logic implemented in this package. 
 
-module Type where
+module Strappy.Type where
 
 -- | standard library imports
 import qualified Data.Set as Set

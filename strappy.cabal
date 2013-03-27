@@ -1,0 +1,55 @@
+Name:                strappy
+Version:             0.0
+License:             GPL
+License-file:        LICENSE
+Author:              Eyal Dechter
+Maintainer:          Eyal Dechter <eyaldechter@gmail.com>
+Stability:           experimental
+Homepage:            https://bitbucket.org/edechter/strappy                            
+Build-Type:          Simple
+Cabal-Version:       >=1.8
+Description: 
+
+    This package includes modules and scripts for concept learning via
+    program induction, a research program lead by Eyal Dechter in Josh
+    Tenenbaum's Computational Cognitive Science Group at MIT.
+
+-- Extra-source-files: 
+source-repository head
+                  type: git
+                  location: git://github.com/edechter/strappy.git
+
+-- You can disable the doctests test suite with -f-test-doctests
+flag test-doctests
+     default: True
+     manual: True
+
+-- You can disable the hunit test suite with -f-test-hunit
+flag test-hunit
+  default: True
+  manual: True
+
+-- Build the properties test if we're building tests
+flag test-properties
+  default: True
+  manual: True
+
+
+library
+        build-depends: 
+           base,
+           MemoTrie,
+           mtl          >= 2.0.1.0,
+           transformers >= 0.2.2.0,
+           containers   >= 0.4.2.1 
+        exposed-modules: Strappy.Type
+        ghc-options: -Wall -fwarn-tabs -O2
+        hs-source-dirs: src    
+
+test-suite properties
+        type:   exitcode-stdio-1.0
+        main-is: properties.hs
+        ghc-options: 
+        hs-source-dirs: tests
+        
+                    

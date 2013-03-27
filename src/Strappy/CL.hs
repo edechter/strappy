@@ -1,6 +1,6 @@
 {-# Language GeneralizedNewtypeDeriving, BangPatterns #-}
 
-module CL where 
+module Strappy.CL where 
 
 -- | standard library imports
 import qualified Data.Map as Map
