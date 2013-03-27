@@ -22,7 +22,7 @@ import Strappy.Expr
 import Strappy.StdLib 
 import Strappy.Compress
 import qualified Strappy.CombMap as CM
-import CombMap (CombMap)
+import Strappy.CombMap (CombMap)
 
 
 eval :: NamedLib -> String -> Either String Expr
