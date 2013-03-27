@@ -92,7 +92,7 @@ test-suite properties
                 test-framework-quickcheck2 >= 0.2,   
                 QuickCheck        >= 2.5.1.1                
         type:   exitcode-stdio-1.0
-        ghc-options: -w -threaded -rtsopts -with-rtsopts=-N             
+        ghc-options: -w -threaded -rtsopts -with-rtsopts=-N -fhpc -hpcdir dist/hpc/strappy-0.0
         main-is: properties.hs
         hs-source-dirs: tests
         
