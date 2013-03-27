@@ -77,6 +77,8 @@ library
             Strappy.Visualize
             Strappy.CLError
             Strappy.PostProcess
+            Strappy.CombMap
+            Strappy.DigArith
 
         ghc-options: -O2 
         hs-source-dirs: src    
@@ -84,11 +86,14 @@ library
 test-suite properties
         build-depends:
                 base,
+                strappy,
                 test-framework  >= 0.6,
-                test-framework-th >= 0.2.4 
+                test-framework-th >= 0.2.4, 
+                test-framework-quickcheck2 >= 0.2,   
+                QuickCheck        >= 2.5.1.1                
         type:   exitcode-stdio-1.0
+        ghc-options: -w -threaded -rtsopts -with-rtsopts=-N             
         main-is: properties.hs
-        ghc-options: -fhpc -hpcdir dist/hpc/strappy-0.0
         hs-source-dirs: tests
         
                     
