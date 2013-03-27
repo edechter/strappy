@@ -1,0 +1,90 @@
+Name:                strappy
+Version:             0.0
+License:             GPL
+License-file:        LICENSE
+Author:              Eyal Dechter
+Maintainer:          Eyal Dechter <eyaldechter@gmail.com>
+Stability:           experimental
+Homepage:            https://bitbucket.org/edechter/strappy                            
+Build-Type:          Simple
+Cabal-Version:       >=1.8
+Description: 
+
+    This package includes modules and scripts for concept learning via
+    program induction, a research program lead by Eyal Dechter in Josh
+    Tenenbaum's Computational Cognitive Science Group at MIT.
+
+-- Extra-source-files: 
+source-repository head
+                  type: git
+                  location: git://github.com/edechter/strappy.git
+
+-- You can disable the doctests test suite with -f-test-doctests
+flag test-doctests
+     default: True
+     manual: True
+
+-- You can disable the hunit test suite with -f-test-hunit
+flag test-hunit
+  default: True
+  manual: True
+
+-- Build the properties test if we're building tests
+flag test-properties
+  default: True
+  manual: True
+
+
+library
+        build-depends: 
+           base,
+           MemoTrie,
+           mtl          >= 2.0.1.0,
+           transformers >= 0.2.2.0,
+           containers   >= 0.4.2.1,
+           hashable     >= 1.1.2.5,
+           hashmap      >= 1.3.0.1,
+           pqueue       >= 1.2.0,
+           list-extras  >= 0.4.1.1,
+           time         >= 1.4,
+           parsec       >= 3.1.2,
+           ghc          >= 7.4.1,
+           MonadRandom  >= 0.1.8,
+           fgl          >= 5.4.2.4,
+           graphviz     >= 2999.14.1.0,
+           MissingH     >= 1.2.0.0,
+           split        >= 0.1.4.3,
+           filepath     >= 1.3.0.0,
+           directory    >= 1.1.0.2
+
+        exposed-modules: 
+            Strappy.Type
+            Strappy.CL
+            Strappy.Expr
+            Strappy.Grammar
+            Strappy.Data
+            Strappy.Routers
+            Strappy.StdLib
+            Strappy.EnumBF
+            Strappy.CompressionSearch
+            Strappy.GraphSearch
+            Strappy.Run
+            Strappy.Task
+            Strappy.Compress
+            Strappy.Experiment
+            Strappy.ParseCL
+            Strappy.Search
+            Strappy.Visualize
+            Strappy.CLError
+            Strappy.PostProcess
+
+        ghc-options: -Wall -fwarn-tabs -O2
+        hs-source-dirs: src    
+
+test-suite properties
+        type:   exitcode-stdio-1.0
+        main-is: properties.hs
+        ghc-options: 
+        hs-source-dirs: tests
+        
+                    
