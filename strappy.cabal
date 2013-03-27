@@ -78,7 +78,7 @@ library
             Strappy.CLError
             Strappy.PostProcess
 
-        ghc-options: -Wall -fwarn-tabs -O2
+        ghc-options: -Wall -fwarn-tabs -O2 -fhpc
         hs-source-dirs: src    
 
 test-suite properties
