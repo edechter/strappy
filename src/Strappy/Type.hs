@@ -19,7 +19,6 @@ import Control.Monad.Error
 import Control.Monad.State
 
 import Data.MemoTrie
-import Debug.Trace
 
 -- | define a type scheme
 type Id = String
