@@ -2,6 +2,8 @@
 
 \usepackage{amsmath}
 \usepackage{ amssymb }
+\usepackage{algorithm}
+\usepackage{algpseudocode}
 \usepackage{graphicx}
 \usepackage{syntax}
 \usepackage{tikz}
@@ -16,8 +18,8 @@
 
 \renewcommand{\grammarlabel}[2]{#1 #2}
 
-\DeclareMathOperator*{\argmin}{arg\,min}
-\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{argmin}
+\DeclareMathOperator*{\argmax}{argmax}
 
 \author{Eyal Dechter}
 \begin{document}
@@ -183,6 +185,24 @@ guide searching over the $e_i$. This suggests the following iterative
 heuristic search algorithm. At iteration $j$, let $G^{(j)}$ be the
 current best value of $G$. 
 
+\begin{algorithm}
+\caption{Hierarchical program induction (E-C)}\label{alg:basic-progind}
+\begin{algorithmic}[1]
+\State  \textbf{Exploration step: } Let $F$ be a set of $T$ samples
+  i.i.d from $p_{e|G}(\cdot | G^{(j)})$.
+\State \textbf{Compression step: } 
+\begin{align*}
+G^{(j+1)}, \{e^{(j+1)}_i\} &= 
+\argmax_{G, \{e_i | e_i \in F \}}
+\sum_i \left( 
+\log{p_{t|e}(t_i|e_i)}+ 
+\log{p_{e|G}(e_i|G)} \right )\\
+&+
+\log{p_{G|\theta}(G|\theta)}
+\end{align*}
+\end{algorithmic}
+\end{algorithm}
+
 \begin{enumerate}
 \item \textbf{Exploration step: } Let $F$ be a set of $T$ samples
   i.i.d from $p_{e|G}(\cdot | G^{(j)})$.
@@ -196,6 +216,58 @@ $$G^{(j+1)}, \{e^{(j+1)}_i\} =
 \log{p_{G|\theta}(G|\theta)}
 $$
 \end{enumerate}
+
+\subsection{An online algorithm}
+
+Here we present an online version of the algorithm that only chooses
+an expression for each task once. We can view the problem as MAP
+estimation of the unobserved variables in the following graphical
+model:
+
+\begin{figure}[h]
+\begin{tikzpicture}[->, circle]
+
+\node[obs] (theta) {$\theta$} ;
+\node[latent, below=of theta] (G) {G} 
+   child {node [latent] (e1) {$e_1$} 
+      child {node [obs] (t1) {$t_1$}}}
+   child {node [latent] (e2) {$e_2$} 
+      child {node [obs] (t2) {$t_2$}}}
+   child {node [latent] (e3) {$e_3$} 
+      child {node [obs] (t3) {$t_3$}}}
+   child {node [latent] (e4) {$e_4$} 
+      child {node [obs] (t5) {$t_4$}}}
+   child {node  (edots) {$\dots$} edge from parent[draw=none] 
+      child {node  (tdots) {$\dots$} edge from parent[draw=none]}};
+
+
+\edge {theta} {G};
+
+\end{tikzpicture}
+\end{figure}
+
+
+We want to choose $e_i$ and $G$ to maximize our objective function. We
+will perform the following iterative procedure. Given a current
+setting of $G$, set $e_i$ to optimize the weights on the edges to
+$t_i$ and $G$. Update $G$ to optimize the weight on the edge to
+$\theta$ and all the edges to previous set expressions $e_j, j\leq
+i$.
+
+\begin{algorithm}
+\caption{Online hierarchical program induction}\label{alg:online-progind}
+\begin{algorithmic}
+\State Initialize $G_0$.
+\For{$i\gets 1, \dots$}
+\State $e_i^* = \argmax_{e} \log p(t_i|e_i) + \log p(e_i|G_{i-1}) $
+\State $G_i = \argmax_{G} \log p(G|\theta) + \sum_{j \leq i} \log p(e_i|G) $
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+
+
+
 
 
 %% We can break this joint maximization into an iteration of
