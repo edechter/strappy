@@ -36,6 +36,8 @@ cDepth (CApp _ _ _ d) = d
 cDepth (CTerminal _ ) = error "cDepth: A CTerminal has no depth"
 
 mkAppDepth :: Comb -> Comb -> Int
+-- | Calcuate the depth of the combinator resulting from an
+-- application.
 mkAppDepth c1 c2 = 1 + max (cDepth c1) (cDepth c2)
 
 isCNode (CNode{}) = True
@@ -52,12 +54,15 @@ app m1 m2 = do c1 <- m1
                            in Right $ CApp c1 c2 t d 
 
 app' :: Comb -> Comb -> Comb
+-- | Returns the combinator resulting from the application of two
+-- combinators. Throws error if there is a type mismatch. 
 app' c1 c2 = case getAppType c1 c2 of
                Left err -> error $ "Error in app' in CL.hs: " ++ err
                Right t -> let d = mkAppDepth c1 c2
                               in CApp c1 c2 t d
 
 infixl 4 <:>
+-- | Alias for app.
 (<:>) = app
 
 infixl 4 <::>
@@ -83,28 +88,36 @@ instance Eq Comb where
     a == b = False
 
 reduceComb :: Comb -> Expr
+-- | Convert a combinator to an expression and reduce. 
 reduceComb c =  reduce ( comb2Expr c)
 
 instance Ord Comb where 
     compare c1 c2 = compare (show c1) (show c2)
 
 num2C :: Int -> Comb 
+-- | Convert integer to a combinator.
 num2C i = CNode (show i) (N i) tInt
 
-dOp2C :: String -> (Int -> Int -> Int) -> Comb
+dOp2C :: String -- ^ operator name
+      -> (Int -> Int -> Int) -- ^ operator
+      -> Comb
+-- | Convert a binary integer operator to an expression.
 dOp2C opString op = CNode opString func (tInt ->-  tInt ->- tInt)
     where func = Func $ \(N !x) -> Func $ \(N !y) -> N $ op x y
 
 bool2C :: Bool -> Comb
+-- | Convert a boolean value to a combinator.
 bool2C c = CNode (show c) (B c) tBool
 
--- | get type outside type monad
 getType :: Comb -> Either String Type
+-- | Get the type of a combinator outside the type inference monad.
 getType (CNode _ _ t) = Right t
 getType c@(CApp c1 c2 _ _) = getAppType c1 c2
 getType c@(CTerminal t) = Right t
 
 getAppType :: Comb -> Comb -> Either String Type
+-- | Returns the type of an application of two combinators. If there
+-- is a type mismatch, returns Left.
 getAppType c1 c2  
     = let st = do t1 <- lift (getType c1) >>= freshInst
                   t2 <- lift (getType c2) >>= freshInst
@@ -116,13 +129,19 @@ getAppType c1 c2
                               ++  show c1 ++ " to " ++ show c2
                     Just subst -> return $ toType (apply subst t1)
       in liftM fst $ runStateT st 0
-                                         
-
+                                    
+     
+sub :: TyVar -> Type -> Comb -> Comb
+-- | Apply a substitution to a type inside a combinator.
 sub s (TVar u) c@(CNode _ _ t) = c{cType = apply [(s, TVar u)] (cType c)}
-                                      
+
+getTvs :: Comb -> [TyVar]
+-- | Returns all type variables used in a combinator                                      
 getTvs (CNode _ _ t) = tv t
 getTvs (CApp cl cr _ _ ) = getTvs cl `union` getTvs cr
 
+comb2Expr :: Comb -> Expr
+-- | Returns expression associated with combinator. 
 comb2Expr c@(CApp c1 c2 _ _ ) = App (comb2Expr c1) (comb2Expr c2)
 comb2Expr c@(CNode _ e _) = e
 
