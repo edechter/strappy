@@ -3,8 +3,9 @@
 {-# Language GeneralizedNewtypeDeriving, BangPatterns,
   DeriveFunctor #-}
 
--- | This module defines a simple type system for use with the
--- combinatory logic implemented in this package. 
+-- | This module defines a Hindley-Milner type system. It is based on
+-- Mark P. Jone's paper "Typing Haskell in Haskell"
+-- <http://web.cecs.pdx.edu/~mpj/thih/>.
 
 module Strappy.Type (
                     -- * Types
@@ -23,6 +24,7 @@ module Strappy.Type (
                     , apply
                     , merge
                     , match
+                    , eqModTyVars
                     , fromType
                     , toType
                     , tv
@@ -102,22 +104,38 @@ instance HasKind Type where
 
 infixr 4 ->-
 (->-) :: Type -> Type -> Type
+-- | Function application.
+--
+-- >>> tInt ->- tInt
+-- (Int -> Int)  
 a ->- b = TAp (TAp tArrow a) b
 
 fromType :: Type -> Type
+-- | Get the source type of a function type (if it is not a function
+-- type then error).
 fromType (TAp (TAp tArrow a) b) = a
+fromType t = error $ "Cannot apply fromType to: " ++ show t
 
 toType :: Type -> Type
+-- | Get the target type of a function type (if it is not a function
+-- type then error).
 toType (TAp (TAp tArrow a) b) = b
 
 mkTVar :: Int -> Type 
+-- | Convenience function that returns a singleton type consisting of
+-- a type variable with specified integer id.
+--
+-- >>> mkTVar 5
+-- v5
 mkTVar i = TVar (TyVar (enumId i) Star)
 
 isTAp :: Type -> Bool
+-- | Returns true if type is a function type. 
 isTAp (TAp t1 t2) = True
 isTAp _ = False
 
 isTVar :: Type -> Bool
+-- | Returns true if type is a singleton type variable.
 isTVar (TVar _) = True
 isTVar _ = False
 
@@ -128,8 +146,12 @@ instance Show Type where
                          (TAp tArrow a) -> "(" ++ show a ++ " -> " ++ show t2 ++ ")"
                          otherwise -> "(" ++ show t1 ++ " " ++ show t2 ++ ")" 
 
---  type equality modulo type variables
-eqModTyVars :: Type -> Type -> Bool
+
+eqModTyVars :: Type -- ^ t1
+            -> Type -- ^ t2
+            -> Bool
+-- | Type equality modulo type variables. Returns true if the mgu
+-- susbtitution from t1 to t2 is just a renaming of type variables.
 eqModTyVars t1 t2 = case mgu t1 t2 of
                       Just s -> all (\v -> isTVar (snd v)) s
                       Nothing -> False
