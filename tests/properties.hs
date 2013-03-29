@@ -8,6 +8,10 @@ import Test.Framework.Providers.QuickCheck2
 
 -- package modules
 import Strappy.Type
+import Strappy.CL
+import Strappy.Expr
+import qualified Strappy.CombMap as CM
+import Strappy.StdLib
 
 instance Arbitrary TyVar where
     arbitrary = liftM2 TyVar (liftM (enumId . abs) arbitrary) (return Star)
@@ -35,6 +39,23 @@ prop_mergeSameSubst s = merge s s == Just (s ++ s)
 prop_match t1 t2 = case match t1 t2 of
                      Just s -> apply s t1 == t2 
                      Nothing -> True
+
+----------------------------------------------------------------------
+-- Testing combinators (CL.hs)
+----------------------------------------------------------------------
+instance Arbitrary Comb where
+    arbitrary = sized combgen
+
+combgen 0 = oneof $ map return (CM.elems stdlib')
+combgen n | n < 10 = liftM4 CApp subcomb subcomb (return tInt) (return 0)
+          where subcomb = combgen (n `div` 2)
+combgen n = combgen 5
+
+prop_mkAppDepth c1 c2 = mkAppDepth c1 c2 == mkAppDepth c2 c1
+
+prop_num2C i = let (N j) = reduceComb (num2C i)
+               in i == j
+
 
 main :: IO ()
 main = $defaultMainGenerator

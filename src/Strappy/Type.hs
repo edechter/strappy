@@ -18,7 +18,7 @@ import Control.Monad.Trans.Class
 import Control.Monad.Error
 import Control.Monad.State
 
-import Data.MemoTrie
+-- import Data.MemoTrie
 
 -- | define a type scheme
 type Id = String
