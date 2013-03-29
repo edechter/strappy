@@ -10,8 +10,6 @@ import Control.Monad
 import Control.Monad.Trans.Class
 import Control.Monad.State
 
-import Debug.Trace
-
 -- | local imports
 import Strappy.Type
 import Strappy.CLError
