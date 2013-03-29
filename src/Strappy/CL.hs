@@ -2,7 +2,7 @@
 
 module Strappy.CL where 
 
--- | standard library imports
+-- standard library imports
 import qualified Data.Map as Map
 import Data.Map ((!), keys)
 import Data.List (union)
@@ -10,12 +10,12 @@ import Control.Monad
 import Control.Monad.Trans.Class
 import Control.Monad.State
 
--- | local imports
+--  local imports
 import Strappy.Type
 import Strappy.CLError
 import Strappy.Expr
                           
--- | Define combinators -------
+--  Define combinators -------
 data Comb = CApp {lComb :: Comb, 
                   rComb ::  Comb,
                   cType :: Type,
