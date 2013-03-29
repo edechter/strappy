@@ -56,6 +56,12 @@ prop_mkAppDepth c1 c2 = mkAppDepth c1 c2 == mkAppDepth c2 c1
 prop_num2C i = let (N j) = reduceComb (num2C i)
                in i == j
 
+prop_bool2C b = let (B c) = reduceComb (bool2C b)
+                in c == b
+
+prop_dOp2C i j = let op = dOp2C "+" (+) 
+                     (N k) = reduceComb $ app' (app' op (num2C i)) (num2C j)
+                 in k == i + j
 
 main :: IO ()
 main = $defaultMainGenerator

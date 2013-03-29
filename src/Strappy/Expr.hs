@@ -41,7 +41,6 @@ instance Eq Expr where
     (Const s) == (Const s') = s == s'
     _ == _ = False
 
-
 toFloat :: Expr -> Double
 toFloat e = error $ "expr cannot be converted to float: " ++ show e
 

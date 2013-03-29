@@ -80,7 +80,7 @@ library
             Strappy.CombMap
             Strappy.DigArith
 
-        ghc-options: -O2 -fhpc -fforce-recomp -fno-code
+        ghc-options: -O2 
         hs-source-dirs: src    
 
 test-suite properties
