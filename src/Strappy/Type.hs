@@ -6,9 +6,48 @@
 -- | This module defines a simple type system for use with the
 -- combinatory logic implemented in this package. 
 
-module Strappy.Type where
+module Strappy.Type (
+                    -- * Types
+                    Kind(..)
+                    , Type(..)
+                    , TyVar(..)
+                    , TyCon(..)
+                    , Subst(..)
 
--- | standard library imports
+                    -- * Functions
+                    , (->-)
+                    , freshInst
+                    , newTVar
+                    , mkTVar
+                    , mgu
+                    , apply
+                    , merge
+                    , match
+                    , fromType
+                    , toType
+                    , tv
+                    , isTAp
+                    , isTVar
+                    , enumId
+                    , readId
+                    , nullSubst
+                    
+                           
+                    -- * Combinator Types
+                    , tChar 
+                    , tInt 
+                    , tBool 
+                    , tArrow
+                    , tList 
+                    , tMaybe
+                    , tPair 
+                    , tTriple
+                    , tQuad 
+                    , tQuint
+
+                    ) where
+
+--  standard library imports
 import qualified Data.Set as Set
 import Data.List (intersect, union, nub, foldl')
 import Data.Maybe (fromJust)
@@ -18,9 +57,7 @@ import Control.Monad.Trans.Class
 import Control.Monad.Error
 import Control.Monad.State
 
--- import Data.MemoTrie
-
--- | define a type scheme
+--  define a type scheme
 type Id = String
 enumId :: Int -> Id
 enumId n = "v" ++ show n

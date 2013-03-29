@@ -15,7 +15,6 @@ data Expr  = App Expr Expr
            | N Int
            | C Char
            | B Bool
-           | Var Id -- variable indexed by de'brujn notation
            | Const String
            | ExprError String 
 
@@ -28,13 +27,11 @@ instance Show Expr where
     show (Const name) = name
     show (Lam expr) = 
         "( L: " ++ show expr ++ ")"
-    show (Var id) = "var_" ++ show id
     show (ExprError s) = "Expr Error: " ++ s
 
 instance Eq Expr where
     (App l1 r1) == (App l2 r2) = (l1 == l2) && (r1 == r2)
     (Lam e) == (Lam f) = (e == f)
-    (Var i) == (Var j) = i == j
     (N i) == (N j) = i == j
     (C i) == (C j) = i == j
     (B i) == (B j) = i == j
@@ -77,8 +74,6 @@ substitute e (App a b) = App a' b' where a' = substitute e a
                                          b' = substitute e b
 substitute e (Lam f) = Lam $ substitute e f
 substitute e a@(Func _) = a
-substitute e v@(Var "v0") = e
-substitute e v@(Var _) = v
 
 -- | implement reduction with a step limit
 reduceWithLimit :: Int -> Expr -> Maybe Expr

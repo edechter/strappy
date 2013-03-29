@@ -2,7 +2,7 @@
 
 module Strappy.ParseCL where
 
--- | standard library imports
+-- standard library imports
 import qualified Text.ParserCombinators.Parsec as P
 import Text.Parsec.Token 
 import Text.ParserCombinators.Parsec.Token
@@ -14,7 +14,7 @@ import Control.Monad.Error
 import Control.Monad.State
 import Data.Char
 
--- | local imports
+-- local imports
 
 import Strappy.Type
 import Strappy.CL
