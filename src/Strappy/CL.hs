@@ -15,19 +15,25 @@ import Strappy.Type
 import Strappy.CLError
 import Strappy.Expr
                           
---  Define combinators -------
+-- | Combinator data type. A well formed combinator is either a
+-- primitive combinator (CNode) or the application of a combinator to
+-- another combinator (CApp). A not-yet-written combinator is
+-- represented by a CTerminal (not well-named).  TODO: we should
+-- change the name of CTerminal to something more appropriate.
 data Comb = CApp {lComb :: Comb, 
                   rComb ::  Comb,
                   cType :: Type,
-                  cAppDepth :: Int}
+                  cAppDepth :: Int} 
           | CNode {cName :: String,
                    cExpr :: Expr,
                    cType :: Type}
           | CTerminal {cType :: Type}
 
 cDepth :: Comb -> Int
+-- | Return the precalculated depth of a combinator. 
 cDepth CNode{} = 0
 cDepth (CApp _ _ _ d) = d
+cDepth (CTerminal _ ) = error "cDepth: A CTerminal has no depth"
 
 mkAppDepth :: Comb -> Comb -> Int
 mkAppDepth c1 c2 = 1 + max (cDepth c1) (cDepth c2)
