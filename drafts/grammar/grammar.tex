@@ -255,15 +255,96 @@ $\theta$ and all the edges to previous set expressions $e_j, j\leq
 i$.
 
 \begin{algorithm}
-\caption{Online hierarchical program induction}\label{alg:online-progind}
+\caption{Online hierarchical program induction (version 1)}\label{alg:online-progind-v1}
 \begin{algorithmic}
 \State Initialize $G_0$.
 \For{$i\gets 1, \dots$}
 \State $e_i^* = \argmax_{e} \log p(t_i|e_i) + \log p(e_i|G_{i-1}) $
-\State $G_i = \argmax_{G} \log p(G|\theta) + \sum_{j \leq i} \log p(e_i|G) $
+\State $G_i = \argmax_{G} \log p(G|\theta) + \sum_{j \leq i} \log p(e_j|G) $
 \EndFor
 \end{algorithmic}
 \end{algorithm}
+
+
+\begin{algorithm}
+\caption{Online hierarchical program induction (version 2)}\label{alg:online-progind-v2}
+\begin{algorithmic}
+\State Initialize $G_0$.
+\For{$i\gets 1, \dots$}
+\State $F_i \sim \text{ i.i.d } p(\cdot | G)$
+\State $e_i^* = \argmax_{e\in F_i} \log p(t_i|e_i) + \log p(e_i|G_{i-1}) $
+\State $G_i = \argmax_{G} \log p(G|\theta) + \sum_{j \leq i} \log p(e_j|G) $
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+\section{Combining planning with hierarchical program induction}
+There is something clearly missing from this learning paradigm?
+Actions, framed as programs acting on the environment, are not
+proposed in a way that is contingent on the environment. But of course
+the actions that we make are contingent on past behavior and sensory
+input. A fundamental question, then, is how we can incorporate sensory
+feedback and past behvarior into this learning paradigm. 
+
+One answer to this is to combine planning with hierarchical program
+induction. In this view, a solution to a problem is not a single
+program. It is a series of programs, each of which attempts to get the
+planner closer to the goal. The goal of the learner is to a learn a
+distribution over programs that takes as input a sequence of past
+actions and their effects and produces a new sequence of actions.
+
+Let's consider a concrete example of such a domain: consider the
+classic AI problem of stacking blocks to build a tower of a given
+height. Let's make this problem somewhat more challenging by having
+the agent build this tower on a vibrating platform. We define the
+domain of primitive actions to be placing a block in either horizontal
+or vertical orientation anywhere in a two dimensional vertical
+plane. At any point during an attempted execution, the state of the
+system is the sequence of previous primitive actions, and, perhaps,
+auxiliary sensory information: in this case, an agent may make use of
+the current configuration of blocks (i.e. what the tower looks like)
+or some summary statistic thereof. We further assume that there is
+some heuristic function (e.g. height) which guides the choice of the
+next state.
+
+Let $S$ be a state space and let $h:S \rightarrow \mathbb{R}$ be a
+reward function. The planner's goal is to maximize the expected change
+in reward of any given action $e \in \mathcal{L}$. Of course, the
+change in reward does not only depend on the current action; it also
+depends on the current state. But to simplify matters we will ignore
+that for now, and assume that the state dependence is subsumed in the
+distribution $p(\Delta h | e)$. That is, the planner wants to find
+grammar $G^*$ such that
+\begin{align}
+G^* &= \argmax_G \sum_e \Delta h \;p(\Delta h | e) \, p(e|G) \, p(G|\theta).
+\end{align}
+
+As a first attempt to solve this problem, we can simply splice
+Algorithm~\ref{alg:online-progind-v2} with a greedy actor who always
+picks the best available action at any moment. Here, however, there is
+only one ``task,'' and we are maximizing over only the grammar. This
+is described in Algorithm~\ref{alg:planning-progind-v1}.
+
+\begin{algorithm}
+\caption{Planning with online program induction (version
+  1)}\label{alg:planning-progind-v1}
+\begin{algorithmic}
+\State Initialize $G_0$.
+\For{$i\gets 1, \dots$}
+\State $F_i \sim \text{ i.i.d } p_{e|G}(\cdot | G_i)$
+\State $G_i = \argmax_{G} \log p(G|\theta) 
++ \log \sum_{e_j \in F_0 \cup \dots \cup F_i}
+\prod_{e_j} \Delta h(e_j) \; p(e_j|G) $
+\State $e_i^* = \argmax_{F_i}$
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+
+
+
+
+
 
 
 
