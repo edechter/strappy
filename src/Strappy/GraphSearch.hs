@@ -1,9 +1,6 @@
--- GraphSearch.hs
-
+-- | This module implements depth first search over variables
+-- assignments.
 module Strappy.GraphSearch where
-
-import Debug.Trace
-
 
 dfs :: Int -- ^ m (total number of variables)
     -> Int -- ^ n (current variable index)
@@ -41,12 +38,12 @@ type GraphEq a = SearchNode a -> SearchNode a -> Bool
 
 dfs' :: Int -- ^ m (total number of variables)
      -> SearchNode a -- ^ (variable number and assignments)
-    -> b   -- ^ c_n (computation intermediates up to n)
-    -> (Int -> [a] -> b -> (Int, b)) -- ^ w (edge function)
-    -> SearchCache a
-    -> GraphEq a
-    -> [[a]]
-    ->
+     -> b   -- ^ c_n (computation intermediates up to n)
+     -> (Int -> [a] -> b -> (Int, b)) -- ^ w (edge function)
+     -> SearchCache a
+     -> GraphEq a
+     -> [[a]]
+     ->
  (SearchSol a, SearchCache a)
 dfs' m (SearchNode n xs) c w cache eq dss | n == (m) = (SearchSol 0 [], cache)
 

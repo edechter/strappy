@@ -1,5 +1,6 @@
--- CombMap.hs
 
+-- | This module supplies the CombMap alias for Map Comb by defining a
+-- Hashable instance for Comb.
 module Strappy.CombMap 
 (
 
