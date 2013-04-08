@@ -21,11 +21,15 @@ import Expr
 data Comb = CApp {lComb :: Comb, 
                   rComb ::  Comb,
                   cType :: Type,
-                  cAppDepth :: Int}
-          | CNode {cName :: String,
+                  cAppDepth :: Int,
+                  cLabel :: Maybe String -- ^ the label of a
+                                         -- combinator is a unique
+                                         -- name for the subtree
+                 }
+          | CLeaf {cName :: String,
                    cExpr :: Expr,
                    cType :: Type}
-          | CTerminal {cType :: Type}
+          | CHole {cType :: Type} -- ^ a location in a tree 
 
 cDepth :: Comb -> Int
 cDepth CNode{} = 0
