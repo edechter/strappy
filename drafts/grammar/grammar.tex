@@ -17,6 +17,7 @@
 \newcommand{\type}[1]{type(#1)}
 
 \renewcommand{\grammarlabel}[2]{#1 #2}
+\renewcommand{\given}{\, | \,}
 
 \DeclareMathOperator*{\argmin}{argmin}
 \DeclareMathOperator*{\argmax}{argmax}
@@ -154,34 +155,34 @@ model of the tasks that an agent encounters
 
 Here each task $t_i$ is interpreted as a noisy version of the
 underlying program $e_i$, and there is an associated likelihood
-function $p_{t|e}(t|e) \propto f(t(e)) $ where $f$ is a monotonically
+function $p_{t\given e}(t \given e) \propto f(t(e)) $ where $f$ is a monotonically
 decreasing function. Given a task-specific loss function $t(\cdot)$, a
-natural likelihood is $p_{t|e}(t|e) \propto \exp^{-t(e)}$. A set of
+natural likelihood is $p_{t \given e}(t \given e) \propto \exp^{-t(e)}$. A set of
 programs $\{e_i\}$ is drawn from a grammar $G$, which functions as the
 subroutine library. Our prior expectations about $G$ are encoded in
-$\theta$ via the distribution $p_{G|\theta}$. 
+$\theta$ via the distribution $p_{G \given \theta}$. 
 
 The goal of the learner is the find the library $G$ and programs
-$\{e_i\}$ that maximize $P(\{e_i\}, G | \{t_i\}, \theta)$. That is, 
+$\{e_i\}$ that maximize $P(\{e_i\}, G \given  \{t_i\}, \theta)$. That is, 
 
 \begin{align}
 G^*, \{e^*_i\} &= \argmax_{G, \{e_i\} }
-   P(\{e_i\}, G | \{t_i\}, \theta)\\
-&= \argmax_{G, \{e_i\} } P(\{t_i\} | \{e_i\})
-  P(\{e_i\} | G) P(G | \theta)\\
+   P(\{e_i\}, G \given  \{t_i\}, \theta)\\
+&= \argmax_{G, \{e_i\} }  P(\{t_i\} \given \{e_i\}) \;
+  P(\{e_i\} \given G) \; P(G \given \theta)\\
 &= \argmax_{G, \{e_i\} }
   \sum_i \left( 
-  \log{p_{t|e}(t_i|e_i)}+ 
-  \log{p_{e|G}(e_i|G)}
+  \log{p_{t\given e}\;(t_i \given e_i)}+ 
+  \log{p_{e \given G}(e_i \given G)}
   \right ) +
-  \log{p_{G|\theta}(G|\theta)}
+  \log{p_{G \given \theta}\; (G \given \theta)}
 \label{eq:objective}
 \end{align}
 
 The main difficulty in this optimization is that finding any candidate
 program $e_i$ that provides a significant value for the first term is
-difficult. If we new $G$, we could sample programs from it as a way to
-guide searching over the $e_i$. This suggests the following iterative
+difficult. If we knew $G$, we could sample programs from it as a way to
+guide the search over the $e_i$. This suggests the following iterative
 heuristic search algorithm. At iteration $j$, let $G^{(j)}$ be the
 current best value of $G$. 
 
