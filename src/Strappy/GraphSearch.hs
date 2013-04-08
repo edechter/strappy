@@ -26,7 +26,6 @@ dfs m n (x:xs) c w dss | n < (m - 1) =
 dfs m n (x:xs) c w dss | n == (m - 1) = (0, [], 0)
 
 
-
 data SearchSol a = SearchSol { extensionCost :: Int, 
                                extension :: [a]} deriving Show
 data SearchNode a = SearchNode { variable :: Int,

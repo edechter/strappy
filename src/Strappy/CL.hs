@@ -22,8 +22,10 @@ data Comb = CApp {lComb :: Comb,
                   cAppDepth :: Int}
           | CNode {cName :: String,
                    cExpr :: Expr,
-                   cType :: Type}
-          | CTerminal {cType :: Type}
+                   cType :: Type} -- ^ a leaf combinator
+          | CTerminal {cType :: Type} -- ^ something that still needs
+                                      -- to be generated
+          
 
 cDepth :: Comb -> Int
 cDepth CNode{} = 0
