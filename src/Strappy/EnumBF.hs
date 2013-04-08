@@ -59,7 +59,7 @@ enumBF :: Grammar
 -- | Breadth-first AO enumeration of combinators with highest scores
 -- under the grammar.
 enumBF gr i tp = map combBase (PQ.take i $ closed $ enumBF' gr i initBFState)
-    where root = CombBaseTuple (CombBase (CHole tp) (Just []) 0) 0
+    where root = CombBaseTuple (CombBase (CInnerNode tp) (Just []) 0) 0
           initBFState = BFState (PQ.singleton root) PQ.empty
 
 enumBF' :: Grammar -> Int -> BFState -> BFState
@@ -83,12 +83,12 @@ enumBF' gr i bfState@(BFState openPQ closedPQ) =
         
 
 expandToApp :: Grammar -> CombBase -> StateT Int [] CombBase
-expandToApp gr (CombBase (CHole tp) (Just []) v) = 
+expandToApp gr (CombBase (CInnerNode tp) (Just []) v) = 
     do tp' <- newTVar Star
        let t_left = tp' ->- tp
            t_right = tp'
-           c_left = (CHole t_left) 
-           c_right = (CHole t_right)
+           c_left = (CInnerNode t_left) 
+           c_right = (CInnerNode t_right)
            c = CApp c_left c_right tp 1 Nothing
            minGrammarVal = hackMinGrammarVal
 --           minGrammarVal = minimum (CM.elems (library gr))
@@ -98,7 +98,7 @@ expandToApp gr (CombBase (CHole tp) (Just []) v) =
 expand :: Grammar 
        -> CombBase 
        -> StateT Int [] CombBase
-expand gr cb@(CombBase (CHole tp) (Just []) v) 
+expand gr cb@(CombBase (CInnerNode tp) (Just []) v) 
     = if cs_is_empty then (trace $ "EMPTY") $ mzero else 
           cbs `mplus` cbApp
     where primCombs = CM.keys (library gr)
@@ -121,7 +121,7 @@ expand gr cb@(CombBase (CApp c_left c_right tp d _) (Just (L:rest)) v) =
                                              (Just rest) 
                                              (v - minGrammarVal)
        let tp_right' = fromType (cType c_left')
-           c_right' =  CHole tp_right'
+           c_right' =  CInnerNode tp_right'
 
        let path' = case rest' of
                      Nothing -> Just [R]

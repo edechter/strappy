@@ -27,11 +27,11 @@ data Comb = CApp {lComb :: Comb,
           | CLeaf {cName :: String,
                    cExpr :: Expr,
                    cType :: Type}
-          | CHole {cType :: Type} -- ^ a location in a tree 
+          | CInnerNode {cType :: Type} -- ^ a location in a tree 
 
-data Domain = IntervalDomain {lowerBound :: a, upperBound :: a}
-data Hole = Hole {holeType :: Type,
-                  holeDomain :: Domain}
+data Domain a = IntervalDomain {lowerBound :: a, upperBound :: a}
+data Hole a = Hole {holeType :: Type,
+                    holeDomain :: Domain a}
 
 cDepth :: Comb -> Int
 cDepth CLeaf{} = 0
@@ -69,7 +69,7 @@ infixl 4 <::>
 instance Show Comb where
     show CApp{lComb=c1, rComb=c2} = "(" ++ show c1 ++ " " ++ show c2 ++ ")"
     show (CLeaf n _ _) = n
-    show (CHole t) =  "CTerm: " ++ show t
+    show (CInnerNode t) =  "CTerm: " ++ show t
 
 -- | An alternative to show: if combinator is named and evaluates to a
 -- number or bool, show it an an evaluated expressions.
@@ -104,7 +104,7 @@ bool2C c = CLeaf (show c) (B c) tBool
 getType :: Comb -> Either String Type
 getType (CLeaf _ _ t) = Right t
 getType c@(CApp{lComb=c1, rComb=c2}) = getAppType c1 c2
-getType c@(CHole t) = Right t
+getType c@(CInnerNode t) = Right t
 
 getAppType :: Comb -> Comb -> Either String Type
 getAppType c1 c2  
