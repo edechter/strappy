@@ -61,7 +61,7 @@ mkHypothesisSpace expr gr
 
 evalSymReg :: Comb -> [Int]
 evalSymReg c = [ f i | i <- [0..10]]
-    where f i = case reduceComb $ CApp c (num2C i) tInt 0 of 
+    where f i = case reduceComb $ CApp c (num2C i) tInt 0 Nothing of 
                   (N y ) -> y
                   otherwise -> (maxBound :: Int)
 

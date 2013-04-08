@@ -104,7 +104,7 @@ type CombMap a = Map Comb a
 
 instance Hashable Comb where
     hash (CLeaf name _ _) = hash name
-    hash (CApp rComb lComb _ _) = hash rComb `hashWithSalt` lComb
+    hash CApp{lComb=cl, rComb=cr} = hash cl `hashWithSalt` hash cr
 
 showCombMap :: Show a => CombMap a -> String
 showCombMap cm = unlines $ Prelude.map (\(k, a) -> show k ++ ": " ++ show a ) 

@@ -30,7 +30,7 @@ type Index = CombMap Int
 
 
 incr :: Index -> Comb -> Index
-incr index c@(CApp l r _ _) 
+incr index c@(CApp{lComb=l, rComb=r})
     = case CM.lookup c index of
         Nothing -> let index' = CM.insert c 1 index
                    in incr (incr index' l) r
@@ -49,7 +49,7 @@ compress cs = foldl' incr CM.empty cs
 
 
 incr2 :: CombMap [Type] -> Comb -> Type -> State Int (CombMap [Type])
-incr2 index c@(CApp l r _ _) tp 
+incr2 index c@(CApp{lComb=l, rComb=r}) tp 
     = do t <- newTVar Star
          let t_left = t ->- tp
          case CM.lookup c index of
@@ -82,7 +82,7 @@ compress2 xs = foldl' f  CM.empty xs
 getUniqueTrees :: Comb -> Index
 getUniqueTrees c@(CLeaf _ _ _ ) = CM.singleton c 1 
                   
-getUniqueTrees c@(CApp l r _ _ ) = let a = CM.singleton c 1 
+getUniqueTrees c@(CApp{lComb=l, rComb=r}) = let a = CM.singleton c 1 
                                        b = getUniqueTrees  l
                                        d = getUniqueTrees  r
                                    in d  `with` a `with` b 

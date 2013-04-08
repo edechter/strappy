@@ -47,13 +47,13 @@ app m1 m2 = do c1 <- m1
                case getAppType c1 c2 of
                 Left err -> Left err
                 Right t -> let d = mkAppDepth c1 c2 
-                           in Right $ CApp c1 c2 t d 
+                           in Right $ CApp c1 c2 t d Nothing
 
 app' :: Comb -> Comb -> Comb
 app' c1 c2 = case getAppType c1 c2 of
                Left err -> error $ "Error in app' in CL.hs: " ++ err
                Right t -> let d = mkAppDepth c1 c2
-                              in CApp c1 c2 t d
+                              in CApp c1 c2 t d Nothing
 
 infixl 4 <:>
 (<:>) = app
@@ -63,21 +63,21 @@ infixl 4 <::>
                   
 
 instance Show Comb where
-    show (CApp c1 c2 _ _) = "(" ++ show c1 ++ " " ++ show c2 ++ ")"
+    show CApp{lComb=c1, rComb=c2} = "(" ++ show c1 ++ " " ++ show c2 ++ ")"
     show (CLeaf n _ _) = n
     show (CTerminal t) =  "CTerm: " ++ show t
 
 -- | An alternative to show: if combinator is named and evaluates to a
 -- number or bool, show it an an evaluated expressions.
 show' (CLeaf n _ _ ) = n
-show' c@(CApp c1 c2 _ _) = case reduceComb c of
+show' c@(CApp{lComb=c1, rComb=c2}) = case reduceComb c of
                              (N i) -> show i
                              (C c) -> show c
                              _     ->  "(" ++ show' c1 ++ " " ++ show' c2 ++ ")"
 
 instance Eq Comb where
-    (CApp c1 c2 _ dl) == (CApp b1 b2 _ dr) = (dl == dr) && (c1 == b1) && (c2 == b2)
-    (CLeaf n _ _) == (CLeaf m _ _ ) = (n==m)
+    (CApp{lComb=c1, rComb=c2, cAppDepth=dl}) == (CApp{lComb=b1, rComb=b2, cAppDepth=dr}) = (dl == dr) && (c1 == b1) && (c2 == b2)
+    (CLeaf{cName=n}) == (CLeaf{cName=m}) = (n==m)
     a == b = False
 
 reduceComb :: Comb -> Expr
@@ -99,7 +99,7 @@ bool2C c = CLeaf (show c) (B c) tBool
 -- | get type outside type monad
 getType :: Comb -> Either String Type
 getType (CLeaf _ _ t) = Right t
-getType c@(CApp c1 c2 _ _) = getAppType c1 c2
+getType c@(CApp{lComb=c1, rComb=c2}) = getAppType c1 c2
 getType c@(CTerminal t) = Right t
 
 getAppType :: Comb -> Comb -> Either String Type
@@ -119,9 +119,9 @@ getAppType c1 c2
 sub s (TVar u) c@(CLeaf _ _ t) = c{cType = apply [(s, TVar u)] (cType c)}
                                       
 getTvs (CLeaf _ _ t) = tv t
-getTvs (CApp cl cr _ _ ) = getTvs cl `union` getTvs cr
+getTvs (CApp{lComb=cl, rComb=cr}) = getTvs cl `union` getTvs cr
 
-comb2Expr c@(CApp c1 c2 _ _ ) = App (comb2Expr c1) (comb2Expr c2)
+comb2Expr c@(CApp{lComb=c1, rComb=c2}) = App (comb2Expr c1) (comb2Expr c2)
 comb2Expr c@(CLeaf _ e _) = e
 
 filterCombinatorsByType :: [Comb] -> Type -> StateT Int [] Comb

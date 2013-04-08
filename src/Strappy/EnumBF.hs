@@ -89,7 +89,7 @@ expandToApp gr (CombBase (CTerminal tp) (Just []) v) =
            t_right = tp'
            c_left = (CTerminal t_left) 
            c_right = (CTerminal t_right)
-           c = CApp c_left c_right tp 1
+           c = CApp c_left c_right tp 1 Nothing
            minGrammarVal = hackMinGrammarVal
 --           minGrammarVal = minimum (CM.elems (library gr))
            cb = CombBase c (Just [L]) (2*minGrammarVal)
@@ -113,7 +113,7 @@ expand gr cb@(CombBase (CTerminal tp) (Just []) v)
                              not $ existCombWithToType primCombs (toType tp)
           cbApp = expandToApp gr cb 
 
-expand gr cb@(CombBase (CApp c_left c_right tp d) (Just (L:rest)) v) = 
+expand gr cb@(CombBase (CApp c_left c_right tp d) (Just (L:rest)) v _) = 
     let --minGrammarVal = minimum (CM.elems (library gr)) in
         minGrammarVal = hackMinGrammarVal in
     do (CombBase c_left' rest' v')  <- expand gr 
@@ -130,10 +130,10 @@ expand gr cb@(CombBase (CApp c_left c_right tp d) (Just (L:rest)) v) =
        let tp' = toType (cType c_left')
            d' = if (cDepth c_left') + 1 > d then cDepth c_left' + 1 else d
 
-       return $ CombBase (CApp c_left' c_right' tp' d') path' 
+       return $ CombBase (CApp c_left' c_right' tp' d' Nothing) path' 
                   (v' + v - minGrammarVal)
 
-expand gr cb@(CombBase (CApp c_left c_right tp d) (Just (R:rest)) v) = 
+expand gr cb@(CombBase (CApp c_left c_right tp d _) (Just (R:rest)) v) = 
     let --minGrammarVal = minimum (CM.elems (library gr)) in
         minGrammarVal = hackMinGrammarVal in
     do (CombBase c_right' rest' v')  <- expand gr 
@@ -147,7 +147,7 @@ expand gr cb@(CombBase (CApp c_left c_right tp d) (Just (R:rest)) v) =
                      Nothing -> Nothing
                      Just ys -> Just (R:ys)
            d' = if (cDepth c_right') + 1 > d then cDepth c_right' + 1 else d
-       return $ CombBase (CApp c_left c_right' tp' d') path' (v' + v - minGrammarVal)
+       return $ CombBase (CApp c_left c_right' tp' d' Nothing) path' (v' + v - minGrammarVal)
 
 
 

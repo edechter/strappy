@@ -43,6 +43,7 @@ enum' xs d t = enum' xs 0 t `mplus` do
           = CApp left right 
             (toType (apply backsub t_left1))
             (mkAppDepth left right)
+            Nothing
   return combined
 
 
@@ -79,6 +80,7 @@ enumLB' xs d b t = enumLB' xs 0 b t `mplus` do
           = CApp left right 
             (toType (apply backsub t_left1))
             (mkAppDepth left right)
+            Nothing
   return combined
 
 -- | Iterative Broadening Enum
