@@ -83,9 +83,9 @@ getUniqueTrees :: Comb -> Index
 getUniqueTrees c@(CLeaf _ _ _ ) = CM.singleton c 1 
                   
 getUniqueTrees c@(CApp{lComb=l, rComb=r}) = let a = CM.singleton c 1 
-                                       b = getUniqueTrees  l
-                                       d = getUniqueTrees  r
-                                   in d  `with` a `with` b 
+                                                b = getUniqueTrees  l
+                                                d = getUniqueTrees  r
+                                            in d  `with` a `with` b 
     where with = CM.unionWith (+)
 
 

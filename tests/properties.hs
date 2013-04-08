@@ -47,7 +47,7 @@ instance Arbitrary Comb where
     arbitrary = sized combgen
 
 combgen 0 = oneof $ map return (CM.elems stdlib')
-combgen n | n < 10 = liftM4 CApp subcomb subcomb (return tInt) (return 0)
+combgen n | n < 10 = liftM5 CApp subcomb subcomb (return tInt) (return 0) (return Nothing)
           where subcomb = combgen (n `div` 2)
 combgen n = combgen 5
 

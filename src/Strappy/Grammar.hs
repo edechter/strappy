@@ -63,7 +63,7 @@ sum' (a, b) (c, d) = (a + b, c + d)
 
 countExpansions :: Comb -> Int
 countExpansions (CLeaf{}) = 0
-countExpansions CApp{lComb=l, rComb=r}) = 1 + countExpansions l  + countExpansions r
+countExpansions CApp{lComb=l, rComb=r} = 1 + countExpansions l  + countExpansions r
 
 countAlts :: [Comb] -> Type -> CombMap Int
 countAlts cs tp = let ms = do tp' <- freshInst tp

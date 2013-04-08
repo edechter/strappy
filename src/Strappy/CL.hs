@@ -65,7 +65,7 @@ infixl 4 <::>
 instance Show Comb where
     show CApp{lComb=c1, rComb=c2} = "(" ++ show c1 ++ " " ++ show c2 ++ ")"
     show (CLeaf n _ _) = n
-    show (CTerminal t) =  "CTerm: " ++ show t
+    show (CHole t) =  "CTerm: " ++ show t
 
 -- | An alternative to show: if combinator is named and evaluates to a
 -- number or bool, show it an an evaluated expressions.
@@ -100,7 +100,7 @@ bool2C c = CLeaf (show c) (B c) tBool
 getType :: Comb -> Either String Type
 getType (CLeaf _ _ t) = Right t
 getType c@(CApp{lComb=c1, rComb=c2}) = getAppType c1 c2
-getType c@(CTerminal t) = Right t
+getType c@(CHole t) = Right t
 
 getAppType :: Comb -> Comb -> Either String Type
 getAppType c1 c2  
