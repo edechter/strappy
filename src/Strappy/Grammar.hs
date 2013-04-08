@@ -30,14 +30,14 @@ instance Show Grammar where
                            ++ "\n\nLibrary: \n-------\n" 
                            ++ showLibrary lib
 
-findCNodeInGrammar :: Grammar -> Comb -> Maybe Comb
-findCNodeInGrammar gr c@CNode{cName=n} = lookup n asc
+findCLeafInGrammar :: Grammar -> Comb -> Maybe Comb
+findCLeafInGrammar gr c@CLeaf{cName=n} = lookup n asc
     where cs = CM.keys (library gr)
-          asc = [(cName c, c) | c <- cs, isCNode c]
-findCNodeInGrammar gr c= error $ show c ++ " is not a CNode."
+          asc = [(cName c, c) | c <- cs, isCLeaf c]
+findCLeafInGrammar gr c= error $ show c ++ " is not a CLeaf."
 
 refreshCombFromGrammar :: Grammar -> Comb -> Maybe Comb
-refreshCombFromGrammar gr c@(CNode{cName=n}) = findCNodeInGrammar gr c
+refreshCombFromGrammar gr c@(CLeaf{cName=n}) = findCLeafInGrammar gr c
 refreshCombFromGrammar gr c@CApp{lComb=cl, rComb=cr} = do cl' <- refreshCombFromGrammar gr cl
                                                           cr'<-  refreshCombFromGrammar gr cr
                                                           let c' = c{lComb=cl', rComb=cr'}
@@ -62,7 +62,7 @@ normalizeGrammar (Grammar lib ex)
 sum' (a, b) (c, d) = (a + b, c + d)
 
 countExpansions :: Comb -> Int
-countExpansions (CNode{}) = 0
+countExpansions (CLeaf{}) = 0
 countExpansions (CApp l r _ _) = 1 + countExpansions l  + countExpansions r
 
 countAlts :: [Comb] -> Type -> CombMap Int

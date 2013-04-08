@@ -17,14 +17,14 @@ import Debug.Trace
 
 
 instance Labellable Comb where
-    toLabelValue CNode{cName=n} = toLabelValue n
+    toLabelValue CLeaf{cName=n} = toLabelValue n
     toLabelValue c = toLabelValue ""
 
 combToGraph :: Comb -> Gr Comb String
 combToGraph c = uncurry mkGraph $ combToGraph' 1 c
 
 combToGraph' :: Int -> Comb -> ([LNode Comb], [LEdge String])
-combToGraph' i c@(CNode{}) = ([(i, c)], [])
+combToGraph' i c@(CLeaf{}) = ([(i, c)], [])
 combToGraph' i c@(CApp{lComb = cl, rComb = cr}) = 
     let rootNode = (i, c)
         (leftGraphNodes, leftGraphEdges) = combToGraph' (2*i) cl
@@ -54,7 +54,7 @@ inGraph c gr = case lookup c (map (\(x,y) -> (y, x) )  $ labNodes gr) of
                  Nothing -> Nothing
 
 addCombToGraph :: Gr Comb String -> Comb -> Gr Comb String
-addCombToGraph gr c@(CNode{})  = case inGraph c gr of 
+addCombToGraph gr c@(CLeaf{})  = case inGraph c gr of 
                                    Just (node, c') -> gr
                                    Nothing -> mkGraph  
                                               ((newNode, c):(labNodes gr)) 

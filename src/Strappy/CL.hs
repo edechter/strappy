@@ -29,16 +29,15 @@ data Comb = CApp {lComb :: Comb,
                    cType :: Type}
           | CHole {cType :: Type} -- ^ a location in a tree 
 
-
 cDepth :: Comb -> Int
-cDepth CNode{} = 0
-cDepth (CApp _ _ _ d) = d
+cDepth CLeaf{} = 0
+cDepth CApp{cAppDepth=d} = d
 
 mkAppDepth :: Comb -> Comb -> Int
 mkAppDepth c1 c2 = 1 + max (cDepth c1) (cDepth c2)
 
-isCNode (CNode{}) = True
-isCNode _ = False
+isCLeaf (CLeaf{}) = True
+isCLeaf _ = False
 
 type SynthComb = Either String Comb
  
@@ -65,12 +64,12 @@ infixl 4 <::>
 
 instance Show Comb where
     show (CApp c1 c2 _ _) = "(" ++ show c1 ++ " " ++ show c2 ++ ")"
-    show (CNode n _ _) = n
+    show (CLeaf n _ _) = n
     show (CTerminal t) =  "CTerm: " ++ show t
 
 -- | An alternative to show: if combinator is named and evaluates to a
 -- number or bool, show it an an evaluated expressions.
-show' (CNode n _ _ ) = n
+show' (CLeaf n _ _ ) = n
 show' c@(CApp c1 c2 _ _) = case reduceComb c of
                              (N i) -> show i
                              (C c) -> show c
@@ -78,7 +77,7 @@ show' c@(CApp c1 c2 _ _) = case reduceComb c of
 
 instance Eq Comb where
     (CApp c1 c2 _ dl) == (CApp b1 b2 _ dr) = (dl == dr) && (c1 == b1) && (c2 == b2)
-    (CNode n _ _) == (CNode m _ _ ) = (n==m)
+    (CLeaf n _ _) == (CLeaf m _ _ ) = (n==m)
     a == b = False
 
 reduceComb :: Comb -> Expr
@@ -88,18 +87,18 @@ instance Ord Comb where
     compare c1 c2 = compare (show c1) (show c2)
 
 num2C :: Int -> Comb 
-num2C i = CNode (show i) (N i) tInt
+num2C i = CLeaf (show i) (N i) tInt
 
 dOp2C :: String -> (Int -> Int -> Int) -> Comb
-dOp2C opString op = CNode opString func (tInt ->-  tInt ->- tInt)
+dOp2C opString op = CLeaf opString func (tInt ->-  tInt ->- tInt)
     where func = Func $ \(N !x) -> Func $ \(N !y) -> N $ op x y
 
 bool2C :: Bool -> Comb
-bool2C c = CNode (show c) (B c) tBool
+bool2C c = CLeaf (show c) (B c) tBool
 
 -- | get type outside type monad
 getType :: Comb -> Either String Type
-getType (CNode _ _ t) = Right t
+getType (CLeaf _ _ t) = Right t
 getType c@(CApp c1 c2 _ _) = getAppType c1 c2
 getType c@(CTerminal t) = Right t
 
@@ -117,13 +116,13 @@ getAppType c1 c2
       in liftM fst $ runStateT st 0
                                          
 
-sub s (TVar u) c@(CNode _ _ t) = c{cType = apply [(s, TVar u)] (cType c)}
+sub s (TVar u) c@(CLeaf _ _ t) = c{cType = apply [(s, TVar u)] (cType c)}
                                       
-getTvs (CNode _ _ t) = tv t
+getTvs (CLeaf _ _ t) = tv t
 getTvs (CApp cl cr _ _ ) = getTvs cl `union` getTvs cr
 
 comb2Expr c@(CApp c1 c2 _ _ ) = App (comb2Expr c1) (comb2Expr c2)
-comb2Expr c@(CNode _ e _) = e
+comb2Expr c@(CLeaf _ e _) = e
 
 filterCombinatorsByType :: [Comb] -> Type -> StateT Int [] Comb
 filterCombinatorsByType (c:cs) t  

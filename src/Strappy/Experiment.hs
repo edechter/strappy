@@ -108,10 +108,10 @@ expSquaredInts
 
 -------------------------
 
--- cCONS = CNode ":" (Func $ \(R r) -> Func $ \(IntList rs) -> IntList (r:rs)) tp
+-- cCONS = CLeaf ":" (Func $ \(R r) -> Func $ \(IntList rs) -> IntList (r:rs)) tp
 --         where tp = Map Rtype (Map TyIntList TyIntList)
 
--- cEmpty = CNode "[]" (IntList []) tp
+-- cEmpty = CLeaf "[]" (IntList []) tp
 --          where tp = TyIntList
 
 

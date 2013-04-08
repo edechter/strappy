@@ -37,87 +37,87 @@ three_routers = CM.fromList
 infixl 4 <+>
 (<+>) = App 
 
-cS = CNode "S" (Func $ \f ->
+cS = CLeaf "S" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x ->
                 (f <+> x ) <+> (g <+> x)) tp
      where tp = (t2 ->- t1 ->- t0) ->- (t2 ->- t1) ->- t2 ->- t0
 
-cB = CNode "B" (Func $ \f ->
+cB = CLeaf "B" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x ->
                 f <+> (g <+> x)) tp
      where tp = (t1 ->- t) ->- (t2 ->- t1) ->- t2 ->- t
 
-cC = CNode "C" (Func $ \f ->
+cC = CLeaf "C" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x ->
                 (f <+> x ) <+> g) tp
      where tp = (t1 ->- t2 ->- t) ->- t2 ->- t1 ->- t 
 
-cSS = CNode "SS" (Func $ \f ->
+cSS = CLeaf "SS" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x1 ->
                 Func $ \x2 ->
                 (f <+> x1 <+> x2 ) <+> (g <+> x1 <+> x2)) tp
      where tp = (t2 ->- t3 ->- t1 ->- t) ->- (t2 ->- t3 ->- t1) ->- t2 ->- t3 ->- t
 
-cSB = CNode "SB" (Func $ \f ->
+cSB = CLeaf "SB" (Func $ \f ->
                   Func $ \g -> 
                   Func $ \x1 ->
                   Func $ \x2 ->
                   (f <+> x1 ) <+> (g <+> x1 <+> x2)) tp
      where tp = (t2 ->- t1 ->- t) ->- (t2 ->- t3 ->- t1) ->- t2 ->- t3 ->- t
-cSC = CNode "SC" (Func $ \f ->
+cSC = CLeaf "SC" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x1 ->
                 Func $ \x2 ->
                 (f <+> x1 <+> x2 ) <+> (g <+> x1)) tp
      where tp = (t3 ->- t1 ->- t2 ->- t) ->- (t3 ->- t2) ->- t3 ->- t1 ->- t
 
-cBS = CNode "BS" (Func $ \f ->
+cBS = CLeaf "BS" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x1 ->
                 Func $ \x2 ->
                 (f <+> x2 ) <+> (g <+> x1 <+> x2)) tp
      where tp = (t3 ->- t1 ->- t) ->- (t2 ->- t3 ->- t1) ->- t2 ->- t3 ->- t
 
-cBB = CNode "BB" (Func $ \f ->
+cBB = CLeaf "BB" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x1 ->
                 Func $ \x2 ->
                 f <+> (g <+> x1 <+> x2)) tp
      where tp = (t1 ->- t) ->- (t2 ->- t3 ->- t1) ->- t2 ->- t3 ->- t
 
-cBC = CNode "BC" (Func $ \f ->
+cBC = CLeaf "BC" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x1 ->
                 Func $ \x2 ->
                 (f <+> x2) <+> (g <+> x1)) tp
      where tp = (t1 ->- t2 ->- t) ->- (t3 ->- t2) ->- t3 ->- t1 ->- t
 
-cCS = CNode "CS" (Func $ \f ->
+cCS = CLeaf "CS" (Func $ \f ->
                   Func $ \g -> 
                   Func $ \x1 ->
                   Func $ \x2 ->
                   (f <+> x1 <+> x2) <+> (g <+> x2)) tp
      where tp = (t1 ->- t3 ->- t2 ->- t) ->- (t3 ->- t2) ->- t1 ->- t3 ->- t
 
-cCB = CNode "CB" (Func $ \f ->
+cCB = CLeaf "CB" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x1 ->
                 Func $ \x2 ->
                 (f <+> x1) <+> (g <+> x2)) tp
      where tp = (t1 ->- t2 ->- t) ->- (t3 ->- t2) ->- t1 ->- t3 ->- t
 
-cCC = CNode "CC" (Func $ \f ->
+cCC = CLeaf "CC" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x1 ->
                 Func $ \x2 ->
                 (f <+> x1 <+> x2) <+> (g)) tp
      where tp = (t1 ->- t2 ->- t3 ->- t) ->- t3 ->- t1 ->- t2 ->- t
 
-cSSS = CNode "SSS" (Func $ \f ->
+cSSS = CLeaf "SSS" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x1 ->
                 Func $ \x2 ->
@@ -126,7 +126,7 @@ cSSS = CNode "SSS" (Func $ \f ->
      where tp = (t2 ->- t3 ->- t4 ->- t1 ->- t)
               ->- (t2 ->- t3 ->- t4 ->- t1) ->- t2 ->- t3 ->- t4 ->- t
 
-cSSB = CNode "SSB" (Func $ \f ->
+cSSB = CLeaf "SSB" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x1 ->
                 Func $ \x2 ->
@@ -135,7 +135,7 @@ cSSB = CNode "SSB" (Func $ \f ->
      where tp = (t3 ->- t4 ->- t1 ->- t2 ->- t)
               ->- (t3 ->- t4 ->- t2) ->- t3 ->- t4 ->- t1 ->- t
 
-cSSC = CNode "SSC" (Func $ \f ->
+cSSC = CLeaf "SSC" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x1 ->
                 Func $ \x2 ->
@@ -145,7 +145,7 @@ cSSC = CNode "SSC" (Func $ \f ->
               ->- (t2 ->- t3 ->- t4 ->- t1) ->- t2 ->- t3 ->- t4 ->- t
 
 
-cSBS = CNode "SBS" (Func $ \f ->
+cSBS = CLeaf "SBS" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x1 ->
                 Func $ \x2 ->
@@ -154,7 +154,7 @@ cSBS = CNode "SBS" (Func $ \f ->
     where tp = (t3 ->- t1 ->- t4 ->- t2 ->- t)
              ->- (t3 ->- t4 ->- t2) ->- t3 ->- t1 ->- t4 ->- t
 
-cSBB = CNode "SBB" (Func $ \f ->
+cSBB = CLeaf "SBB" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x1 ->
                 Func $ \x2 ->
@@ -162,7 +162,7 @@ cSBB = CNode "SBB" (Func $ \f ->
                 (f <+> x1 <+> x2 <+> x3) <+> (g <+> x1 )) tp
      where tp =  (t4 ->- t1 ->- t2 ->- t3 ->- t) ->- (t4 ->- t3) ->- t4 ->- t1 ->- t2 ->- t
 
-cSBC = CNode "SBC" (Func $ \f ->
+cSBC = CLeaf "SBC" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x1 ->
                 Func $ \x2 ->
@@ -170,7 +170,7 @@ cSBC = CNode "SBC" (Func $ \f ->
                 (f <+> x1 <+> x2) <+> (g <+> x1 <+> x3 )) tp
      where tp = (t3 ->- t1 ->- t2 ->- t) ->- (t3 ->- t4 ->- t2) ->- t3 ->- t1 ->- t4 ->- t
 
-cSCS = CNode "SCS" (Func $ \f ->
+cSCS = CLeaf "SCS" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x1 ->
                 Func $ \x2 ->
@@ -179,7 +179,7 @@ cSCS = CNode "SCS" (Func $ \f ->
      where tp = (t2 ->- t4 ->- t1 ->- t)
               ->- (t2 ->- t3 ->- t4 ->- t1) ->- t2 ->- t3 ->- t4 ->- t
 
-cSCB = CNode "SCB" (Func $ \f ->
+cSCB = CLeaf "SCB" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x1 ->
                 Func $ \x2 ->
@@ -188,7 +188,7 @@ cSCB = CNode "SCB" (Func $ \f ->
      where tp = (t3 ->- t1 ->- t2 ->- t) ->- (t3 ->- t4 ->- t2) ->- t3 ->- t4 ->- t1 ->- t
 
 
-cSCC = CNode "SCC" (Func $ \f ->
+cSCC = CLeaf "SCC" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x1 ->
                 Func $ \x2 ->
@@ -196,7 +196,7 @@ cSCC = CNode "SCC" (Func $ \f ->
                 (f <+> x1) <+> (g <+> x1 <+> x2 <+> x3  )) tp
      where tp = (t2 ->- t1 ->- t) ->- (t2 ->- t3 ->- t4 ->- t1) ->- t2 ->- t3 ->- t4 ->- t
 
-cBSS = CNode "BSS" (Func $ \f ->
+cBSS = CLeaf "BSS" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x1 ->
                 Func $ \x2 ->
@@ -205,7 +205,7 @@ cBSS = CNode "BSS" (Func $ \f ->
      where tp = (t1 ->- t3 ->- t4 ->- t2 ->- t)
               ->- (t3 ->- t4 ->- t2) ->- t1 ->- t3 ->- t4 ->- t
 
-cBSB = CNode "BSB" (Func $ \f ->
+cBSB = CLeaf "BSB" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x1 ->
                 Func $ \x2 ->
@@ -213,7 +213,7 @@ cBSB = CNode "BSB" (Func $ \f ->
                 (f <+> x1 <+> x2 <+> x3) <+> (g  <+> x2   )) tp
      where tp = (t1 ->- t4 ->- t2 ->- t3 ->- t) ->- (t4 ->- t3) ->- t1 ->- t4 ->- t2 ->- t
 
-cBSC = CNode "BSC" (Func $ \f ->
+cBSC = CLeaf "BSC" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x1 ->
                 Func $ \x2 ->
@@ -221,7 +221,7 @@ cBSC = CNode "BSC" (Func $ \f ->
                 (f <+> x1 <+> x2 ) <+> (g  <+> x2 <+> x3   )) tp
      where tp = (t1 ->- t3 ->- t2 ->- t) ->- (t3 ->- t4 ->- t2) ->- t1 ->- t3 ->- t4 ->- t
 
-cBBS = CNode "BBS" (Func $ \f ->
+cBBS = CLeaf "BBS" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x1 ->
                 Func $ \x2 ->
@@ -229,7 +229,7 @@ cBBS = CNode "BBS" (Func $ \f ->
                 (f <+> x1 <+> x2 <+> x3 ) <+> (g  <+> x3   )) tp
      where tp = (t1 ->- t2 ->- t4 ->- t3 ->- t) ->- (t4 ->- t3) ->- t1 ->- t2 ->- t4 ->- t
 
-cBBB = CNode "BBB" (Func $ \f ->
+cBBB = CLeaf "BBB" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x1 ->
                 Func $ \x2 ->
@@ -238,7 +238,7 @@ cBBB = CNode "BBB" (Func $ \f ->
      where tp = (t1 ->- t2 ->- t3 ->- t4 ->- t) ->- t4 ->- t1 ->- t2 ->- t3 ->- t
 
 
-cBBC = CNode "BBC" (Func $ \f ->
+cBBC = CLeaf "BBC" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x1 ->
                 Func $ \x2 ->
@@ -246,7 +246,7 @@ cBBC = CNode "BBC" (Func $ \f ->
                 (f <+> x1 <+> x2  ) <+> (g <+> x3) ) tp
      where tp = (t1 ->- t2 ->- t3 ->- t) ->- (t4 ->- t3) ->- t1 ->- t2 ->- t4 ->- t
 
-cBCS = CNode "BCS" (Func $ \f ->
+cBCS = CLeaf "BCS" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x1 ->
                 Func $ \x2 ->
@@ -254,7 +254,7 @@ cBCS = CNode "BCS" (Func $ \f ->
                 (f <+> x1 <+> x3  ) <+> (g <+> x2 <+> x3) ) tp
      where tp = (t1 ->- t4 ->- t2 ->- t) ->- (t3 ->- t4 ->- t2) ->- t1 ->- t3 ->- t4 ->- t
 
-cBCB = CNode "BCB" (Func $ \f ->
+cBCB = CLeaf "BCB" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x1 ->
                 Func $ \x2 ->
@@ -262,7 +262,7 @@ cBCB = CNode "BCB" (Func $ \f ->
                 (f <+> x1 <+> x3  ) <+> (g <+> x2) ) tp
      where tp = (t1 ->- t2 ->- t3 ->- t) ->- (t4 ->- t3) ->- t1 ->- t4 ->- t2 ->- t
 
-cBCC = CNode "BCC" (Func $ \f ->
+cBCC = CLeaf "BCC" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x1 ->
                 Func $ \x2 ->
@@ -270,7 +270,7 @@ cBCC = CNode "BCC" (Func $ \f ->
                 (f <+> x1   ) <+> (g <+> x2 <+> x3) ) tp
      where tp = (t1 ->- t2 ->- t) ->- (t3 ->- t4 ->- t2) ->- t1 ->- t3 ->- t4 ->- t
 
-cCSS = CNode "CSS" (Func $ \f ->
+cCSS = CLeaf "CSS" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x1 ->
                 Func $ \x2 ->
@@ -279,7 +279,7 @@ cCSS = CNode "CSS" (Func $ \f ->
      where tp = (t3 ->- t4 ->- t1 ->- t)
               ->- (t2 ->- t3 ->- t4 ->- t1) ->- t2 ->- t3 ->- t4 ->- t
 
-cCSB = CNode "CSB" (Func $ \f ->
+cCSB = CLeaf "CSB" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x1 ->
                 Func $ \x2 ->
@@ -287,7 +287,7 @@ cCSB = CNode "CSB" (Func $ \f ->
                 (f <+> x2 <+> x3   ) <+> (g <+> x1 <+> x2) ) tp
      where tp = (t4 ->- t1 ->- t2 ->- t) ->- (t3 ->- t4 ->- t2) ->- t3 ->- t4 ->- t1 ->- t
 
-cCSC = CNode "CSC" (Func $ \f ->
+cCSC = CLeaf "CSC" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x1 ->
                 Func $ \x2 ->
@@ -295,7 +295,7 @@ cCSC = CNode "CSC" (Func $ \f ->
                 (f <+> x2    ) <+> (g <+> x1 <+> x2 <+> x3) ) tp
      where tp = (t3 ->- t1 ->- t) ->- (t2 ->- t3 ->- t4 ->- t1) ->- t2 ->- t3 ->- t4 ->- t
 
-cCBS = CNode "CBS" (Func $ \f ->
+cCBS = CLeaf "CBS" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x1 ->
                 Func $ \x2 ->
@@ -303,7 +303,7 @@ cCBS = CNode "CBS" (Func $ \f ->
                 (f <+> x2 <+> x3) <+> (g <+> x1  <+> x3) ) tp
      where tp = (t1 ->- t4 ->- t2 ->- t) ->- (t3 ->- t4 ->- t2) ->- t3 ->- t1 ->- t4 ->- t
 
-cCBB = CNode "CBB" (Func $ \f ->
+cCBB = CLeaf "CBB" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x1 ->
                 Func $ \x2 ->
@@ -311,7 +311,7 @@ cCBB = CNode "CBB" (Func $ \f ->
                 (f <+> x2 <+> x3) <+> (g <+> x1) ) tp
      where tp = (t1 ->- t2 ->- t3 ->- t) ->- (t4 ->- t3) ->- t4 ->- t1 ->- t2 ->- t
 
-cCBC = CNode "CBC" (Func $ \f ->
+cCBC = CLeaf "CBC" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x1 ->
                 Func $ \x2 ->
@@ -319,7 +319,7 @@ cCBC = CNode "CBC" (Func $ \f ->
                 (f <+> x2 ) <+> (g <+> x1 <+> x3) ) tp
      where tp = (t1 ->- t2 ->- t) ->- (t3 ->- t4 ->- t2) ->- t3 ->- t1 ->- t4 ->- t
 
-cCCS = CNode "CCS" (Func $ \f ->
+cCCS = CLeaf "CCS" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x1 ->
                 Func $ \x2 ->
@@ -327,7 +327,7 @@ cCCS = CNode "CCS" (Func $ \f ->
                 (f <+> x3 ) <+> (g <+> x1 <+> x2 <+> x3) ) tp
      where tp = (t4 ->- t1 ->- t) ->- (t2 ->- t3 ->- t4 ->- t1) ->- t2 ->- t3 ->- t4 ->- t
 
-cCCB = CNode "CCB" (Func $ \f ->
+cCCB = CLeaf "CCB" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x1 ->
                 Func $ \x2 ->
@@ -335,7 +335,7 @@ cCCB = CNode "CCB" (Func $ \f ->
                 (f <+> x3 ) <+> (g <+> x1 <+> x2 ) ) tp
      where tp = (t1 ->- t2 ->- t) ->- (t3 ->- t4 ->- t2) ->- t3 ->- t4 ->- t1 ->- t
 
-cCCC = CNode "CCC" (Func $ \f ->
+cCCC = CLeaf "CCC" (Func $ \f ->
                 Func $ \g -> 
                 Func $ \x1 ->
                 Func $ \x2 ->

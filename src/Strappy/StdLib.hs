@@ -31,18 +31,18 @@ t8 = mkTVar 8
 
  
 -- | define common combinators
-cI = CNode "I" (Func id) ( t0 ->- t0)
-cK = CNode "K" (Func $ \a -> Func $ \b -> a)   ( t0 ->- t1 ->- t0)
--- cS = CNode "S" (Func $ \f -> Func $ \g -> Func $ \x -> (App (App f x) (App g x))) typeS 
+cI = CLeaf "I" (Func id) ( t0 ->- t0)
+cK = CLeaf "K" (Func $ \a -> Func $ \b -> a)   ( t0 ->- t1 ->- t0)
+-- cS = CLeaf "S" (Func $ \f -> Func $ \g -> Func $ \x -> (App (App f x) (App g x))) typeS 
 --     where typeS = (t2 ->- t1 ->- t0) ->- (t2 ->- t1) ->- (t2 ->- t0)
 
--- cB = CNode "B" (Func $ \f -> Func $ \g -> Func $ \x -> (App f (App g x))) typeB 
+-- cB = CLeaf "B" (Func $ \f -> Func $ \g -> Func $ \x -> (App f (App g x))) typeB 
 --     where typeB = (t1 ->- t0) ->- (t2 ->- t1) ->- (t2 ->- t0)
 
--- cC = CNode "C" (Func $ \f -> Func $ \g -> Func $ \x -> (App (App f x) g )) typeC 
+-- cC = CLeaf "C" (Func $ \f -> Func $ \g -> Func $ \x -> (App (App f x) g )) typeC 
 --     where typeC = (t1 ->- t2 ->- t0) ->- (t2 ->- t1 ->- t0)
 
--- cBCS = CNode "BCS" (Func $ \f 
+-- cBCS = CLeaf "BCS" (Func $ \f 
 --                 -> Func $ \g 
 --                 -> Func $ \a 
 --                 -> Func $ \b 
@@ -50,42 +50,42 @@ cK = CNode "K" (Func $ \a -> Func $ \b -> a)   ( t0 ->- t1 ->- t0)
 --                 -> ((App (App f b) (App (App g a) x)))) tp 
 --     where tp = (t1 ->- t2 ->- t0) ->- (t3 ->- t4 ->- t2) ->- t3 ->- t1 ->- t4 ->- t0
 
--- cSS = CNode "SS" (Func $ \f 
+-- cSS = CLeaf "SS" (Func $ \f 
 --                 -> Func $ \g 
 --                 -> Func $ \x1 
 --                 -> Func $ \x2
 --                 -> ((App (App x1 x2) (App x1 x2 )) tp 
 --     where tp = undefined
 
--- cSS = CNode "SR" (Func $ \f 
+-- cSS = CLeaf "SR" (Func $ \f 
 --                 -> Func $ \g 
 --                 -> Func $ \x1 
 --                 -> Func $ \x2
 --                 -> ((App (App x1 x2) (App x1 x2 )) tp 
 --     where tp = undefined
 
--- cSS = CNode "SS" (Func $ \f 
+-- cSS = CLeaf "SS" (Func $ \f 
 --                 -> Func $ \g 
 --                 -> Func $ \x1 
 --                 -> Func $ \x2
 --                 -> ((App (App x1 x2) (App x1 x2 )) tp 
 --     where tp = undefined
 
--- cSS = CNode "SS" (Func $ \f 
+-- cSS = CLeaf "SS" (Func $ \f 
 --                 -> Func $ \g 
 --                 -> Func $ \x1 
 --                 -> Func $ \x2
 --                 -> ((App (App x1 x2) (App x1 x2 )) tp 
 --     where tp = undefined
 
--- cSS = CNode "SS" (Func $ \f 
+-- cSS = CLeaf "SS" (Func $ \f 
 --                 -> Func $ \g 
 --                 -> Func $ \x1 
 --                 -> Func $ \x2
 --                 -> ((App (App x1 x2) (App x1 x2 )) tp 
 --     where tp = undefined
 
--- cSS = CNode "SS" (Func $ \f 
+-- cSS = CLeaf "SS" (Func $ \f 
 --                 -> Func $ \g 
 --                 -> Func $ \x1 
 --                 -> Func $ \x2
@@ -94,7 +94,7 @@ cK = CNode "K" (Func $ \a -> Func $ \b -> a)   ( t0 ->- t1 ->- t0)
 
 
 
-cPrim = CNode "PrimRec" prim primType
+cPrim = CLeaf "PrimRec" prim primType
         where prim = Func $ \c -> Func $ \f -> Func $ \(N i) ->
                       if
                          i <= 0 
@@ -108,25 +108,25 @@ cPrim = CNode "PrimRec" prim primType
 
 -- Cond, Not, And, Or, XOr, Any, All
 
-cTrue = CNode "True" (B True) tBool
-cFalse = CNode "False" (B False) tBool
+cTrue = CLeaf "True" (B True) tBool
+cFalse = CLeaf "False" (B False) tBool
 
-cAnd = CNode "&" expr tp
+cAnd = CLeaf "&" expr tp
     where expr = Func $ \(B x) -> Func $ \(B y) -> B ( x && y)
           tp = tBool ->- tBool ->- tBool
-cOr = CNode "|" expr tp
+cOr = CLeaf "|" expr tp
     where expr = Func $ \(B x) -> Func $ \(B y) -> B ( x || y)
           tp = tBool ->- tBool ->- tBool
-cNot = CNode "not" expr tp
+cNot = CLeaf "not" expr tp
     where expr = Func $ \(B x) -> B ( not x)
           tp = tBool ->- tBool
-cNand = CNode "nand" expr tp
+cNand = CLeaf "nand" expr tp
     where expr = Func $ \(B x) -> Func $ \(B y) -> B ( not (x && y))
           tp = tBool ->- tBool ->- tBool
 
 
                
-cCond = CNode "Cond" expr tp
+cCond = CLeaf "Cond" expr tp
     where expr = Func $ \c -> Func $ \t -> Func $ \f
                  -> case c of
                       (B True) -> t
@@ -135,13 +135,13 @@ cCond = CNode "Cond" expr tp
 
 ----- Maybe Functions ----------
 
-cJust = CNode "Just" (Const "Just") tp
+cJust = CLeaf "Just" (Const "Just") tp
     where tp = t0 ->- (TAp tMaybe t0)
         
-cNothing = CNode "Nothing" (Const "Nothing") tp
+cNothing = CLeaf "Nothing" (Const "Nothing") tp
     where tp = (TAp tMaybe t0)
 
-cFromJust = CNode "FromJust" expr t0
+cFromJust = CLeaf "FromJust" expr t0
     where expr = Func $ \e -> case e of
                                 App (Const "Just") x -> x
                                 (Const "Nothing") 
@@ -150,26 +150,26 @@ cFromJust = CNode "FromJust" expr t0
 ----- List Functions --------
 
 
-cCons = CNode ":" (Const ":") (t0 ->- (TAp tList t0) ->- (TAp tList t0))
+cCons = CLeaf ":" (Const ":") (t0 ->- (TAp tList t0) ->- (TAp tList t0))
 
-cHead = CNode "head" expr tp
+cHead = CLeaf "head" expr tp
     where expr = Func $ \xs -> case xs of
                                  (App (App (Const ":") x) y) -> x
                                  Const "[]" 
                                      -> ExprError "head applied to []"
           tp = (TAp tList t0) ->- t0
 
-cTail = CNode "tail" expr tp
+cTail = CLeaf "tail" expr tp
     where expr = Func $ \xs -> case xs of
                                  (App (App (Const ":") x) y) -> y
                                  Const "[]" 
                                      -> ExprError "tail applied to []"
           tp = (TAp tList t0) ->- (TAp tList t0)
 
-cEmpty = CNode "[]" (Const "[]") (TAp tList t0)
+cEmpty = CLeaf "[]" (Const "[]") (TAp tList t0)
 
 
-cIsEmpty = CNode "isEmpty" expr tp
+cIsEmpty = CLeaf "isEmpty" expr tp
     where expr = Func $ \xs -> case xs of
                                  Const "[]" -> (B True)
                                  otherwise -> (B False)
@@ -178,56 +178,56 @@ cIsEmpty = CNode "isEmpty" expr tp
 
 ------ Tuple Functions ----------
 
-cPair = CNode "pair" (Const "pair") (t0 ->- t0 ->- TAp tPair t0)
-cFst = CNode "fst" expr tp
+cPair = CLeaf "pair" (Const "pair") (t0 ->- t0 ->- TAp tPair t0)
+cFst = CLeaf "fst" expr tp
        where expr = Func $ \pr -> case pr of
                                     (App (App (Const "pair") x) y) -> x
                                     otherwise -> error "Error in cFst"
              tp = (TAp tPair t0) ->- t0
 
-cSnd = CNode "snd" expr tp
+cSnd = CLeaf "snd" expr tp
        where expr = Func $ \pr -> case pr of
                                     (App (App (Const "pair") x) y) -> y
                                     otherwise -> error "Error in cFst"
              tp = (TAp tPair t0) ->- t0
 
-cTriple = CNode "triple" (Const "triple") 
+cTriple = CLeaf "triple" (Const "triple") 
            (t0 ->- t0 ->- t0 ->- TAp tTriple t0)
 
-cFst3 = CNode "fst3" expr tp
+cFst3 = CLeaf "fst3" expr tp
         where expr = Func $ \tr -> case tr of
                                     (App (App (App (Const "triple") x) y) z) -> x
                                     otherwise -> error "Error in cFst3"
               tp = (TAp tTriple t0) ->- t0
-cSnd3 = CNode "snd3" expr tp
+cSnd3 = CLeaf "snd3" expr tp
         where expr = Func $ \tr -> case tr of
                                     (App (App (App (Const "triple") x) y) z) -> y
                                     otherwise -> error "Error in cFst3"
               tp = (TAp tTriple t0) ->- t0
-cThrd3 = CNode "thrd3" expr tp
+cThrd3 = CLeaf "thrd3" expr tp
         where expr = Func $ \tr -> case tr of
                                     (App (App (App (Const "triple") x) y) z) -> y
                                     otherwise -> error "Error in cThrd3"
               tp = (TAp tTriple t0) ->- t0
 
-cQuad = CNode "quad" (Const "quad") 
+cQuad = CLeaf "quad" (Const "quad") 
            (t0 ->- t0 ->- t0 ->- TAp tTriple t0)
-cFst4 = CNode "fst4" expr tp
+cFst4 = CLeaf "fst4" expr tp
         where expr = Func $ \tr -> case tr of
                                     (App (App (App (App (Const "quad") x) y) z) w) -> x
                                     otherwise -> error "Error in cFst4"
               tp = (TAp tTriple t0) ->- t0
-cSnd4 = CNode "snd4" expr tp
+cSnd4 = CLeaf "snd4" expr tp
         where expr = Func $ \tr -> case tr of
                                     (App (App (App (App (Const "quad") x) y) z) w) -> y
                                     otherwise -> error "Error in cSnd4"
               tp = (TAp tTriple t0) ->- t0
-cThrd4 = CNode "thrd4" expr tp
+cThrd4 = CLeaf "thrd4" expr tp
         where expr = Func $ \tr -> case tr of
                                     (App (App (App (App (Const "quad") x) y) z) w) -> z
                                     otherwise -> error "Error in cThrd4"
               tp = (TAp tTriple t0) ->- t0
-cFrth4 = CNode "frth4" expr tp
+cFrth4 = CLeaf "frth4" expr tp
         where expr = Func $ \tr -> case tr of
                                     (App (App (App (App (Const "quad") x) y) z) w) -> w
                                     otherwise -> error "Error in cFrth4"
