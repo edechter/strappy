@@ -393,6 +393,23 @@ I've found various resources to guide implementation of typed
 languages.  A simple guide to the implementation of dependently typed
 programming languages is found in Loh et al.~\cite{lowsimply}.
 
+\section{Holes}
+In real-world applications, many of the useful degrees of freedom are
+continuous, and it would be useful to have parameters that could be
+fit in a systematic way. Doing this requires a small extension to the
+framework presented so far: we add a special type of construct as a
+primitive of the language. We call these holes. Each hole is a
+placeholder for values of a specific type, within a specific
+domain. For example, a continuous hole is bounded within a continuous
+integer and has the type of a real value.
+
+A combinator with no holes is filled.
+
+
+
+
+
+
 
 \bibliographystyle{plain}
 \bibliography{writeup}
