@@ -29,6 +29,10 @@ data Comb = CApp {lComb :: Comb,
                    cType :: Type}
           | CHole {cType :: Type} -- ^ a location in a tree 
 
+data Domain = IntervalDomain {lowerBound :: a, upperBound :: a}
+data Hole = Hole {holeType :: Type,
+                  holeDomain :: Domain}
+
 cDepth :: Comb -> Int
 cDepth CLeaf{} = 0
 cDepth CApp{cAppDepth=d} = d
