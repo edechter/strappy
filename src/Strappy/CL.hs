@@ -223,12 +223,14 @@ productOfHoles (Hole{holeDomain=(Domain x)}:[]) = [[toComb a] | a <- x]
 productOfHoles (Hole{holeDomain=(Domain x)}:xs) = [((toComb a):as)| a <- x, as <- productOfHoles xs]
 
 resolveCombHoles :: Comb -> [Comb]
+-- | Given a combinator with holes, this function returns a lazy list
+-- of all combinators formed by extending each hole to one of its
+-- domain values.
 resolveCombHoles c@(CApp{lComb=l, rComb=r}) = do l' <- resolveCombHoles l
                                                  r' <- resolveCombHoles r
                                                  return c{lComb=l', rComb=r'}
 resolveCombHoles CHole{cHole=Hole{holeDomain=(Domain xs)}} = [toComb x | x <- xs]
 resolveCombHoles c = [c]
-
 
 intIntervalDomain :: Int -> Int -> Domain Int
 intIntervalDomain a b = Domain [a..b]
