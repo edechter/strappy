@@ -1,6 +1,9 @@
 {-# Language GeneralizedNewtypeDeriving, 
   BangPatterns,
-  ExistentialQuantification #-}
+  ExistentialQuantification,
+  TypeSynonymInstances,
+  FlexibleInstances,
+  OverlappingInstances #-}
 
 module Strappy.CL where 
 
@@ -13,6 +16,8 @@ import Control.Monad.Trans.Class
 import Control.Monad.State
 import qualified Data.Sequence as Seq
 import Data.Sequence ( (|>), (<|))
+import qualified Data.Foldable as Foldable (toList)
+import Data.Function (on)
 
 --  local imports
 import Strappy.Type
@@ -34,12 +39,16 @@ data Comb = CApp {lComb :: Comb,
           | CInnerNode {cType :: Type} -- ^ a location in a tree 
           | CHole {cHole :: Hole}
 
-class (Show a, Ord a) =>  Domain a where 
-    lowerBound :: a
-    upperBound :: a
-    
-data Hole = forall a. Domain a => Hole {holeType :: Type,
-                                        holeDomain :: a}
+data Domain a = Domain [a]
+data Hole = forall a. (Show a, Eq a) =>  Hole {holeType :: Type,
+                                         holeDomain :: Domain a} 
+instance Show Hole where
+    show (Hole t d) = "hole :: " ++ show t
+
+instance Eq Hole where
+    (Hole t d) == (Hole t2 d2) = (t == t2) 
+instance Ord Hole where
+    compare = compare `on` holeType
 
 cDepth :: Comb -> Int
 cDepth CLeaf{} = 0
@@ -78,6 +87,7 @@ instance Show Comb where
     show CApp{lComb=c1, rComb=c2} = "(" ++ show c1 ++ " " ++ show c2 ++ ")"
     show (CLeaf n _ _) = n
     show (CInnerNode t) =  "CTerm: " ++ show t
+    show (CHole h) = show h
 
 -- | An alternative to show: if combinator is named and evaluates to a
 -- number or bool, show it an an evaluated expressions.
@@ -112,6 +122,7 @@ getType :: Comb -> Either String Type
 getType (CLeaf _ _ t) = Right t
 getType c@(CApp{lComb=c1, rComb=c2}) = getAppType c1 c2
 getType c@(CInnerNode t) = Right t
+getType (CHole (Hole t _)) = Right t
 
 getAppType :: Comb -> Comb -> Either String Type
 getAppType c1 c2  
@@ -155,8 +166,10 @@ fitCombWithHoles :: Comb -> Comb
 fitCombWithHoles c = let holes = getHoles c
                      in undefined
 
-data Dir = L | R
+data Dir = L | R deriving (Show, Ord, Eq)
 type TrPtr = Seq.Seq Dir
+instance Show TrPtr where 
+    show xs = show (Foldable.toList xs)
  
 getHoles :: Comb -> [(Hole, TrPtr)]
 -- | getHoles takes a combinator and returns a list of holes and their
@@ -170,6 +183,8 @@ getHoles c = getHoles' [] Seq.empty c
           getHoles' holes _ _ = holes
 
 
+boolHole :: Hole 
+boolHole = Hole tBool (Domain [True, False])
 
 
 

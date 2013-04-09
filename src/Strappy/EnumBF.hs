@@ -11,7 +11,7 @@ import qualified Data.PQueue.Max as PQ
 import Debug.Trace 
 
 import Strappy.Type
-import Strappy.CL
+import Strappy.CL hiding (R, L)
 import Strappy.StdLib
 import Strappy.Expr
 import Strappy.CLError
