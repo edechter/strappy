@@ -1,4 +1,6 @@
-{-# Language GeneralizedNewtypeDeriving, BangPatterns #-}
+{-# Language GeneralizedNewtypeDeriving, 
+  BangPatterns,
+  ExistentialQuantification #-}
 
 module Strappy.CL where 
 
@@ -9,6 +11,8 @@ import Data.List (union)
 import Control.Monad 
 import Control.Monad.Trans.Class
 import Control.Monad.State
+import qualified Data.Sequence as Seq
+import Data.Sequence ( (|>), (<|))
 
 --  local imports
 import Strappy.Type
@@ -28,10 +32,14 @@ data Comb = CApp {lComb :: Comb,
                    cExpr :: Expr,
                    cType :: Type}
           | CInnerNode {cType :: Type} -- ^ a location in a tree 
+          | CHole {cHole :: Hole}
 
-data Domain a = IntervalDomain {lowerBound :: a, upperBound :: a}
-data Hole a = Hole {holeType :: Type,
-                    holeDomain :: Domain a}
+class (Show a, Ord a) =>  Domain a where 
+    lowerBound :: a
+    upperBound :: a
+    
+data Hole = forall a. Domain a => Hole {holeType :: Type,
+                                        holeDomain :: a}
 
 cDepth :: Comb -> Int
 cDepth CLeaf{} = 0
@@ -84,8 +92,7 @@ instance Eq Comb where
     (CLeaf{cName=n}) == (CLeaf{cName=m}) = (n==m)
     a == b = False
 
-reduceComb :: Comb -> Expr
-reduceComb c =  reduce ( comb2Expr c)
+
 
 instance Ord Comb where 
     compare c1 c2 = compare (show c1) (show c2)
@@ -136,6 +143,32 @@ filterCombinatorsByType (c:cs) t
            Nothing -> rest
       where rest = filterCombinatorsByType cs t
 filterCombinatorsByType [] t = lift []
+
+
+----------------------------------------------------------------------
+-- Reducing combinator -- 
+
+reduceComb :: Comb -> Expr
+reduceComb c =  reduce ( comb2Expr c)
+
+fitCombWithHoles :: Comb -> Comb
+fitCombWithHoles c = let holes = getHoles c
+                     in undefined
+
+data Dir = L | R
+type TrPtr = Seq.Seq Dir
+ 
+getHoles :: Comb -> [(Hole, TrPtr)]
+-- | getHoles takes a combinator and returns a list of holes and their
+-- locations (i.e. pointers of type TrPtr to their locations in a tree).
+getHoles c = getHoles' [] Seq.empty c
+    where getHoles' holes ptr CApp{lComb=l, rComb=r} 
+              = let leftHoles = getHoles' holes (ptr |> L) l
+                    rightHoles = getHoles' leftHoles (ptr |> R)  r
+                in rightHoles
+          getHoles' holes ptr CHole{cHole=h} = (h,ptr):holes
+          getHoles' holes _ _ = holes
+
 
 
 
