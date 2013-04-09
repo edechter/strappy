@@ -95,5 +95,21 @@ test-suite properties
         ghc-options: -w -threaded -rtsopts -with-rtsopts=-N 
         main-is: properties.hs
         hs-source-dirs: tests
+
+test-suite hunit
+  type: exitcode-stdio-1.0
+  main-is: hunit.hs
+  ghc-options: -w -threaded -rtsopts -with-rtsopts=-N
+  hs-source-dirs: tests
+
+  build-depends:
+      base,
+      strappy,
+      HUnit >= 1.2,
+      test-framework       >= 0.6,
+      test-framework-hunit >= 0.2,
+      test-framework-th    >= 0.2,
+      containers           >= 0.4.2.1
+      
         
                     
