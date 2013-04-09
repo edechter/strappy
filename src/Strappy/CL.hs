@@ -43,9 +43,12 @@ data Comb = CApp {lComb :: Comb,
           | CInnerNode {cType :: Type} -- ^ a location in a tree 
           | CHole {cHole :: Hole}
 
+class ToComb a where
+    toComb :: a -> Comb
+
 data Domain a = Domain [a]
-data Hole = forall a. (Show a, Eq a) =>  Hole {holeType :: Type,
-                                         holeDomain :: Domain a} 
+data Hole = forall a. (Show a, Eq a, ToComb a) =>  Hole {holeType :: Type,
+                                                         holeDomain :: Domain a} 
 instance Show Hole where
     show (Hole t d) = "hole :: " ++ show t
 
@@ -114,9 +117,6 @@ instance Eq Comb where
     (CLeaf{cName=n}) == (CLeaf{cName=m}) = (n==m)
     a == b = False
 
-
-
-
 instance Ord Comb where 
     compare c1 c2 = compare (show c1) (show c2)
 
@@ -134,6 +134,12 @@ dOp2C opString op = CLeaf opString func (tInt ->-  tInt ->- tInt)
 bool2C :: Bool -> Comb
 -- | Convert a boolean value to a combinator.
 bool2C c = CLeaf (show c) (B c) tBool
+
+instance ToComb Bool where
+    toComb = bool2C
+instance ToComb Int where
+    toComb = num2C
+
 
 
 getType :: Comb -> Either String Type
@@ -193,6 +199,9 @@ fitCombWithHoles :: Comb -> Comb
 fitCombWithHoles c = let holes = getHoles c
                      in undefined
 
+
+----------------------------------------------------------------------
+-- Holes -------------------------------------------------------------
 data Dir = L | R deriving (Show, Ord, Eq)
 type TrPtr = Seq.Seq Dir
 instance Show TrPtr where 
@@ -210,8 +219,29 @@ getHoles c = getHoles' [] Seq.empty c
           getHoles' holes _ _ = holes
 
 
-boolHole :: Hole 
+productOfHoles (Hole{holeDomain=(Domain x)}:[]) = [[toComb a] | a <- x]
+productOfHoles (Hole{holeDomain=(Domain x)}:xs) = [((toComb a):as)| a <- x, as <- productOfHoles xs]
+
+resolveCombHoles :: Comb -> [Comb]
+resolveCombHoles c@(CApp{lComb=l, rComb=r}) = do l' <- resolveCombHoles l
+                                                 r' <- resolveCombHoles r
+                                                 return c{lComb=l', rComb=r'}
+resolveCombHoles CHole{cHole=Hole{holeDomain=(Domain xs)}} = [toComb x | x <- xs]
+resolveCombHoles c = [c]
+
+
+intIntervalDomain :: Int -> Int -> Domain Int
+intIntervalDomain a b = Domain [a..b]
+
+intIntervalHole :: Int -> Int -> Hole
+intIntervalHole a b = Hole tInt $ intIntervalDomain a b
+
+intHole = intIntervalHole 0 1
 boolHole = Hole tBool (Domain [True, False])
+
+
+
+
 
 
 
