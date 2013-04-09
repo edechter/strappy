@@ -33,6 +33,7 @@ module Strappy.Type (
                     , enumId
                     , readId
                     , nullSubst
+                    , (-->)
                     
                            
                     -- * Combinator Types
@@ -161,9 +162,13 @@ eqModTyVars t1 t2 = case mgu t1 t2 of
 type Subst = [ (TyVar, Type) ] -- ^ list of type variable - type
                                 -- associations
 nullSubst :: Subst
+-- | The empty substitution. 
 nullSubst = []
 
-(-->) :: TyVar -> Type -> Subst
+(-->) :: TyVar -- ^ u, a type variable
+      -> Type  -- ^ t, a type
+      -> Subst
+-- | Returns the substitution of u for t.
 u --> t = [(u, t)]
 
 class Types t where
@@ -250,6 +255,8 @@ newTVar k = do i <- get
                return $ mkTVar i
 
 freshInst :: Monad m => Type -> StateT Int m Type
+-- | Return a type where each type variable is replaced with a new,
+-- unbound, type variable.
 freshInst t = do let tvs = tv t 
                  ts <- mapM newTVar (map kind tvs)
                  let lk = zip (map TVar tvs) ts
@@ -265,16 +272,19 @@ typeLeftDepth (TAp t1 t2) = typeLeftDepth t2 + 1
 typeLeftDepth _ = 1
 
 extendTypeOnLeft :: Monad m => Type -> StateT Int m Type
+-- | Returns a function type whose target is the input type and whose
+-- source is a new type variable.
 extendTypeOnLeft t = do tnew <- newTVar Star
                         return (tnew ->- t)
 
 extendTypeOnLeftN :: Monad m => Type -> Int -> StateT Int m Type
+-- | Apply extendTypeOnLeft N times. 
 extendTypeOnLeftN t 0 = return $ t
 extendTypeOnLeftN t n = do t' <- extendTypeOnLeft t
                            extendTypeOnLeftN t' (n-1)
 
 
--- | types 
+-- | Useful types. 
 tChar = TCon (TyCon "Char" Star)
 tInt = TCon (TyCon "Int" Star)
 tBool = TCon (TyCon "Bool" Star)

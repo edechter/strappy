@@ -1,6 +1,10 @@
 -- ParseCL.hs
-
-module Strappy.ParseCL where
+-- | A module for parsing strings into combinators. 
+module Strappy.ParseCL (
+                        eval
+                       , parseExpr
+                       , parseExprStd
+                       ) where
 
 -- standard library imports
 import qualified Text.ParserCombinators.Parsec as P
@@ -15,7 +19,6 @@ import Control.Monad.State
 import Data.Char
 
 -- local imports
-
 import Strappy.Type
 import Strappy.CL
 import Strappy.Expr
@@ -25,14 +28,21 @@ import qualified Strappy.CombMap as CM
 import Strappy.CombMap (CombMap)
 
 
-eval :: NamedLib -> String -> Either String Expr
+eval :: NamedLib -- ^ combinator library
+        -> String -- ^  input string
+        -> Either String Expr 
+-- | Evaluate string to expression. 
 eval lib s =  liftM reduceComb $ parseExpr lib s
 
-parseExpr :: NamedLib -> String -> SynthComb
+parseExpr :: NamedLib -- ^ combinator library
+          -> String -- ^ input string
+          -> SynthComb -- ^ output in Either String Comb
+-- | Parse combinator to string.
 parseExpr combLib s = case P.parse (expr combLib) "expr" s of
                         Left err -> Left (show err)
                         Right val -> val
 
+-- | Parse combinator using stdlib 
 parseExprStd = parseExpr stdlib'
 
 lexer = makeTokenParser haskellDef

@@ -24,7 +24,11 @@ import Strappy.Type
 import Strappy.CLError
 import Strappy.Expr
                           
---  Define combinators -------
+-- | Combinator data type. A well formed combinator is either a
+-- primitive combinator (CNode) or the application of a combinator to
+-- another combinator (CApp). A not-yet-written combinator is
+-- represented by a CTerminal (not well-named).  TODO: we should
+-- change the name of CTerminal to something more appropriate.
 data Comb = CApp {lComb :: Comb, 
                   rComb ::  Comb,
                   cType :: Type,
@@ -50,11 +54,16 @@ instance Eq Hole where
 instance Ord Hole where
     compare = compare `on` holeType
 
+-- | Return the precalculated depth of a combinator. 
 cDepth :: Comb -> Int
 cDepth CLeaf{} = 0
+cDepth CHole{} = 0
 cDepth CApp{cAppDepth=d} = d
+cDepth (CInnerNode _ ) = error "cDepth: A CTerminal has no depth"
 
 mkAppDepth :: Comb -> Comb -> Int
+-- | Calcuate the depth of the combinator resulting from an
+-- application.
 mkAppDepth c1 c2 = 1 + max (cDepth c1) (cDepth c2)
 
 isCLeaf (CLeaf{}) = True
@@ -71,12 +80,15 @@ app m1 m2 = do c1 <- m1
                            in Right $ CApp c1 c2 t d Nothing
 
 app' :: Comb -> Comb -> Comb
+-- | Returns the combinator resulting from the application of two
+-- combinators. Throws error if there is a type mismatch. 
 app' c1 c2 = case getAppType c1 c2 of
                Left err -> error $ "Error in app' in CL.hs: " ++ err
                Right t -> let d = mkAppDepth c1 c2
                               in CApp c1 c2 t d Nothing
 
 infixl 4 <:>
+-- | Alias for app.
 (<:>) = app
 
 infixl 4 <::>
@@ -104,27 +116,36 @@ instance Eq Comb where
 
 
 
+
 instance Ord Comb where 
     compare c1 c2 = compare (show c1) (show c2)
 
 num2C :: Int -> Comb 
+-- | Convert integer to a combinator.
 num2C i = CLeaf (show i) (N i) tInt
 
-dOp2C :: String -> (Int -> Int -> Int) -> Comb
+dOp2C :: String -- ^ operator name
+      -> (Int -> Int -> Int) -- ^ operator
+      -> Comb
+-- | Convert a binary integer operator to an expression.
 dOp2C opString op = CLeaf opString func (tInt ->-  tInt ->- tInt)
     where func = Func $ \(N !x) -> Func $ \(N !y) -> N $ op x y
 
 bool2C :: Bool -> Comb
+-- | Convert a boolean value to a combinator.
 bool2C c = CLeaf (show c) (B c) tBool
 
--- | get type outside type monad
+
 getType :: Comb -> Either String Type
+-- | Get the type of a combinator outside the type inference monad.
 getType (CLeaf _ _ t) = Right t
 getType c@(CApp{lComb=c1, rComb=c2}) = getAppType c1 c2
 getType c@(CInnerNode t) = Right t
 getType (CHole (Hole t _)) = Right t
 
 getAppType :: Comb -> Comb -> Either String Type
+-- | Returns the type of an application of two combinators. If there
+-- is a type mismatch, returns Left.
 getAppType c1 c2  
     = let st = do t1 <- lift (getType c1) >>= freshInst
                   t2 <- lift (getType c2) >>= freshInst
@@ -135,15 +156,20 @@ getAppType c1 c2
                                ++ " when attempting to apply " 
                               ++  show c1 ++ " to " ++ show c2
                     Just subst -> return $ toType (apply subst t1)
-      in liftM fst $ runStateT st 0
-                                         
+      in liftM fst $ runStateT st 0                                         
 
+sub :: TyVar -> Type -> Comb -> Comb
+-- | Apply a substitution to a type inside a combinator.
 sub s (TVar u) c@(CLeaf _ _ t) = c{cType = apply [(s, TVar u)] (cType c)}
-                                      
-getTvs (CLeaf _ _ t) = tv t
-getTvs (CApp{lComb=cl, rComb=cr}) = getTvs cl `union` getTvs cr
 
-comb2Expr c@(CApp{lComb=c1, rComb=c2}) = App (comb2Expr c1) (comb2Expr c2)
+getTvs :: Comb -> [TyVar]
+-- | Returns all type variables used in a combinator                                      
+getTvs (CLeaf _ _ t) = tv t
+getTvs CApp{lComb=cl, rComb=cr} = getTvs cl `union` getTvs cr
+
+comb2Expr :: Comb -> Expr
+-- | Returns expression associated with combinator. 
+comb2Expr CApp{lComb=c1, rComb=c2} = App (comb2Expr c1) (comb2Expr c2)
 comb2Expr c@(CLeaf _ e _) = e
 
 filterCombinatorsByType :: [Comb] -> Type -> StateT Int [] Comb
@@ -160,6 +186,7 @@ filterCombinatorsByType [] t = lift []
 -- Reducing combinator -- 
 
 reduceComb :: Comb -> Expr
+-- | Convert a combinator to an expression and reduce. 
 reduceComb c =  reduce ( comb2Expr c)
 
 fitCombWithHoles :: Comb -> Comb

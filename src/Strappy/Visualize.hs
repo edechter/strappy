@@ -1,5 +1,4 @@
--- Visualize.hs
-
+-- | Convenience functions for visualization of combinators using GraphViz. 
 module Strappy.Visualize where
 
 import Data.GraphViz
@@ -75,8 +74,6 @@ addCombToGraph gr c@(CApp{lComb = cl, rComb = cr}) =
             rootNode = (newNode, c)
             edges = labEdges withLeftRight  ++ [ leftEdge, rightEdge] 
             nodes = rootNode:(labNodes withLeftRight)
-
--- runGraphviz (graphToDot params  gr) Pdf "test.pdf"
 
 combsToGraph :: [Comb] -> Gr Comb String
 combsToGraph cs = foldl (addCombToGraph) (mkGraph [] []) cs
