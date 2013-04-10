@@ -51,7 +51,7 @@ refreshCombFromGrammar _ x = Just x
 nullGrammar :: Grammar
 nullGrammar = Grammar CM.empty 0
 
-logsumexp xs = log . sum . map (exp . (\x -> x-a)) $ xs
+logsumexp xs = a + (log . sum . map (exp . (\x -> x-a)) $ xs)
     where a = maximum xs
 
 normalizeGrammar :: Grammar -> Grammar 
@@ -62,12 +62,16 @@ normalizeGrammar (Grammar lib ex)
       in Grammar lib' ex' 
           
 countExpansions :: Comb -> Int
+-- | Returns the number of expansions used in this combinator.
 countExpansions c = count 0 c
     where count n (CLeaf{}) = n
           count n CApp{lComb=l, rComb=r} = let n' = count (n + 1) l
                                            in count n' r
 
-countAlts :: [Comb] -> Type -> CombMap Int
+countAlts :: [Comb]           -- ^ a list of combinators (e.g. from a library)
+          -> Type             -- ^ a type t  
+          -> CombMap Int      -- ^ a map of combinators that return type t
+-- | 
 countAlts cs tp = let ms = do tp' <- freshInst tp
                               alt <- filterCombinatorsByType cs tp'
                               return $ CM.singleton alt 1
@@ -93,8 +97,8 @@ bernLogProb hits obs | otherwise =
 showCombWType cs = unlines $ map show [(c, cType c) | c <- cs]
 
 estimateGrammar :: 
-    Grammar -- ^ prior
-    -> Double -- ^ number of pseudo-observations by which to weight the prior 
+    Grammar           -- ^ prior
+    -> Double         -- ^ number of pseudo-observations by which to weight the prior 
     -> CombMap [Type] -- ^ primitive combinators and their occurance counts
     -> [(Task, Comb)]
     -> Grammar
