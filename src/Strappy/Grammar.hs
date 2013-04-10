@@ -14,8 +14,6 @@ import Strappy.CombMap (CombMap)
 import Strappy.Compress
 import Strappy.Task
 
-
-
 data Grammar = Grammar { library :: CombMap Double, -- ^ neg log prob
                          expansions :: Double -- ^ neg log prob
                        } deriving Eq
@@ -31,12 +29,15 @@ instance Show Grammar where
                            ++ showLibrary lib
 
 findCLeafInGrammar :: Grammar -> Comb -> Maybe Comb
+-- | Is the combinator leaf in the grammar? If so, return it. Else Nothing. 
 findCLeafInGrammar gr c@CLeaf{cName=n} = lookup n asc
     where cs = CM.keys (library gr)
           asc = [(cName c, c) | c <- cs, isCLeaf c]
 findCLeafInGrammar gr c= error $ show c ++ " is not a CLeaf."
 
 refreshCombFromGrammar :: Grammar -> Comb -> Maybe Comb
+-- | Grab the combinator from the grammar. Useful, to get the original
+-- type information.
 refreshCombFromGrammar gr c@(CLeaf{cName=n}) = findCLeafInGrammar gr c
 refreshCombFromGrammar gr c@CApp{lComb=cl, rComb=cr} = do cl' <- refreshCombFromGrammar gr cl
                                                           cr'<-  refreshCombFromGrammar gr cr
@@ -50,22 +51,27 @@ refreshCombFromGrammar _ x = Just x
 nullGrammar :: Grammar
 nullGrammar = Grammar CM.empty 0
 
-logsumexp = log . sum . (map exp)
+logsumexp xs = a + (log . sum . map (exp . (\x -> x-a)) $ xs)
+    where a = maximum xs
 
 normalizeGrammar :: Grammar -> Grammar 
 normalizeGrammar (Grammar lib ex)
-    = let logTotalMass = logsumexp $ (CM.elems lib)
-          lib' = CM.map (+ (-logTotalMass)) lib
+    = let logTotalMass = logsumexp $ ex : (CM.elems lib)
+          lib' = CM.map (\x -> x - logTotalMass) lib
           ex' = ex - logTotalMass
-      in Grammar lib'  0 -- ex'
+      in Grammar lib' ex' 
           
-sum' (a, b) (c, d) = (a + b, c + d)
-
 countExpansions :: Comb -> Int
-countExpansions (CLeaf{}) = 0
-countExpansions CApp{lComb=l, rComb=r} = 1 + countExpansions l  + countExpansions r
+-- | Returns the number of expansions used in this combinator.
+countExpansions c = count 0 c
+    where count n (CLeaf{}) = n
+          count n CApp{lComb=l, rComb=r} = let n' = count (n + 1) l
+                                           in count n' r
 
-countAlts :: [Comb] -> Type -> CombMap Int
+countAlts :: [Comb]           -- ^ a list of combinators (e.g. from a library)
+          -> Type             -- ^ a type t  
+          -> CombMap Int      -- ^ a map of combinators that return type t
+-- | 
 countAlts cs tp = let ms = do tp' <- freshInst tp
                               alt <- filterCombinatorsByType cs tp'
                               return $ CM.singleton alt 1
@@ -91,8 +97,8 @@ bernLogProb hits obs | otherwise =
 showCombWType cs = unlines $ map show [(c, cType c) | c <- cs]
 
 estimateGrammar :: 
-    Grammar -- ^ prior
-    -> Double -- ^ number of pseudo-observations by which to weight the prior 
+    Grammar           -- ^ prior
+    -> Double         -- ^ number of pseudo-observations by which to weight the prior 
     -> CombMap [Type] -- ^ primitive combinators and their occurance counts
     -> [(Task, Comb)]
     -> Grammar

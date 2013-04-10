@@ -275,4 +275,8 @@ stdgrammar = Grammar lib c
     where lib  = CM.fromList $ [(c, (-3::Double)) | c <- CM.elems stdlib']
           c = 0 -- (-2)
 
+basicGrammar = Grammar lib c
+    where lib = CM.fromList $ [(c, 0) | c <- [cI, cTrue, cFalse, cAnd, cOr]]
+          c = 0.5
+
 
