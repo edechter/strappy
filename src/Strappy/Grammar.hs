@@ -14,8 +14,6 @@ import Strappy.CombMap (CombMap)
 import Strappy.Compress
 import Strappy.Task
 
-
-
 data Grammar = Grammar { library :: CombMap Double, -- ^ neg log prob
                          expansions :: Double -- ^ neg log prob
                        } deriving Eq
@@ -31,12 +29,15 @@ instance Show Grammar where
                            ++ showLibrary lib
 
 findCLeafInGrammar :: Grammar -> Comb -> Maybe Comb
+-- | Is the combinator leaf in the grammar? If so, return it. Else Nothing. 
 findCLeafInGrammar gr c@CLeaf{cName=n} = lookup n asc
     where cs = CM.keys (library gr)
           asc = [(cName c, c) | c <- cs, isCLeaf c]
 findCLeafInGrammar gr c= error $ show c ++ " is not a CLeaf."
 
 refreshCombFromGrammar :: Grammar -> Comb -> Maybe Comb
+-- | Grab the combinator from the grammar. Useful, to get the original
+-- type information.
 refreshCombFromGrammar gr c@(CLeaf{cName=n}) = findCLeafInGrammar gr c
 refreshCombFromGrammar gr c@CApp{lComb=cl, rComb=cr} = do cl' <- refreshCombFromGrammar gr cl
                                                           cr'<-  refreshCombFromGrammar gr cr
@@ -50,7 +51,8 @@ refreshCombFromGrammar _ x = Just x
 nullGrammar :: Grammar
 nullGrammar = Grammar CM.empty 0
 
-logsumexp = log . sum . (map exp)
+logsumexp xs = log . sum . map (exp . (\x -> x-a)) $ xs
+    where a = maximum xs
 
 normalizeGrammar :: Grammar -> Grammar 
 normalizeGrammar (Grammar lib ex)
