@@ -56,16 +56,16 @@ logsumexp xs = log . sum . map (exp . (\x -> x-a)) $ xs
 
 normalizeGrammar :: Grammar -> Grammar 
 normalizeGrammar (Grammar lib ex)
-    = let logTotalMass = logsumexp $ (CM.elems lib)
-          lib' = CM.map (+ (-logTotalMass)) lib
+    = let logTotalMass = logsumexp $ ex : (CM.elems lib)
+          lib' = CM.map (\x -> x - logTotalMass) lib
           ex' = ex - logTotalMass
-      in Grammar lib'  0 -- ex'
+      in Grammar lib' ex' 
           
-sum' (a, b) (c, d) = (a + b, c + d)
-
 countExpansions :: Comb -> Int
-countExpansions (CLeaf{}) = 0
-countExpansions CApp{lComb=l, rComb=r} = 1 + countExpansions l  + countExpansions r
+countExpansions c = count 0 c
+    where count n (CLeaf{}) = n
+          count n CApp{lComb=l, rComb=r} = let n' = count (n + 1) l
+                                           in count n' r
 
 countAlts :: [Comb] -> Type -> CombMap Int
 countAlts cs tp = let ms = do tp' <- freshInst tp
