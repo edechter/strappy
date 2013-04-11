@@ -14,6 +14,7 @@ module Strappy.Type (
                     , TyVar(..)
                     , TyCon(..)
                     , Subst(..)
+                    , TypeInference
 
                     -- * Functions
                     , (->-)
@@ -59,6 +60,8 @@ import Control.Monad.Identity
 import Control.Monad.Trans.Class
 import Control.Monad.Error
 import Control.Monad.State
+
+type TypeInference = StateT Int
 
 --  define a type scheme
 type Id = String
@@ -249,12 +252,12 @@ makeNewTVar tps = TyVar (enumId ts_next) Star
                       [] -> 0
                       xs -> 1 + maximum xs
 
-newTVar :: Monad m => Kind -> StateT Int m Type
+newTVar :: Monad m => Kind -> TypeInference m Type
 newTVar k = do i <- get
                put (i+1)
                return $ mkTVar i
 
-freshInst :: Monad m => Type -> StateT Int m Type
+freshInst :: Monad m => Type -> TypeInference m Type
 -- | Return a type where each type variable is replaced with a new,
 -- unbound, type variable.
 freshInst t = do let tvs = tv t 
@@ -271,13 +274,13 @@ typeLeftDepth :: Type -> Int
 typeLeftDepth (TAp t1 t2) = typeLeftDepth t2 + 1
 typeLeftDepth _ = 1
 
-extendTypeOnLeft :: Monad m => Type -> StateT Int m Type
+extendTypeOnLeft :: Monad m => Type -> TypeInference m Type
 -- | Returns a function type whose target is the input type and whose
 -- source is a new type variable.
 extendTypeOnLeft t = do tnew <- newTVar Star
                         return (tnew ->- t)
 
-extendTypeOnLeftN :: Monad m => Type -> Int -> StateT Int m Type
+extendTypeOnLeftN :: Monad m => Type -> Int -> TypeInference m Type
 -- | Apply extendTypeOnLeft N times. 
 extendTypeOnLeftN t 0 = return $ t
 extendTypeOnLeftN t n = do t' <- extendTypeOnLeft t

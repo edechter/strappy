@@ -178,7 +178,7 @@ comb2Expr :: Comb -> Expr
 comb2Expr CApp{lComb=c1, rComb=c2} = App (comb2Expr c1) (comb2Expr c2)
 comb2Expr c@(CLeaf _ e _) = e
 
-filterCombinatorsByType :: [Comb] -> Type -> StateT Int [] Comb
+filterCombinatorsByType :: [Comb] -> Type -> TypeInference [] Comb
 filterCombinatorsByType (c:cs) t  
     = do ct <- freshInst (cType c)
          case mgu ct t of

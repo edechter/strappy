@@ -82,7 +82,7 @@ enumBF' gr i bfState@(BFState openPQ closedPQ) =
            $ enumBF' gr i $ BFState openPQ'' closedPQ'
         
 
-expandToApp :: Grammar -> CombBase -> StateT Int [] CombBase
+expandToApp :: Grammar -> CombBase -> TypeInference [] CombBase
 expandToApp gr (CombBase (CInnerNode tp) (Just []) v) = 
     do tp' <- newTVar Star
        let t_left = tp' ->- tp

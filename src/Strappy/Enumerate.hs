@@ -21,12 +21,12 @@ import CLError
 import CombMap (CombMap, (!))
 import qualified CombMap as CM
 
-enum :: [Comb] -> Int -> Type -> StateT Int [] Comb
+enum :: [Comb] -> Int -> Type -> TypeInference [] Comb
 enum xs d t = do
   t' <- freshInst t
   enum' xs d t'
 
-enum' :: [Comb] -> Int -> Type -> StateT Int [] Comb
+enum' :: [Comb] -> Int -> Type -> TypeInference [] Comb
 enum' xs 0 t = filterCombinatorsByType xs t
 
 enum' xs d t = enum' xs 0 t `mplus` do
@@ -48,17 +48,17 @@ enum' xs d t = enum' xs 0 t `mplus` do
 
 
 -- | Limited Breadth Enum
-enumLB :: CombMap Int -> Int -> Int ->  Type -> StateT Int [] Comb
+enumLB :: CombMap Int -> Int -> Int ->  Type -> TypeInference [] Comb
 enumLB xs d b t = do
   t' <- freshInst t
   enumLB' xs d b t'
 
-liftST :: ([(a, Int)] -> [(a,Int)]) -> (StateT Int [] a -> StateT Int [] a)
+liftST :: ([(a, Int)] -> [(a,Int)]) -> (TypeInference [] a -> TypeInference [] a)
 liftST f st = StateT $ \s -> 
               let xs = runStateT st s
               in f xs 
 
-enumLB' :: CombMap Int -> Int -> Int -> Type -> StateT Int [] Comb
+enumLB' :: CombMap Int -> Int -> Int -> Type -> TypeInference [] Comb
 enumLB' xs 0 b t = let cs = filterCombinatorsByType (CM.keys xs) t 
                        g ys =take b $ 
                                  sortBy (\(a, _) (b, _) -> 
@@ -88,7 +88,7 @@ enumIB :: CombMap Int
        -> Int -- max depth
        -> Int -- max num combinators
        -> Type
-       -> StateT Int [] Comb
+       -> TypeInference [] Comb
 enumIB xs d n t = let m = CM.size xs
                   in liftST (take n) $ enumIB' (-1) 0
     where enumIB' last i = let st = enumLB xs d i t
