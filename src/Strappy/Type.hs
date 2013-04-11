@@ -15,6 +15,7 @@ module Strappy.Type (
                     , TyCon(..)
                     , Subst(..)
                     , TypeInference
+                    , runTI
 
                     -- * Functions
                     , (->-)
@@ -61,7 +62,10 @@ import Control.Monad.Trans.Class
 import Control.Monad.Error
 import Control.Monad.State
 
+-- type inference monad
 type TypeInference = StateT Int
+runTI :: (Monad m) => TypeInference m a -> m (a, Int)
+runTI m = runStateT m 0
 
 --  define a type scheme
 type Id = String

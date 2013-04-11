@@ -162,7 +162,7 @@ getAppType c1 c2
                                ++ " when attempting to apply " 
                               ++  show c1 ++ " to " ++ show c2
                     Just subst -> return $ toType (apply subst t1)
-      in liftM fst $ runStateT st 0                       
+      in liftM fst . runTI $ st                        
 
 typeOfApp :: Monad m => Comb -> Comb -> TypeInference m Type
 typeOfApp c_left c_right 
