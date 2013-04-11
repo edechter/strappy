@@ -277,6 +277,6 @@ stdgrammar = Grammar lib c
 
 basicGrammar = Grammar lib c
     where lib = CM.fromList $ [(c, 0) | c <- [cI, cTrue, cFalse, cAnd, cOr]]
-          c = 0.5
+          c = 0.1
 
 

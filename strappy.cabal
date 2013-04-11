@@ -114,4 +114,14 @@ test-suite hunit
       containers           >= 0.4.2.1
       
         
+benchmark sampling
+  type:           exitcode-stdio-1.0
+  main-is:        sampling.hs
+  ghc-options:    -Wall -O2 -threaded -fdicts-cheap -funbox-strict-fields
+  hs-source-dirs: benchmarks
+  build-depends:
+    base,
+    strappy,
+    criterion
+
                     
