@@ -72,6 +72,9 @@ mkAppDepth c1 c2 = 1 + max (cDepth c1) (cDepth c2)
 isCLeaf (CLeaf{}) = True
 isCLeaf _ = False
 
+isCApp (CApp{}) = True
+isCApp _        = False
+
 type SynthComb = Either String Comb
  
 app :: SynthComb -> SynthComb -> SynthComb

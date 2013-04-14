@@ -121,6 +121,15 @@ estimateGrammar prior psObs ind xs =
         empiricalGr = Grammar logprobs 0 -- logProbEx
     in combineGrammars (normalizeGrammar prior, psObs) (normalizeGrammar empiricalGr, 1.0)
 
+-- Estimates the production probabilities for the given grammar by counting
+estimateGrammarWeighted ::
+  Grammar
+  -> Double  -- pseudo-counts
+  -> CombMap [Type] -- primitive combinators
+  -> [(Comb, Double)]  -- Weighted observations
+  -> Grammar
+estimateGrammarWeighted = undefined -- TODO
+
 calcLogProb :: Grammar 
             -> Type
             -> Comb
@@ -136,6 +145,25 @@ calcLogProb gr tp c
           combLogProb = (library gr) CM.! c - logProbAll
           out = if length altCs < 2 then log (0.5) else combLogProb
       in out
+
+combinatorLL :: Grammar
+                -> Comb
+                -> Double
+-- | Returns the log probability of producing the given tree
+-- when asked for the given type
+-- FIXME: This follows what is described in the paper.
+-- I am confused as to whether the rest of the code does, however;
+-- in particular, I do not see why there are no terms from nonterminal nodes
+combinatorLL gr c =
+  -- Is this combinator a leaf?
+  if CM.member c (library gr)
+  then calcLogProb gr (cType c) c
+  else case c of
+    CApp{lComb = l, rComb = r} -> combinatorLL gr l + combinatorLL gr r
+    _ -> 0 -- Is this the correct thing to do?
+
+      
+      
 
 -- exLogProb :: Grammar -> Type -> Double
 -- exLogProb gr tp  
