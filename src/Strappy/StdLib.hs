@@ -14,7 +14,7 @@ import Strappy.Expr
 import Strappy.Grammar
 import Strappy.Routers (cS, cB, cC, cSS, cSB, cSC, 
                   cBS, cBB, cBC, cCS, cCB, cCC,
-                  cSSS, cBCB, routers)
+                  cSSS, cBCB, one_routers, routers)
 
 type NamedLib = HMap.Map String Comb
 
@@ -239,8 +239,8 @@ stdlib' = (CM.fromList $
            ("I", cI)
 --         , ("K", cK)
 --         , ("cond", cCond)
-        , ("True", cTrue)
-        , ("False", cFalse)
+        -- , ("True", cTrue)
+        -- , ("False", cFalse)
 --         , ("|", cOr)
 --         , ("&", cAnd)
 --         , ("not", cNot)
@@ -261,15 +261,15 @@ stdlib' = (CM.fromList $
 --            , ("head", cHead)
 --            , ("tail", cTail)
 --            , ("isEmpty", cIsEmpty)
-          , ("pair", cPair)
-          , ("fst", cFst)
-          , ("snd", cSnd)
-          , ("triple", cTriple)
-          , ("fst3", cFst3)
-          , ("snd3", cSnd3)
-          , ("thrd3", cThrd3)
+          -- , ("pair", cPair)
+          -- , ("fst", cFst)
+          -- , ("snd", cSnd)
+          -- , ("triple", cTriple)
+          -- , ("fst3", cFst3)
+          -- , ("snd3", cSnd3)
+          -- , ("thrd3", cThrd3)
            ]) 
-           `CM.union` routers
+           `CM.union` one_routers
 
 stdgrammar = Grammar lib c
     where lib  = CM.fromList $ [(c, (-3::Double)) | c <- CM.elems stdlib']
