@@ -1,16 +1,16 @@
- 
+\renewcommand{\colwidth}{.7cm}
 \begingroup\tabcolsep=2pt\def\arraystretch{1}
 \hspace{-10cm}\begin{table}[p]
 \tiny
 \begin{tabular}{p{.02\linewidth}p{.9\linewidth}}
  ~ & 
-  \begin{tabular}{|m{.5cm}|m{2.5cm}|m{4.5cm}|}
+  \begin{tabular}{|m{\colwidth}|m{2.5cm}|m{4.5cm}|}
     \hline
     func. & CL expression & schematic\\
     \hline\hline
   \end{tabular}\\
 (a) & 
-  \begin{tabular}{|m{.5cm}|m{2.5cm}|m{4.5cm}|}
+  \begin{tabular}{|m{\colwidth}|m{2.5cm}|m{4.5cm}|}
     {\color{OliveGreen}NOT} & \color{OliveGreen}{(S NAND I)} & 
     %%%%%%% NOT %%%%%%%%
     \begin{tikzpicture}
@@ -68,7 +68,7 @@
     \hline
   \end{tabular}\\
 (b) & 
-  \begin{tabular}{|m{.5cm}|m{2.5cm}|m{4.5cm}|}
+  \begin{tabular}{|m{\colwidth}|m{2.5cm}|m{4.5cm}|}
     \hline
     {\color{red}$E_1$} & {\color{red} S B (S NAND) } & 
     %%%%%%%% E1 %%%%%%%%%%%%%%%%%%%%
@@ -103,7 +103,7 @@
     \hline
   \end{tabular}\\
 (c) \hspace{-3pt} & 
-  \begin{tabular}{|m{.5cm}|m{2.5cm}|m{4.5cm}|}
+  \begin{tabular}{|m{\colwidth}|m{2.5cm}|m{4.5cm}|}
     \hline\hline
       TRUE & (S NAND) {\color{OliveGreen}(S NAND I)} \newline
       $\rightarrow$  (S NAND) {\color{OliveGreen}NOT} &
