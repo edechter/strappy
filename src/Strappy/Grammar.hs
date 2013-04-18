@@ -56,7 +56,7 @@ logsumexp xs = a + (log . sum . map (exp . (\x -> x-a)) $ xs)
 
 normalizeGrammar :: Grammar -> Grammar 
 normalizeGrammar (Grammar lib ex)
-    = let logTotalMass = logsumexp $ ex : (CM.elems lib)
+    = let logTotalMass = logsumexp $ ex : CM.elems lib
           lib' = CM.map (\x -> x - logTotalMass) lib
           ex' = ex - logTotalMass
       in Grammar lib' ex' 
@@ -83,14 +83,14 @@ combineGrammars :: (Grammar, Double) -> (Grammar, Double) -> Grammar
 combineGrammars (Grammar lib1 ex1, ob1) (Grammar lib2 ex2, ob2) = 
     normalizeGrammar $ Grammar lib ex
         where lib = CM.unionWith (\a b -> f a ob1 b ob2) lib1 lib2
-              f lp1 n lp2 m = log $ ((exp lp1) * ( n) 
-                               + (exp lp2) * ( m)) 
+              f lp1 n lp2 m = log  $ exp lp1 * n + exp lp2 * m 
+                               
                               
               ex = f ex1 ob1 ex2 ob2
 
 bernLogProb :: Int -> Int -> Double
 bernLogProb hits obs | obs >= hits = logI hits - logI obs  where logI = log . fromIntegral
-bernLogProb hits obs | otherwise =
+bernLogProb hits obs = 
                          error $ "bernLogProb: # obs " ++ show obs ++ 
                                " must be greater than # of hits " ++ show hits
 
@@ -111,7 +111,7 @@ estimateGrammar prior psObs ind xs =
                $ map (countAlts combs) (concat . CM.elems $ ind')
         logprobs =  CM.mapWithKey f uses
             where f c v = bernLogProb v w where
-                      w = case (CM.lookup c alts) of 
+                      w = case CM.lookup c alts of 
                             Nothing -> error $ "estimateGrammar: cannot find "
                                        ++ show c ++ " in alternative map " 
                                       ++ show alts
@@ -131,10 +131,10 @@ calcLogProb :: Grammar
 calcLogProb gr tp c 
     = let m = filterCombinatorsByType (CM.keys $ library gr) tp
           altCs = map fst $ runStateT m 0
-          combLps = [exp $ (library gr) CM.! x | x <- altCs] 
+          combLps = [exp $ library gr CM.! x | x <- altCs] 
           logProbAll = log $ sum combLps
-          combLogProb = (library gr) CM.! c - logProbAll
-          out = if length altCs < 2 then log (0.5) else combLogProb
+          combLogProb = library gr CM.! c - logProbAll
+          out = if length altCs < 2 then log 0.5 else combLogProb
       in out
 
 -- exLogProb :: Grammar -> Type -> Double

@@ -53,7 +53,7 @@ instance Show Hole where
     show (Hole t d) = "hole :: " ++ show t
 
 instance Eq Hole where
-    (Hole t d) == (Hole t2 d2) = (t == t2) 
+    (Hole t d) == (Hole t2 d2) = t == t2
 instance Ord Hole where
     compare = compare `on` holeType
 
@@ -95,7 +95,7 @@ infixl 4 <:>
 (<:>) = app
 
 infixl 4 <::>
-(<::>) = \m1 c2 ->  m1 <:> (return c2)
+m1 <::> c2 = m1 <:> return c2
                   
 
 instance Show Comb where
@@ -114,7 +114,7 @@ show' c@(CApp{lComb=c1, rComb=c2}) = case reduceComb c of
 
 instance Eq Comb where
     (CApp{lComb=c1, rComb=c2, cAppDepth=dl}) == (CApp{lComb=b1, rComb=b2, cAppDepth=dr}) = (dl == dr) && (c1 == b1) && (c2 == b2)
-    (CLeaf{cName=n}) == (CLeaf{cName=m}) = (n==m)
+    (CLeaf{cName=n}) == (CLeaf{cName=m}) = n == m
     a == b = False
 
 instance Ord Comb where 
@@ -191,7 +191,7 @@ filterCombinatorsByType :: [Comb] -> Type -> TypeInference [] Comb
 filterCombinatorsByType (c:cs) t  
     = do ct <- freshInst (cType c)
          case mgu ct t of
-           Just sub -> (return  (c{cType = apply sub ct})) `mplus` rest
+           Just sub -> return  (c{cType = apply sub ct}) `mplus` rest
            Nothing -> rest
       where rest = filterCombinatorsByType cs t
 filterCombinatorsByType [] t = lift []
@@ -202,7 +202,7 @@ filterCombinatorsByType [] t = lift []
 
 reduceComb :: Comb -> Expr
 -- | Convert a combinator to an expression and reduce. 
-reduceComb c =  reduce ( comb2Expr c)
+reduceComb c =  reduce $ comb2Expr c
 
 fitCombWithHoles :: Comb -> Comb
 fitCombWithHoles c = let holes = getHoles c
@@ -219,7 +219,7 @@ instance Show TrPtr where
 getHoles :: Comb -> [(Hole, TrPtr)]
 -- | getHoles takes a combinator and returns a list of holes and their
 -- locations (i.e. pointers of type TrPtr to their locations in a tree).
-getHoles c = getHoles' [] Seq.empty c
+getHoles = getHoles' [] Seq.empty 
     where getHoles' holes ptr CApp{lComb=l, rComb=r} 
               = let leftHoles = getHoles' holes (ptr |> L) l
                     rightHoles = getHoles' leftHoles (ptr |> R)  r
@@ -229,7 +229,7 @@ getHoles c = getHoles' [] Seq.empty c
 
 
 productOfHoles (Hole{holeDomain=(Domain x)}:[]) = [[toComb a] | a <- x]
-productOfHoles (Hole{holeDomain=(Domain x)}:xs) = [((toComb a):as)| a <- x, as <- productOfHoles xs]
+productOfHoles (Hole{holeDomain=(Domain x)}:xs) = [toComb a : as| a <- x, as <- productOfHoles xs]
 
 resolveCombHoles :: Comb -> [Comb]
 -- | Given a combinator with holes, this function returns a lazy list

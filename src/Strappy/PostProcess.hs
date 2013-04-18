@@ -15,7 +15,6 @@ import Debug.Trace
 import Text.ParserCombinators.Parsec 
 import Text.Parsec.Token 
 import Text.ParserCombinators.Parsec.Token
-import Text.ParserCombinators.Parsec ((<|>), (<?>))
 import Text.Parsec.Language (haskellDef)
 import Control.Applicative ((<$>), (<*>), (*>), (<*))
 

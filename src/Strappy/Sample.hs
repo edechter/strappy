@@ -36,7 +36,7 @@ sampleFromGrammar gr tp = do shouldExpand <- flip $ expansions gr
                                             let cs = runStateT (filterCombinatorsByType (CM.keys lib) tp) 0
                                             let dist = [(lib CM.! c, c ) | (c, i) <- cs]
                                                 z = logsumexp . map fst $ dist
-                                                dist' = map (\(x, y) -> (exp (x - z), y)) $ dist 
+                                                dist' = map (\(x, y) -> (exp (x - z), y)) dist 
                                             guard (not . null $ dist)
                                             sampleMultinomial  dist'
                                  

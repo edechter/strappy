@@ -31,7 +31,7 @@ instance Show Expr where
 
 instance Eq Expr where
     (App l1 r1) == (App l2 r2) = (l1 == l2) && (r1 == r2)
-    (Lam e) == (Lam f) = (e == f)
+    (Lam e) == (Lam f) = e == f
     (N i) == (N j) = i == j
     (C i) == (C j) = i == j
     (B i) == (B j) = i == j
@@ -78,7 +78,7 @@ substitute e a@(Func _) = a
 -- | implement reduction with a step limit
 reduceWithLimit :: Int -> Expr -> Maybe Expr
 {-# INLINE reduceWithLimit #-}
-reduceWithLimit 0 e = (trace $ "Reduction limit reached.") $ Nothing
+reduceWithLimit 0 e = (trace "Reduction limit reached.")  Nothing
 reduceWithLimit i x@(App (Lam e) f) = 
     do f' <- reduceWithLimit (i-1) f 
        reduceWithLimit (i-1) $ substitute f' e
