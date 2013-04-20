@@ -20,11 +20,6 @@
 \usetikzlibrary{arrows,automata, positioning, patterns,backgrounds}
 \usetikzlibrary{arrows,shapes.gates.logic.US,shapes.gates.logic.IEC,calc}
 
-\usepackage{titling}
-
-\setlength{\droptitle}{-1em}   
-\date{}
-
 \newtheorem{definition}{Definition}
 \DeclareMathOperator*{\argmax}{arg\,max} 
 \DeclareMathOperator*{\argmin}{arg\,min} 
@@ -32,26 +27,26 @@
 
 \title{Bootstrap learning via modular concept discovery}
 
-%% \author{Eyal Dechter \\
-%% MIT\\
-%% USA \\
-%% edechter@mit.edu
-%% \And
-%% Jon Malmaud \\
-%% MIT \\ 
-%% USA \\
-%% malmaud@mit.edu
-%% \And 
-%% Ryan P.  Adams \\
-%% Harvard University\\
-%% USA \\
-%% rpa@seas.harvard.edu
-%% \And
-%% Joshua B. Tenenbaum \\
-%% MIT\\
-%% USA \\
-%% jbt@mit.edu
-%% }
+\author{Eyal Dechter \\
+MIT\\
+USA \\
+edechter@mit.edu
+\And
+Jon Malmaud \\
+MIT \\ 
+USA \\
+malmaud@mit.edu
+\And 
+Ryan P.  Adams \\
+Harvard University\\
+USA \\
+rpa@seas.harvard.edu
+\And
+Joshua B. Tenenbaum \\
+MIT\\
+USA \\
+jbt@mit.edu
+}
 
 \begin{document}
 
@@ -77,10 +72,11 @@
  first step to estimate a new stochastic grammar. We test this
  procedure on symbolic regression and boolean circuit learning and
  show that the learner discovers modular concepts for these
- domains. Whereas the learner is initially unable to solve almost any
- of the posed problems, it quickly acquires the ability to solve many
- problems by gaining abstract knowledge of the structure of the
- solution space.
+ domains. Whereas the learner is able to solve almost none of the
+ posed problems in the procedure's first iteration, it rapidly becomes
+ able to solve a large number by gaining abstract knowledge of the
+ structure of the solution space.
+ 
  
 \end{abstract}
 
@@ -149,15 +145,20 @@ distribution over program primitives clearly fails.
 
 
 \section{Related Work}
-The idea of discovering and using reusable subcomponents is an old one
-in AI. Rendell's 1985 paper~\cite{DBLP:conf/ijcai/Rendell85},
-``Substantial Constructive Induction Using Layered Information
-Compression: Tractable Feature Formation in Search,'' presented within
-a classical search paradigm the idea that compression provides a
-heuristic for constructing good representations. Within the Inductive
-Logic Programming (ILP) literature, researchers have explored ``Constructive
-Induction,'' generating new and reusable logic programming
-terms~\cite{DBLP:conf/ijcai/Muggleton87}. We apply these ideas to
+The idea of discovering and using reusable subcomponents is part of an
+old tradition in AI. For instance, it is one of the central themes in
+Herb Simon's 1969 ``The Sciences of the
+Artificial''~\cite{simon1996sciences}. Rendell's 1985
+paper~\cite{DBLP:conf/ijcai/Rendell85}, ``Substantial Constructive
+Induction Using Layered Information Compression: Tractable Feature
+Formation in Search,'' presented within a classical search paradigm
+the idea that compression provides a heuristic for constructing good
+representations. Within the Inductive Logic Programming (ILP)
+literature, researchers have explored ``Constructive Induction,''
+generating new and reusable logic programming
+terms~\cite{DBLP:conf/ijcai/Muggleton87}. Later, predicate invention
+was also applied in the multitask
+setting~\cite{DBLP:conf/ilp/KhanMP98}. We apply these ideas to
 learning functional programs, and believe that the modularity and
 compositionality afforded by this representation is necessary for
 these ideas to be successful.
@@ -436,7 +437,7 @@ induction problem: suppose we are given a set of \textbf{tasks}
 $T=\{t_k\}_{k=1}^K$ where each task is a function $t_k : \mathcal{L}
 \rightarrow \{0, 1\}$ and where $\mathcal{L}$ is the set of
 expressions in our language.  We say that expression $ e \in
-\mathcal{L}$ \textbf{solves} $t_k$ if $ t_k(p) = 1$. Our goal is to
+\mathcal{L}$ \textbf{solves} $t_k$ if $ t_k(e) = 1$. Our goal is to
 solve as many of the tasks in $T$ as we can.
 
 We propose the \textbf{E.C. algorithm}, an iterative procedure to solve this
@@ -635,7 +636,7 @@ expressions $e$. We define the probability of an expression ${e \in
 where $p(c | \tau(c))$ is the probability of using primitive $c$ when
 the requesting type is $\tau(c)$. In turn, we define the conditional
 probability for each combinator $c_n$ to be $p(c_n| \tau(c_n)) \propto
-\frac{p}{\sum_{c_j \in C_{\tau(c_n)}} p_j}$.  That is, $p(c_n | \tau(c_n)$ is
+\frac{p_n}{\sum_{c_j \in C_{\tau(c_n)}} p_j}$.  That is, $p(c_n | \tau(c_n)$ is
 proportional to the probability of sampling $c_n$ from the multinomial
 distribution defined by the $p_n$'s, conditioned on the requesting
 type, with the constant of proportionality chosen to ensure that the
@@ -674,8 +675,9 @@ criterion~\cite{DBLP:conf/sfp/Katayama05}
 problem as a best-first exploration of an AND/OR tree
 (Figure~\ref{fig:andor})~\cite{nilsson1982principles}~\cite{DBLP:journals/cacm/Hall73}. In
 words, the enumeration procedure is best described by the following
-recursion: every program is either a primitive combinator or it is a
-left child program applied to a right child program.
+recursion: every program is either a primitive combinator OR it is a
+left child program applied to a right child program (that is, a left
+child AND a right child).
 
 This can framed as the following AND/OR tree $\mathcal{G}$. Suppose we
 want a program of type $\tau$. The root of $\mathcal{G}$ is an OR node of
@@ -711,14 +713,14 @@ a complete solution is at most $log(1/4)$. Thus, we have defined a
 value for partial solutions that upper bounds the value of any of its
 extensions.
 
-Our best-first policy is to expand the next partial solution with the
-highest value. If a partial solution has multiple leaves that are not
-primitive combinators, we expand the left most one first, since it is
-the choice of left combinator that defines the type of its right
-combinator in an application pair. That is, the parent node applies
-its constraint on valid solutions via the left child, not the right
-child. We want to apply constraints as early as possible, so we expand
-the left child first to prune more partial solutions.
+Our best-first policy is to expand the next partial solution
+with the highest value. If a partial solution has multiple leaves that
+are not primitive combinators, we expand the left most one first,
+since it is the choice of left combinator that defines the type of its
+right combinator in an application pair. That is, the parent node
+applies its constraint on valid solutions via the left child, not the
+right child. We want to apply constraints as early as possible, so
+expanding left child first prunes more partial solutions.
 
 \subsection{Finding the most compressive set of solutions}
 
