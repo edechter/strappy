@@ -77,17 +77,28 @@
  first step to estimate a new stochastic grammar. We test this
  procedure on symbolic regression and boolean circuit learning and
  show that the learner discovers modular concepts for these
- domains. Whereas the learner is able to solve almost none of the
- posed problems in the procedure's first iteration, it rapidly becomes
- able to solve a large number by gaining abstract knowledge of the
- structure of the solution space.
- 
+ domains. Whereas the learner is initially unable to solve almost any
+ of the posed problems, it quickly acquires the ability to solve many
+ problems by gaining abstract knowledge of the structure of the
+ solution space.
  
 \end{abstract}
 
 \section{Introduction}
-Many of the problems we want to solve in AI are best cast as search
-problems. There are many search algorithms, but they typically exploit
+A central question for AI is how to create intelligent agents without
+building in vast amounts of pre-specified knowledge that is tailored
+to one domain or another. Any attempt to solve this problem must
+contend with the fact that the less an agent knows about solving
+problems in a domain, the worse its attempts are, and the less it
+learns about how to solve subsequent problems. For example, imagine
+you know nothing about baking but are supplied with a stocked kitchen:
+your initial attempts will be uniformly disastrous, and you will learn
+little from them, except that you did not create a baked good. A
+little bit of knowledge about baking would go a long way towards
+making your initial attempts more informative. 
+
+Like many of the problems in AI, this one can be cast as a search
+problem. There are many search algorithms, but they typically exploit
 local or topological structure in the search space. For example,
 convex optimization and gradient based search methods take
 advantage of local smoothness to move in good directions. Local search
@@ -95,21 +106,22 @@ algorithms move from one candidate solution to a neighboring
 one. Heuristic search techniques take advantage of topological
 structure to prune off large parts of the solution space.
 
-However, many of the problems we want solve -- discovering scientific
-theories, developing new technologies, figuring out how to bake -- do
-not come with such a structured search space. This is particularly
-true of problems, such as those mentioned, whose solutions can be
-naturally framed as programs. Here we ask how to extract structure
-from the space of programs by attempting to solve multiple related
-problems in a given domain at once.
+The absense of domain specific knowledge makes exploiting structure
+difficult, especially if the structure of the search space is not
+smooth. This is particularly true of problems -- such as discovering
+scientific theories, developing new technologies, learning how to bake
+-- whose solutions can be naturally framed as programs. Here we ask
+how to bootstrap domain specific knowledge and extract structure from
+the space of programs by attempting to solve multiple related problems
+in a given domain at once.
 
-We take as inspiration the programmer who -- having reused several
-subroutines to solve different but similar simple tasks -- creates a
-function library to help manage the complexity of larger projects. The
-EC algorithm, which we introduce here, builds a library of reusable
-program components and places a distribution over these, effectively
-learning from simple tasks a search space structure that enables it
-to solve more complex tasks.
+Out approach is inspired by the programmer who -- having reused
+several subroutines to solve different but similar simple tasks --
+creates a function library to help manage the complexity of larger
+projects. The E.C. algorithm, which we introduce here, builds a library
+of reusable program components and places a distribution over these,
+effectively learning from simple tasks a search space structure that
+enables it to solve more complex tasks.
 
 In this work, we try to see how far this idea of reusable function
 definition can get us. We ask the following question: can an AI system
@@ -119,7 +131,7 @@ space? Can discovering modular program components transform a problem
 from one in which search is intractable into a problem in which it
 becomes increasingly feasible with experience?
 
-Concretely, the EC algorithm works as follows. It begins with a small
+Concretely, the E.C. algorithm works as follows. It begins with a small
 library of program primitives and a distribution over programs
 synthesized from this library. In each iteration, it generates
 programs in order of highest probability according to the library
@@ -385,7 +397,7 @@ functional programs to solve those kinds of problems.  \\
 %% to be solutions to our tasks. 
 
 The remainder of this paper will include two major sections. In the
-first, we describe in detail the EC algorithm and design choices we
+first, we describe in detail the E.C. algorithm and design choices we
 make in implementing it. We will then present results from two
 experiments in the domains of symbolic regression and Boolean
 function learning.
@@ -427,7 +439,7 @@ expressions in our language.  We say that expression $ e \in
 \mathcal{L}$ \textbf{solves} $t_k$ if $ t_k(p) = 1$. Our goal is to
 solve as many of the tasks in $T$ as we can.
 
-We propose the \textbf{EC algorithm}, an iterative procedure to solve this
+We propose the \textbf{E.C. algorithm}, an iterative procedure to solve this
 problem. It will be useful in presenting the algorithm to define the
 following terminology: a \textbf{frontier} is the finite set of
 expressions that the algorithm considers in any one iteration. The
@@ -435,7 +447,7 @@ expressions that the algorithm considers in any one iteration. The
 the frontier. We will say that a task is \textbf{hit} by the frontier
 if there is a expression in the frontier that solves it.
 
-The EC algorithm maintains a distribution $\mathcal{D}$ over
+The E.C. algorithm maintains a distribution $\mathcal{D}$ over
 expressions in $\mathcal{L}$. At each iteration, it
 \begin{enumerate}
 \item \textbf{explores} the frontier -- enumerating the $N$ most probable expressions
@@ -699,14 +711,14 @@ a complete solution is at most $log(1/4)$. Thus, we have defined a
 value for partial solutions that upper bounds the value of any of its
 extensions.
 
-Our best-first policy is to expand the next partial solution
-with the highest value. If a partial solution has multiple leaves that
-are not primitive combinators, we expand the left most one first,
-since it is the choice of left combinator that defines the type of its
-right combinator in an application pair. That is, the parent node
-applies its constraint on valid solutions via the left child, not the
-right child. We want to apply constraints as early as possible, so
-expanding left child first prunes more partial solutions.
+Our best-first policy is to expand the next partial solution with the
+highest value. If a partial solution has multiple leaves that are not
+primitive combinators, we expand the left most one first, since it is
+the choice of left combinator that defines the type of its right
+combinator in an application pair. That is, the parent node applies
+its constraint on valid solutions via the left child, not the right
+child. We want to apply constraints as early as possible, so we expand
+the left child first to prune more partial solutions.
 
 \subsection{Finding the most compressive set of solutions}
 
@@ -796,7 +808,8 @@ frontier contains the $10$ expressions:
 \end{figure}
 \captionsetup[subfigure]{labelformat=parens} 
 \vspace{-.3cm}
-The top row consists of one type of representation of an integer
+
+\noindent The top row consists of one type of representation of an integer
 squared, namely, the integer times itself. The bottom row contains
 another type of representation in which the function $f(x)=x^2$,
 represented in combinatory logic as $S * I$, is applied to the
@@ -851,7 +864,7 @@ grammar-based compression~\cite{nevill1997identifying}. The idea of
 that compression algorithm is to compress any string by creating a
 grammar for that string such that a) no two symbols appear more than
 once in the grammar and b) every rule is used more than once. From a
-set of expressions we generate a grammar according to these criteria.
+set of expressions, we generate a grammar according to these criteria.
 
 %% To do this, we traverse a set of combinator binary trees in
 %% depth first order. We count the occurrences of every subtree. Every
@@ -900,7 +913,7 @@ uniform weighting.
 \setcounter{subfigure}{0} 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=.8\linewidth]{figures/symreg3frontiers.pdf}
+\includegraphics[width=1.0\linewidth]{figures/symreg3frontiers.pdf}
 \vspace{-.2cm}
 \caption{Learning curves as a function of frontier size.  As frontier
   size is increased, curves plateau closer to $100\%$ performance. A
@@ -909,13 +922,12 @@ uniform weighting.
 \vspace{-.3cm}
 \end{figure}
 \begin{figure}[ht]
-\centering
-\includegraphics[width=.8\linewidth]{figures/symRegDiffCurricula.pdf}
+\includegraphics[width=1.07\linewidth]{figures/symRegDiffCurricula.pdf}
 \caption{How do different task sets affect learning curves? Learning
   curves at frontier size of $10000$ for different task
   sets.} 
 \label{fig:symregCurricula}
-\vspace{-.5cm}
+
 \end{figure}
 
 
@@ -946,13 +958,13 @@ iterations). As a baseline, we enumerated $10000*15=150000$
 expressions from the initial grammar. This is the total number of
 expressions that a run of the algorithm sees if it has a frontier size
 of $10000$ and runs for $15$ iterations. Thus, if the benefit accruing
-to the runs with larger frontier sizes is due to simply an increase in
-the number of expressions seen, rather than increased learning, we should
-see similarly good performance from this baseline run. In fact,
+to the runs with larger frontier sizes is simply due to an increase in
+the number of expressions seen, rather than increased learning, we
+should see similarly good performance from this baseline run. In fact,
 however, the baseline run only hits $27$ of the $1000$ tasks ($3\%$),
 whereas our algorithm nears $100\%$ for a frontier of $10000$.
 
-What does the EC algorithm learn in this task?  Inspecting the top
+What does the E.C. algorithm learn in this task?  Inspecting the top
 weighted primitives of the final grammars, we find many incrementers
 (e.g. (+1), (+2), etc.), several versions of expressions that
 translate to functions like $x*f(x)$ and $f(x*f(x))$, and combinations
@@ -966,7 +978,7 @@ simple problems account for the ability to learn complex functions?
 One hypothesis is that to succeed on a set of tasks, the set must
 contain a ``learnable'' curriculum, a set of tasks that serve as
 stepping stones from an impoverished representation to a rich one. We
-can test this hypothesis by varying the set of tasks to which the EC
+can test this hypothesis by varying the set of tasks to which the E.C.
 algorithm is exposed. If it is true, then we should see a nonlinear
 response to reducing the number of easy tasks, as the curriculum
 changes from being learnable to being unlearnable.
@@ -1009,7 +1021,7 @@ basic shape.
 
 \begin{figure}[t]
 \includegraphics{./figures/tablealonedoc.pdf}
-\vspace{-.5cm}
+%% \vspace{-.5cm}
 \caption{Some learned primitives from the circuit based Boolean
   function learning experiment. We highlight compression using $NOT$,
   $E_1$ and $E_2$. \,(a)The three elementary gates used to generate
@@ -1017,13 +1029,13 @@ basic shape.
   grammar. Note how $E_1$ can be used to define FALSE by taking the
   NOT function as an argument. (c) Additional common Boolean functions
   found in the learned grammar.  \label{table:booleanCircuits}}
-\vspace{-.4cm}
+%%\vspace{-.4cm}
 \end{figure}
 
 
 
 As another demonstration of our approach, we investigate the
-EC algorithm's ability to learn Boolean functions using only the logical
+E.C. algorithm's ability to learn Boolean functions using only the logical
 primitive NAND and the basic combinators. It is well known that a
 boolean circuit can be constructed for any boolean function given only
 the NAND gate. Here, the basic combinators take the place of the
@@ -1214,7 +1226,7 @@ circuits, i.e., circuits all of whose outputs are wired to an input
 except for the last one (the output gate). This resulted in $1000$
 tasks consisting of $82$ unique Boolean functions, with a distribution
 of tasks as shown in Figure~\ref{fig:booldistr}~(a). In
-Figure~\ref{fig:boolLearningCurvesCircuits}, We present learning
+Figure~\ref{fig:boolLearningCurvesCircuits}, we present learning
 curves for frontier sizes 100, 500 and 10000, using the same procedure
 as in Section~\ref{sec:symreg}. In Figure~\ref{fig:booldistr}, we show
 that the distribution over Boolean functions enumerated from the
@@ -1222,9 +1234,9 @@ grammar over expressions is much more similar to the true function
 distribution after learning than before.
 
 \begin{figure}
-\vspace{-.3cm}
+%%\vspace{-.3cm}
 \includegraphics[width=\linewidth]{figures/circuitDistrComp.pdf}
-\vspace{-.6cm}
+%%\vspace{-.6cm}
 \caption{Distribution of boolean functions among (a) the set of 1000
   circuits randomly constructed from AND, OR and NOT gates (see text);
   b) the first 1000 expressions from the grammar over expressions
@@ -1232,7 +1244,7 @@ distribution after learning than before.
   grammar over expressions \emph{after} learning. Gray levels indicate
   percent of instances (circuits/expressions) which evaluate to that
   function.\label{fig:booldistr}}
-\vspace{-.4cm}
+%%\vspace{-.4cm}
 \end{figure}
 
 This problem is particularly suitable for inspecting the constituents
@@ -1241,12 +1253,12 @@ recovers the constituent logic gates that were used to build up the
 tasks. Table~\ref{table:booleanCircuits} shows a few of the top ranked
 expressions in the library. These include the basic logic gates; we
 also include two higher-order expression $E_1$ and $E_2$, to stress
-that the representation the EC algorithm is using allows it to build
+that the representation the E.C. algorithm is using allows it to build
 concepts that are more expressive that just sub-circuits.
 
 In a second experiment, we include all $272$ Boolean truth tables with
 three or fewer inputs as tasks. This is a more difficult
-problem. There are two kinds of learning that the EC algorithm might
+problem. There are two kinds of learning that the E.C. algorithm might
 accomplish: first, many expressions in $\mathcal{L}$ map to a single
 Boolean function, so it needs to learn primitives that allow it to
 span many different functions instead of generating very simple
@@ -1255,19 +1267,20 @@ distribution of the functions themselves. In the circuit based Boolean
 experiment, that structure is apparent in the distribution in
 Figure~\ref{fig:booldistr}. In this second experiment, we remove the
 second kind of structure. In
-Figure~\ref{fig:boolLearningCurvesUniform}, we show 10 runs of the EC
-algorithm on the second experiment with a frontier size of $2000$: note how there are several
-local minima that the majority of the runs get stuck in with performance
-around $50\%$, but several of the runs seem to take different
-trajectories to more successful representations.
+Figure~\ref{fig:boolLearningCurvesUniform}, we show 10 runs of the
+E.C.  algorithm on the second experiment with a frontier size of
+$2000$: note how there are several local minima that the majority of
+the runs get stuck in with performance around $50\%$, but several of
+the runs seem to take different trajectories to more successful
+representations.
 
 \vspace{-.3cm}
 \begin{figure}[h]
 \begin{subfigure}{.1\linewidth}
 \caption{\label{fig:boolLearningCurvesCircuits} }
 \end{subfigure}
-\begin{subfigure}[Before]{.9\linewidth}
-\includegraphics[width=.9\linewidth]{figures/booleancircuits3frontiers.pdf}
+\begin{subfigure}[Before]{0.9\linewidth}
+\includegraphics[width=1.0\linewidth]{figures/booleancircuits3frontiers.pdf}
 \end{subfigure}
 
 \vspace{-.32cm}
@@ -1275,7 +1288,7 @@ trajectories to more successful representations.
 \caption{\label{fig:boolLearningCurvesUniform}}
 \end{subfigure}
 \begin{subfigure}[After]{.9\linewidth}
-\includegraphics[width=.9\linewidth]{figures/booleanfunctionsUniform.pdf}
+\includegraphics[width=1.0\linewidth]{figures/booleanfunctionsUniform.pdf}
 
 \end{subfigure}
 \vspace{-.3cm}
@@ -1304,7 +1317,7 @@ of the solutions that the algorithm itself builds.
 
 Our specific implementation of this approach involved a number of
 choices which should be explored further in future work.  Our claim
-here is not that the EC algorithm is optimal, but that it captures key
+here is not that the E.C. algorithm is optimal, but that it captures key
 features of how people solve the problem of learning new systems of
 concepts in acquiring deep domain expertise.  Much like a human
 researcher investigating a new area of study, our algorithm tries
