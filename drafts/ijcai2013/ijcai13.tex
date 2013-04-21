@@ -729,10 +729,16 @@ to hit tasks such that this set is maximally compressible. This will
 promote reusable modular subtrees. 
 
 A natural metric for the compressibility of a set of binary trees is
-the number of unique subtrees (counting leaves) that this
-set contains. As an example of this, suppose we have six tasks whose
-solutions are integers $4^2, 5^2, 6^2, 7^2$, and $8^2$, and suppose our
-frontier contains the $10$ expressions:
+the number of unique subtrees (counting leaves) that this set
+contains. More sophisticated metrics exist; we could use the negative
+logarithm of the probability of the solutions under a suitable
+probability distribution~\cite{DBLP:journals/tit/BarronRY98}. Future
+work will explore whether this sophistication is worthwhile and which
+prior on grammars makes sense. For our purposes here, the unique
+subtree counting metric appropriately rewards reuse of useful
+subtrees. As an example of this, suppose we have six tasks whose
+solutions are integers $4^2, 5^2, 6^2, 7^2$, and $8^2$, and suppose
+our frontier contains the $10$ expressions:
 \vspace{-.3cm}
 \captionsetup[subfigure]{labelformat=empty} 
 \begin{figure}[h!]
@@ -920,7 +926,7 @@ uniform weighting.
 \caption{Learning curves as a function of frontier size.  As frontier
   size is increased, curves plateau closer to $100\%$ performance. A
   baseline search over $150000$ expressions only hits $3\%$ of the
-  tasks. \label{fig:symregLearning}}
+  tasks (dashed pink line). \label{fig:symregLearning}}
 \vspace{-.3cm}
 \end{figure}
 \begin{figure}[ht]
