@@ -21,6 +21,12 @@
 \usetikzlibrary{arrows,automata, positioning, patterns,backgrounds}
 \usetikzlibrary{arrows,shapes.gates.logic.US,shapes.gates.logic.IEC,calc}
 
+\usepackage{times}
+\pdfinfo{
+  /Title (Bootstrap learning via modular concept discovery)
+  /Author (Eyal Dechter, Jon Malmaud, Ryan P. Adams, Joshua B. Tenenbaum)
+}
+
 \newtheorem{definition}{Definition}
 \DeclareMathOperator*{\argmax}{arg\,max} 
 \DeclareMathOperator*{\argmin}{arg\,min} 
@@ -38,12 +44,12 @@ MIT \\
 USA \\
 malmaud@mit.edu
 \And 
-Ryan P.  Adams \\
+Ryan~P.  Adams \\
 Harvard University\\
 USA \\
 rpa@seas.harvard.edu
 \And
-Joshua B. Tenenbaum \\
+Joshua~B. Tenenbaum \\
 MIT\\
 USA \\
 jbt@mit.edu
@@ -924,12 +930,10 @@ uniform weighting.
 \begin{figure}[ht]
 \centering
 \includegraphics[width=1.0\linewidth]{figures/symreg3frontiers.pdf}
-%\vspace{-.2cm}
 \caption{Learning curves as a function of frontier size.  As frontier
   size is increased, curves plateau closer to $100\%$ performance. A
   baseline search over $150000$ expressions only hits $3\%$ of the
   tasks (dashed pink line). \label{fig:symregLearning}}
-%\vspace{-.3cm}
 \end{figure}
 \begin{figure}[ht]
 \includegraphics[width=1.07\linewidth]{figures/symRegDiffCurricula.pdf}
@@ -1031,7 +1035,6 @@ basic shape.
 
 \begin{figure}[t]
 \includegraphics{./figures/tablealonedoc.pdf}
-%% \vspace{-.5cm}
 \caption{Some learned primitives from the circuit based Boolean
   function learning experiment. We highlight compression using $NOT$,
   $E_1$ and $E_2$. \,(a)The three elementary gates used to generate
@@ -1039,7 +1042,6 @@ basic shape.
   grammar. Note how $E_1$ can be used to define FALSE by taking the
   NOT function as an argument. (c) Additional common Boolean functions
   found in the learned grammar.  \label{table:booleanCircuits}}
-%%\vspace{-.4cm}
 \end{figure}
 
 
@@ -1050,180 +1052,6 @@ primitive NAND and the basic combinators. It is well known that a
 Boolean circuit can be constructed for any Boolean function given only
 the NAND gate. Here, the basic combinators take the place of the
 wiring normally found in a circuit.
-
-%% \begin{table}
-%% \tiny
-%% \begin{tabular}[width=\linewidth]{|p{1cm}|p{2cm}|p{3.5cm}|}
-%% \hline function  & CL expression & circuit  ~ \\ \hline\hline
-%% ¬†¬†¬†¬†¬†¬†¬†¬†NOT¬†¬† & S NAND I¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬† &  ~
-
-%% \begin{circuitikz}[transform shape]
-%% \draw
-%% (1.2,0) node[nand port, scale=.3] (nand1) {}
-%% (0, 0) node (x) {x}
-%% (x) -| (nand1.in 1)
-%% (x) -| (nand1.in 2)
-%% ;
-%% \end{circuitikz}
-
-%% \\ \hline
-%% ¬†¬†¬†¬†¬†¬†¬†¬†AND¬†¬† & ((C B NAND) (B (S NAND I)))¬†¬†¬†¬†¬†¬†¬†¬†¬†¬† & ~
-
-%% \begin{circuitikz}
-%% \draw
-%% (1.0,0) node[nand port, scale=.3] (nand1) {}
-%% (2.0,0) node[nand port, scale=.3] (nand2) {}
-%% % (0, 0) node (x) {x}
-%% % (0, 0) node (y) {y}
-%% node[above left=.2cm and .7cm  of nand1] (x) {x} %-- (nand1.in 1)
-%% node[below left=.2cm and .7cm  of nand1] (y) {y} %-- (nand1.in 2)
-%% (x) |- (nand1.in 1)
-%% (y) |- (nand1.in 2)
-%% (nand1.out) |- (nand2.in 1)
-%% (nand1.out) |- (nand2.in 2)
-%% ;
-%% \end{circuitikz}
-%%  \\  \hline
-%% ¬†¬†¬†¬†¬†¬†¬†¬†OR¬†¬†¬† & ((B (C (B (S NAND) NAND))) (S NAND I) & ~
-
-%% \begin{circuitikz}
-%% \draw
-%% (0,0) node (x) {x}
-%% (0,.7) node (y) {y}
-
-%% node[nand port, scale=.3, right=1cm of x] (nand1) {}
-%% node[nand port, scale=.3, right=1cm of y] (nand2) {}
-%% node[nand port, scale=.3, below right=.3cm and 1cm of nand2] (nand3) {}
-%% (x) -| (nand1.in 1)
-%% (x) -| (nand1.in 2)
-%% (y) -| (nand2.in 1)
-%% (y) -| (nand2.in 2)
-%% (nand1.out) |- (nand3.in 1)
-%% (nand2.out) |- (nand3.in 2)
-%% ;
-%% \end{circuitikz}
-%%  \\  \hline\hline
-
-%% ¬†¬†¬†¬†¬†¬†¬†¬†TRUE¬† & (S NAND) (S NAND I)¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬† & ~ 
-
-%% %\begin{top}
-%% \begin{circuitikz}[transform shape] 
-%% \draw
-%% (1, 0) node[nand port, scale=.3] (nand1) {}
-%% (2,.3) node[nand port, scale=.3] (nand2) {}
-%% (0, 0) node[anchor=east]  (x) {x}
-%% (x) -- (.3, 0) -| (nand1.in 1)
-%% (x) -- (.3, 0) -|  (nand1.in 2)
-%% (x) |- (nand2.in 1)
-%% (nand1.out) |- (nand2.in 2)
-%% ;
-%% \end{circuitikz}
-%% %\end{top}
-%% \\ \hline
-%% ¬†¬†¬†¬†¬†¬†¬†¬†FALSE & (S B (S NAND)) (S NAND I)¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬† &  ~
-
-%% \begin{circuitikz}[transform shape] 
-%% \draw
-%% (1, 0) node[nand port, scale=.3] (nand1) {}
-%% (2,.3) node[nand port, scale=.3] (nand2) {}
-%% node[nand port, scale=.3, right=1cm of nand2] (nand3) {} 
-%% (0, 0) node[anchor=east]  (x) {x}
-%% (x) -- (.3, 0) -| (nand1.in 1)
-%% (x) -- (.3, 0) -|  (nand1.in 2)
-%% (x) |- (nand2.in 1)
-%% (nand1.out) |- (nand2.in 2)
-%% (nand2.out) -| (nand3.in 1)
-%% (nand2.out) -| (nand3.in 2)
-%% ;
-%% \end{circuitikz}
-%% \\ \hline
-%% ¬†¬†¬†¬†¬†¬†¬†¬†XOR¬†¬† & ((S (B C (((B (C B NAND)) S) (((B (C B NAND)) S) (B C ((B (B NAND)) NAND)))))) I)¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬† & ~
-
-%% \begin{circuitikz}
-%% \draw
-%% node[nand port, scale=.3] (nand1) {}
-%% node[nand port, scale=.3, above right=.3cm and 1cm of nand1] (nand2) {} 
-%% node[nand port, scale=.3, below right=.3cm and 1cm of nand1] (nand3) {} 
-%% node[nand port, scale=.3, right=2cm of nand1] (nand4) {} 
-%% node[left=1.2cm of nand2.in 1] (x) {x}
-%% node[left=1.2cm of nand3.in 2] (y) {y}
-%% node[right=.2cm of nand4] (out) {}
-%% (x) -| (nand1.in 1)
-%% (x) -| (nand2.in 1)
-%% (y) -| (nand1.in 2)
-%% (y) -| (nand3.in 2)
-%% (nand1.out) -| (nand2.in 2)
-%% (nand1.out) -| (nand3.in 1)
-%% (nand2.out) |- (nand4.in 1)
-%% (nand3.out) |- (nand4.in 2)
-%% (nand4.out) -- (out)
-%% ;
-%% \end{circuitikz}
-
-%%  \\  \hline\hline
-%% ¬†¬†¬†¬†¬†¬†¬†¬†$E_1$¬†¬†¬†  & S B (S NAND)¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬†¬† & ~
-
-%% \begin{circuitikz}
-%% \draw
-%% node (x) {x}
-%% node[nand port, scale=.3, right=1.5cm of x] (nand) {} 
-%% node[draw=blue!75, fill=blue!20, thick, 
-%%   above right=.3cm and .2cm of x, anchor=west] (f1) {$g(x)$} 
-%% node[draw=blue!75, fill=blue!20, thick, right=.5cm of nand] (f2) {$g(x)$}
-%% node[right=.1cm of f2] (out) {}
-%% (x) -| (f1.west)
-%% (x) -| (nand.in 2)
-%% (f1) -| (nand.in 1)
-%% (nand.out) -- (f2)
-%% (f2) -- (out);
-%% \end{circuitikz}
-
-%% \\ \hline
-%% $E_2$¬†¬†¬†  & B (C B NAND) S & ~
-
-%% \begin{circuitikz}
-%% \draw
-%% node (x) {x} 
-%% node[nand port, scale=.3, right=1.5cm of x] (nand) {} 
-%% node[draw=blue!75, fill=blue!20, thick, 
-%%   above right=.2cm and .3cm of x, anchor=west] (g) {$g(x)$} 
-%% node[draw=blue!75, fill=blue!20, thick, 
-%%   below right=.2cm and .3cm of x, anchor=west] (f) {$f(x)$} 
-%% (x) -- [right=.25] (f.west)
-%% (x) |- (g.west)
-%% (f.east) -| (nand.in 1)
-%% (g.east) -| (nand.in 2)
-%% (nand.out) -- (out)
-%% (x)
-%% ;
-%% \end{circuitikz}
-
-%% \\ \hline
-
-%% \end{tabular}
-%% \caption{Expressions in the induced library on sets of tasks
-%%   corresponding to boolean circuits synthesized from AND, OR, and NOT
-%%   gates, with boolean circuits of 1, 2, or 3 inputs.}
-%% \label{table:boolexpr}
-
-%% \end{table}
-
-
-%% \begin{table}[t]
-%% \scriptsize
-%%    \begin{tabular}{|l|l|l|}
-%%     function  & CL expressions & circuit  ~ \\ \hline
-%%         TRUE  & (S NAND) (S NAND I)                   & ~ \\ \hline
-%%         FALSE & (S B (S NAND)) (S NAND I)             & ~ \\ \hline
-%%         NOT   & S NAND I                              & \input{figures/NOT.tex} \\ \hline
-%%         AND   & ((C B NAND) (B (S NAND I)))           & ~ \\ 
-%%         OR    & ((B (C (B (S NAND) NAND))) (S NAND I) & ~ \\ 
-%%         XOR   & ~                                     & ~ \\ 
-%%         F     & S B (S NAND)                          & \input{figures/F.tex}
-%%     \end{tabular}
-%% \end{table}
-
-
 
 We constructed two task sets. The first of these was constructed
 explicitly to contain familiar modular structure. In this set of
@@ -1244,9 +1072,7 @@ grammar over expressions is much more similar to the true function
 distribution after learning than before.
 
 \begin{figure}
-%%\vspace{-.3cm}
 \includegraphics[width=\linewidth]{figures/circuitDistrComp2.png}
-%%\vspace{-.6cm}
 \caption{Distribution of Boolean functions among (a) the set of 1000
   circuits randomly constructed from AND, OR and NOT gates (see text);
   b) the first 1000 expressions from the grammar over expressions
@@ -1254,7 +1080,6 @@ distribution after learning than before.
   grammar over expressions \emph{after} learning. Gray levels indicate
   percent of instances (circuits/expressions) which evaluate to that
   function.\label{fig:booldistr}}
-%%\vspace{-.4cm}
 \end{figure}
 
 This problem is particularly suitable for inspecting the constituents
