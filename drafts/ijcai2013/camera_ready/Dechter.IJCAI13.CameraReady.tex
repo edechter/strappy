@@ -77,17 +77,23 @@ jbt@mit.edu
 \section{Introduction}
 A central question for AI is how to create intelligent agents without
 building in vast amounts of pre-specified knowledge that is tailored
-to one domain or another. Any attempt to solve this problem must
-contend with the fact that the less an agent knows about solving
-problems in a domain, the worse its attempts are, and, therefore, the
-less informative they are about how to solve subsequent problems. 
+to one domain or another. This is generally accomplished by a learning
+algorithm that uses past experience to improve future performance. The
+problem is that if past problem solving attempts entirely missed the
+mark, their failures are unlikely to shed light on will work and what
+will not. Such uninformative solutions, however, vastly outnumber the
+rest, and our uninformed agent has no way to know which solutions will
+be informative and which will not. Thus, our learning algorithms must
+contend with a bootstrapping problem: the less an agent knows to begin
+with, the harder it is to learn from experience.
 
 For example, imagine you know nothing about electronics but are
 supplied with a collection of circuit elements and asked to build a
-useful device: your initial attempts will be uniformly
-ineffective. If, on the other hand, you know the basics, you are far
+number of canonical useful devices, such as a digital adder, an
+op-amp,, etc. Your initial attempts will be uniformly ineffective. If,
+on the other hand, you know the basics of circuit design, you are far
 more likely to generate devices that are somewhat successful and on
-whose basis you might improve your skills.
+whose basis you might improve your designs and your design skills.
 
 Like many of the problems in AI, this one can be cast as a search
 problem: the goal is to find a circuit wiring procedure that maximizes
@@ -97,15 +103,16 @@ example, local search algorithms move from one candidate solution to a
 neighboring one. Heuristic search techniques take advantage of
 topological structure to prune off large parts of the solution space.
 
-Domain specific knowledge provides this structure. In local search, it
-defines the similarity metric between solutions; in heuristic search
-it provides the heuristic. Here we ask how to bootstrap domain
-specific knowledge and extract structure from the space of possible
-solutions by attempting to solve multiple related problems in a given
-domain at once. Our approach is motivated by the observation that many
-interesting problems -- such as discovering scientific theories,
-developing new technologies, learning to play a new instrument -- have
-solutions that are naturally specified as programs.
+This structure derives from domain specific knowledge. In local
+search, domain knowledge provides the similarity metric between
+solutions; in heuristic search it provides the heuristic. Here we ask
+how to bootstrap domain specific knowledge and extract structure from
+the space of possible solutions by attempting to solve multiple
+related problems in a given domain at once. Our approach is motivated
+by the observation that many interesting problems -- such as
+discovering scientific theories, designing new technologies, learning
+a skill such as playing an instrument or cooking -- have solutions that
+are naturally specified as programs.
 
 Our proposed solution is thus inspired by the programmer who -- having
 reused subroutines to solve similar simple tasks -- creates a function
