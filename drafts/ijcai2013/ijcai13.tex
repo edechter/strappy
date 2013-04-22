@@ -922,12 +922,12 @@ uniform weighting.
 \begin{figure}[ht]
 \centering
 \includegraphics[width=1.0\linewidth]{figures/symreg3frontiers.pdf}
-\vspace{-.2cm}
+%\vspace{-.2cm}
 \caption{Learning curves as a function of frontier size.  As frontier
   size is increased, curves plateau closer to $100\%$ performance. A
   baseline search over $150000$ expressions only hits $3\%$ of the
   tasks (dashed pink line). \label{fig:symregLearning}}
-\vspace{-.3cm}
+%\vspace{-.3cm}
 \end{figure}
 \begin{figure}[ht]
 \includegraphics[width=1.07\linewidth]{figures/symRegDiffCurricula.pdf}
@@ -1299,7 +1299,7 @@ representations.
 \includegraphics[width=1.0\linewidth]{figures/booleanfunctionsUniform.pdf}
 
 \end{subfigure}
-\vspace{-.3cm}
+%\vspace{-.3cm}
 \caption{Learning curves from Boolean function learning
   experiments. (a) Learning curves for various frontier sizes on task
   set of circuit based Boolean functions. (b) 10
@@ -1309,7 +1309,7 @@ representations.
   $50\%$.\label{fig:boolLearningCurves}
 
 }
-\vspace{-.5cm}
+%\vspace{-.5cm}
 \end{figure}
 
 \section{Conclusion}
@@ -1317,11 +1317,12 @@ This work brings together ideas from various areas of research --
 hierarchical Bayes, learning to learn, minimum description length
 learning, and learning programs -- to provide a proof of concept for
 how bootstrap learning of abstract composable concepts can rapidly
-improve search performance.  We show that this approach can learn
-successfully even in domains for which the solution space is not
-smooth and the error signal is all or none, where the only sense of
-locality to guide learning is the modular and compositional structure
-of the solutions that the algorithm itself builds.
+facilitate problem solving in the absence of domain specific
+knowledge. We show that this approach can learn successfully even in
+domains for which the solution space is not smooth and the error
+signal is all or none, where the only sense of locality to guide
+learning is the modular and compositional structure of the solutions
+that the algorithm itself builds.
 
 Our specific implementation of this approach involved a number of
 choices which should be explored further in future work.  Our claim
