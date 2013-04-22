@@ -86,20 +86,22 @@ building in vast amounts of pre-specified knowledge that is tailored
 to one domain or another. Any attempt to solve this problem must
 contend with the fact that the less an agent knows about solving
 problems in a domain, the worse its attempts are, and, therefore, the
-less informative they are about how to solve subsequent problems. For
-example, imagine you know nothing about baking but are supplied with a
-stocked kitchen: your initial attempts will be uniformly inedible, and
-you will learn little from them. If, on the other hand, you know the
-basics, you are far more likely to generate recipes that are
-somewhat successful and on whose basis you might improve your skills.
+less informative they are about how to solve subsequent problems. 
+
+For example, imagine you know nothing about electronics but are
+supplied with a collection of circuit elements and asked to build a
+useful device: your initial attempts will be uniformly
+ineffective. If, on the other hand, you know the basics, you are far
+more likely to generate devices that are somewhat successful and on
+whose basis you might improve your skills.
 
 Like many of the problems in AI, this one can be cast as a search
-problem: the goal is to find a baking procedure that maximizes certain
-criter.  There are many search algorithms, but they typically exploit
-local or topological structure in the search space. For example, local
-search algorithms move from one candidate solution to a neighboring
-one. Heuristic search techniques take advantage of topological
-structure to prune off large parts of the solution space.
+problem: the goal is to find a circuit wiring procedure that maximizes
+certain criteria.  There are many search algorithms, but they typically
+exploit local or topological structure in the search space. For
+example, local search algorithms move from one candidate solution to a
+neighboring one. Heuristic search techniques take advantage of
+topological structure to prune off large parts of the solution space.
 
 Domain specific knowledge provides this structure. In local search, it
 defines the similarity metric between solutions; in heuristic search
