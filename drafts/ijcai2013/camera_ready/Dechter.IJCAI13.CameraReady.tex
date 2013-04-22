@@ -111,8 +111,8 @@ the space of possible solutions by attempting to solve multiple
 related problems in a given domain at once. Our approach is motivated
 by the observation that many interesting problems -- such as
 discovering scientific theories, designing new technologies, learning
-a skill such as playing an instrument or cooking -- have solutions that
-are naturally specified as programs.
+a new language or learning a skill such as playing an instrument or
+cooking -- have solutions that are naturally specified as programs.
 
 Our proposed solution is thus inspired by the programmer who -- having
 reused subroutines to solve similar simple tasks -- creates a function
@@ -732,13 +732,7 @@ promote reusable modular subtrees.
 
 A natural metric for the compressibility of a set of binary trees is
 the number of unique subtrees (counting leaves) that this set
-contains. More sophisticated metrics exist; we could use the negative
-logarithm of the probability of the solutions under a suitable
-probability distribution~\cite{DBLP:journals/tit/BarronRY98}. Future
-work will explore whether this sophistication is worthwhile and which
-prior on grammars makes sense. For our purposes here, penalizing
-according to the number of unique subtrees appropriately rewards reuse
-of useful subtrees. As an example of this, suppose we have six tasks
+contains. As an example of this, suppose we have six tasks
 whose solutions are integers $4^2, 5^2, 6^2, 7^2$, and $8^2$, and
 suppose our frontier contains the $10$ expressions:
 \vspace{-.3cm}
@@ -832,6 +826,15 @@ increased compressibility of the bottom row is due to the fact that
 the squaring operation has been factored out as an abstraction. This
 is an example of how this compressibility metric favors
 abstraction when multiple expressions are being considered at once.
+
+More sophisticated metrics than the one proposed here exist; we could
+use the negative logarithm of the probability of the solutions under a
+suitable probability
+distribution~\cite{DBLP:journals/tit/BarronRY98}. Future work will
+explore whether this sophistication is worthwhile and which prior on
+grammars makes sense. For our purposes here, penalizing according to
+the number of unique subtrees appropriately and sufficiently rewards
+reuse of useful subtrees.
 
 We want to choose a solution for each hit task such that the complete set
 of such solutions for all solved tasks is as compressible as
@@ -992,7 +995,7 @@ response to reducing the number of easy tasks, as the curriculum
 changes from being learnable to being unlearnable.
 
 In Figure~\ref{fig:symregCurricula}, we present learning curves
-(frontier size 10000) corresponding to various versions of our
+(frontier size~10000) corresponding to various versions of our
 original symbolic regression task set. Recall that the original set
 consisted of all polynomials of degree two or less and with
 coefficients between 0 and 9. In the ``no constant'' task set, we
@@ -1148,9 +1151,9 @@ that the algorithm itself builds.
 The problem presented here was chosen to highlight the vastness of the
 search space confronting an agent with minimal background knowledge:
 the reward function is binary, it is deterministic, and it cannot
-provide feedback about partial solutions. An important question left
-to be addressed is how to extend this algorithm to take into account
-continuous rewards, noisy data, and partial solutions.
+provide feedback about partial solutions. In ongoing work we are
+exploring a more probabilistic version of the algorithm that can take
+into account continuous rewards, noisy data, and partial solutions.
 
 Our specific implementation of this approach involved a number of
 choices which should be explored further in future work.  Our claim
