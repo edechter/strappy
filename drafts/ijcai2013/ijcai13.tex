@@ -70,7 +70,7 @@ jbt@mit.edu
  finite subset of the domain, guided by a stochastic grammar; in the
  second step, the learner compresses the successful solutions from the
  first step to estimate a new stochastic grammar. We test this
- procedure on symbolic regression and boolean circuit learning and
+ procedure on symbolic regression and Boolean circuit learning and
  show that the learner discovers modular concepts for these
  domains. Whereas the learner is able to solve almost none of the
  posed problems in the procedure's first iteration, it rapidly becomes
@@ -103,15 +103,13 @@ structure to prune off large parts of the solution space.
 
 Domain specific knowledge provides this structure. In local search, it
 defines the similarity metric between solutions; in heuristic search
-it provides the heuristic.  
-
-Here we ask how to bootstrap domain specific knowledge and extract
-structure from the space of possible solutions by attempting to solve
-multiple related problems in a given domain at once. Our approach is
-motivated by the observation that many interesting problems -- such as
-discovering scientific theories, developing new technologies, learning
-to play a new instrument -- have solutions that are natrually
-specified as programs.
+it provides the heuristic. Here we ask how to bootstrap domain
+specific knowledge and extract structure from the space of possible
+solutions by attempting to solve multiple related problems in a given
+domain at once. Our approach is motivated by the observation that many
+interesting problems -- such as discovering scientific theories,
+developing new technologies, learning to play a new instrument -- have
+solutions that are natrually specified as programs.
 
 Our proposed solution is thus inspired by the programmer who -- having
 reused subroutines to solve similar simple tasks -- creates a function
@@ -516,7 +514,7 @@ x~\rightarrow~(*\; x)\; (I\; x)~\rightarrow *\; x \; x$.
 
 We can extend this representation with a simple polymorphic type
 system~\cite{Pierce_2002}. In this representation, a type is either a
-type primitive (e.g. reals, integers, booleans, etc.), a type variable
+type primitive (e.g. reals, integers, Booleans, etc.), a type variable
 (e.g. $\sigma$), or a function type $ \tau_1 \rightarrow \tau_2$ of
 functions from source type $\tau_1$ to target type $\tau_2$. Any combinator
 can be represented as a binary tree~(Figure~\ref{fig:clbintree}) whose
@@ -736,11 +734,11 @@ contains. More sophisticated metrics exist; we could use the negative
 logarithm of the probability of the solutions under a suitable
 probability distribution~\cite{DBLP:journals/tit/BarronRY98}. Future
 work will explore whether this sophistication is worthwhile and which
-prior on grammars makes sense. For our purposes here, the unique
-subtree counting metric appropriately rewards reuse of useful
-subtrees. As an example of this, suppose we have six tasks whose
-solutions are integers $4^2, 5^2, 6^2, 7^2$, and $8^2$, and suppose
-our frontier contains the $10$ expressions:
+prior on grammars makes sense. For our purposes here, penalizing
+according to the number of unique subtrees appropriately rewards reuse
+of useful subtrees. As an example of this, suppose we have six tasks
+whose solutions are integers $4^2, 5^2, 6^2, 7^2$, and $8^2$, and
+suppose our frontier contains the $10$ expressions:
 \vspace{-.3cm}
 \captionsetup[subfigure]{labelformat=empty} 
 \begin{figure}[h!]
@@ -909,11 +907,11 @@ literature~\cite{DBLP:books/daglib/0070933}.
 
 In the formulation we consider, each task $t$ corresponds to a
 polynomial $f$, and an expression $e$ solves $t$ if it returns the
-same value when applied $i \in 0, \dots, 9$ that $f$ does. In the
+same value when applied to $i \in 0, \dots, 9$ that $f$ does. In the
 experiment shown here, the set of problems corresponds to the set of
 all polynomials with degree less than or equal to 2. In the initial
 library, we include the basic combinators I, S, B, C and four
-arithmetic primitives, $1$, $0$, $*$, and $+$. The choice of initial
+arithmetic primitives $1$, $0$, $*$, and $+$. The choice of initial
 weights on these primitives can make a difference, as it determines
 the relative ordering of combinators in the enumeration step. To get a
 general sense of the algorithm's performance, we set the initial
@@ -961,7 +959,7 @@ uniform weighting.
 
 
 In Figure~\ref{fig:symregLearning}, we show performance results as we
-vary the frontier size.Changing the frontier size changes the number
+vary the frontier size. Changing the frontier size changes the number
 of tasks the algorithm identifies correctly over the course of 15
 algorithm iterations (all experiments in this work were run for 15
 iterations). As a baseline, we enumerated $10000*15=150000$
@@ -1047,7 +1045,7 @@ basic shape.
 As another demonstration of our approach, we investigate the
 E.C. algorithm's ability to learn Boolean functions using only the logical
 primitive NAND and the basic combinators. It is well known that a
-boolean circuit can be constructed for any boolean function given only
+Boolean circuit can be constructed for any Boolean function given only
 the NAND gate. Here, the basic combinators take the place of the
 wiring normally found in a circuit.
 
@@ -1228,14 +1226,14 @@ wiring normally found in a circuit.
 We constructed two task sets. The first of these was constructed
 explicitly to contain familiar modular structure. In this set of
 tasks, we sampled $1000$ Boolean circuits using AND, OR, and NOT
-gates. To accomplish this, we first sampled either 1, 2, 3 inputs,
+gates. To accomplish this, we first sampled either 1, 2 or 3 inputs,
 then between 1 and 5 gates, randomly wiring the inputs of each new
 gate to the output of one of the existing gates in the circuit. We
 continued this sampling procedure until we had 1000 ``connected''
 circuits, i.e., circuits all of whose outputs are wired to an input
 except for the last one (the output gate). This resulted in $1000$
 tasks consisting of $82$ unique Boolean functions, with a distribution
-of tasks as shown in Figure~\ref{fig:booldistr}~(a). In
+of tasks as shown in Figure~\ref{fig:booldistr}(a). In
 Figure~\ref{fig:boolLearningCurvesCircuits}, we present learning
 curves for frontier sizes 100, 500 and 10000, using the same procedure
 as in Section~\ref{sec:symreg}. In Figure~\ref{fig:booldistr}, we show
@@ -1247,7 +1245,7 @@ distribution after learning than before.
 %%\vspace{-.3cm}
 \includegraphics[width=\linewidth]{figures/circuitDistrComp2.png}
 %%\vspace{-.6cm}
-\caption{Distribution of boolean functions among (a) the set of 1000
+\caption{Distribution of Boolean functions among (a) the set of 1000
   circuits randomly constructed from AND, OR and NOT gates (see text);
   b) the first 1000 expressions from the grammar over expressions
   \emph{before} learning; c) the first 1000 expressions from the
