@@ -174,16 +174,16 @@ stochastic local search over the space of programs, and automatically
 discovering useful subroutines is seen as a helpful heuristic. More
 recently, Liang et al.~\cite{liang10programs} used a stochastic
 grammar over combinatory logic to induce shared structure in
-multi-task program induction problems. We find their representation of
-programs compelling and use it here, but we see both this and genetic
-programming as tackling the question of how to benefit from shared
-structure in situations where local search might be successful on its
-own. Such problems rely on domain knowledge -- whether in the form of
-a fitness function or a likelihood function -- to provide local
-structure to the search space.
+multi-task program induction problems. We find this latter
+representation compelling and use it here, but we see both this and
+genetic programming as tackling the question of how to benefit from
+shared structure in situations where local search might be successful
+on its own. Such problems rely on domain knowledge -- whether in the
+form of a fitness function or a likelihood function -- to provide
+local structure to the search space.
 
-But, as mentioned before, our goal is to learn to solve problems in
-solution spaces whose structure is unknown. Here we attempt to learn
+But, as mentioned before, the problems we want AI systems to solve
+often lack this kind of built in structure. Here we attempt to learn
 functional programs to solve those kinds of problems.  \\
 
 %% AI and machine learning algorithms commonly take advantage of the
@@ -448,7 +448,7 @@ following terminology: a \textbf{frontier} is the finite set of
 expressions that the algorithm considers in any one iteration. The
 \textbf{frontier size} $N$ is the prespecified number of elements in
 the frontier. We will say that a task is \textbf{hit} by the frontier
-if there is an expression in the frontier that solves it.
+if there is a expression in the frontier that solves it.
 
 The E.C. algorithm maintains a distribution $\mathcal{D}$ over
 expressions in $\mathcal{L}$. At each iteration, it
@@ -658,13 +658,14 @@ requesting type, we could just count all occurrences of each primitive
 in our expression set, and this would be proportional to the maximum
 likelihood estimate. This is the ML estimator for a multinomial
 distribution. However, the fact that we condition on the requesting
-type makes this a considerably more difficult optimization task. A
-simple approximation is to calculate the frequency with which each
-primitive combinator appears in $\mathcal{E}$ when the requesting type
-is such that it could have been chosen. This is a straightforward
-calculation, and we use it for its convenience, finding that our
-empirical results justify its use. Future inquiry will determine to
-what extent a more accurate estimator can improve these results.
+type makes this a considerably more difficult optimization task. One
+of the simplest approximations we can make is to calculate the
+frequency with which each primitive combinator appears in
+$\mathcal{E}$ when the requesting type is such that it could have
+been chosen. This is a straightforward calculation, and
+we use it for its convenience, finding that our empirical results
+justify its use. Future inquiry will be needed to determine to what
+extent a more accurate estimator can improve these results.
 
 \subsection{Best-first enumeration of programs}
 In order to explore the frontier of most promising programs, we need a
@@ -714,14 +715,14 @@ a complete solution is at most $log(1/4)$. Thus, we have defined a
 value for partial solutions that upper bounds the value of any of its
 extensions.
 
-Our best-first policy is to expand the next partial solution with the
-highest value. If a partial solution has multiple leaves that are not
-primitive combinators, we expand the left most one first, since it is
-the choice of left combinator that defines the type of its right
-combinator in an application pair. That is, the parent node applies
-its constraint on valid solutions via the left child, not the right
-child. We want to apply constraints as early as possible, and thus we
-expand the left child first.
+Our best-first policy is to expand the next partial solution
+with the highest value. If a partial solution has multiple leaves that
+are not primitive combinators, we expand the left most one first,
+since it is the choice of left combinator that defines the type of its
+right combinator in an application pair. That is, the parent node
+applies its constraint on valid solutions via the left child, not the
+right child. We want to apply constraints as early as possible, so
+expanding left child first prunes more partial solutions.
 
 \subsection{Finding the most compressive set of solutions}
 
