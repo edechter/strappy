@@ -57,15 +57,15 @@ jbt@mit.edu
  knows nearly nothing. It does not know the distribution of problems,
  the space of solutions is not smooth, and the reward signal is
  uninformative, providing perhaps a few bits of information but not
- enough to steer it effectively. How can such a learner ever get off
- the ground? A common intuition is that if the solutions to these
- problems share a common structure, and the learner can solve some
- simple problems by brute force, it should be able to extract useful
- components from these solutions and, by composing them, explore the
- solution space more efficiently. Here, we formalize this intuition,
- where the solution space is the space of typed functional programs
- and the gained information is stored as a stochastic grammar over
- programs. We propose an iterative procedure for exploring such
+ enough to steer the learner effectively. How can such a learner ever
+ get off the ground? A common intuition is that if the solutions to
+ these problems share a common structure, and the learner can solve
+ some simple problems by brute force, it should be able to extract
+ useful components from these solutions and, by composing them,
+ explore the solution space more efficiently. Here, we formalize this
+ intuition, where the solution space is the space of typed functional
+ programs and the gained information is stored as a stochastic grammar
+ over programs. We propose an iterative procedure for exploring such
  spaces: in the first step of each iteration, the learner explores a
  finite subset of the domain, guided by a stochastic grammar; in the
  second step, the learner compresses the successful solutions from the
@@ -85,39 +85,41 @@ A central question for AI is how to create intelligent agents without
 building in vast amounts of pre-specified knowledge that is tailored
 to one domain or another. Any attempt to solve this problem must
 contend with the fact that the less an agent knows about solving
-problems in a domain, the worse its attempts are, and the less it
-learns about how to solve subsequent problems. For example, imagine
-you know nothing about baking but are supplied with a stocked kitchen:
-your initial attempts will be uniformly disastrous, and you will learn
-little from them, except that you did not create a baked good. A
-little bit of knowledge about baking would go a long way towards
-making your initial attempts more informative. 
+problems in a domain, the worse its attempts are, and, therefore, the
+less informative they are about how to solve subsequent problems. For
+example, imagine you know nothing about baking but are supplied with a
+stocked kitchen: your initial attempts will be uniformly inedible, and
+you will learn little from them. If, on the other hand, you know the
+basics, you are far more likely to generate recipes that are
+somewhat successful and on whose basis you might improve your skills.
 
 Like many of the problems in AI, this one can be cast as a search
-problem. There are many search algorithms, but they typically exploit
-local or topological structure in the search space. For example,
-convex optimization and gradient based search methods take
-advantage of local smoothness to move in good directions. Local search
-algorithms move from one candidate solution to a neighboring
+problem: the goal is to find a baking procedure that maximizes certain
+criter.  There are many search algorithms, but they typically exploit
+local or topological structure in the search space. For example, local
+search algorithms move from one candidate solution to a neighboring
 one. Heuristic search techniques take advantage of topological
 structure to prune off large parts of the solution space.
 
-The absense of domain specific knowledge makes exploiting structure
-difficult, especially if the structure of the search space is not
-smooth. This is particularly true of problems -- such as discovering
-scientific theories, developing new technologies, learning how to bake
--- whose solutions can be naturally framed as programs. Here we ask
-how to bootstrap domain specific knowledge and extract structure from
-the space of programs by attempting to solve multiple related problems
-in a given domain at once.
+Domain specific knowledge provides this structure. In local search, it
+defines the similarity metric between solutions; in heuristic search
+it provides the heuristic.  
 
-Out approach is inspired by the programmer who -- having reused
-several subroutines to solve different but similar simple tasks --
-creates a function library to help manage the complexity of larger
-projects. The E.C. algorithm, which we introduce here, builds a library
-of reusable program components and places a distribution over these,
-effectively learning from simple tasks a search space structure that
-enables it to solve more complex tasks.
+Here we ask how to bootstrap domain specific knowledge and extract
+structure from the space of possible solutions by attempting to solve
+multiple related problems in a given domain at once. Our approach is
+motivated by the observation that many interesting problems -- such as
+discovering scientific theories, developing new technologies, learning
+to play a new instrument -- have solutions that are natrually
+specified as programs.
+
+Our proposed solution is thus inspired by the programmer who -- having
+reused subroutines to solve similar simple tasks -- creates a function
+library to help manage the complexity of larger projects. The
+E.C. algorithm, which we introduce here, builds a library of reusable
+program components and places a distribution over these, effectively
+learning from simple tasks a search space structure that enables it to
+solve more complex tasks.
 
 In this work, we try to see how far this idea of reusable function
 definition can get us. We ask the following question: can an AI system
@@ -159,7 +161,7 @@ generating new and reusable logic programming
 terms~\cite{DBLP:conf/ijcai/Muggleton87}. Later, predicate invention
 was also applied in the multitask
 setting~\cite{DBLP:conf/ilp/KhanMP98}. We apply these ideas to
-learning functional programs, and believe that the modularity and
+learning functional programs and believe that the modularity and
 compositionality afforded by this representation is necessary for
 these ideas to be successful.
 
@@ -1243,7 +1245,7 @@ distribution after learning than before.
 
 \begin{figure}
 %%\vspace{-.3cm}
-\includegraphics[width=\linewidth]{figures/circuitDistrComp.pdf}
+\includegraphics[width=\linewidth]{figures/circuitDistrComp2.png}
 %%\vspace{-.6cm}
 \caption{Distribution of boolean functions among (a) the set of 1000
   circuits randomly constructed from AND, OR and NOT gates (see text);
