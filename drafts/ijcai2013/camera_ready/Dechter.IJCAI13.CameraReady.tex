@@ -49,7 +49,6 @@ jbt@mit.edu
 
 \maketitle
 \begin{abstract}
-%\small
  Suppose a learner is faced with a domain of problems about which it
  knows nearly nothing. It does not know the distribution of problems,
  the space of solutions is not smooth, and the reward signal is
@@ -73,8 +72,6 @@ jbt@mit.edu
  posed problems in the procedure's first iteration, it rapidly becomes
  able to solve a large number by gaining abstract knowledge of the
  structure of the solution space.
- 
- 
 \end{abstract}
 
 \section{Introduction}
@@ -1062,6 +1059,7 @@ grammar over expressions is much more similar to the true function
 distribution after learning than before.
 
 \begin{figure}
+\vspace{.5cm}
 \includegraphics[width=\linewidth]{figures/circuitDistrComp2.png}
 \caption{Distribution of Boolean functions among (a) the set of 1000
   circuits randomly constructed from AND, OR and NOT gates (see text);
@@ -1069,7 +1067,10 @@ distribution after learning than before.
   \emph{before} learning; c) the first 1000 expressions from the
   grammar over expressions \emph{after} learning. Gray levels indicate
   percent of instances (circuits/expressions) which evaluate to that
-  function.\label{fig:booldistr}}
+  function. Functions increase in domain size from left to right; each
+  function can be represented as a binary string corresponding to the
+  output column of the truth table, and functions are ordered with
+  respect to these strings. \label{fig:booldistr}}
 \end{figure}
 
 This problem is particularly suitable for inspecting the constituents
