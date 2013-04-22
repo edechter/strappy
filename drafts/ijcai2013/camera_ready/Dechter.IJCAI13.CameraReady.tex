@@ -59,7 +59,7 @@ jbt@mit.edu
  some simple problems by brute force, it should be able to extract
  useful components from these solutions and, by composing them,
  explore the solution space more efficiently. Here, we formalize this
- intuition, where the solution space is the space of typed functional
+ intuition, where the solution space is that of typed functional
  programs and the gained information is stored as a stochastic grammar
  over programs. We propose an iterative procedure for exploring such
  spaces: in the first step of each iteration, the learner explores a
@@ -105,7 +105,7 @@ solutions by attempting to solve multiple related problems in a given
 domain at once. Our approach is motivated by the observation that many
 interesting problems -- such as discovering scientific theories,
 developing new technologies, learning to play a new instrument -- have
-solutions that are natrually specified as programs.
+solutions that are naturally specified as programs.
 
 Our proposed solution is thus inspired by the programmer who -- having
 reused subroutines to solve similar simple tasks -- creates a function
@@ -143,17 +143,17 @@ distribution over program primitives clearly fails.
 \section{Related Work}
 The idea of discovering and using reusable subcomponents is part of an
 old tradition in AI. For instance, it is one of the central themes in
-Herb Simon's 1969 ``The Sciences of the
-Artificial''~\shortcite{simon1996sciences}. Rendell's 1985
-paper~\shortcite{DBLP:conf/ijcai/Rendell85}, ``Substantial Constructive
-Induction Using Layered Information Compression: Tractable Feature
-Formation in Search,'' presented within a classical search paradigm
-the idea that compression provides a heuristic for constructing good
-representations. Within the Inductive Logic Programming (ILP)
-literature, researchers have explored ``Constructive Induction,''
-generating new and reusable logic programming
-terms~\cite{DBLP:conf/ijcai/Muggleton87}. Later, predicate invention
-was also applied in the multitask
+Herb Simon's ``The Sciences of the
+Artificial''~\shortcite{simon1996sciences}. Rendell's ``Substantial
+Constructive Induction Using Layered Information Compression:
+Tractable Feature Formation in Search'' presented within a classical
+search paradigm the idea that compression provides a heuristic for
+constructing good
+representations~\shortcite{DBLP:conf/ijcai/Rendell85}. Within the
+Inductive Logic Programming (ILP) literature, researchers have
+explored ``Constructive Induction,'' generating new and reusable logic
+programming terms~\cite{DBLP:conf/ijcai/Muggleton87}. Later, predicate
+invention was also applied in the multitask
 setting~\cite{DBLP:conf/ilp/KhanMP98}. We apply these ideas to
 learning functional programs and believe that the modularity and
 compositionality afforded by this representation is necessary for
@@ -291,9 +291,9 @@ functional programs to solve those kinds of problems.  \\
 %% %% representations, useful strategies, etc.
 
 %% %% But suppose that you have very little knowledge of a domain. Your
-%% %% intial representation of the domain is poor: ``nearby'' points in the
-%% %% solutions space ellicit wildly different outcomes in unpredictable
-%% %% ways. Or perhaps nearby points ellicit the same outcome and its not a
+%% %% initial representation of the domain is poor: ``nearby'' points in the
+%% %% solutions space elicit wildly different outcomes in unpredictable
+%% %% ways. Or perhaps nearby points elicit the same outcome and its not a
 %% %% good one, so you don't know which way to go. Many learning problems,
 %% %% especially those whose solutions are best described as programs, have
 %% %% these qualities: imagine learning to synthesize new sentences
@@ -430,8 +430,8 @@ function learning.
 
 Our goal is to solve the following minimal feedback multi-task program
 induction problem: suppose we are given a set of \textbf{tasks}
-$T=\{t_k\}_{k=1}^K$ where each task is a function $t_k : \mathcal{L}
-\rightarrow \{0, 1\}$ and where $\mathcal{L}$ is the set of
+$T=\{t_k\}_{k=1}^K$ where each task is a function \mbox{$t_k : \mathcal{L}
+\rightarrow \{0, 1\}$} and where $\mathcal{L}$ is the set of
 expressions in our language.  We say that expression $ e \in
 \mathcal{L}$ \textbf{solves} $t_k$ if $ t_k(e) = 1$. Our goal is to
 solve as many of the tasks in $T$ as we can. 
@@ -440,7 +440,7 @@ We propose the \textbf{E.C. algorithm}, an iterative procedure to solve this
 problem. It will be useful in presenting the algorithm to define the
 following terminology: a \textbf{frontier} is the finite set of
 expressions that the algorithm considers in any one iteration. The
-\textbf{frontier size} $N$ is the prespecified number of elements in
+\textbf{frontier size} $N$ is the pre-specified number of elements in
 the frontier. We will say that a task is \textbf{hit} by the frontier
 if there is a expression in the frontier that solves it.
 
@@ -862,7 +862,7 @@ problems.
 
 Given a set of chosen solution expressions, which we will call the
 \emph{solution set}, want to re-estimate our stochastic grammar. Our
-inspiration for doing this is the Neville-Manning algorithm for
+inspiration for doing this is the Nevill-Manning algorithm for
 grammar-based compression~\cite{nevill1997identifying}. The idea of
 that compression algorithm is to compress any string by creating a
 grammar for that string such that a) no two symbols appear more than
@@ -925,7 +925,7 @@ uniform weighting.
 \begin{figure}[ht]
 \includegraphics[width=1.07\linewidth]{figures/symRegDiffCurricula.pdf}
 \caption{How do different task sets affect learning curves? Learning
-  curves at frontier size of $10000$ for different task
+  curves at a frontier size of $10000$ for different task
   sets.} 
 \label{fig:symregCurricula}
 
