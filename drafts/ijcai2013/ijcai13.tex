@@ -151,8 +151,8 @@ distribution over program primitives clearly fails.
 The idea of discovering and using reusable subcomponents is part of an
 old tradition in AI. For instance, it is one of the central themes in
 Herb Simon's 1969 ``The Sciences of the
-Artificial''~\cite{simon1996sciences}. Rendell's 1985
-paper~\cite{DBLP:conf/ijcai/Rendell85}, ``Substantial Constructive
+Artificial''~\shortcite{simon1996sciences}. Rendell's 1985
+paper~\shortcite{DBLP:conf/ijcai/Rendell85}, ``Substantial Constructive
 Induction Using Layered Information Compression: Tractable Feature
 Formation in Search,'' presented within a classical search paradigm
 the idea that compression provides a heuristic for constructing good
@@ -168,12 +168,12 @@ these ideas to be successful.
 
 
 Genetic programming
-(GP)~\cite{DBLP:conf/foga/Koza92}~\cite{DBLP:conf/ices/KozaBAK96} has
+(GP)~\cite{DBLP:conf/foga/Koza92,DBLP:conf/ices/KozaBAK96} has
 tackled the problem of program learning and has explored the notion
 that reusable functions are helpful. This work relies, however, on
 stochastic local search over the space of programs, and automatically
 discovering useful subroutines is seen as a helpful heuristic. More
-recently, Liang et al.~\cite{liang10programs} used a stochastic
+recently, Liang et al.~\shortcite{liang10programs} used a stochastic
 grammar over combinatory logic to induce shared structure in
 multi-task program induction problems. We find this latter
 representation compelling and use it here, but we see both this and
@@ -493,7 +493,7 @@ combinatory logic we sequester uses of the abstraction operation
 inside the combinators. In doing so, we have replaced the variable
 binding of the $\lambda$ operator with the variable \emph{routing} of
 these basis combinators. Our representation thus becomes
-variable-free. See Liang et al.~\cite{liang10programs} for a more
+variable-free. See \cite{liang10programs} for a more
 detailed discussion of this routing interpretation.
 
 Using combinatory logic is very convenient for program
@@ -673,10 +673,9 @@ In order to explore the frontier of most promising programs, we need a
 procedure that enumerates the $N$ most probable expressions. There has
 been recent interest in this problem, most of it focused on
 enumerating the shortest program satisfying some
-criterion~\cite{DBLP:conf/sfp/Katayama05}
-\cite{DBLP:conf/aaip/YakushevJ09}. Our approach is to formulate the
+criterion~\cite{DBLP:conf/sfp/Katayama05, DBLP:conf/aaip/YakushevJ09}. Our approach is to formulate the
 problem as a best-first exploration of an AND/OR tree
-(Figure~\ref{fig:andor})~\cite{nilsson1982principles}~\cite{DBLP:journals/cacm/Hall73}. In
+(Figure~\ref{fig:andor})~\cite{nilsson1982principles, DBLP:journals/cacm/Hall73}. In
 words, the enumeration procedure is best described by the following
 recursion: every program is either a primitive combinator OR it is a
 left child program applied to a right child program (that is, a left
