@@ -3,6 +3,7 @@
 \usepackage{ijcai13}
 \usepackage{times}
 \usepackage{amsmath} 
+\usepackage{amsfonts}
 \usepackage{latexsym} 
 \usepackage{ dsfont }
 \usepackage[usenames,dvipsnames]{xcolor}
@@ -440,7 +441,7 @@ $T=\{t_k\}_{k=1}^K$ where each task is a function $t_k : \mathcal{L}
 \rightarrow \{0, 1\}$ and where $\mathcal{L}$ is the set of
 expressions in our language.  We say that expression $ e \in
 \mathcal{L}$ \textbf{solves} $t_k$ if $ t_k(e) = 1$. Our goal is to
-solve as many of the tasks in $T$ as we can.
+solve as many of the tasks in $T$ as we can. 
 
 We propose the \textbf{E.C. algorithm}, an iterative procedure to solve this
 problem. It will be useful in presenting the algorithm to define the
@@ -535,12 +536,12 @@ nodes with their types).
           \rightarrow \mathbb{R}$}
         child {node [left=.5cm, below=1cm, text width=3.0cm] 
           {$ \mathbf{S} : (t_2 \rightarrow t_1 \rightarrow t_0)  \rightarrow (t_2 \rightarrow t_1) 
-            \rightarrow \\ t_2 \rightarrow t_0$}}
+            \rightarrow$ \\ $t_2 \rightarrow t_0$}}
         child {node [right=0cm, text width=2cm] {$ \mathbf{*}: \mathbb{R} \rightarrow \mathbb{R} \rightarrow \mathbb{R}$}}
       }
       child {node [below right=-.5cm and .2cm] (b) {$\mathbb{R} \rightarrow \mathbb{R}$}
         child {node [above=.5cm] {$ \mathbf{I}: t_0 \rightarrow t_0 \rightarrow t_0$}}
-      }
+      };
     \end{tikzpicture}
     \caption{    \label{fig:clbintree}}
   \end{subfigure}
@@ -1301,17 +1302,13 @@ representations.
 \includegraphics[width=1.0\linewidth]{figures/booleanfunctionsUniform.pdf}
 
 \end{subfigure}
-%\vspace{-.3cm}
 \caption{Learning curves from Boolean function learning
   experiments. (a) Learning curves for various frontier sizes on task
   set of circuit based Boolean functions. (b) 10
   learning curves for frontier size of 2000 on a task set consisting
   of all Boolean functions of cardinality 3 or smaller. Note how most
   of the trajectories get stuck in a local minimum around
-  $50\%$.\label{fig:boolLearningCurves}
-
-}
-%\vspace{-.5cm}
+  $50\%$.\label{fig:boolLearningCurves}}
 \end{figure}
 
 \section{Conclusion}
@@ -1325,6 +1322,13 @@ domains for which the solution space is not smooth and the error
 signal is all or none, where the only sense of locality to guide
 learning is the modular and compositional structure of the solutions
 that the algorithm itself builds.
+
+The problem presented here was chosen to highlight the vastness of the
+search space confronting an agent with minimal background knowledge:
+the reward function is binary, it is deterministic, and it cannot
+provide feedback about partial solutions. An important question left
+to be addressed is how to extend this algorithm to take into account
+continuous rewards, noisy data, and partial solutions.
 
 Our specific implementation of this approach involved a number of
 choices which should be explored further in future work.  Our claim
@@ -1355,67 +1359,6 @@ more intelligently compose and modify the set of problems under
 consideration, designing their own stepping stones to expand the set
 of problems they can solve.  Making bootstrap learning systems smarter
 in these more human-like ways is a prime target for future research.
-%% \subsection{Digital arithmetic}
-%% Having demonstrated the behavior of the E-C algorithm on symbolic
-%% regression, we analyze its performance on tasks involving digital
-%% arithmetic, a class of problems with known modular structure. The
-%% general goal is to discover boolean circuits consisting of a limited
-%% set of gates that perform arithmetic operations on binary number
-%% representations. 
-
-
-%% \section{Discussion}
-%% This work attempts to bring together ideas from various areas of
-%% research -- hierarchical Bayes, learning to learn, minimum description
-%% length learning -- to provide a proof of concept that learning
-%% abstractions from programs via compression can rapidly improve search
-%% performance. We emphasize this by focusing on domains in which the
-%% solution space is not smooth and the error signal is all or
-%% none. Thus, the main source of information for learning is the modular
-%% and compositional structure of the solution space.
-
-%% Of course, the representations that people use to learn in the world
-%% often have a partially smooth or local structure. Techniques in AI and
-%% machine learning commonly use smoothness or local structure to make
-%% search tractable. But the difference between this kind of learning and
-%% conceptual learning is undeniable. The former is what the statistician
-%% or machine learning researcher implements. The latter is what she
-%% learns as a student and as a practicioner. As researchers, we try
-%% different models, watch them fail or succeed, and abstract out the
-%% elements of these models that capture the relevant differences. We mix
-%% and match parts of different ideas, and utilize succcessful patterns
-%% of reasoning that can span many problems and domains. 
-
-%% We believe that the primary characteristic of conceptual learning is
-%% that it occurs over a modular and compositional computational
-%% representation that supports higher-order functions. That is why we
-%% chose a functional programming language as the representational
-%% language of this work.
-
-%% The experiments in this work do not contain the richness of real world
-%% learning, but we believe that the learning algorithm's behavior
-%% exhibits some of the characteristics we would expect of a conceptual
-%% learner. 
-
-%% One characteristic of this algorithm's behavior is a rapid initial
-%% increase in performance followed by a hard plateau. This plateau is
-%% expected given the circular nature of the algorithm: the learner
-%% inspects the region of the solution space that is typical of solutions
-%% already found. We see in this phenomenon a conceptual demarcation of
-%% the problem space: a coherent set of concepts or problems solving
-%% techniques can define by their power the extent of problems a problem
-%% solver is willing to consider. One might hope, however, that an
-%% intelligent learner would recognize that such a demarcation has
-%% occured and attempt to find another class of concepts for the
-%% remaining unsolved tasks.
-
-%% Another aspect of conceptual learning that we see present in this
-%% algorithm's behavior is the importance of a curriculum. By this we do
-%% not mean an explicit ordering of the problems in the task set, but
-%% rather that a set of sufficiently simple problems must act as stepping
-%% stones to the acquisition of complex representations. 
-
-
 
 
 %% The file named.bst is a bibliography style file for BibTeX 0.99c
