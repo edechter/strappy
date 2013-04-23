@@ -22,7 +22,7 @@
 \DeclareMathOperator*{\argmin}{arg\,min} 
 
 
-\title{Bootstrap learning via modular concept discovery}
+\title{Bootstrap Learning via Modular Concept Discovery}
 
 \author{Eyal Dechter \\
 MIT\\
@@ -441,7 +441,7 @@ function learning.
 %% language for programs and a family of distributions over expressions
 %% in that language, but we leave these details for the following section
 
-\section{Extracting concepts from programs}
+\section{Extracting Concepts from Programs}
 
 Our goal is to solve the following minimal feedback multi-task program
 induction problem: suppose we are given a set of \textbf{tasks}
@@ -468,7 +468,7 @@ expressions in $\mathcal{L}$. At each iteration, it
   distribution.
 \end{enumerate}
 
-\subsection{Representing typed functional programs as binary trees}
+\subsection{Representing Typed Functional Programs as Binary Trees}
 
 Following~\cite{liang10programs} and~\cite{briggs2006functional}, we use a
 simply typed combinatory logic -- a variable-free subset of the
@@ -611,7 +611,7 @@ nodes with their types).
 
 \end{figure}
 
-\subsection{A stochastic grammar over programs}
+\subsection{A Stochastic Grammar over Programs}
 \label{sec:stochgrammar}
 
 We specify a distribution $\mathcal{D}$ over expressions in
@@ -676,7 +676,7 @@ we use it for its convenience, finding that our empirical results
 justify its use. Future inquiry will be needed to determine to what
 extent a more accurate estimator can improve these results.
 
-\subsection{Best-first enumeration of programs}
+\subsection{Best-first Enumeration of Programs}
 In order to explore the frontier of most promising programs, we need a
 procedure that enumerates the $N$ most probable expressions. There has
 been recent interest in this problem, most of it focused on
@@ -732,7 +732,7 @@ applies its constraint on valid solutions via the left child, not the
 right child. We want to apply constraints as early as possible, so
 expanding left child first prunes more partial solutions.
 
-\subsection{Finding the most compressive set of solutions}
+\subsection{Finding the Most Compressive Set of Solutions}
 
 Having enumerated the frontier, we want to assign solutions
 to hit tasks such that this set is maximally compressible. This will
@@ -876,7 +876,7 @@ enough to guide subcomponent discovery in a reliable way. It may be
 necessary to increase this bound as we scale this algorithm to larger
 problems.
 
-\subsection{Re-estimating the stochastic grammar}
+\subsection{Re-estimating the Stochastic Grammar}
 
 Given a set of chosen solution expressions, which we will call the
 \emph{solution set}, want to re-estimate our stochastic grammar. Our
@@ -1035,7 +1035,7 @@ basic shape.
 %% the algorithm.
 
 
-\subsection{Boolean function learning}
+\subsection{Boolean Function Learning}
 \label{sec:boolcircuits}
 
 \begin{figure}[t]
