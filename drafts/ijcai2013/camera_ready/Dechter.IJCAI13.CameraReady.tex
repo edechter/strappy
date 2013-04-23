@@ -75,52 +75,60 @@ jbt@mit.edu
 \end{abstract}
 
 \section{Introduction}
-A central question for AI is how to create intelligent agents without
-building in vast amounts of pre-specified knowledge that is tailored
-to one domain or another. This is generally accomplished by a learning
-algorithm that uses past experience to improve future performance. The
-problem is that if past problem solving attempts entirely missed the
-mark, their failures are unlikely to shed light on will work and what
-will not. Such uninformative solutions, however, vastly outnumber the
-rest, and our uninformed agent has no way to know which solutions will
-be informative and which will not. Thus, our learning algorithms must
-contend with a bootstrapping problem: the less an agent knows to begin
-with, the harder it is to learn from experience.
 
-For example, imagine you know nothing about electronics but are
-supplied with a collection of circuit elements and asked to build a
-number of canonical useful devices, such as a digital adder, an
-op-amp,, etc. Your initial attempts will be uniformly ineffective. If,
-on the other hand, you know the basics of circuit design, you are far
-more likely to generate devices that are somewhat successful and on
-whose basis you might improve your designs and your design skills.
+Imagine that you know nothing about electronics but are supplied with
+a collection of circuit elements and asked to build a number of useful
+digital devices, such as an adder, a flip-flop, a counter, a
+multiplexer, and so on.  Your initial attempts will probably be
+uniformly ineffective.  If your only feedback is based on success or
+failure, you may have trouble learning anything.  If, on the other
+hand, you already know the basics of circuit design, you are far more
+likely to generate some devices that are at least somewhat successful.
+In this case, with feedback you can improve your designs and your
+design skills.
 
-Like many of the problems in AI, this one can be cast as a search
-problem: the goal is to find a circuit wiring procedure that maximizes
-certain criteria.  There are many search algorithms, but they typically
-exploit local or topological structure in the search space. For
-example, local search algorithms move from one candidate solution to a
-neighboring one. Heuristic search techniques take advantage of
+This example illustrates the central ``bootstrapping'' challenge for
+attempts to create intelligent agents without building in vast amounts
+of pre-speciﬁed domain knowledge.  Learning from experience is
+typically most effective in a system that already knows most of what
+it needs to know, because mistakes are most informative.  In a system
+that knows almost nothing, where most problem solving attempts
+entirely miss their mark, failures are unlikely to shed light on will
+work and what will not.  Uninformative solutions vastly outnumber the
+rest, and an uninformed agent has no way to know which solutions will
+be informative and which will not.  If it is harder to learn the less
+an agent knows, how can a learner who knows almost nothing about a domain
+ever get off the ground?
+
+Here we propose an answer to this challenge, based on an approach to
+discovering new and increasingly sophisticated concepts that build
+modularly on previously learned, simpler concepts.  Like many problems
+in AI, the bootstrapping challenge and its solution can be cast in
+terms of search.  In our circuit-building scenario, the goal is to ﬁnd
+circuit wiring procedures that maximize certain criteria.  Search
+algorithm typically aim to exploit local or topological structure in
+the search space -- here the space of all circuit-wiring procedures.
+For example, local search algorithms move from one candidate solution
+to a neighboring one. Heuristic search techniques take advantage of
 topological structure to prune off large parts of the solution space.
-
-This structure derives from domain specific knowledge. In local
+This structure derives from domain-speciﬁc knowledge.  In local
 search, domain knowledge provides the similarity metric between
-solutions; in heuristic search it provides the heuristic. Here we ask
-how to bootstrap domain specific knowledge and extract structure from
-the space of possible solutions by attempting to solve multiple
-related problems in a given domain at once. Our approach is motivated
-by the observation that many interesting problems -- such as
-discovering scientific theories, designing new technologies, learning
-a new language or learning a skill such as playing an instrument or
-cooking -- have solutions that are naturally specified as programs.
+solutions; in heuristic search it provides the heuristic.  Here we ask
+how to bootstrap domain-speciﬁc knowledge by extracting search
+structure from the space of possible solutions, by attempting to solve
+multiple related problems in a given domain at once.
 
-Our proposed solution is thus inspired by the programmer who -- having
-reused subroutines to solve similar simple tasks -- creates a function
-library to help manage the complexity of larger projects. The
-E.C. algorithm, which we introduce here, builds a library of reusable
-program components and places a distribution over these, effectively
-learning from simple tasks a search space structure that enables it to
-solve more complex tasks.
+Our approach is motivated by the observation that many interesting
+problems –- such as discovering scientiﬁc theories, designing new
+technologies, learning a skill such as playing an instrument or
+cooking –- have solutions that are naturally speciﬁed as programs.
+Our proposed solution is inspired by the programmer who, having found
+various subroutines that can be reused to solve similar simple tasks,
+creates a function library to help manage the complexity of larger
+projects. The E.C. algorithm, which we introduce here, builds a
+library of reusable program components and places a distribution over
+these, effectively learning from simple tasks a search space structure
+that enables it to solve more complex tasks.
 
 In this work, we try to see how far this idea of reusable function
 definition can get us. We ask the following question: can an AI system
