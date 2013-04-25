@@ -40,7 +40,8 @@ module Strappy.Type (
                            
                     -- * Combinator Types
                     , tChar 
-                    , tInt 
+                    , tInt
+                    , tDouble
                     , tBool 
                     , tArrow
                     , tList 
@@ -86,7 +87,7 @@ data Type = TVar TyVar
           | TAp Type Type
           deriving (Eq, Ord)
 
-data TyVar = TyVar Id Kind
+data TyVar = TyVar {tyVarId :: Id, tyVarKind :: Kind}
              deriving (Eq, Ord)
 
 instance Show TyVar where
@@ -294,6 +295,7 @@ extendTypeOnLeftN t n = do t' <- extendTypeOnLeft t
 -- | Useful types. 
 tChar = TCon (TyCon "Char" Star)
 tInt = TCon (TyCon "Int" Star)
+tDouble = TCon (TyCon "Double" Star)
 tBool = TCon (TyCon "Bool" Star)
 tArrow = TCon (TyCon "(->)" (Kfun Star (Kfun Star Star)))
 tList = TCon $ TyCon "[]" (Kfun Star Star)
