@@ -1,5 +1,7 @@
 {-# Language GADTs,  ScopedTypeVariables   #-}
 
+module Strappy.AnAlternativeApproach where
+
 import Prelude hiding (flip)
 import qualified  Data.List as List
 import Unsafe.Coerce (unsafeCoerce) 
@@ -9,6 +11,7 @@ import Control.Monad.State
 import Control.Monad.Trans
 import Control.Monad.Identity
 import Control.Monad.Random
+import Control.Monad.Trans.List
 
 import Strappy.Type
 import Strappy.Utils
@@ -37,8 +40,6 @@ a <> b = App a b (fst . runIdentity . runTI $ typeOfApp a b)
 instance Show (Expr a)   where
     show Term{eName=s} = s
     show App{eLeft=el, eRight=er} = "(" ++ show el ++ " " ++  show er ++ ")"
-
-
 
                     
 typeOfApp :: Monad m => Expr a -> Expr b -> TypeInference  m Type
@@ -147,13 +148,13 @@ initializeTI Library{libFunctions=es} = do put (i + 1)
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
 -- Main functions. 
-sampleFromExprs :: (MonadPlus m, MonadRandom m) =>
-                   Library -> Type -> TypeInference  m (Expr a)
+sampleExpr ::
+  (MonadPlus m, MonadRandom m) => Library -> Type -> m (Expr a, Int)
 -- | Samples a combinator of type t from a stochastic grammar G. 
-sampleFromExprs lib@Library{probOfApp=prApp, libFunctions=exprs} tp 
-    = do initializeTI lib
-         tp' <- freshInst tp
-         sample tp'
+sampleExpr lib@Library{probOfApp=prApp, libFunctions=exprs} tp 
+    = runTI $ do initializeTI lib
+                 tp' <- freshInst tp
+                 sample tp'
     where sample tp = do
             shouldExpand <- flip prApp
             case shouldExpand of
@@ -165,17 +166,16 @@ sampleFromExprs lib@Library{probOfApp=prApp, libFunctions=exprs} tp
                           guard (not . null $ cs) 
                           i <- getRandomR (0, length cs - 1)
                           return $ unsafeCoerce (cs !! i) 
-              
-----------------------------------------------------------------------
-----------------------------------------------------------------------
 
-main = replicateM 10000 $ 
-       do let out =  runTI $ do sampleFromExprs library (TAp tList tInt) 
-          x <- catch (liftM (Just . fst)  out)
-                     (\_ -> putStrLn "error" >> return Nothing)                       
-          case x of 
-            Just y  -> putStrLn $ show x ++ " " ++ show (unsafeCoerce (eval y) :: [Int])
-            Nothing  -> putStrLn ""
+sampleExprs n library tp = replicate n $ sampleExpr library tp
+
+main = sequence 
+       $ do x <- sampleExprs 10 library (TAp tList tInt)
+            let x' = do z <- x
+                        return $ show . fst $ z
+            let x'' = catch x' (const $ return "error")
+            return x''
+
 
 
 
