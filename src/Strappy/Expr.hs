@@ -1,95 +1,67 @@
 -- Expr.hs
-{-# Language BangPatterns #-}
+{-# Language GADTs,  ScopedTypeVariables   #-}
 
 module Strappy.Expr where
 
 import Debug.Trace
+import Unsafe.Coerce (unsafeCoerce) 
+import GHC.Prim
+import Control.Monad
+import Control.Monad.Trans
+import Control.Monad.Identity
 
 import Strappy.Type
 
+-- | Main data type. Holds primitive functions (Term), their
+-- application (App) and annotations.
+data Expr a where
+    Term :: {eName  :: String, 
+             eType  :: Type, 
+             eThing :: a} -> Expr a
+    App  :: {eLeft  :: (Expr (b -> a)),
+             eRight :: (Expr b),
+             eType  :: Type}         ->  Expr a 
 
--- define an expression
-data Expr  = App Expr Expr
-           | Func (Expr -> Expr)
-           | Lam Expr
-           | N Int
-           | C Char
-           | B Bool
-           | Const String
-           | ExprError String 
+-- | smart constructor for applications
+a <> b = App a b (fst . runIdentity . runTI $ typeOfApp a b)
+          
+instance Show (Expr a)   where
+    show Term{eName=s} = s
+    show App{eLeft=el, eRight=er} = "(" ++ show el ++ " " ++  show er ++ ")"
 
-instance Show Expr where
-    show (Func _) = "<function>"
-    show (App left right) = "(" ++ show left ++ " " ++ show right ++ ")"
-    show (N i) = show i
-    show (C c) = show c
-    show (B t) = show t -- boolean
-    show (Const name) = name
-    show (Lam expr) = 
-        "( L: " ++ show expr ++ ")"
-    show (ExprError s) = "Expr Error: " ++ s
+showableToExpr :: (Show a) => a -> Type -> Expr a
+showableToExpr f tp = Term (show f) tp f
 
-instance Eq Expr where
-    (App l1 r1) == (App l2 r2) = (l1 == l2) && (r1 == r2)
-    (Lam e) == (Lam f) = e == f
-    (N i) == (N j) = i == j
-    (C i) == (C j) = i == j
-    (B i) == (B j) = i == j
-    (Const s) == (Const s') = s == s'
-    _ == _ = False
+doubleToExpr :: Double -> Expr Double
+doubleToExpr d = showableToExpr d tDouble
 
-toFloat :: Expr -> Double
-toFloat e = error $ "expr cannot be converted to float: " ++ show e
+intToExpr :: Int -> Expr Int
+intToExpr d = showableToExpr d tInt
 
-isRedex :: Expr -> Bool
-{-# INLINE isRedex #-}
-isRedex (App (Const _ ) _) = False
-isRedex (App _ _) = True
-isRedex _ = False
+typeOfApp :: Monad m => Expr a -> Expr b -> TypeInference  m Type
+typeOfApp e_left e_right 
+    = do t <- newTVar Star 
+         case mgu (eType e_left) (eType e_right ->- t) of 
+           (Just sub) -> return $ toType (apply sub (eType e_left))
+           Nothing -> error $ "typeOfApp: cannot unify " ++
+                      show e_left ++ ":: " ++ show (eType e_left) 
+                               ++ " with " ++ 
+                      show e_right ++ ":: " ++ show (eType e_right ->- t) 
 
-reduce :: Expr -> Expr
-{-# INLINE reduce #-} 
-reduce (App err@(ExprError s) _) = err
-reduce (App _ err@(ExprError s)) = err
+eval :: Expr a -> a
+eval Term{eThing=f} = f
+eval App{eLeft=el, eRight=er} = (eval el) (eval er)
 
-reduce x@(App (Lam e) f) = let f' = reduce f 
-                           in case f' of 
-                                err@(ExprError _) -> err
-                                otherwise -> reduce $ substitute f' e
-
-reduce e@(App (Func f) a)  = let z = (reduce a) 
-                             in case z of 
-                                  err@(ExprError _) -> err
-                                  otherwise -> z `seq` reduce $ f z
-reduce e@(App (Const _) _) =  e
-reduce x@(App a b) | isRedex a =  let a' = reduce a 
-                                  in case a' of
-                                       err@(ExprError _) -> err
-                                       otherwise -> reduce $ App a' b
-                   | otherwise = x
-
-reduce e = e
-
-substitute e (App a b) = App a' b' where a' = substitute e a
-                                         b' = substitute e b
-substitute e (Lam f) = Lam $ substitute e f
-substitute e a@(Func _) = a
-
--- | implement reduction with a step limit
-reduceWithLimit :: Int -> Expr -> Maybe Expr
-{-# INLINE reduceWithLimit #-}
-reduceWithLimit 0 e = (trace "Reduction limit reached.")  Nothing
-reduceWithLimit i x@(App (Lam e) f) = 
-    do f' <- reduceWithLimit (i-1) f 
-       reduceWithLimit (i-1) $ substitute f' e
-reduceWithLimit i  e@(App (Func f) a)  = 
-    do  z <- reduceWithLimit (i-1) a
-        z `seq` reduceWithLimit (i-1) $ f z
-reduceWithLimit i x@(App a b) = 
-    do l <- reduceWithLimit (i-1 ) a
-       r <- reduceWithLimit (i-1) b
-       reduceWithLimit (i-1) (App l r)
-reduceWithLimit i e = Just e
+filterExprsByType :: [Any] -> Type -> TypeInference [] Any
+filterExprsByType (e:es) t  
+    = do et <- freshInst (eType (unsafeCoerce e :: Expr a))
+         let e' = unsafeCoerce e :: Expr a
+         case mgu et t of
+           Just sub -> do let eOut = unsafeCoerce e'{eType = apply sub et} :: Any
+                          return eOut `mplus` rest
+           Nothing -> rest
+      where rest = filterExprsByType es t
+filterExprsByType [] t = lift []
 
 
-                                    
+
