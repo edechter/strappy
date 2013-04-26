@@ -23,54 +23,12 @@ import Debug.Trace
 mkAny :: a -> Any
 mkAny x = unsafeCoerce x 
 
-
--- | Main data type. Holds primitive functions (Term), their
--- application (App) and annotations.
-data Expr a where
-    Term :: {eName  :: String, 
-             eType  :: Type, 
-             eThing :: a} -> Expr a
-    App  :: {eLeft  :: (Expr (b -> a)),
-             eRight :: (Expr b),
-             eType  :: Type}         ->  Expr a 
-
--- | smart constructor for applications
-a <> b = App a b (fst . runIdentity . runTI $ typeOfApp a b)
-          
-instance Show (Expr a)   where
-    show Term{eName=s} = s
-    show App{eLeft=el, eRight=er} = "(" ++ show el ++ " " ++  show er ++ ")"
-
                     
-typeOfApp :: Monad m => Expr a -> Expr b -> TypeInference  m Type
-typeOfApp e_left e_right 
-    = do t <- newTVar Star 
-         case mgu (eType e_left) (eType e_right ->- t) of 
-           (Just sub) -> return $ toType (apply sub (eType e_left))
-           Nothing -> error $ "typeOfApp: cannot unify " ++
-                      show e_left ++ ":: " ++ show (eType e_left) 
-                               ++ " with " ++ 
-                      show e_right ++ ":: " ++ show (eType e_right ->- t) 
 
 -- | Calculate the result type of an Expr
 exprType :: Expr a -> Type
 exprType Term{eType=t} = t
 exprType App{eLeft=el, eRight=er} = fst . runIdentity . runTI $ typeOfApp el er
-
-eval :: Expr a -> a
-eval Term{eThing=f} = f
-eval App{eLeft=el, eRight=er} = (eval el) (eval er)
-
-filterExprsByType :: [Any] -> Type -> TypeInference [] Any
-filterExprsByType (e:es) t  
-    = do et <- freshInst (eType (unsafeCoerce e :: Expr a))
-         let e' = unsafeCoerce e :: Expr a
-         case mgu et t of
-           Just sub -> do let eOut = unsafeCoerce e'{eType = apply sub et} :: Any
-                          return eOut `mplus` rest
-           Nothing -> rest
-      where rest = filterExprsByType es t
-filterExprsByType [] t = lift []
 
 
 ----------------------------------------------------------------------
