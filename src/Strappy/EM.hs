@@ -5,12 +5,16 @@ import Strappy.Grammar
 import Strappy.CL
 import Strappy.EnumBF
 import Strappy.Type
+import Strappy.Sample
 import qualified Strappy.CombMap as CM
 
 import Data.Maybe
 import Data.List
 import Data.Function
 import qualified Data.Map as Map
+import Control.Monad
+import Control.Monad.Random
+import Control.Monad.State
 
 -- Evaluates to the number of nats required to encode the grammar
 -- Does not include production probabilities
@@ -42,42 +46,41 @@ grammarLogLikelihood gr frontier =
       wMatrix = map (map snd) frontier
   in sum $ zipWith (\lls ws -> sum $ zipWith (*) lls ws) combLLs wMatrix
 
--- "Samples" the frontier of the old grammar
--- Does so by doing a BF enumeration and then weighting
--- Returns a list of tuples of (combinator, prior probability)
--- In the future, it would be nice to actually do a random sample from G
-sampleFrontier :: Grammar -> Int -> Type -> [(Comb,Double)]
+-- Returns a given number of samples from the grammar
+sampleFrontier :: MonadRandom m =>
+                  Grammar -> Int -> Type -> m [Comb]
 sampleFrontier gr size ty =
-  let sample = [ (comb cb, value cb) | cb <- enumBF gr size ty ]
-      logZ = foldl1 logSumExp $ map snd sample
-      -- Normalized sample
-      sample' = [ (c, exp (p - logZ)) | (c, p) <- sample ]
-  in sample'
-  where logSumExp :: Double -> Double -> Double
-        logSumExp x y | x <  y = x + (log $ 1.0 + exp (y - x))
-                      | y <= x = y + (log $ 1.0 + exp (x - y))
+  evalStateT (sample' size) 0
+  where sample' 0 = return []
+        sample' n = do
+          maybeSample <- maybeSampleFromGrammar gr ty
+          case maybeSample of
+            Nothing -> sample' n
+            Just s -> liftM (s:) $ sample' (n-1)
+
+  
 
 -- Takes a grammar and a list of tasks; updates to a new grammar
-doEMIteration :: Grammar -> CM.CombMap [Type] -> Int ->
-                 [(Type, Comb -> Double)] -> Grammar
-doEMIteration gr baseGrammar size tasks =
-  let frontiers = map (sampleFrontier gr size . fst) tasks
-      -- Weight each frontier by likelihood
-      frontiers' = zipWith (\frontier (_, likelihood) ->
-                             map (\ (comb, prior) ->
-                                   (comb, prior * likelihood comb))
+doEMIteration :: MonadRandom m =>
+                 Grammar -> CM.CombMap [Type] -> Int ->
+                 [(Type, Comb -> Double)] -> m Grammar
+doEMIteration gr baseGrammar size tasks = do
+  frontiers <- mapM (sampleFrontier gr size . fst) tasks
+  -- Weight each frontier by likelihood
+  let frontiers' = zipWith (\frontier (_, likelihood) ->
+                             map (\ comb -> (comb, likelihood comb))
                              frontier)
                    frontiers tasks
-      -- Compute normalizing constants
-      zs = map (sum . map snd) frontiers'
-      -- Remove unhit tasks
-      z_and_frontier = filter ((>0) . fst) $ zip zs frontiers'
-      -- Divide by normalizing constant
-      frontiers'' = map (\(z, frontier) ->
+  -- Compute normalizing constants
+  let zs = map (sum . map snd) frontiers'
+  -- Remove unhit tasks
+  let z_and_frontier = filter ((>0) . fst) $ zip zs frontiers'
+  -- Divide by normalizing constant
+  let frontiers'' = map (\(z, frontier) ->
                           map (\ (comb, posterior) -> (comb, posterior/z))
                           frontier)
                     z_and_frontier
-  in optimizeGrammar gr baseGrammar frontiers''
+  return $ optimizeGrammar gr baseGrammar frontiers''
 
 -- Performs hill climbing upon the given grammar
 optimizeGrammar :: Grammar -> CM.CombMap [Type]
@@ -103,3 +106,4 @@ optimizeGrammar gr baseGrammar frontier =
 
 grammarNeighbors :: Grammar -> [[(Comb, Double)]] -> [Grammar]
 grammarNeighbors = undefined
+

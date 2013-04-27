@@ -21,3 +21,27 @@ requestConstruction host plan shoves = withSocketsDo $ do
   print result
   hClose h
   return $ read result
+
+
+-- | Given a plan and a list of outcomes, evaluates to a list of final heights
+-- The outcomes may be taken from requestConstruction, for example
+computeFinalHeights :: [(Double,Double,Double,Double)] ->
+                       [[(Double,Double,Double)]] ->
+                       [Double]
+computeFinalHeights plan outcomes =
+  let blockRadiiAndTheta = map (\(_,_,dx,dz) ->
+                                (sqrt $ dx*dx + dz*dz, dTheta = atan2 dz dx))
+                               plan
+  in flip map outcomes $
+     \outcome -> maximum $ zipWith (\(r,dTheta) (_,z,ang) ->
+                                     blockHeight r dTheta z ang)
+                                   blockRadiiAndTheta outcome
+  where blockHeight r dTheta z ang =
+          let ang' = ang / 180.0 * pi
+              r = 
+              
+              -- Check all four corners
+          in maximum [ z + r * sin (ang + dTheta),
+                       z + r * sin (ang - dTheta),
+                       z + r * sin (pi + ang + dTheta),
+                       z + r * sin (pi + ang - dTheta) ]

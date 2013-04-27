@@ -1,9 +1,10 @@
-
 module Strappy.Sample where
 
 import Prelude hiding (flip)
 import Control.Monad.State
 import Control.Monad.Random
+import Control.Monad.Random
+import Control.Monad.Trans.Maybe
 
 import Strappy.CL 
 import Strappy.Type
@@ -39,6 +40,20 @@ sampleFromGrammar gr tp = do shouldExpand <- flip $ expansions gr
                                                 dist' = map (\(x, y) -> (exp (x - z), y)) $ dist 
                                             guard (not . null $ dist)
                                             sampleMultinomial  dist'
-                                 
-                                                              
-                                          
+
+
+instance (MonadRandom m) => MonadRandom (MaybeT m) where
+  getRandom = lift getRandom
+  getRandoms = lift getRandoms
+  getRandomR = lift . getRandomR
+  getRandomRs = lift . getRandomRs
+
+-- Wrapper over sampleFromGrammar that doesn't require m to instantiate MonadPlus
+-- Also does not wrap the result in the type inference monad
+maybeSampleFromGrammar :: MonadRandom m =>
+                          Grammar -- ^ stochastic grammar G
+                          -> Type -- ^ type t
+                          -> m (Maybe Comb)
+maybeSampleFromGrammar gr tp = do
+  runMaybeT $ evalStateT (sampleFromGrammar gr tp) 0
+

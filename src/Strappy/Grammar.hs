@@ -67,7 +67,6 @@ countExpansions c = count 0 c
     where count n (CLeaf{}) = n
           count n CApp{lComb=l, rComb=r} = let n' = count (n + 1) l
                                            in count n' r
-
 countAlts :: [Comb]           -- ^ a list of combinators (e.g. from a library)
           -> Type             -- ^ a type t  
           -> CombMap Int      -- ^ a map of combinators that return type t
@@ -121,14 +120,48 @@ estimateGrammar prior psObs ind xs =
         empiricalGr = Grammar logprobs 0 -- logProbEx
     in combineGrammars (normalizeGrammar prior, psObs) (normalizeGrammar empiricalGr, 1.0)
 
+
+-- | Replaces the actual types of a combinator with its requested type
+requestedTypes :: Comb -> Type -> Comb
+requestedTypes comb ty =
+  fst $ fromJust $ evalStateT (requestedTypes' comb ty) 0
+  -- requestedTypes' takes a combinator and a type;
+  -- It imposes the constraint that the combinator has that type,
+  -- and then returns the combinator annotated w/ requested types,
+  -- as well as the type that was chosen for the combinator,
+  -- which may be more specific than the requested type
+  where requestedTypes' c@(CApp{lComb = l, rComb = r}) ty = do
+          t <- newTVar Star
+          (l', newL'Ty) <- requestedTypes' l (t ->- tp)
+          (r', newR'Ty) <- requestedTypes' r (fromType newL'Ty)
+          let c' = c { lComb = l', rComb = r', cType = ty }
+          let ty' = case getAppType l' r' of
+                Left err -> error $ "Error computing requested types: " ++ err
+                Right appType -> appType
+          return (c', ty')
+        requestedTypes' c@(CLeaf 
+          
+
 -- Estimates the production probabilities for the given grammar by counting
 estimateGrammarWeighted ::
   Grammar
   -> Double  -- pseudo-counts
-  -> CombMap [Type] -- primitive combinators
   -> [(Comb, Double)]  -- Weighted observations
   -> Grammar
-estimateGrammarWeighted = undefined -- TODO
+estimateGrammarWeighted gr pseudoCounts obs =
+  let counts = CM.map (const pseudoCounts) gr
+      requestedTypes = concatMap (\(c, w) -> map ((,) w) $ combRequests c) obs
+  in undefined
+  where combRequests 
+        
+        
+      (gr', expansions, terminals) =
+        foldl (\gr_cnt (comb, wt) -> updateCounts comb wt gr_cnt)
+              (gr, 0.0, 0.0) obs
+  in
+   gr' { expansions = -log $ expansions / (terminals+expansions) }
+  where updateCounts comb wt (gr, exps, terms) =
+          
 
 calcLogProb :: Grammar 
             -> Type
@@ -151,15 +184,13 @@ combinatorLL :: Grammar
                 -> Double
 -- | Returns the log probability of producing the given tree
 -- when asked for the given type
--- FIXME: This follows what is described in the paper.
--- I am confused as to whether the rest of the code does, however;
--- in particular, I do not see why there are no terms from nonterminal nodes
 combinatorLL gr c =
   -- Is this combinator a leaf?
   if CM.member c (library gr)
-  then calcLogProb gr (cType c) c
+  then calcLogProb gr (cType c) c + (expansion gr)
   else case c of
-    CApp{lComb = l, rComb = r} -> combinatorLL gr l + combinatorLL gr r
+    CApp{lComb = l, rComb = r} ->
+      combinatorLL gr l + combinatorLL gr r - (expansion gr)
     _ -> 0 -- Is this the correct thing to do?
 
       
