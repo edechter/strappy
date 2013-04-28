@@ -57,6 +57,8 @@ module Strappy.Type (
 import qualified Data.Set as Set
 import Data.List (intersect, union, nub, foldl')
 import Data.Maybe (fromJust)
+import Data.Hashable 
+
 import Control.Monad (foldM)
 import Control.Monad.Identity
 import Control.Monad.Trans.Class
@@ -84,7 +86,7 @@ instance Show Kind where
 
 data Type = TVar TyVar
           | TCon TyCon
-          | TAp Type Type
+          | TAp {tLeft :: Type, tRight ::  Type}
           deriving (Eq, Ord)
 
 data TyVar = TyVar {tyVarId :: Id, tyVarKind :: Kind}
@@ -93,7 +95,7 @@ data TyVar = TyVar {tyVarId :: Id, tyVarKind :: Kind}
 instance Show TyVar where
     show (TyVar i k) = i
 
-data TyCon = TyCon Id Kind 
+data TyCon = TyCon {tyConId :: Id, tyConKind :: Kind }
            deriving (Eq, Ord)
 instance Show TyCon where
     show (TyCon i k) = i
@@ -291,6 +293,15 @@ extendTypeOnLeftN t 0 = return $ t
 extendTypeOnLeftN t n = do t' <- extendTypeOnLeft t
                            extendTypeOnLeftN t' (n-1)
 
+
+instance Hashable Type where
+    hash (TVar v) = hash "TyVar" `hashWithSalt`
+                         hash (tyVarId v) 
+    hash (TCon v) = hash "TyCon" `hashWithSalt`
+                         hash (tyConId v) 
+    hash (TAp t1 t2) = hash "TAp" `hashWithSalt` hash t1 `hashWithSalt` hash t2
+
+                         
 
 -- | Useful types. 
 tChar = TCon (TyCon "Char" Star)

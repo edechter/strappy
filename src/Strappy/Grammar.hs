@@ -7,12 +7,9 @@ import Control.Monad.State
 import Debug.Trace
 import Data.Maybe
 
-import Strappy.CL 
 import Strappy.Type
 import qualified Strappy.CombMap as CM
 import Strappy.CombMap (CombMap)
-import Strappy.Compress
-import Strappy.Task
 
 data Grammar = Grammar { library :: CombMap Double, -- ^ neg log prob
                          expansions :: Double -- ^ neg log prob
@@ -136,25 +133,6 @@ calcLogProb gr tp c
           combLogProb = library gr CM.! c - logProbAll
           out = if length altCs < 2 then log 0.5 else combLogProb
       in out
-
--- exLogProb :: Grammar -> Type -> Double
--- exLogProb gr tp  
---     = let m = filterCombinatorsByType (CM.keys $ library gr) tp
---           altCs = map fst $ runStateT m 0
---           combLps = [exp $ (library gr) CM.! x | x <- altCs] 
---           logProbAll = log $ exp (expansions gr) + sum combLps
---           out = if null altCs then log (0.5)  -- ^ this log (0.5) is a
---                                               -- hack. it should be 0,
---                                               -- right? since there
---                                               -- are no alternatives,
---                                               -- the probability is
---                                               -- 1. But this causes
---                                               -- infinite expansions
---                                               -- in the best-first search. 
---                 else expansions gr  - logProbAll
---       in  out
-
-
 
 
 truncateGrammar :: Grammar -> Int -> Grammar
