@@ -1,20 +1,47 @@
+{-# Language TypeSynonymInstances, FlexibleInstances #-}
 
-module Library where
+module Strappy.Library where
 
-import Data.HashMap  (Map)
+import qualified Data.HashMap as Map
 import Data.Hashable
 import GHC.Prim
 import Unsafe.Coerce (unsafeCoerce)
 import qualified Data.List as List
+import Text.Printf
+import Data.Function (on)
 
 import Strappy.Type
 import Strappy.Expr
+import Strappy.Utils
 
-type ExprMap a = Map UExpr a
+-- | Type alias for hash table with keys as type-hidden expressions.
+type ExprMap a = Map.Map UExpr a
 
 instance Hashable UExpr where
     hash uexpr = hash $ fromUExpr uexpr                                     
-    
+
+-- | Type alias for distribution over expressions. 
+type ExprDistr = ExprMap Double 
+
+ 
+showExprDistr exprDistr  = unlines $ map (\(e, i) -> printf "%7s:%7.2f" (show e) i) pairs
+    where pairs = List.sortBy (compare `on` snd) $ Map.toList exprDistr
+                  
+
+-- | Type for stochastic grammar over programs.
+data Grammar = Grammar {grApp :: Double, -- ^ log probability of application
+                        grExprDistr :: ExprDistr -- ^ distribution over functions
+                       } 
+
+showGrammar (Grammar p exprDistr) = printf "%7s:%7.2f\n" "p" p ++ showExprDistr exprDistr
+
+normalizeGrammar :: Grammar -> Grammar 
+normalizeGrammar Grammar{grApp=p, grExprDistr=distr}
+    = let logTotalMass = logsumexp $ p : Map.elems distr
+          distr' = Map.map (\x -> x - logTotalMass) distr
+          p' = p - logTotalMass
+      in Grammar  p' distr'
+
 -- | Helper for turning a Haskell type to Any. 
 mkAny :: a -> Any
 mkAny x = unsafeCoerce x 
@@ -61,23 +88,30 @@ cRep = Term "rep" (tInt ->- t ->- TAp tList t) $ \n x -> take n (repeat x)
 cFoldl = Term "foldl" ((t ->- t1 ->- t) ->- t ->- (TAp tList t1) ->- t) $ List.foldl'
 cNums =  [cInt2Expr i | i <- [1..10]]
 
---  A basic library
+-- | A basic collection of expressions
+basicExprs :: [UExpr]
+basicExprs = [toUExpr cI, 
+              toUExpr cS, 
+              toUExpr cB, 
+              toUExpr cC, 
+              toUExpr cTimes, 
+              toUExpr cCons, 
+              toUExpr cEmpty,
+              toUExpr cAppend,
+              --         toUExpr cHead,
+              toUExpr cMap,
+              toUExpr cFoldl,
+              toUExpr cSingle,
+              toUExpr cRep
+             ] 
+             ++ map toUExpr cNums
 
-exprs :: [Any]
-exprs = [mkAny cI, 
-         mkAny cS, 
-         mkAny cB, 
-         mkAny cC, 
-         mkAny cTimes, 
-         mkAny cCons, 
-         mkAny cEmpty,
-         mkAny cAppend,
---         mkAny cHead,
-         mkAny cMap,
-         mkAny cFoldl,
-         mkAny cSingle,
-         mkAny cRep
-        ] 
-        ++ map mkAny cNums
+-- | A basic expression distribution
+basicExprDistr :: ExprDistr
+basicExprDistr = Map.fromList [(e, 1) | e <- basicExprs]
+
+basicGrammar :: Grammar
+basicGrammar = Grammar 1 basicExprDistr
+
 
 -- library = Library 0.3 exprs

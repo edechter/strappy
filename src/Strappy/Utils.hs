@@ -13,3 +13,7 @@ sampleMultinomial dist = do r <- getRandomR (0, 1)
                             return $ sample r dist
     where sample r ((p, a):rest) = if r <= p then a else 
                                        sample (r - p) rest
+
+
+logsumexp xs = a + (log . sum . map (exp . (\x -> x-a)) $ xs)
+    where a = maximum xs

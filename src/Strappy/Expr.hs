@@ -39,6 +39,21 @@ instance Show (Expr a)   where
     show Term{eName=s} = s
     show App{eLeft=el, eRight=er} = "(" ++ show el ++ " " ++  show er ++ ")"
 
+instance Eq (Expr a) where
+    e1 == e2 = show e1 == show e2
+
+instance Ord (Expr a) where
+    compare e1 e2 = compare (show e1) (show e2) 
+
+instance Show UExpr where
+    show  = show . fromUExpr  
+
+instance Ord UExpr where
+    compare ue1 ue2 = compare (show ue1) (show ue2)
+
+instance Eq UExpr where
+    ue1 == ue2 = show ue1 ==  show ue2
+
 showableToExpr :: (Show a) => a -> Type -> Expr a
 showableToExpr f tp = Term (show f) tp f
 
