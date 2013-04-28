@@ -42,6 +42,8 @@ normalizeGrammar Grammar{grApp=p, grExprDistr=distr}
           p' = p - logTotalMass
       in Grammar  p' distr'
 
+
+
 -- | Helper for turning a Haskell type to Any. 
 mkAny :: a -> Any
 mkAny x = unsafeCoerce x 
@@ -59,7 +61,9 @@ cS = Term "S" (((t2 ->- t1 ->- t) ->- (t2 ->- t1) ->- t2 ->- t)) $ \f g x -> (f 
 
 cB = Term "B" ((t1 ->- t) ->- (t2 ->- t1) ->- t2 ->- t) $ \f g x -> f (g x)
 
-cC = Term "C" ((t2 ->- t1 ->- t2 ->- t) ->- t1 ->- t2 ->- t) $ \f g x -> (f x) g 
+cC = Term "C" ((t1 ->- t2 ->- t) ->- t2 ->- t1 ->- t) $ \f g x -> (f x) g 
+
+cBottom = Term "_|_" t $ undefined
 
 -- | Integer arithmetic
 cPlus :: Expr (Int -> Int -> Int)
@@ -94,6 +98,7 @@ basicExprs = [toUExpr cI,
               toUExpr cS, 
               toUExpr cB, 
               toUExpr cC, 
+              toUExpr cBottom,
               toUExpr cTimes, 
               toUExpr cCons, 
               toUExpr cEmpty,
@@ -108,10 +113,11 @@ basicExprs = [toUExpr cI,
 
 -- | A basic expression distribution
 basicExprDistr :: ExprDistr
-basicExprDistr = Map.fromList [(e, 1) | e <- basicExprs]
+basicExprDistr = Map.adjust (const (-5)) (toUExpr cBottom) 
+                 $ Map.fromList [(e, 1) | e <- basicExprs] 
 
 basicGrammar :: Grammar
-basicGrammar = Grammar 1 basicExprDistr
+basicGrammar = Grammar 3 basicExprDistr
 
 
 -- library = Library 0.3 exprs

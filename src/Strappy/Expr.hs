@@ -25,7 +25,7 @@ data Expr a where
              eLabel :: Maybe String}         ->  Expr a 
 
 -- | smart constructor for applications
-a <> b = App a b (fst . runIdentity . runTI $ typeOfApp a b)
+a <> b = App a b (fst . runIdentity . runTI $ typeOfApp a b) Nothing
 
 -- | hide expression type in an Any
 data UExpr = UExpr Any
@@ -77,16 +77,17 @@ eval :: Expr a -> a
 eval Term{eThing=f} = f
 eval App{eLeft=el, eRight=er} = (eval el) (eval er)
 
-filterExprsByType :: [Any] -> Type -> TypeInference [] Any
-filterExprsByType (e:es) t  
-    = do et <- freshInst (eType (unsafeCoerce e :: Expr a))
-         let e' = unsafeCoerce e :: Expr a
-         case mgu et t of
-           Just sub -> do let eOut = unsafeCoerce e'{eType = apply sub et} :: Any
-                          return eOut `mplus` rest
-           Nothing -> rest
-      where rest = filterExprsByType es t
-filterExprsByType [] t = lift []
+filterExprsByType :: (Monad m) => [(UExpr, a)] -> Type -> TypeInference m [(UExpr, a)]
+filterExprsByType ((ue, x):es) t  
+    = let e = fromUExpr ue
+      in do et <- freshInst . eType $ e
+            case mgu et t of
+              Just sub -> do let ueOut = toUExpr e{eType = apply sub et}
+                             rest <- filterExprsByType es t
+                             return $ (ueOut, x) : rest
+              Nothing -> filterExprsByType es t
+
+filterExprsByType [] t = return []
 
 
 
