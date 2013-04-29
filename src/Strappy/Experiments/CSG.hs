@@ -101,15 +101,19 @@ csgExprs = [toUExpr cI, toUExpr cS, toUExpr cB, toUExpr cC, toUExpr cBottom,
 csgExprDistr = Map.adjust (const (-6)) (toUExpr cBottom) 
                 $ Map.fromList [(e, 1) | e <- csgExprs]
 
-csgGrammar = Grammar 6 csgExprDistr
+csgGrammar = Grammar 4 csgExprDistr
 
 ----------------------------------------
 -- Sample an openSCAD file -------------
 ----------------------------------------
-sampleOpenSCAD library tp = do (expr, i) <- sampleExpr library tp
-                               let solid = (trace $ show expr) eval expr
-                                   str = openSCAD solid
-                               writeFile "solid.scad" str 
+sampleOpenSCAD :: String -> Grammar -> IO ()
+-- | Sample solid from <library> and write scad file to <filename>.
+sampleOpenSCAD filename library = do (expr, i) <- sampleExpr library tSolid
+                                     let solid = eval expr
+                                         str = openSCAD solid
+                                     writeFile filename str 
+
+
 
   
 
