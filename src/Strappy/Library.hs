@@ -65,6 +65,7 @@ cC = Term "C" ((t1 ->- t2 ->- t) ->- t2 ->- t1 ->- t) $ \f g x -> (f x) g
 
 cBottom = Term "_|_" t $ undefined
 
+
 -- | Integer arithmetic
 cPlus :: Expr (Int -> Int -> Int)
 cPlus = Term "+" (tInt ->- tInt ->- tInt) (+)
@@ -90,7 +91,8 @@ cEmpty = Term "[]" (TAp tList t) []
 cSingle = Term "single" (t ->- TAp tList t) $ \x -> [x]
 cRep = Term "rep" (tInt ->- t ->- TAp tList t) $ \n x -> take n (repeat x)
 cFoldl = Term "foldl" ((t ->- t1 ->- t) ->- t ->- (TAp tList t1) ->- t) $ List.foldl'
-cNums =  [cInt2Expr i | i <- [1..10]]
+cInts =  [cInt2Expr i | i <- [1..10]]
+cDoubles =  [cDouble2Expr i | i <- [1..10]]
 
 -- | A basic collection of expressions
 basicExprs :: [UExpr]
@@ -109,7 +111,7 @@ basicExprs = [toUExpr cI,
               toUExpr cSingle,
               toUExpr cRep
              ] 
-             ++ map toUExpr cNums
+             ++ map toUExpr cInts
 
 -- | A basic expression distribution
 basicExprDistr :: ExprDistr

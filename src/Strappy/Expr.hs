@@ -101,6 +101,10 @@ cInt2Expr :: Int -> Expr Int
 -- | Convert numbers to expressions. 
 cInt2Expr i = Term (show i) tInt i 
 
+cDouble2Expr :: Double -> Expr Double
+-- | Convert numbers to expressions. 
+cDouble2Expr i = Term (show i) tDouble i 
+
 
 ----------------------------------------
 -- Hashable instance ------------------- 

@@ -48,9 +48,10 @@ sampleExpr gr@Grammar{grApp=p, grExprDistr=exprDistr} tp
                          e_right <- sample (fromType (eType (fromUExpr e_left)))
                          return $ toUExpr $ (fromUExpr e_left) <> (fromUExpr e_right) 
               False -> do cs <- filterExprsByType (Map.toList exprDistr) tp
-                          guard (not . null $ cs) 
-                          sampleMultinomial $ map (\(e, i) -> (e, exp i)) $ 
+                          guard (trace (show tp) $ not . null $ cs) 
+                          out <- sampleMultinomial $ map (\(e, i) -> (e, exp i)) $ 
                                              normalizeDist cs
+                          (trace $ show out ) $ return out
 
 sampleExprs n library tp = replicate n $ sampleExpr library tp
 
