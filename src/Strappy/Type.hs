@@ -19,6 +19,7 @@ module Strappy.Type (
 
                     -- * Functions
                     , (->-)
+                    , kind
                     , freshInst
                     , newTVar
                     , mkTVar
@@ -57,7 +58,7 @@ module Strappy.Type (
 import qualified Data.Set as Set
 import Data.List (intersect, union, nub, foldl')
 import Data.Maybe (fromJust)
-import Data.Hashable 
+import Data.Hashable (Hashable, hash, hashWithSalt) 
 
 import Control.Monad (foldM)
 import Control.Monad.Identity
@@ -233,8 +234,8 @@ mgu t s = Nothing
 varBind :: TyVar -> Type -> Maybe Subst
 varBind u t | t == TVar u  = Just nullSubst
             | u `elem` tv t = Nothing
-            | kind u == kind t = Just $ u --> t
-            | otherwise = Nothing
+            | kind u /= kind t = Nothing
+            | otherwise = Just $ u --> t
 
 -- matching : given types t1 t2, find substitution s s.t. apply s t1 =
 -- t2
@@ -295,11 +296,11 @@ extendTypeOnLeftN t n = do t' <- extendTypeOnLeft t
 
 
 instance Hashable Type where
-    hash (TVar v) = hash "TyVar" `hashWithSalt`
+    hashWithSalt a (TVar v) = hash a `hashWithSalt` hash "TyVar" `hashWithSalt`
                          hash (tyVarId v) 
-    hash (TCon v) = hash "TyCon" `hashWithSalt`
+    hashWithSalt a (TCon v) = hash a `hashWithSalt` hash "TyCon" `hashWithSalt`
                          hash (tyConId v) 
-    hash (TAp t1 t2) = hash "TAp" `hashWithSalt` hash t1 `hashWithSalt` hash t2
+    hashWithSalt a (TAp t1 t2) = hash a `hashWithSalt` hash "TAp" `hashWithSalt` hash t1 `hashWithSalt` hash t2
 
                          
 

@@ -4,6 +4,7 @@ module Strappy.Sample where
 import Prelude hiding (flip)
 import Control.Monad.State
 import Control.Monad.Random
+import Control.Exception 
 import qualified Data.HashMap as Map
 
 import Strappy.Type
@@ -55,11 +56,12 @@ sampleExpr gr@Grammar{grApp=p, grExprDistr=exprDistr} tp
 
 sampleExprs n library tp = replicate n $ sampleExpr library tp
 
-putSampleExprs n library tp  = sequence 
-                               $ do x <- sampleExprs n library tp
-                                    let x' = do z <- x
-                                                return $ show . fst $ z
-                                    let x'' = catch x' (const $ return "error")
-                                    return x''
+putSampleExprs n library tp  
+    = sequence 
+      $ do x <- sampleExprs n library tp
+           let x' = do z <- x
+                       return $ show . fst $ z
+           let x'' = catch x' (const (return "error") :: IOException -> IO String)
+           return x''
 
                                           

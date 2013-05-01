@@ -1,7 +1,24 @@
 
+
 module Strappy.Experiments.CSG where
 
 import qualified Data.HashMap as Map
+
+import System.Process
+import System.IO
+import System.Directory
+import System.Posix
+
+import Control.Monad
+import Control.Exception
+
+import Foreign.Ptr
+import System.Environment
+import Data.Word
+import Data.Array.Repa hiding ((++), map)
+import Data.Array.Repa.IO.DevIL
+import Data.Array.Repa.Repr.ForeignPtr
+import Data.Array.Repa.Eval
 
 import Debug.Trace
 
@@ -16,7 +33,7 @@ import Language.Mecha
 ----------------------------------------
 -- Type primitives ---------------------
 ----------------------------------------
-tSolid = TCon $ TyCon "Solid" (Kfun Star Star)
+tSolid = TCon $ TyCon "Solid" Star
 
 ----------------------------------------
 -- Solid geometry primitives -----------
@@ -106,15 +123,53 @@ csgGrammar = Grammar 4 csgExprDistr
 ----------------------------------------
 -- Sample an openSCAD file -------------
 ----------------------------------------
-sampleOpenSCAD :: String -> Grammar -> IO ()
+sampleOpenSCAD :: String -> String -> Grammar -> IO FilePath
 -- | Sample solid from <library> and write scad file to <filename>.
-sampleOpenSCAD filename library = do (expr, i) <- sampleExpr library tSolid
-                                     let solid = eval expr
-                                         str = openSCAD solid
-                                     writeFile filename str 
+sampleOpenSCAD tempdir template library 
+    = do (expr, i) <- sampleExpr library tSolid
+         result <- try $ evaluate (eval expr)
+         case result of
+           Left error -> throw (error :: IOException)
+           Right solid -> do let str = openSCAD solid
+                             createDirectoryIfMissing True tempdir
+                             (filepath, h) <- openTempFile tempdir  (template ++ ".scad")
+                             hClose h
+                             writeFile filepath str 
+                             return filepath
 
 
 
+sampleSolidPNG :: String -> String -> Grammar -> IO FilePath
+sampleSolidPNG tempdir template library 
+    = do scadPath <- sampleOpenSCAD tempdir template library
+         (pngPath, h) <- openTempFile tempdir (template ++ ".png")
+         hClose h
+         setFileMode pngPath stdFileMode
+         let cmd = "OpenSCAD" ++ " -o " ++ pngPath ++ " " ++ scadPath 
+         putStrLn $ cmd
+         system cmd
+         return pngPath
+
+sampleSolidImage :: String -> String -> Grammar -> IO (Array F DIM3 Word8)
+sampleSolidImage tempdir template library
+    = do pngPath <- sampleSolidPNG tempdir template library
+         (RGB v) <- runIL $ readImage pngPath
+         return v
+         
+                  
+----------------------------------------
+-- Sample a povray file ----------------
+----------------------------------------
+samplePovray :: String -> Grammar -> IO ()
+-- | Sample solid from <library> and write scad file to <filename>.
+samplePovray filename library = do (expr, i) <- sampleExpr library tSolid
+                                   let solid = eval expr
+                                       str = povray solid
+                                   writeFile filename str 
+
+
+----------------------------------------
+-- 
   
 
 

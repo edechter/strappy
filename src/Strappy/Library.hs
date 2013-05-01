@@ -18,7 +18,7 @@ import Strappy.Utils
 type ExprMap a = Map.Map UExpr a
 
 instance Hashable UExpr where
-    hash uexpr = hash $ fromUExpr uexpr                                     
+    hashWithSalt a  uexpr = hash a `hashWithSalt` (hash $ fromUExpr uexpr)
 
 -- | Type alias for distribution over expressions. 
 type ExprDistr = ExprMap Double 
