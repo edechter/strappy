@@ -120,6 +120,42 @@ csgExprDistr = Map.adjust (const (-6)) (toUExpr cBottom)
 
 csgGrammar = Grammar 4 csgExprDistr
 
+
+----------------------------------------
+-- Interface with OpenSCAD tool --------
+----------------------------------------
+
+data OpenSCADConfig = OpenSCADConfig { camConfig :: OpenSCADCamera}
+
+data OpenSCADCamera = OpenSCADCamera { camTranslate :: (Double, Double, Double),
+                                       camRotate    :: (Double, Double, Double),
+                                       distance     :: Double} deriving Show
+
+defaultSCADCamera = OpenSCADCamera (0, 0, 0) (45, 0, 0) 300
+
+defaultSCADConfig = OpenSCADConfig defaultSCADCamera
+
+rotSCADCamera cam@OpenSCADCamera{camRotate=(a,b,c)} delta
+    = cam{camRotate=(a, b, c + delta) }
+
+solidToImage :: OpenSCADConfig -> Solid -> IO (Array F DIM3 Word8)
+solidToImage config solid = do tmpDir <- getTemporaryDirectory
+                               (scadPath, scadH) <- openTempFile tmpDir "csg.scad"  
+                               hClose scadH
+                               writeFile scadPath scad
+                               (pngPath, pngH) <- openTempFile tmpDir "csg.png"
+                               hClose pngH
+                               setFileMode pngPath stdFileMode
+                               let cmd = "OpenSCAD" ++ " -o " ++ pngPath ++ " " ++ scadPath 
+                               putStrLn $ cmd
+                               system cmd
+                               (RGB v) <- runIL $ readImage pngPath
+                               return v
+    where scad = openSCAD solid
+                               
+
+                                       
+
 ----------------------------------------
 -- Sample an openSCAD file -------------
 ----------------------------------------
@@ -155,7 +191,9 @@ sampleSolidImage tempdir template library
     = do pngPath <- sampleSolidPNG tempdir template library
          (RGB v) <- runIL $ readImage pngPath
          return v
-         
+
+
+
                   
 ----------------------------------------
 -- Sample a povray file ----------------
@@ -169,7 +207,13 @@ samplePovray filename library = do (expr, i) <- sampleExpr library tSolid
 
 
 ----------------------------------------
--- 
+-- Search for a matching CSG -----------
+----------------------------------------
+-- l2NormBetweenSolids :: Solid 
+--                     -> Solid
+--                     -> IO Double
+-- l2NormBetweenSolids solid1 solid2
+--     = let arrays1 = 
   
 
 
