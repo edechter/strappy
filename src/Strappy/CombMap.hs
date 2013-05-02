@@ -104,7 +104,7 @@ import Strappy.CL
 type CombMap a = Map Comb a
 
 instance Hashable Comb where
-    hash (CLeaf name _ _) = hash name
+    hash (CLeaf name _ _ _) = hash name
     hash CApp{lComb=cl, rComb=cr} = hash cl `hashWithSalt` hash cr
 
 showCombMap :: Show a => CombMap a -> String

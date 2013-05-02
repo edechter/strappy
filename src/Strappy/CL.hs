@@ -27,11 +27,12 @@ import Strappy.Expr
 -- | Combinator data type. A well formed combinator is either a
 -- primitive combinator (CNode) or the application of a combinator to
 -- another combinator (CApp). A not-yet-written combinator is
--- represented by a CTerminal (not well-named).  TODO: we should
--- change the name of CTerminal to something more appropriate.
+-- represented by a CInnerNode.
 data Comb = CApp {lComb :: Comb, 
                   rComb ::  Comb,
                   cType :: Type,
+                  cReqType :: Type, -- ^ Requested type of combinator
+                                    -- Remembered during sampling process
                   cAppDepth :: Int,
                   cLabel :: Maybe String -- ^ the label of a
                                          -- combinator is a unique
@@ -39,7 +40,8 @@ data Comb = CApp {lComb :: Comb,
                  }
           | CLeaf {cName :: String,
                    cExpr :: Expr,
-                   cType :: Type}
+                   cType :: Type,
+                   cReqType :: Type}
           | CInnerNode {cType :: Type} -- ^ a location in a tree 
           | CHole {cHole :: Hole}
 
@@ -83,7 +85,7 @@ app m1 m2 = do c1 <- m1
                case getAppType c1 c2 of
                 Left err -> Left err
                 Right t -> let d = mkAppDepth c1 c2 
-                           in Right $ CApp c1 c2 t d Nothing
+                           in Right $ CApp c1 c2 t t d Nothing
 
 app' :: Comb -> Comb -> Comb
 -- | Returns the combinator resulting from the application of two
@@ -91,7 +93,7 @@ app' :: Comb -> Comb -> Comb
 app' c1 c2 = case getAppType c1 c2 of
                Left err -> error $ "Error in app' in CL.hs: " ++ err
                Right t -> let d = mkAppDepth c1 c2
-                              in CApp c1 c2 t d Nothing
+                              in CApp c1 c2 t t d Nothing
 
 infixl 4 <:>
 -- | Alias for app.
@@ -103,13 +105,13 @@ infixl 4 <::>
 
 instance Show Comb where
     show CApp{lComb=c1, rComb=c2} = "(" ++ show c1 ++ " " ++ show c2 ++ ")"
-    show (CLeaf n _ _) = n
+    show (CLeaf n _ _ _) = n
     show (CInnerNode t) =  "CTerm: " ++ show t
     show (CHole h) = show h
 
 -- | An alternative to show: if combinator is named and evaluates to a
 -- number or bool, show it an an evaluated expressions.
-show' (CLeaf n _ _ ) = n
+show' (CLeaf n _ _ _) = n
 show' c@(CApp{lComb=c1, rComb=c2}) = case reduceComb c of
                              (N i) -> show i
                              (C c) -> show c
@@ -125,18 +127,19 @@ instance Ord Comb where
 
 num2C :: Int -> Comb 
 -- | Convert integer to a combinator.
-num2C i = CLeaf (show i) (N i) tInt
+num2C i = CLeaf (show i) (N i) tInt tInt
 
 dOp2C :: String -- ^ operator name
       -> (Int -> Int -> Int) -- ^ operator
       -> Comb
 -- | Convert a binary integer operator to an expression.
-dOp2C opString op = CLeaf opString func (tInt ->-  tInt ->- tInt)
+dOp2C opString op = CLeaf opString func t t
     where func = Func $ \(N !x) -> Func $ \(N !y) -> N $ op x y
+          t    = tInt ->-  tInt ->- tInt
 
 bool2C :: Bool -> Comb
 -- | Convert a boolean value to a combinator.
-bool2C c = CLeaf (show c) (B c) tBool
+bool2C c = CLeaf (show c) (B c) tBool tBool
 
 instance ToComb Bool where
     toComb = bool2C
@@ -147,7 +150,7 @@ instance ToComb Int where
 
 getType :: Comb -> Either String Type
 -- | Get the type of a combinator outside the type inference monad.
-getType (CLeaf _ _ t) = Right t
+getType (CLeaf _ _ t _) = Right t
 getType c@(CApp{lComb=c1, rComb=c2}) = getAppType c1 c2
 getType c@(CInnerNode t) = Right t
 getType (CHole (Hole t _)) = Right t
@@ -178,17 +181,17 @@ typeOfApp c_left c_right
 
 sub :: TyVar -> Type -> Comb -> Comb
 -- | Apply a substitution to a type inside a combinator.
-sub s (TVar u) c@(CLeaf _ _ t) = c{cType = apply [(s, TVar u)] (cType c)}
+sub s (TVar u) c@(CLeaf _ _ t _) = c{cType = apply [(s, TVar u)] (cType c)}
 
 getTvs :: Comb -> [TyVar]
 -- | Returns all type variables used in a combinator                                      
-getTvs (CLeaf _ _ t) = tv t
+getTvs (CLeaf _ _ t _) = tv t
 getTvs CApp{lComb=cl, rComb=cr} = getTvs cl `union` getTvs cr
 
 comb2Expr :: Comb -> Expr
 -- | Returns expression associated with combinator. 
 comb2Expr CApp{lComb=c1, rComb=c2} = App (comb2Expr c1) (comb2Expr c2)
-comb2Expr c@(CLeaf _ e _) = e
+comb2Expr c@(CLeaf _ e _ _) = e
 
 filterCombinatorsByType :: [Comb] -> Type -> TypeInference [] Comb
 filterCombinatorsByType (c:cs) t  
@@ -198,6 +201,13 @@ filterCombinatorsByType (c:cs) t
            Nothing -> rest
       where rest = filterCombinatorsByType cs t
 filterCombinatorsByType [] t = lift []
+
+-- | Evaluates to the largest type variable used
+maxTVarComb :: Comb -> Int
+maxTVarComb (CApp{lComb=l, rComb=r, cReqType=ty}) =
+  (maxTVarComb l) `max` (maxTVarComb l) `max` (maxTVar ty)
+maxTVarComb (CLeaf{cReqType=ty}) = maxTVar ty
+maxTVarComb _ = 0
 
 
 ----------------------------------------------------------------------

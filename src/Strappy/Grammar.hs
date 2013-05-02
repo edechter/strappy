@@ -121,47 +121,60 @@ estimateGrammar prior psObs ind xs =
     in combineGrammars (normalizeGrammar prior, psObs) (normalizeGrammar empiricalGr, 1.0)
 
 
--- | Replaces the actual types of a combinator with its requested type
-requestedTypes :: Comb -> Type -> Comb
-requestedTypes comb ty =
-  fst $ fromJust $ evalStateT (requestedTypes' comb ty) 0
-  -- requestedTypes' takes a combinator and a type;
-  -- It imposes the constraint that the combinator has that type,
-  -- and then returns the combinator annotated w/ requested types,
-  -- as well as the type that was chosen for the combinator,
-  -- which may be more specific than the requested type
-  where requestedTypes' c@(CApp{lComb = l, rComb = r}) ty = do
-          t <- newTVar Star
-          (l', newL'Ty) <- requestedTypes' l (t ->- tp)
-          (r', newR'Ty) <- requestedTypes' r (fromType newL'Ty)
-          let c' = c { lComb = l', rComb = r', cType = ty }
-          let ty' = case getAppType l' r' of
-                Left err -> error $ "Error computing requested types: " ++ err
-                Right appType -> appType
-          return (c', ty')
-        requestedTypes' c@(CLeaf 
-          
-
--- Estimates the production probabilities for the given grammar by counting
+-- Estimates the production probabilities for the given grammar
 estimateGrammarWeighted ::
   Grammar
   -> Double  -- pseudo-counts
   -> [(Comb, Double)]  -- Weighted observations
   -> Grammar
-estimateGrammarWeighted gr pseudoCounts obs =
-  let counts = CM.map (const pseudoCounts) gr
-      requestedTypes = concatMap (\(c, w) -> map ((,) w) $ combRequests c) obs
-  in undefined
-  where combRequests 
-        
-        
-      (gr', expansions, terminals) =
-        foldl (\gr_cnt (comb, wt) -> updateCounts comb wt gr_cnt)
-              (gr, 0.0, 0.0) obs
+estimateGrammarWeighted gr@(Grammar{library=lib}) pseudoCounts obs =
+  -- We want to compute, for each combinator, a fresh type
+  -- First, find where the type variables start at within the observations,
+  -- so that the fresh instances don't bind to these type variables
+  -- typeLibrary will hold this
+  let nextTVar = maximum $ map (maxTVarComb . fst) obs
+      typeLibrary = map (freshInst' nextTVar) $ CM.keys lib
+      -- Count up all uses and all expansions
+      countAllUses = mapM_ (\(c,wt) -> countUses c wt typeLibrary) obs
+      countAllExpansions = mapM_ (\(c,wt) -> countExpansions c wt) obs
+      pseudoMap = CM.mapWithKey (\c _ -> (pseudoCounts,pseudoCounts)) lib
+      -- Run the monadic actions w/ the correct prior pseudocounts
+      lib' = CM.map (\(uses,attempts)-> negate $ log $ uses/attempts) $
+             execState countAllUses pseudoMap 
+      expansionsProb = negate $ log $ uncurry (/) $
+                       execState countAllExpansions (0.0, 0.0)
   in
-   gr' { expansions = -log $ expansions / (terminals+expansions) }
-  where updateCounts comb wt (gr, exps, terms) =
+   Grammar{ library = lib', expansions = -log expansionsProb}
+  where freshInst' nextTVar comb =
+          (comb,
+           fromJust $ evalStateT (freshInst $ cType comb) (nextTVar+1))
+        countUses :: Comb -> Double -> [(Comb,Type)] -> State (CombMap (Double, Double)) ()
+        -- Counts the number of times each combinator could have been used,
+        -- and actually was used, in the given library
+        countUses c wt tyLib | CM.member c lib = do
+          let requested = cReqType c
+          let alts = filter (\(_,ty) -> isJust $ mgu ty requested) tyLib
+          -- Record that we attempted to use everything in alt
+          forM_ alts $ \(otherComb,_) ->
+            modify $ CM.adjust (\(uses,attempts)->(uses,attempts+wt)) otherComb
+          -- Record that we actually used c
+          modify $ CM.adjust (\(uses,attempts)->(uses+wt,attempts)) c
+        countUses (CApp{lComb=l, rComb=r}) wt tyLib = do
+          countUses l wt tyLib >> countUses r wt tyLib
+        countUses _ _ _ = return ()
+        -- Counts number of expansions used in the combinator
+        countExpansions :: Comb -> Double -> State (Double, Double) ()
+        countExpansions c@(CApp{lComb = l, rComb = r}) wt | not (CM.member c lib) = do
+          modify $ \(expansions, total) -> (expansions+wt,total+wt)
+          countExpansions l wt
+          countExpansions r wt
+        countExpansions _ wt = do
+          modify $ \(expansions, total) -> (expansions,total+wt)
           
+  
+  
+  
+  
 
 calcLogProb :: Grammar 
             -> Type
@@ -187,11 +200,13 @@ combinatorLL :: Grammar
 combinatorLL gr c =
   -- Is this combinator a leaf?
   if CM.member c (library gr)
-  then calcLogProb gr (cType c) c + (expansion gr)
+  then calcLogProb gr (cReqType c) c +
+       (log $ 1 + (negate $ exp $ negate $ expansions gr))
   else case c of
     CApp{lComb = l, rComb = r} ->
-      combinatorLL gr l + combinatorLL gr r - (expansion gr)
-    _ -> 0 -- Is this the correct thing to do?
+      combinatorLL gr l + combinatorLL gr r - (expansions gr)
+    _ -> -- Not in library => Expansion => CApp
+      error $ "Combinator "++show c++" is not an application, and is not in library"
 
       
       
