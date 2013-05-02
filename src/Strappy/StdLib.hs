@@ -31,8 +31,8 @@ t8 = mkTVar 8
 
  
 -- | define common combinators
-cI = CLeaf "I" (Func id) ( t0 ->- t0)
-cK = CLeaf "K" (Func $ \a -> Func $ \b -> a)   ( t0 ->- t1 ->- t0)
+cI = CLeaf "I" (Func id) ( t0 ->- t0) ( t0 ->- t0)
+cK = CLeaf "K" (Func $ \a -> Func $ \b -> a)   ( t0 ->- t1 ->- t0) ( t0 ->- t1 ->- t0)
 -- cS = CLeaf "S" (Func $ \f -> Func $ \g -> Func $ \x -> (App (App f x) (App g x))) typeS 
 --     where typeS = (t2 ->- t1 ->- t0) ->- (t2 ->- t1) ->- (t2 ->- t0)
 
@@ -94,7 +94,7 @@ cK = CLeaf "K" (Func $ \a -> Func $ \b -> a)   ( t0 ->- t1 ->- t0)
 
 
 
-cPrim = CLeaf "PrimRec" prim primType
+cPrim = CLeaf "PrimRec" prim primType primType
         where prim = Func $ \c -> Func $ \f -> Func $ \(N i) ->
                       if
                          i <= 0 
@@ -108,25 +108,25 @@ cPrim = CLeaf "PrimRec" prim primType
 
 -- Cond, Not, And, Or, XOr, Any, All
 
-cTrue = CLeaf "True" (B True) tBool
-cFalse = CLeaf "False" (B False) tBool
+cTrue = CLeaf "True" (B True) tBool tBool
+cFalse = CLeaf "False" (B False) tBool tBool
 
-cAnd = CLeaf "&" expr tp
+cAnd = CLeaf "&" expr tp tp
     where expr = Func $ \(B x) -> Func $ \(B y) -> B ( x && y)
           tp = tBool ->- tBool ->- tBool
-cOr = CLeaf "|" expr tp
+cOr = CLeaf "|" expr tp tp
     where expr = Func $ \(B x) -> Func $ \(B y) -> B ( x || y)
           tp = tBool ->- tBool ->- tBool
-cNot = CLeaf "not" expr tp
+cNot = CLeaf "not" expr tp tp
     where expr = Func $ \(B x) -> B ( not x)
           tp = tBool ->- tBool
-cNand = CLeaf "nand" expr tp
+cNand = CLeaf "nand" expr tp tp
     where expr = Func $ \(B x) -> Func $ \(B y) -> B ( not (x && y))
           tp = tBool ->- tBool ->- tBool
 
 
                
-cCond = CLeaf "Cond" expr tp
+cCond = CLeaf "Cond" expr tp tp
     where expr = Func $ \c -> Func $ \t -> Func $ \f
                  -> case c of
                       (B True) -> t
@@ -135,13 +135,13 @@ cCond = CLeaf "Cond" expr tp
 
 ----- Maybe Functions ----------
 
-cJust = CLeaf "Just" (Const "Just") tp
+cJust = CLeaf "Just" (Const "Just") tp tp
     where tp = t0 ->- (TAp tMaybe t0)
         
-cNothing = CLeaf "Nothing" (Const "Nothing") tp
+cNothing = CLeaf "Nothing" (Const "Nothing") tp tp
     where tp = (TAp tMaybe t0)
 
-cFromJust = CLeaf "FromJust" expr t0
+cFromJust = CLeaf "FromJust" expr t0 t0
     where expr = Func $ \e -> case e of
                                 App (Const "Just") x -> x
                                 (Const "Nothing") 
@@ -150,26 +150,28 @@ cFromJust = CLeaf "FromJust" expr t0
 ----- List Functions --------
 
 
-cCons = CLeaf ":" (Const ":") (t0 ->- (TAp tList t0) ->- (TAp tList t0))
+cCons = CLeaf ":" (Const ":")
+        (t0 ->- (TAp tList t0) ->- (TAp tList t0))
+        (t0 ->- (TAp tList t0) ->- (TAp tList t0))
 
-cHead = CLeaf "head" expr tp
+cHead = CLeaf "head" expr tp tp
     where expr = Func $ \xs -> case xs of
                                  (App (App (Const ":") x) y) -> x
                                  Const "[]" 
                                      -> ExprError "head applied to []"
           tp = (TAp tList t0) ->- t0
 
-cTail = CLeaf "tail" expr tp
+cTail = CLeaf "tail" expr tp tp
     where expr = Func $ \xs -> case xs of
                                  (App (App (Const ":") x) y) -> y
                                  Const "[]" 
                                      -> ExprError "tail applied to []"
           tp = (TAp tList t0) ->- (TAp tList t0)
 
-cEmpty = CLeaf "[]" (Const "[]") (TAp tList t0)
+cEmpty = CLeaf "[]" (Const "[]") (TAp tList t0) (TAp tList t0)
 
 
-cIsEmpty = CLeaf "isEmpty" expr tp
+cIsEmpty = CLeaf "isEmpty" expr tp tp
     where expr = Func $ \xs -> case xs of
                                  Const "[]" -> (B True)
                                  otherwise -> (B False)
@@ -178,14 +180,14 @@ cIsEmpty = CLeaf "isEmpty" expr tp
 
 ------ Tuple Functions ----------
 
-cPair = CLeaf "pair" (Const "pair") (t0 ->- t0 ->- TAp tPair t0)
-cFst = CLeaf "fst" expr tp
+cPair = CLeaf "pair" (Const "pair") (t0 ->- t0 ->- TAp tPair t0) (t0 ->- t0 ->- TAp tPair t0)
+cFst = CLeaf "fst" expr tp tp
        where expr = Func $ \pr -> case pr of
                                     (App (App (Const "pair") x) y) -> x
                                     otherwise -> error "Error in cFst"
              tp = (TAp tPair t0) ->- t0
 
-cSnd = CLeaf "snd" expr tp
+cSnd = CLeaf "snd" expr tp tp
        where expr = Func $ \pr -> case pr of
                                     (App (App (Const "pair") x) y) -> y
                                     otherwise -> error "Error in cFst"
@@ -193,18 +195,19 @@ cSnd = CLeaf "snd" expr tp
 
 cTriple = CLeaf "triple" (Const "triple") 
            (t0 ->- t0 ->- t0 ->- TAp tTriple t0)
+           (t0 ->- t0 ->- t0 ->- TAp tTriple t0)
 
-cFst3 = CLeaf "fst3" expr tp
+cFst3 = CLeaf "fst3" expr tp tp
         where expr = Func $ \tr -> case tr of
                                     (App (App (App (Const "triple") x) y) z) -> x
                                     otherwise -> error "Error in cFst3"
               tp = (TAp tTriple t0) ->- t0
-cSnd3 = CLeaf "snd3" expr tp
+cSnd3 = CLeaf "snd3" expr tp tp
         where expr = Func $ \tr -> case tr of
                                     (App (App (App (Const "triple") x) y) z) -> y
                                     otherwise -> error "Error in cFst3"
               tp = (TAp tTriple t0) ->- t0
-cThrd3 = CLeaf "thrd3" expr tp
+cThrd3 = CLeaf "thrd3" expr tp tp
         where expr = Func $ \tr -> case tr of
                                     (App (App (App (Const "triple") x) y) z) -> y
                                     otherwise -> error "Error in cThrd3"
@@ -212,22 +215,23 @@ cThrd3 = CLeaf "thrd3" expr tp
 
 cQuad = CLeaf "quad" (Const "quad") 
            (t0 ->- t0 ->- t0 ->- TAp tTriple t0)
-cFst4 = CLeaf "fst4" expr tp
+           (t0 ->- t0 ->- t0 ->- TAp tTriple t0)
+cFst4 = CLeaf "fst4" expr tp tp
         where expr = Func $ \tr -> case tr of
                                     (App (App (App (App (Const "quad") x) y) z) w) -> x
                                     otherwise -> error "Error in cFst4"
               tp = (TAp tTriple t0) ->- t0
-cSnd4 = CLeaf "snd4" expr tp
+cSnd4 = CLeaf "snd4" expr tp tp
         where expr = Func $ \tr -> case tr of
                                     (App (App (App (App (Const "quad") x) y) z) w) -> y
                                     otherwise -> error "Error in cSnd4"
               tp = (TAp tTriple t0) ->- t0
-cThrd4 = CLeaf "thrd4" expr tp
+cThrd4 = CLeaf "thrd4" expr tp tp
         where expr = Func $ \tr -> case tr of
                                     (App (App (App (App (Const "quad") x) y) z) w) -> z
                                     otherwise -> error "Error in cThrd4"
               tp = (TAp tTriple t0) ->- t0
-cFrth4 = CLeaf "frth4" expr tp
+cFrth4 = CLeaf "frth4" expr tp tp
         where expr = Func $ \tr -> case tr of
                                     (App (App (App (App (Const "quad") x) y) z) w) -> w
                                     otherwise -> error "Error in cFrth4"
