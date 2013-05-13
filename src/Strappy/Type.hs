@@ -23,6 +23,7 @@ module Strappy.Type (
                     , freshInst
                     , newTVar
                     , mkTVar
+                    , maxTVar
                     , mgu
                     , apply
                     , merge
@@ -264,6 +265,11 @@ newTVar :: Monad m => Kind -> TypeInference m Type
 newTVar k = do i <- get
                put (i+1)
                return $ mkTVar i
+
+maxTVar :: Type -> Int
+maxTVar (TVar (TyVar v _)) = readId v
+maxTVar (TAp t t') = (maxTVar t) `max` (maxTVar t')
+maxTVar _ = 0
 
 freshInst :: Monad m => Type -> TypeInference m Type
 -- | Return a type where each type variable is replaced with a new,

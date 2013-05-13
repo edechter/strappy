@@ -38,7 +38,7 @@ incr index c@(CApp{lComb=l, rComb=r})
                   in case i  of
                        0 -> incr (incr index' l) r
                        otherwise -> index'
-incr index c@(CLeaf _ _ _) = case CM.lookup c index of
+incr index c@(CLeaf{}) = case CM.lookup c index of
                                Nothing -> CM.insert c 1 index
                                Just i -> CM.insert c (i+1) index
 
@@ -63,7 +63,7 @@ incr2 index c@(CApp{lComb=l, rComb=r}) tp
                              return r_index
            Just xs -> do let index' = CM.insert c (tp:xs) index 
                          return index'
-incr2 index c@(CLeaf _ _ _) tp = return $ CM.insertWith (++) c [tp] index 
+incr2 index c@(CLeaf{}) tp = return $ CM.insertWith (++) c [tp] index 
 
 compress2 :: [(Type, Comb)] -> CombMap [Type]
 compress2 xs = foldl' f  CM.empty xs
@@ -80,7 +80,7 @@ compress2 xs = foldl' f  CM.empty xs
 -- expressions is the number of unique subexpression.
 
 getUniqueTrees :: Comb -> Index
-getUniqueTrees c@(CLeaf _ _ _ ) = CM.singleton c 1 
+getUniqueTrees c@(CLeaf{}) = CM.singleton c 1 
                   
 getUniqueTrees c@(CApp{lComb=l, rComb=r}) = let a = CM.singleton c 1 
                                                 b = getUniqueTrees  l
