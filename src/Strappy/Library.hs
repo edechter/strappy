@@ -42,8 +42,13 @@ normalizeGrammar Grammar{grApp=p, grExprDistr=distr}
           p' = p - logTotalMass
       in Grammar  p' distr'
 
-
-
+-- | Methods for calculating the loglikelihood of an expression draw from grammar
+exprLogLikelihood :: Grammar -> Expr a -> Double
+-- | Returns the log probability of producing the given expr tree
+exprLogLikelihood gr expr =
+    -- | Is this expr a leaf?
+    if Map.member (toUExpr expr) (grExprDistr gr)
+        then calcLogProb gr (
 -- | Helper for turning a Haskell type to Any. 
 mkAny :: a -> Any
 mkAny x = unsafeCoerce x 
