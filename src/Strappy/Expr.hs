@@ -19,10 +19,12 @@ import Strappy.Type
 data Expr a where
     Term :: {eName  :: String, 
              eType  :: Type, 
+             eReqType :: Maybe Type, 
              eThing :: a} -> Expr a
     App  :: {eLeft  :: (Expr (b -> a)),
              eRight :: (Expr b),
              eType  :: Type,
+             eReqType :: Maybe Type, 
              eLabel :: Maybe String}         ->  Expr a 
 
 -- | smart constructor for applications
@@ -61,7 +63,7 @@ instance Eq UExpr where
 
 showableToExpr :: (Show a) => a -> Type -> Expr a
 -- | Convert any Showable Haskell object into an Expr.
-showableToExpr f tp = Term (show f) tp f
+showableToExpr f tp = Term (show f) tp Nothing f
 
 doubleToExpr :: Double -> Expr Double
 doubleToExpr d = showableToExpr d tDouble
@@ -113,20 +115,23 @@ filterExprsByType [] t = return []
 
 cInt2Expr :: Int -> Expr Int
 -- | Convert integers to expressions. 
-cInt2Expr i = Term (show i) tInt i 
+cInt2Expr i = Term (show i) tInt Nothing i 
 
 cDouble2Expr :: Double -> Expr Double
 -- | Convert doubles to expressions. 
-cDouble2Expr i = Term (show i) tDouble i 
+cDouble2Expr i = Term (show i) tDouble Nothing i 
 
 
 ----------------------------------------
 -- Hashable instance ------------------- 
 ----------------------------------------
 instance Hashable (Expr a) where
-    hashWithSalt a (Term name tp thing) = hash a `hashWithSalt` hash name `hashWithSalt` hash tp 
-    hashWithSalt a (App left right tp name) =  hash a `hashWithSalt` hash left `hashWithSalt` 
+    hashWithSalt a (Term name tp reqType thing) = hash a `hashWithSalt` 
+                                                    hash name `hashWithSalt` hash tp 
+                                                   `hashWithSalt` hash reqType 
+                                                    
+    hashWithSalt a (App left right tp reqType name) =  hash a `hashWithSalt` hash left `hashWithSalt` 
                                                hash right `hashWithSalt` 
                                                hash tp `hashWithSalt` 
-                                               hash tp `hashWithSalt` hash name
+                                               hash reqType `hashWithSalt` hash name
 
