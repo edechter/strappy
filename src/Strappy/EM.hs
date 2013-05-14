@@ -1,12 +1,8 @@
 
 module Strappy.EM where
 
-import Strappy.Grammar
-import Strappy.CL
-import Strappy.EnumBF
-import Strappy.Type
 import Strappy.Sample
-import qualified Strappy.CombMap as CM
+import Strappy.Expr
 
 import Data.Maybe
 import Data.List
@@ -17,20 +13,20 @@ import Control.Monad.Random
 import Control.Monad.State
 
 -- Evaluates to the number of nats required to encode the grammar
--- Does not include production probabilities
+-- Does not include production probabilities TODO: why not?
 descriptionLength :: Grammar -> Double
-descriptionLength gr@(Grammar{library=lib}) =
-  CM.foldWithKey (\ k _ s -> s + productionLen k) 0.0 lib
+descriptionLength gr@(Grammar{grExprDistr=lib}) =
+  CM.foldWithKey (\ k _ s -> s + productionLen (fromUExpr k)) 0.0 lib
   where 
     -- Unprimed is invoked first, and doesn't look through grammar
     -- Primed can look through grammar for matching subtrees
     -- This is done so that we don't pick ourselves out of the grammar
-    productionLen :: Comb -> Double
-    productionLen (CApp {lComb=l, rComb=r}) =
+    productionLen :: Expr a -> Double
+    productionLen (App {eLeft=l, eRight=r}) =
       productionLen' l + productionLen' r
     productionLen _ = 0 -- Terminal production w/o application is always
                         -- in the grammar, so we don't have to count it
-    productionLen' :: Comb -> Double
+    productionLen' :: Expr a -> Double
     productionLen' c = combSize lib c
 
 
@@ -38,7 +34,7 @@ descriptionLength gr@(Grammar{library=lib}) =
 -- (frontier!!i)!!k   ==   <e_i^k, P(e_i^k | t_i, G^old)>
 -- The probabilities should be normalized, eg,
 --    forall i.  (sum $ map snd $ frontier!!i) == 1
-grammarLogLikelihood :: Grammar -> [[(Comb,Double)]] -> Double
+grammarLogLikelihood :: Grammar -> [[(UExpr,Double)]] -> Double
 grammarLogLikelihood gr frontier =
   -- Calculate prob of new grammar generating each combinator
   let combLLs = map (map (\ (c,_) -> combinatorLL gr c)) frontier
@@ -47,7 +43,7 @@ grammarLogLikelihood gr frontier =
 
 -- Returns a given number of samples from the grammar
 sampleFrontier :: MonadRandom m =>
-                  Grammar -> Int -> Type -> m [Comb]
+                  Grammar -> Int -> Type -> m [UExpr]
 sampleFrontier gr size ty =
   evalStateT (sample' size) 0
   where sample' 0 = return []

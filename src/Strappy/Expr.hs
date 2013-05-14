@@ -121,7 +121,6 @@ cDouble2Expr :: Double -> Expr Double
 -- | Convert doubles to expressions. 
 cDouble2Expr i = Term (show i) tDouble Nothing i 
 
-
 ----------------------------------------
 -- Hashable instance ------------------- 
 ----------------------------------------

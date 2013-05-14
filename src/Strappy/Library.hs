@@ -9,6 +9,8 @@ import Unsafe.Coerce (unsafeCoerce)
 import qualified Data.List as List
 import Text.Printf
 import Data.Function (on)
+import Control.Monad.Identity
+import Debug.Trace
 
 import Strappy.Type
 import Strappy.Expr
@@ -45,10 +47,26 @@ normalizeGrammar Grammar{grApp=p, grExprDistr=distr}
 -- | Methods for calculating the loglikelihood of an expression draw from grammar
 exprLogLikelihood :: Grammar -> Expr a -> Double
 -- | Returns the log probability of producing the given expr tree
-exprLogLikelihood gr expr =
+exprLogLikelihood gr expr = let e = toUExpr expr in
     -- | Is this expr a leaf?
-    if Map.member (toUExpr expr) (grExprDistr gr)
-        then calcLogProb gr (
+    if Map.member e (grExprDistr gr)
+        then calcLogProb gr expr (maybe (eType expr) id (eReqType expr)) +
+            (log $ 1 + (negate $ exp $ negate $ grApp gr))
+        else case expr of
+            App{eLeft=l, eRight = r} -> exprLogLikelihood gr l +
+                                        exprLogLikelihood gr r -
+                                        grApp gr
+            _  -> error $ "Expression "++show e++" is not an application, and is not in the library."                            
+
+calcLogProb :: Grammar -> Expr a -> Type -> Double
+-- | Returns the log probability of using the given expression for the
+-- given requesting type.
+calcLogProb gr@Grammar{grExprDistr=distr} expr tp 
+    = let m = fst . runIdentity . runTI $ filterExprsByType (Map.toList distr) tp
+          logp_e = (trace $ show m) $ distr Map.! (toUExpr expr)
+          logp_e_tot = logsumexp (map snd m) 
+      in (trace $ show logp_e_tot) $ logp_e - logp_e_tot
+
 -- | Helper for turning a Haskell type to Any. 
 mkAny :: a -> Any
 mkAny x = unsafeCoerce x 
@@ -60,42 +78,42 @@ t2 = mkTVar 2
 t3 = mkTVar 3                  
 
 -- | Basic combinators
-cI = Term "I" (t ->- t) id
+cI = Term "I" (t ->- t) Nothing id
 
-cS = Term "S" (((t2 ->- t1 ->- t) ->- (t2 ->- t1) ->- t2 ->- t)) $ \f g x -> (f x) (g x)
+cS = Term "S" (((t2 ->- t1 ->- t) ->- (t2 ->- t1) ->- t2 ->- t)) Nothing $ \f g x -> (f x) (g x)
 
-cB = Term "B" ((t1 ->- t) ->- (t2 ->- t1) ->- t2 ->- t) $ \f g x -> f (g x)
+cB = Term "B" ((t1 ->- t) ->- (t2 ->- t1) ->- t2 ->- t) Nothing $ \f g x -> f (g x)
 
-cC = Term "C" ((t1 ->- t2 ->- t) ->- t2 ->- t1 ->- t) $ \f g x -> (f x) g 
+cC = Term "C" ((t1 ->- t2 ->- t) ->- t2 ->- t1 ->- t) Nothing $ \f g x -> (f x) g 
 
-cBottom = Term "_|_" t $ undefined
+cBottom = Term "_|_" t Nothing $ undefined
 
 
 -- | Integer arithmetic
 cPlus :: Expr (Int -> Int -> Int)
-cPlus = Term "+" (tInt ->- tInt ->- tInt) (+)
+cPlus = Term "+" (tInt ->- tInt ->- tInt) Nothing (+)
 
 cTimes :: Expr (Int -> Int -> Int)
-cTimes = Term "*" (tInt ->- tInt ->- tInt) (*)
+cTimes = Term "*" (tInt ->- tInt ->- tInt) Nothing (*)
 
 cMinus :: Expr (Int -> Int -> Int)
-cMinus = Term "-" (tInt ->- tInt ->- tInt) (-)
+cMinus = Term "-" (tInt ->- tInt ->- tInt) Nothing (-)
 
 cMod :: Expr (Int -> Int -> Int)
-cMod = Term "-" (tInt ->- tInt ->- tInt) (-)
+cMod = Term "-" (tInt ->- tInt ->- tInt) Nothing  (-)
 
 cRem :: Expr (Int -> Int -> Int)
-cRem = Term "rem" (tInt ->- tInt ->- tInt) mod
+cRem = Term "rem" (tInt ->- tInt ->- tInt) Nothing mod
 
 -- | Lists
-cCons = Term ":"  (t ->- TAp tList t ->- TAp tList t)  (:)
-cAppend = Term "++" (TAp tList t ->- TAp tList t ->- TAp tList t) (++)
-cHead = Term "head" (TAp tList t ->- t) head
-cMap = Term "map" ((t ->- t1) ->- TAp tList t ->- TAp tList t1) map
-cEmpty = Term "[]" (TAp tList t) []
-cSingle = Term "single" (t ->- TAp tList t) $ \x -> [x]
-cRep = Term "rep" (tInt ->- t ->- TAp tList t) $ \n x -> take n (repeat x)
-cFoldl = Term "foldl" ((t ->- t1 ->- t) ->- t ->- (TAp tList t1) ->- t) $ List.foldl'
+cCons = Term ":"  (t ->- TAp tList t ->- TAp tList t)  Nothing (:)
+cAppend = Term "++" (TAp tList t ->- TAp tList t ->- TAp tList t) Nothing (++)
+cHead = Term "head" (TAp tList t ->- t) Nothing head
+cMap = Term "map" ((t ->- t1) ->- TAp tList t ->- TAp tList t1) Nothing map
+cEmpty = Term "[]" (TAp tList t) Nothing []
+cSingle = Term "single" (t ->- TAp tList t) Nothing $ \x -> [x]
+cRep = Term "rep" (tInt ->- t ->- TAp tList t) Nothing $ \n x -> take n (repeat x)
+cFoldl = Term "foldl" ((t ->- t1 ->- t) ->- t ->- (TAp tList t1) ->- t) Nothing $ List.foldl'
 cInts =  [cInt2Expr i | i <- [1..10]]
 cDoubles =  [cDouble2Expr i | i <- [1..10]]
 
@@ -124,7 +142,7 @@ basicExprDistr = Map.adjust (const (-5)) (toUExpr cBottom)
                  $ Map.fromList [(e, 1) | e <- basicExprs] 
 
 basicGrammar :: Grammar
-basicGrammar = Grammar 3 basicExprDistr
+basicGrammar = normalizeGrammar $ Grammar 3 basicExprDistr
 
 
 -- library = Library 0.3 exprs
