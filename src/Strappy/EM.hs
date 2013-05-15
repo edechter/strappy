@@ -3,6 +3,8 @@ module Strappy.EM where
 
 import Strappy.Sample
 import Strappy.Expr
+import Strappy.Library
+import Strappy.Type
 
 import Data.Maybe
 import Data.List
@@ -16,7 +18,7 @@ import Control.Monad.State
 -- Does not include production probabilities TODO: why not?
 descriptionLength :: Grammar -> Double
 descriptionLength gr@(Grammar{grExprDistr=lib}) =
-  CM.foldWithKey (\ k _ s -> s + productionLen (fromUExpr k)) 0.0 lib
+  Map.foldWithKey (\ k _ s -> s + productionLen (fromUExpr k)) 0.0 lib
   where 
     -- Unprimed is invoked first, and doesn't look through grammar
     -- Primed can look through grammar for matching subtrees
@@ -27,7 +29,7 @@ descriptionLength gr@(Grammar{grExprDistr=lib}) =
     productionLen _ = 0 -- Terminal production w/o application is always
                         -- in the grammar, so we don't have to count it
     productionLen' :: Expr a -> Double
-    productionLen' c = combSize lib c
+    productionLen' c = exprSize lib c
 
 
 -- Likelihood term in EM
@@ -37,34 +39,33 @@ descriptionLength gr@(Grammar{grExprDistr=lib}) =
 grammarLogLikelihood :: Grammar -> [[(UExpr,Double)]] -> Double
 grammarLogLikelihood gr frontier =
   -- Calculate prob of new grammar generating each combinator
-  let combLLs = map (map (\ (c,_) -> combinatorLL gr c)) frontier
+  let combLLs = map (map (\ (e,_) -> exprLogLikelihood gr e)) frontier
       wMatrix = map (map snd) frontier
   in sum $ zipWith (\lls ws -> sum $ zipWith (*) lls ws) combLLs wMatrix
 
 -- Returns a given number of samples from the grammar
-sampleFrontier :: MonadRandom m =>
-                  Grammar -> Int -> Type -> m [UExpr]
-sampleFrontier gr size ty =
-  evalStateT (sample' size) 0
-  where sample' 0 = return []
-        sample' n = do
-          maybeSample <- maybeSampleFromGrammar gr ty
-          case maybeSample of
-            Nothing -> sample' n
-            Just s -> liftM (s:) $ sample' (n-1)
-
+--sampleFrontier :: MonadRandom m =>
+--                  Grammar -> Int -> Type -> m [UExpr]
+--sampleFrontier gr size tp =
+--  evalStateT (sample' size) 0
+--  where sample' 0 = return []
+--        sample' n = do
+--          maybeSample <- maybeSampleFromGrammar gr ty
+--          case maybeSample of
+--            Nothing -> sample' n
+--            Just s -> liftM (s:) $ sample' (n-1)
   
 
 -- Takes a grammar and a list of tasks; updates to a new grammar
 doEMIteration :: MonadRandom m =>
                  Double ->
-                 Grammar -> [Comb] -> Int ->
-                 [(Type, Comb -> Double)] -> m Grammar
+                 Grammar -> [UExpr] -> Int ->
+                 [(Type, UExpr -> Double)] -> m Grammar
 doEMIteration lambda gr primitives size tasks = do
-  frontiers <- mapM (sampleFrontier gr size . fst) tasks
+  frontiers <- mapM (sampleExprs gr size . fst) tasks
   -- Weight each frontier by likelihood
   let frontiers' = zipWith (\frontier (_, likelihood) ->
-                             map (\ comb -> (comb, likelihood comb))
+                             map (\ expr -> (expr, likelihood expr))
                              frontier)
                    frontiers tasks
   -- Compute normalizing constants
@@ -73,14 +74,14 @@ doEMIteration lambda gr primitives size tasks = do
   let z_and_frontier = filter ((>0) . fst) $ zip zs frontiers'
   -- Divide by normalizing constant
   let frontiers'' = map (\(z, frontier) ->
-                          map (\ (comb, posterior) -> (comb, posterior/z))
+                          map (\ (expr, posterior) -> (expr, posterior/z))
                           frontier)
                     z_and_frontier
   return $ optimizeGrammar lambda gr primitives frontiers''
 
 -- Performs hill climbing upon the given grammar
-optimizeGrammar :: Double -> Grammar -> [Comb]
-                   -> [[(Comb, Double)]] -> Grammar
+optimizeGrammar :: Double -> Grammar -> [Expr]
+                   -> [[(Expr, Double)]] -> Grammar
 optimizeGrammar lambda gr primitives frontier =
   let flatFrontier = concat frontier
       gr' = estimateGrammarWeighted gr 1.0 flatFrontier
@@ -103,44 +104,42 @@ optimizeGrammar lambda gr primitives frontier =
 -- | The neighbors of a grammar are those reachable by one addition/removal of a production
 -- This procedure tries adding/removing one production,
 -- modulo the restriction that the primitives are never removed from the grammar
-grammarNeighbors :: Grammar -> [Comb] -> [[(Comb, Double)]] ->
+grammarNeighbors :: Grammar -> [Expr] -> [[(Expr, Double)]] ->
                     [Grammar]
 grammarNeighbors (Grammar lib _) primitives obs = oneRemoved ++ oneAdded
-  where oneRemoved = map (\comb -> Grammar (CM.delete comb lib) 0.0) $
-                         (CM.keys lib) \\ primitives
+  where oneRemoved = map (\expr -> Grammar (Map.delete expr lib) 0.0) $
+                         (Map.keys lib) \\ primitives
         oneAdded =
           let duplicatedSubtrees =
-                foldl (\cnt comb_wt -> countSubtreesNotInGrammar lib cnt comb_wt)
-                      CM.empty (concat obs)
-              subtreeSizes = CM.mapWithKey (\comb cnt -> cnt * (combSize lib comb))
+                foldl (\cnt expr_wt -> countSubtreesNotInGrammar lib cnt expr_wt)
+                      Map.empty (concat obs)
+              subtreeSizes = Map.mapWithKey (\expr cnt -> cnt * (exprSize lib expr))
                                            duplicatedSubtrees
               maximumAdded = 10 -- Consider at most 10 subtrees. Cuts down search.
               bestSubtrees = take maximumAdded $
                              map fst $
                              sortBy (compare `on` snd) $
-                             CM.toList subtreeSizes
+                             Map.toList subtreeSizes
           in
-           map (\comb -> Grammar (CM.insert comb 0.0 lib) 0.0) bestSubtrees
+           map (\expr -> Grammar (Map.insert expr 0.0 lib) 0.0) bestSubtrees
 
   
-countSubtreesNotInGrammar :: CM.CombMap Double -> CM.CombMap Double -> (Comb,Double) ->
-                             CM.CombMap Double
-countSubtreesNotInGrammar lib cnt (comb@(CApp{lComb=l, rComb=r}),wt) =
-  let cnt'   = incCountIfNotInGrammar lib cnt (comb,wt)
+countSubtreesNotInGrammar :: ExprDistr -> ExprMap Double -> (Expr a ,Double) ->
+                             ExprMap Double
+countSubtreesNotInGrammar lib cnt (expr@(App{eLeft=l, eRight=r}),wt) =
+  let cnt'   = incCountIfNotInGrammar lib cnt (expr,wt)
       cnt''  = countSubtreesNotInGrammar lib cnt' (l,wt)
       cnt''' = countSubtreesNotInGrammar lib cnt'' (r,wt)
   in
    cnt'''
 countSubtreesNotInGrammar _ cnt _ = cnt
 
-incCountIfNotInGrammar :: CM.CombMap Double -> CM.CombMap Double -> (Comb,Double) ->
-                          CM.CombMap Double
-incCountIfNotInGrammar lib cnt (comb,wt) | not (CM.member comb lib) =
-  CM.insertWith (+) comb wt cnt
+incCountIfNotInGrammar :: Map.Map Double -> Map.Map Double -> (Expr a,Double) ->
+                          Map.Map Double
+incCountIfNotInGrammar lib cnt (expr,wt) | not (Map.member expr lib) =
+  Map.insertWith (+) expr wt cnt
 incCountIfNotInGrammar _ cnt _ = cnt
 
-
-combSize :: CM.CombMap Double -> Comb -> Double
-combSize lib comb@(CApp{lComb = l, rComb = r}) | not (CM.member comb lib) = 
-  1.0 + combSize lib l + combSize lib r
-combSize _ _ = 1.0
+exprSize :: ExprDistr -> Expr a -> Double
+exprSize distr App{eLeft=l, eRight=r, eLabel=Nothing} = 1.0 + exprSize distr l + exprSize distr r
+exprSize _ _ = 1.0 
