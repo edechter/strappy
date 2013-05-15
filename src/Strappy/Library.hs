@@ -51,7 +51,7 @@ exprLogLikelihood gr expr = let e = toUExpr expr in
     -- | Is this expr a leaf?
     if Map.member e (grExprDistr gr)
         then calcLogProb gr expr (maybe (eType expr) id (eReqType expr)) +
-            (log $ 1 + (negate $ exp $ negate $ grApp gr))
+            (log $ 1 + (negate $ exp $ grApp gr))
         else case expr of
             App{eLeft=l, eRight = r} -> exprLogLikelihood gr l +
                                         exprLogLikelihood gr r -
@@ -59,13 +59,18 @@ exprLogLikelihood gr expr = let e = toUExpr expr in
             _  -> error $ "Expression "++show e++" is not an application, and is not in the library."                            
 
 calcLogProb :: Grammar -> Expr a -> Type -> Double
--- | Returns the log probability of using the given expression for the
--- given requesting type.
 calcLogProb gr@Grammar{grExprDistr=distr} expr tp 
+    | isTerm expr || isLabeled expr
     = let m = fst . runIdentity . runTI $ filterExprsByType (Map.toList distr) tp
-          logp_e = (trace $ show m) $ distr Map.! (toUExpr expr)
+          logp_e = distr Map.! (toUExpr expr)
           logp_e_tot = logsumexp (map snd m) 
-      in (trace $ show logp_e_tot) $ logp_e - logp_e_tot
+      in  logp_e - logp_e_tot
+    | otherwise = error "calcLogProb: the argument to calcLogProb must be either a Term or an App that is labeled."
+    where isTerm Term{} = True
+          isTerm _ = False
+          isLabeled App{eLabel=Just _} = True
+          isLabeled _ = False
+----------------------------------------------------------------------      
 
 -- | Helper for turning a Haskell type to Any. 
 mkAny :: a -> Any
@@ -124,6 +129,7 @@ basicExprs = [toUExpr cI,
               toUExpr cB, 
               toUExpr cC, 
               toUExpr cBottom,
+              toUExpr cPlus,
               toUExpr cTimes, 
               toUExpr cCons, 
               toUExpr cEmpty,

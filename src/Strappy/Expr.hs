@@ -28,7 +28,7 @@ data Expr a where
              eLabel :: Maybe String}         ->  Expr a 
 
 -- | smart constructor for applications
-a <> b = App a b (fst . runIdentity . runTI $ typeOfApp a b) Nothing
+a <> b = App a b (fst . runIdentity . runTI $ typeOfApp a b) Nothing Nothing
 
 -- | Hide expression type in an Any type.  
 data UExpr = UExpr Any
