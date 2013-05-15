@@ -9,6 +9,7 @@ import Unsafe.Coerce (unsafeCoerce)
 import qualified Data.List as List
 import Text.Printf
 import Data.Function (on)
+import qualified Data.List as List
 import Control.Monad.Identity
 import Debug.Trace
 
@@ -25,7 +26,6 @@ instance Hashable UExpr where
 -- | Type alias for distribution over expressions. 
 type ExprDistr = ExprMap Double 
 
- 
 showExprDistr exprDistr  = unlines $ map (\(e, i) -> printf "%7s:%7.2f" (show e) i) pairs
     where pairs = List.sortBy (compare `on` snd) $ Map.toList exprDistr
                   
@@ -57,7 +57,8 @@ exprLogLikelihood gr expr = let e = toUExpr expr in
                                         exprLogLikelihood gr r -
                                         grApp gr
             _  -> error $ "Expression "++show e++" is not an application, and is not in the library."                            
-
+-- | Returns the probability of using a given expression from the library of
+-- terminals.
 calcLogProb :: Grammar -> Expr a -> Type -> Double
 calcLogProb gr@Grammar{grExprDistr=distr} expr tp 
     | isTerm expr || isLabeled expr
@@ -70,6 +71,26 @@ calcLogProb gr@Grammar{grExprDistr=distr} expr tp
           isTerm _ = False
           isLabeled App{eLabel=Just _} = True
           isLabeled _ = False
+
+data Counts = Counts {appCounts :: Double,
+                        termCounts :: Double,
+                        useCounts :: ExprMap Double,
+                        possibleUseCounts :: ExprMap Double} deriving Show
+estimateGrammar :: Grammar 
+                -> Double -- pseudocounts
+                -> [(UExpr, Double)] -- weighted observations 
+                -> Grammar
+estimateGrammar Grammar{grExprDistr=distr, grApp = app} pseudocounts obs 
+    = undefined
+        
+    where es = Map.toList distr
+          go :: Counts -> Expr a -> Counts
+          go (Counts ac tc uc pc) expr@Term{eReqType=(Just tp)} = 
+            let tc = tc + pseudocounts
+                uc = Map.adjust (+ pseudocounts) expr uc
+                otherTerms = runIdentity . runTI $ filterExprsByType es tp
+                pc = List.foldl' (Map.adjust (+pseudocounts) uc) otherTerms 
+            in Counts ac tc uc pc
 ----------------------------------------------------------------------      
 
 -- | Helper for turning a Haskell type to Any. 
@@ -78,7 +99,7 @@ mkAny x = unsafeCoerce x
 
 --  Some basic library entires. 
 t = mkTVar 0                  
-t1 = mkTVar 1                  
+t1 = mkTVar 1               
 t2 = mkTVar 2                  
 t3 = mkTVar 3                  
 
@@ -151,4 +172,3 @@ basicGrammar :: Grammar
 basicGrammar = normalizeGrammar $ Grammar 3 basicExprDistr
 
 
--- library = Library 0.3 exprs
