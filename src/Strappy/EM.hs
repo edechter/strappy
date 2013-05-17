@@ -9,7 +9,7 @@ import Strappy.Type
 import Data.Maybe
 import Data.List
 import Data.Function
-import qualified Data.Map as Map
+import qualified Data.HashMap as Map
 import Control.Monad
 import Control.Monad.Random
 import Control.Monad.State
@@ -39,7 +39,7 @@ descriptionLength gr@(Grammar{grExprDistr=lib}) =
 grammarLogLikelihood :: Grammar -> [[(UExpr,Double)]] -> Double
 grammarLogLikelihood gr frontier =
   -- Calculate prob of new grammar generating each combinator
-  let combLLs = map (map (\ (e,_) -> exprLogLikelihood gr e)) frontier
+  let combLLs = map (map (\ (e,_) -> exprLogLikelihood gr (fromUExpr e))) frontier
       wMatrix = map (map snd) frontier
   in sum $ zipWith (\lls ws -> sum $ zipWith (*) lls ws) combLLs wMatrix
 
@@ -57,12 +57,16 @@ grammarLogLikelihood gr frontier =
   
 
 -- Takes a grammar and a list of tasks; updates to a new grammar
-doEMIteration :: MonadRandom m =>
-                 Double ->
-                 Grammar -> [UExpr] -> Int ->
-                 [(Type, UExpr -> Double)] -> m Grammar
+doEMIteration :: (MonadPlus m, MonadRandom m )=>
+                 Double
+                 -> Grammar 
+                 -> [UExpr] 
+                 -> Int 
+                 -> [(Type, UExpr -> Double)] -> m Grammar 
 doEMIteration lambda gr primitives size tasks = do
-  frontiers <- mapM (sampleExprs gr size . fst) tasks
+  let ms = map (sampleExprs size gr . fst) tasks  
+  xs <- sequence . map sequence $ ms 
+  let frontiers = map (map $ toUExpr . fst) xs :: [[UExpr]]
   -- Weight each frontier by likelihood
   let frontiers' = zipWith (\frontier (_, likelihood) ->
                              map (\ expr -> (expr, likelihood expr))
@@ -80,11 +84,11 @@ doEMIteration lambda gr primitives size tasks = do
   return $ optimizeGrammar lambda gr primitives frontiers''
 
 -- Performs hill climbing upon the given grammar
-optimizeGrammar :: Double -> Grammar -> [Expr]
-                   -> [[(Expr, Double)]] -> Grammar
+optimizeGrammar :: Double -> Grammar -> [UExpr]
+                   -> [[(UExpr, Double)]] -> Grammar
 optimizeGrammar lambda gr primitives frontier =
   let flatFrontier = concat frontier
-      gr' = estimateGrammarWeighted gr 1.0 flatFrontier
+      gr' = estimateGrammar gr 1.0 flatFrontier
       -- TODO: BIC or something like that for continuous params
       initial_score = lambda * (descriptionLength gr' - grammarLogLikelihood gr' frontier)
       -- This procedure performs hill climbing
@@ -104,15 +108,14 @@ optimizeGrammar lambda gr primitives frontier =
 -- | The neighbors of a grammar are those reachable by one addition/removal of a production
 -- This procedure tries adding/removing one production,
 -- modulo the restriction that the primitives are never removed from the grammar
-grammarNeighbors :: Grammar -> [Expr] -> [[(Expr, Double)]] ->
+grammarNeighbors :: Grammar -> [UExpr] -> [[(UExpr, Double)]] ->
                     [Grammar]
-grammarNeighbors (Grammar lib _) primitives obs = oneRemoved ++ oneAdded
-  where oneRemoved = map (\expr -> Grammar (Map.delete expr lib) 0.0) $
+grammarNeighbors (Grammar _ lib) primitives obs = oneRemoved ++ oneAdded
+  where oneRemoved = map (\expr -> Grammar 0.0 (Map.delete expr lib)) $
                          (Map.keys lib) \\ primitives
         oneAdded =
           let duplicatedSubtrees =
-                foldl (\cnt expr_wt -> countSubtreesNotInGrammar lib cnt expr_wt)
-                      Map.empty (concat obs)
+                foldl (\cnt expr_wt -> countSubtreesNotInGrammar lib cnt ((\(e, w) -> (fromUExpr e, w) )$ expr_wt))
               subtreeSizes = Map.mapWithKey (\expr cnt -> cnt * (exprSize lib expr))
                                            duplicatedSubtrees
               maximumAdded = 10 -- Consider at most 10 subtrees. Cuts down search.
@@ -134,8 +137,8 @@ countSubtreesNotInGrammar lib cnt (expr@(App{eLeft=l, eRight=r}),wt) =
    cnt'''
 countSubtreesNotInGrammar _ cnt _ = cnt
 
-incCountIfNotInGrammar :: Map.Map Double -> Map.Map Double -> (Expr a,Double) ->
-                          Map.Map Double
+incCountIfNotInGrammar :: ExprDistr -> ExprMap Double -> (Expr a,Double) 
+                          -> ExprMap Double
 incCountIfNotInGrammar lib cnt (expr,wt) | not (Map.member expr lib) =
   Map.insertWith (+) expr wt cnt
 incCountIfNotInGrammar _ cnt _ = cnt

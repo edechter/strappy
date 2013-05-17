@@ -81,17 +81,27 @@ estimateGrammar :: Grammar
                 -> [(UExpr, Double)] -- weighted observations 
                 -> Grammar
 estimateGrammar Grammar{grExprDistr=distr, grApp = app} pseudocounts obs 
-    = undefined
-        
-    where es = Map.toList distr
+    = Grammar{grApp=appLogProb, grExprDistr=distr'}
+    where es = Map.toList distr -- [(UExpr, Double)]
+          -- Accumulator function that takes a current records of counts and an expression and undates the counts.
           go :: Counts -> Expr a -> Counts
-          go (Counts ac tc uc pc) expr@Term{eReqType=(Just tp)} = 
-            let tc = tc + pseudocounts
-                uc = Map.adjust (+ pseudocounts) expr uc
-                otherTerms = runIdentity . runTI $ filterExprsByType es tp
-                pc = List.foldl' (Map.adjust (+pseudocounts) uc) otherTerms 
-            in Counts ac tc uc pc
-----------------------------------------------------------------------      
+          -- If expression is a terminal. 
+          go (Counts ac tc uc pc) expr@Term{eReqType=(Just tp)} =
+            let tc' = tc + pseudocounts
+                uc' = (trace $ show uc) $ Map.adjust (+ pseudocounts) (toUExpr expr) uc
+                otherTerms = (trace $ show uc') $ map fst . fst . runIdentity . runTI $ filterExprsByType es tp
+                pc' = List.foldl' (Prelude.flip $ Map.adjust (+pseudocounts)) pc otherTerms 
+            in Counts ac tc' uc' pc'
+          go counts@(Counts ac tc uc pc) expr@App{eRight= r, eLeft=l} = let countsLeft = go counts l
+                                                                            countsRight = go countsLeft r
+                                                                        in countsRight{appCounts=(appCounts countsRight) + pseudocounts}
+          empty = Map.map (\x -> 0) distr
+          counts = List.foldl' go (Counts 0 0 empty empty) (map (fromUExpr . fst) obs)
+          appLogProb = (trace $ show counts) $ log (appCounts counts) - log (termCounts counts + appCounts counts)
+          distr' = Map.unionWith (\a a' -> log a - log (a + a')) (useCounts counts) (possibleUseCounts counts)
+
+          
+---------------------------------------------------------------------      
 
 -- | Helper for turning a Haskell type to Any. 
 mkAny :: a -> Any

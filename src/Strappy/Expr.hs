@@ -127,10 +127,8 @@ cDouble2Expr i = Term (show i) tDouble Nothing i
 instance Hashable (Expr a) where
     hashWithSalt a (Term name tp reqType thing) = hash a `hashWithSalt` 
                                                     hash name `hashWithSalt` hash tp 
-                                                   `hashWithSalt` hash reqType 
-                                                    
+
     hashWithSalt a (App left right tp reqType name) =  hash a `hashWithSalt` hash left `hashWithSalt` 
                                                hash right `hashWithSalt` 
-                                               hash tp `hashWithSalt` 
-                                               hash reqType `hashWithSalt` hash name
+                                               hash tp `hashWithSalt` hash name
 
