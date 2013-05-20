@@ -110,25 +110,26 @@ optimizeGrammar lambda gr primitives frontier =
 -- modulo the restriction that the primitives are never removed from the grammar
 grammarNeighbors :: Grammar -> [UExpr] -> [[(UExpr, Double)]] ->
                     [Grammar]
-grammarNeighbors (Grammar _ lib) primitives obs = oneRemoved ++ oneAdded
-  where oneRemoved = map (\expr -> Grammar 0.0 (Map.delete expr lib)) $
+grammarNeighbors (Grammar appProb lib) primitives obs = oneRemoved ++ oneAdded
+  where oneRemoved = map (\expr -> Grammar appProb (Map.delete expr lib)) $
                          (Map.keys lib) \\ primitives
         oneAdded =
           let duplicatedSubtrees =
-                foldl (\cnt expr_wt -> countSubtreesNotInGrammar lib cnt ((\(e, w) -> (fromUExpr e, w) )$ expr_wt))
-              subtreeSizes = Map.mapWithKey (\expr cnt -> cnt * (exprSize lib expr))
-                                           duplicatedSubtrees
+                foldl (\cnt expr_wt -> countSubtreesNotInGrammar lib cnt ((\(e, w) -> (fromUExpr e, w) )$ expr_wt)) Map.empty (join obs) 
+              subtreeSizes = Map.mapWithKey (\uexpr cnt -> cnt * (exprSize lib (fromUExpr uexpr)))
+                                           $ duplicatedSubtrees
               maximumAdded = 10 -- Consider at most 10 subtrees. Cuts down search.
               bestSubtrees = take maximumAdded $
                              map fst $
                              sortBy (compare `on` snd) $
                              Map.toList subtreeSizes
           in
-           map (\expr -> Grammar (Map.insert expr 0.0 lib) 0.0) bestSubtrees
+           map (\expr -> Grammar appProb (Map.insert expr 0.0 lib)) bestSubtrees
 
-  
-countSubtreesNotInGrammar :: ExprDistr -> ExprMap Double -> (Expr a ,Double) ->
-                             ExprMap Double
+countSubtreesNotInGrammar :: ExprDistr -- <lib>: Distribution over expressions. 
+                            -> ExprMap Double -- <cnt>: Map of rules and associated counts.  
+                            -> (Expr a ,Double) -- <expr>: the expression
+                            -> ExprMap Double
 countSubtreesNotInGrammar lib cnt (expr@(App{eLeft=l, eRight=r}),wt) =
   let cnt'   = incCountIfNotInGrammar lib cnt (expr,wt)
       cnt''  = countSubtreesNotInGrammar lib cnt' (l,wt)
@@ -139,8 +140,8 @@ countSubtreesNotInGrammar _ cnt _ = cnt
 
 incCountIfNotInGrammar :: ExprDistr -> ExprMap Double -> (Expr a,Double) 
                           -> ExprMap Double
-incCountIfNotInGrammar lib cnt (expr,wt) | not (Map.member expr lib) =
-  Map.insertWith (+) expr wt cnt
+incCountIfNotInGrammar lib cnt (expr,wt) | not (Map.member (toUExpr expr) lib) =
+  Map.insertWith (+) (toUExpr expr) wt cnt
 incCountIfNotInGrammar _ cnt _ = cnt
 
 exprSize :: ExprDistr -> Expr a -> Double
