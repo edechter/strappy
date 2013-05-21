@@ -209,7 +209,7 @@ over expressions in the chosen model of computation; being able to
 treat most subexpressions of well-formed expressions as themselves
 well-formed expressions makes things easier. This was first noticed by
 Briggs and O'Neill in using combinators for genetic
-programming~\cite{briggs2006functioinal}. 
+programming~\cite{briggs2006functional}. 
 
 Example: Consider the function $f = \lambda y. \lambda x. +\,
 (*\, x\, x) (*\, x\, x)$ (note that all functions we are considering
@@ -406,9 +406,47 @@ integer and has the type of a real value.
 A combinator with no holes is filled.
 
 
+\section{Genetic Programming}
 
+The most directly related work to ours is that on Genetic Programming.
+Therefore, we need to declare the differences between our work and genetic
+programming in as clear a way as possible. This will consist of two steps: 1)
+we need to review the literature and understand what its achievements are; 2)
+we need to implement a GP system and show how our system differs from a GP
+system in practice. 
 
+An implementation of a symbolic regression genetic programming system is
+TinyGP, Java source code for which can be found in Appendix B
+of~\cite{poli08:fieldguide}. 
 
+There are five basic things that need to be specified in order to create a GP
+algorithm. We need to determine the terminal set, the function set, the fitness
+function, the GP parameter values, and the terminal solution designation. The
+terminal set consists of the external inputs (i.e.  variables of the form x, y,
+etc.), functions with no arguments (e.g., rand and other functions with side
+effects), and constants. 
+
+The function set is a set of functions and their arities. Function sets must
+satisfy \emph{closure}, which consists of \emph{type consistency} and
+\emph{evaluation safety}. Type consistency means that all functions return
+values of the same type. Evaluation safety means that functions do not throw
+errors. 
+
+The fitness function is the objective function. 
+
+The GP parameters are various: population size, probabilities of performing
+genetic operations (crossover and mutation), selection mechanism, etc. 
+
+Finally, we need to specify termination condition. These include the number of
+runs or other predicates based on which the program should terminate.
+
+There are several papers by O'Reilly that analyze GP that are worth looking at:
+\cite{OReilly:thesis} \cite{OReilly:1995:tabbGP}
+
+\subsection{Modulearity and Hierarchy in GP} 
+
+Koza's Automatically defined functions (ADFs) are the most popular way of
+evolving reusable components. In automatically defined functions, we explicitly add auxiliary functional genetic material that the main function can call. Typically, the ADFS need different terminal and function sets (for example, ADFs need argument terminals). In this scheme, each function only has access to its own ADFs. See Olsson's ADATE system where subfunctions as anonymous lambda expressions are extracted~\cite{DBLP:conf/eurogp/Olsson9}.
 
 
 \bibliographystyle{plain}
