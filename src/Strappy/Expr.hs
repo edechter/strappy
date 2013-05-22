@@ -1,5 +1,5 @@
 -- Expr.hs
-{-# Language GADTs,  ScopedTypeVariables   #-}
+{-# Language GADTs,  ScopedTypeVariables, FlexibleInstances, UndecidableInstances   #-}
 
 module Strappy.Expr where
 
@@ -131,4 +131,13 @@ instance Hashable (Expr a) where
     hashWithSalt a (App left right tp reqType name) =  hash a `hashWithSalt` hash left `hashWithSalt` 
                                                hash right `hashWithSalt` 
                                                hash tp `hashWithSalt` hash name
+
+----------------------------------------
+-- Expressable typeclass -------------- 
+----------------------------------------
+class Expressable a where
+       toExpr :: a -> Expr a 
+
+instance (Show a, Typeable a) => Expressable a where
+       toExpr v = Term (show v) (typeOf v) Nothing v 
 
