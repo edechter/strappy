@@ -7,21 +7,16 @@ import Data.Maybe
 import Debug.Trace
 
 import Strappy.Type
-import Strappy.CL
 import Strappy.Expr
 import Strappy.Task
-import Strappy.StdLib
-import Strappy.Data
-import qualified Strappy.CombMap as CM
-import Strappy.CombMap (CombMap)
-import Strappy.Grammar
+import Strappy.Library
 
 data Experiment = Experiment {expName :: String, -- ^ name of experiment
                               expTaskSet :: TaskSet, -- ^ list of tasks
                               expEps  :: Double, -- ^ penalty threshold
                               expPrior :: Grammar, 
                               expInitLib :: Grammar,
-                              expDepthBound   :: Int, 
+                              expDepthBound :: Int, 
                               expNumBound :: Int, -- ^ number of combinators to search
                               expReps :: Int } -- ^ number of iterations
                 deriving Show
