@@ -1,7 +1,7 @@
 -- Type.hs
 -- Eyal Dechhter
 {-# Language GeneralizedNewtypeDeriving, BangPatterns,
-  DeriveFunctor #-}
+  DeriveFunctor, ScopedTypeVariables #-}
 
 -- | This module defines a Hindley-Milner type system. It is based on
 -- Mark P. Jone's paper "Typing Haskell in Haskell"
@@ -155,10 +155,8 @@ isTVar _ = False
 instance Show Type where
     show (TVar u) = show u
     show (TCon tc) = show tc
-    show (TAp t1 t2) = case t1 of
-                         (TAp tArrow a) -> "(" ++ show a ++ " -> " ++ show t2 ++ ")"
-                         otherwise -> "(" ++ show t1 ++ " " ++ show t2 ++ ")" 
-
+    show (TAp t@(TAp t1 t2) t3) | t1 == tArrow = "(" ++ show t2 ++ " -> " ++ show t3 ++ ")"
+    show (TAp a b) = "(" ++ show a ++ " " ++ show b ++ ")"
 
 eqModTyVars :: Type -- ^ t1
             -> Type -- ^ t2
@@ -166,7 +164,7 @@ eqModTyVars :: Type -- ^ t1
 -- | Type equality modulo type variables. Returns true if the mgu
 -- susbtitution from t1 to t2 is just a renaming of type variables.
 eqModTyVars t1 t2 = case mgu t1 t2 of
-                      Just s -> all (\v -> isTVar (snd v)) s
+                      Just s -> all (isTVar . snd ) s
                       Nothing -> False
 
 
@@ -318,10 +316,31 @@ tBool = TCon (TyCon "Bool" Star)
 tArrow = TCon (TyCon "(->)" (Kfun Star (Kfun Star Star)))
 tList = TCon $ TyCon "[]" (Kfun Star Star)
 tMaybe = TCon $ TyCon "Maybe" (Kfun Star Star)                                         
-tPair = TCon $ TyCon "(,)" (Kfun Star Star)
-tTriple = TCon $ TyCon "(,,)" (Kfun Star Star)
+tPair = TCon $ TyCon "(,)" (Kfun Star (Kfun Star Star))
+tTriple = TCon $ TyCon "(,,)" (Kfun Star (Kfun Star (Kfun Star Star)))
 tQuad = TCon $ TyCon "(,,,)" (Kfun Star Star)
 tQuint = TCon $ TyCon "(,,,,)" (Kfun Star Star)
 
-                     
+----------------------------------------                    
+-- Typeable ----------------------------
+----------------------------------------                    
+class Typeable a where
+	typeOf :: a ->  Type
+
+instance Typeable Int where
+	typeOf v = tInt 
+instance Typeable Char where
+	typeOf v = tChar
+instance Typeable Double where
+	typeOf v = tDouble
+instance Typeable Bool where
+	typeOf v = tBool
+instance (Typeable a, Typeable b) =>  Typeable (a -> b)  where
+	typeOf v = TAp (TAp tArrow (typeOf (undefined :: a))) 
+					(typeOf (undefined :: b)) 
+instance (Typeable a) => Typeable [a] where
+	typeOf v = TAp tList (typeOf $ (undefined :: a))
+instance (Typeable a, Typeable b) => Typeable (a, b) where
+	typeOf v = TAp (TAp tPair  (typeOf (undefined :: a))) 
+					(typeOf (undefined :: b)) 
 
