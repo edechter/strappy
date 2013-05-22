@@ -16,7 +16,7 @@ module Strappy.Type (
                     , Subst(..)
                     , TypeInference
                     , runTI
-
+                    , Typeable                        
                     -- * Functions
                     , (->-)
                     , kind
@@ -38,6 +38,7 @@ module Strappy.Type (
                     , readId
                     , nullSubst
                     , (-->)
+                    , typeOf
                     
                            
                     -- * Combinator Types
