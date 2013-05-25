@@ -87,8 +87,11 @@ eval :: Expr a -> a
 eval Term{eThing=f} = f
 eval App{eLeft=el, eRight=er} = (eval el) (eval er)
 
+cBottom = Term "_|_" (mkTVar 0) Nothing $ undefined
+
 safeEval :: Expr a -> Maybe a
-safeEval Term{eThing=f} = if f == cBottom then Nothing else Just f
+safeEval term@Term{eThing=f} = if (toUExpr term) == (toUExpr cBottom) 
+                                then Nothing else Just f
 safeEval App{eLeft = el, eRight = er} = do l <- safeEval el
                                            r <- safeEval er    
                                            return (l r) 
