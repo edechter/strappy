@@ -122,7 +122,7 @@ cB = Term "B" ((t1 ->- t) ->- (t2 ->- t1) ->- t2 ->- t) Nothing $ \f g x -> f (g
 
 cC = Term "C" ((t1 ->- t2 ->- t) ->- t2 ->- t1 ->- t) Nothing $ \f g x -> (f x) g 
 
-cBottom = Term "_|_" t Nothing $ undefined
+
 
 
 -- | Integer arithmetic
@@ -181,4 +181,9 @@ basicExprDistr = Map.adjust (const (-5)) (toUExpr cBottom)
 basicGrammar :: Grammar
 basicGrammar = normalizeGrammar $ Grammar 3 basicExprDistr
 
-
+-- | Helpers 
+-- | compose epressions together
+compose :: [UExpr] -> UExpr
+compose (x:[]) = x
+compose (x:xs) = toUExpr $ fromUExpr x <> (fromUExpr $ compose xs) 
+compose []  = error "compose: applied to empty list"
