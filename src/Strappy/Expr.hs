@@ -87,6 +87,12 @@ eval :: Expr a -> a
 eval Term{eThing=f} = f
 eval App{eLeft=el, eRight=er} = (eval el) (eval er)
 
+safeEval :: Expr a -> Maybe a
+safeEval Term{eThing=f} = return f
+safeEval App{eLeft = el, eRight = er} = do l <- safeEval el
+                                           r <- safeEval er    
+                                           return (l r) 
+
 filterExprsByType :: (Monad m) => [(UExpr, a)] -> Type -> TypeInference m [(UExpr, a)]
 -- | This function takes an association list with UExpr keys and a
 -- target type and returns an association list filtered to only those
