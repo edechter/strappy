@@ -5,6 +5,7 @@ import Prelude hiding (flip)
 import Control.Monad.State
 import Control.Monad.Random
 import Control.Exception 
+import Control.Arrow (second)
 import qualified Data.HashMap as Map
 
 import Strappy.Type
@@ -22,7 +23,7 @@ initializeTI :: Monad m => ExprDistr -> TypeInference m ()
 initializeTI exprDistr = do put (i + 1)
                             return ()
     where go n (uexpr:rest) = let tvs = getTVars uexpr
-                                  getTVars expr = tv . eType $ (fromUExpr expr)
+                                  getTVars expr = tv . eType $ fromUExpr expr
                                   m = maximum $ map (readId . tyVarId) tvs 
                              in if null tvs then 0 else go (max n m) rest
           go n [] = n
@@ -33,13 +34,13 @@ initializeTI exprDistr = do put (i + 1)
 ----------------------------------------------------------------------
 -- Main functions. 
 sampleExpr ::
-  (MonadPlus m, MonadRandom m) => Grammar -> Type -> m (Expr a, Int)
+  (MonadPlus m, MonadRandom m) => Grammar -> Type -> m (Expr a)
 -- | Samples a combinator of type t from a stochastic grammar G. 
 sampleExpr gr@Grammar{grApp=p, grExprDistr=exprDistr} tp 
-    = runTI $ do initializeTI exprDistr
-                 tp' <- freshInst tp
-                 let out = sample tp'
-                 liftM fromUExpr $ out
+    = liftM fst $ runTI $ do initializeTI exprDistr
+                             tp' <- freshInst tp
+                             let out = sample tp'
+                             liftM fromUExpr  out
     where 
       sample tp = do
             shouldExpand <- flip (exp p)
@@ -47,12 +48,12 @@ sampleExpr gr@Grammar{grApp=p, grExprDistr=exprDistr} tp
               True -> do t <- newTVar Star
                          e_left  <- sample (t ->- tp)
                          e_right <- sample (fromType (eType (fromUExpr e_left)))
-                         return $ toUExpr $ (fromUExpr e_left) <> (fromUExpr e_right) 
+                         return $ toUExpr $ fromUExpr e_left <> fromUExpr e_right 
               False -> do cs <- filterExprsByType (Map.toList exprDistr) tp
-                          guard (trace (show tp) $ not . null $ cs) 
-                          out <- sampleMultinomial $ map (\(e, i) -> (e, exp i)) $ 
+                          guard (not . null $ cs) 
+                          sampleMultinomial $ map (second exp) $   
                                              normalizeDist cs
-                          (trace $ show out ) $ return out
+                          
 
 sampleExprs n library tp = replicate n $ sampleExpr library tp
 
@@ -60,7 +61,7 @@ putSampleExprs n library tp
     = sequence 
       $ do x <- sampleExprs n library tp
            let x' = do z <- x
-                       return $ show . fst $ z
+                       return $ show  z
            let x'' = catch x' (const (return "error") :: IOException -> IO String)
            return x''
 
