@@ -5,6 +5,7 @@ import Strappy.Sample
 import Strappy.Expr
 import Strappy.Library
 import Strappy.Type
+import Strappy.Task
 
 import Data.Maybe
 import Data.List
@@ -13,6 +14,7 @@ import qualified Data.HashMap as Map
 import Control.Monad
 import Control.Monad.Random
 import Control.Monad.State
+import Debug.Trace 
 
 -- Evaluates to the number of nats required to encode the grammar
 -- Does not include production probabilities TODO: why not?
@@ -62,14 +64,14 @@ doEMIteration :: (MonadPlus m, MonadRandom m )=>
                  -> Grammar 
                  -> [UExpr] 
                  -> Int 
-                 -> [(Type, UExpr -> Double)] -> m Grammar 
+                 -> [Task] -> m Grammar 
 doEMIteration lambda gr primitives size tasks = do
-  let ms = map (sampleExprs size gr . fst) tasks  
+  let ms = map (sampleExprs size gr . taskType) tasks 
   xs <- sequence . map sequence $ ms 
-  let frontiers = map (map $ toUExpr . fst) xs :: [[UExpr]]
+  let frontiers = map (map toUExpr) xs :: [[UExpr]]
   -- Weight each frontier by likelihood
-  let frontiers' = zipWith (\frontier (_, likelihood) ->
-                             map (\ expr -> (expr, likelihood expr))
+  let frontiers' = zipWith (\frontier Task{task=tsk} ->
+                             map (\ expr -> (expr, tsk expr))
                              frontier)
                    frontiers tasks
   -- Compute normalizing constants
@@ -147,3 +149,36 @@ incCountIfNotInGrammar _ cnt _ = cnt
 exprSize :: ExprDistr -> Expr a -> Double
 exprSize distr App{eLeft=l, eRight=r, eLabel=Nothing} = 1.0 + exprSize distr l + exprSize distr r
 exprSize _ _ = 1.0 
+
+----------------------------------------------------------------------
+-- Solve a single task
+
+solveTask :: (MonadPlus m, MonadRandom m) => 
+           Grammar  
+        -> Task
+        -> Int -- ^ <n> plan length
+        -> Int -- ^ <m> branching factor 
+        -> m ( [(UExpr, Double)], -- all expressions tried and associated rewards
+               [UExpr], -- plan of expressions
+               Double) -- score of plan
+solveTask gr Task{task=tsk, taskType=tp} n m = go [] [] 0 n 
+       where 
+              go exprs_and_scores plan cum_score 0 = return (exprs_and_scores, plan, cum_score)
+              go exprs_and_scores plan cum_score steps = 
+                 let tp' = if steps == n then tp else tp ->- tp 
+                 in do exprs <- sequence $ sampleExprs m gr tp' 
+                       -- for each expr, append that expression to the plan, 
+                       -- score it on the task, and compare the new score to the
+                       -- score of the current plan. 
+                       let exprs_and_scores'  
+                             = do expr <- exprs 
+                                  let score = (tsk $ compose (toUExpr expr : plan)) - cum_score
+                                  return (toUExpr expr, score)
+                           plan' = best_expr : plan                                     
+                                   where best_expr = fst $ maximumBy (compare `on` snd) exprs_and_scores' 
+                           cum_score' = tsk $ compose plan'            
+                       go exprs_and_scores' plan' cum_score' (steps - 1)
+
+solveTask2 gr Task{task=tsk, taskType=tp} = do expr <- sampleExpr gr tp
+                                               let score = tsk $ toUExpr expr
+                                               return (expr, score)
