@@ -179,6 +179,3 @@ solveTask gr Task{task=tsk, taskType=tp} n m = go [] [] 0 n
                            cum_score' = tsk $ compose plan'            
                        go exprs_and_scores' plan' cum_score' (steps - 1)
 
-solveTask2 gr Task{task=tsk, taskType=tp} = do expr <- sampleExpr gr tp
-                                               let score = tsk $ toUExpr expr
-                                               return (expr, score)
