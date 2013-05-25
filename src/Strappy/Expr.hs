@@ -88,7 +88,7 @@ eval Term{eThing=f} = f
 eval App{eLeft=el, eRight=er} = (eval el) (eval er)
 
 safeEval :: Expr a -> Maybe a
-safeEval Term{eThing=f} = return f
+safeEval Term{eThing=f} = if f == cBottom then Nothing else Just f
 safeEval App{eLeft = el, eRight = er} = do l <- safeEval el
                                            r <- safeEval er    
                                            return (l r) 
