@@ -23,6 +23,14 @@ normalizeDist dist
     = let logTotalMass = logsumexp (map snd dist)
       in [(c, v - logTotalMass) | (c, v) <- dist]
 
+logistic :: Double -- ^ x-shift
+         -> Double -- ^ growth rate
+         -> Double -- ^ x value
+         -> Double -- ^ y value
+logistic a b x = 1 / (1 + exp (-b * (x - a)))
 
-
+flipOrdering :: Ordering -> Ordering
+flipOrdering LT = GT
+flipOrdering GT = LT
+flipOrdering EQ = EQ
 

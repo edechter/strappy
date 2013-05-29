@@ -47,13 +47,14 @@ sampleExpr gr@Grammar{grApp=p, grExprDistr=exprDistr} tp
             case shouldExpand of
               True -> do t <- newTVar Star
                          e_left  <- sample (t ->- tp)
-                         e_right <- sample (fromType (eType (fromUExpr e_left)))
-                         return $ toUExpr $ fromUExpr e_left <> fromUExpr e_right 
+                         e_right <- sample (fromType (currentType (fromUExpr e_left)))
+                         let e = fromUExpr e_left <> fromUExpr e_right 
+                         return $ toUExpr $ e{eReqType=Just tp}
               False -> do cs <- filterExprsByType (Map.toList exprDistr) tp
                           guard (not . null $ cs) 
-                          sampleMultinomial $ map (second exp) $   
+                          e <- liftM fromUExpr $ sampleMultinomial $ map (second exp) $   
                                              normalizeDist cs
-                          
+                          return $ toUExpr $ e{eReqType=Just tp}
 
 sampleExprs n library tp = replicate n $ sampleExpr library tp
 

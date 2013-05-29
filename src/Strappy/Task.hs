@@ -5,6 +5,7 @@ module Strappy.Task where
 
 import Strappy.Expr
 import Strappy.Type
+import Strappy.Utils
 
 data Task =  Task {taskName :: String, 
                    task :: UExpr -> Double,
@@ -18,7 +19,7 @@ instance Show Task where
 	
 mkIntTask :: Int -> Task
 mkIntTask i = Task (show i) tsk tInt
-        where tsk uexpr = case safeEval (fromUExpr uexpr) of
-                                Nothing -> negate (1.0/0.0)
-                                Just r -> negate $ fromIntegral $ abs $ r - i
+        where tsk uexpr = case safeEval (fromUExpr uexpr :: Expr Int ) of
+                                Nothing -> 0
+                                Just r -> exp $ negate $ fromIntegral $ abs $ r - i
 

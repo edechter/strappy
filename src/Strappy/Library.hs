@@ -11,6 +11,7 @@ import qualified Data.List as List
 import Text.Printf
 import Data.Function (on)
 import Control.Monad.Identity
+import Control.Arrow (first)
 import Debug.Trace
 
 import Strappy.Type
@@ -33,7 +34,6 @@ showExprDistr exprDistr  = unlines $ map (\(e, i) -> printf "%7s:%7.2f" (show e)
 showExprDistrLong exprDistr = unlines $ map (\(e, i) -> printf "%60s, %7.2f" (showUExprLong e) i) pairs
     where pairs = List.sortBy (compare `on` snd) $ Map.toList exprDistr
 
-
 -- | Type for stochastic grammar over programs.
 data Grammar = Grammar {grApp :: Double, -- ^ log probability of application
                         grExprDistr :: ExprDistr -- ^ distribution over functions
@@ -51,9 +51,9 @@ normalizeGrammar Grammar{grApp=p, grExprDistr=distr}
 -- | Methods for calculating the loglikelihood of an expression draw from grammar
 exprLogLikelihood :: Grammar -> Expr a -> Double
 -- | Returns the log probability of producing the given expr tree
--- | TODO: the use of isLeaf here is incorrect, because it only looks at the label of the expression, which refers to a previous grammar.
 exprLogLikelihood gr expr = let e = toUExpr expr in
     -- | Is this expr a leaf?
+    -- trace ("\nExpr: " ++ showExprLong expr ++ "\n ExprDistr: " ++ showExprDistrLong (grExprDistr gr)) $ 
     if Map.member e (grExprDistr gr)
         then calcLogProb gr expr (fromMaybe (eType expr) (eReqType expr)) +
             log (1 - exp (grApp gr))
@@ -73,38 +73,34 @@ calcLogProb gr@Grammar{grExprDistr=distr} expr tp
           logp_e_tot = logsumexp (map snd m) 
       in  logp_e - logp_e_tot
     | otherwise = error "calcLogProb: the argument to calcLogProb must be either a Term or an App that is labeled."
-    where isTerm Term{} = True
-          isTerm _ = False
-          isLabeled App{eLabel=Just _} = True
-          isLabeled _ = False
 
 data Counts = Counts {appCounts :: Double,
                         termCounts :: Double,
                         useCounts :: ExprMap Double,
                         possibleUseCounts :: ExprMap Double} deriving Show
 estimateGrammar :: Grammar 
-                -> Double -- pseudocounts
+                -> Double -- pseudocount by which to weight the grammar as a prior
                 -> [(UExpr, Double)] -- weighted observations 
                 -> Grammar
 estimateGrammar Grammar{grExprDistr=distr, grApp = app} pseudocounts obs 
     = Grammar{grApp=appLogProb, grExprDistr=distr'}
     where es = Map.toList distr -- [(UExpr, Double)]
           -- Accumulator function that takes a current records of counts and an expression and undates the counts.
-          go :: Counts -> Expr a -> Counts
+          go :: Counts -> Expr a -> Double -> Counts
           -- If expression is a terminal. 
-          go (Counts ac tc uc pc) expr@Term{eReqType=(Just tp)} =
-            let tc' = tc + pseudocounts
-                uc' = Map.adjust (+ pseudocounts) (toUExpr expr) uc
+          go (Counts ac tc uc pc) expr@Term{eReqType=(Just tp)} weight =
+            let tc' = tc + weight
+                uc' = Map.adjust (+ weight) (toUExpr expr) uc
                 otherTerms = map fst . fst . runIdentity . runTI $ filterExprsByType es tp
-                pc' = List.foldl' (Prelude.flip $ Map.adjust (+pseudocounts)) pc otherTerms 
+                pc' = List.foldl' (Prelude.flip $ Map.adjust (+ weight)) pc otherTerms 
             in Counts ac tc' uc' pc'
-          go counts@(Counts ac tc uc pc) expr@App{eRight=r, eLeft=l} = let countsLeft = go counts l
-                                                                           countsRight = go countsLeft r
-                                                                        in countsRight{appCounts= appCounts countsRight + pseudocounts}
-          empty = Map.map (const 0) distr
-          counts = List.foldl' go (Counts 0 0 empty empty) (map (fromUExpr . fst) obs)
+          go counts@(Counts ac tc uc pc) expr@App{eRight=r, eLeft=l} weight = let countsLeft = go counts l weight
+                                                                                  countsRight = go countsLeft r weight
+                                                                               in countsRight{appCounts= appCounts countsRight + weight} 
+          empty = Map.map (const pseudocounts) distr
+          counts = List.foldl' (\cts (e, w) -> go cts (fromUExpr e) w) (Counts pseudocounts pseudocounts empty empty) obs
           appLogProb = (trace $ show counts) $ log (appCounts counts) - log (termCounts counts + appCounts counts)
-          distr' = Map.unionWith (\a a' -> log a - log (a + a')) (useCounts counts) (possibleUseCounts counts)
+          distr' = Map.unionWith (\a a' -> log a - log a') (useCounts counts) (possibleUseCounts counts)
           
 ---------------------------------------------------------------------      
 
@@ -119,41 +115,41 @@ t2 = mkTVar 2
 t3 = mkTVar 3                  
 
 -- | Basic combinators
-cI = Term "I" (t ->- t) Nothing id
+cI = mkTerm "I" (t ->- t)   id
 
-cS = Term "S" ((t2 ->- t1 ->- t) ->- (t2 ->- t1) ->- t2 ->- t) Nothing $ \f g x -> f x (g x)
+cS = mkTerm "S" ((t2 ->- t1 ->- t) ->- (t2 ->- t1) ->- t2 ->- t)    $ \f g x -> f x (g x)
 
-cB = Term "B" ((t1 ->- t) ->- (t2 ->- t1) ->- t2 ->- t) Nothing $ \f g x -> f (g x)
+cB = mkTerm "B" ((t1 ->- t) ->- (t2 ->- t1) ->- t2 ->- t)   $ \f g x -> f (g x)
 
-cC = Term "C" ((t1 ->- t2 ->- t) ->- t2 ->- t1 ->- t) Nothing $ \f g x -> f x g 
+cC = mkTerm "C" ((t1 ->- t2 ->- t) ->- t2 ->- t1 ->- t)   $ \f g x -> f x g 
 
 
 
 
 -- | Integer arithmetic
 cPlus :: Expr (Int -> Int -> Int)
-cPlus = Term "+" (tInt ->- tInt ->- tInt) Nothing (+)
+cPlus = mkTerm "+" (tInt ->- tInt ->- tInt)   (+)
 
 cTimes :: Expr (Int -> Int -> Int)
-cTimes = Term "*" (tInt ->- tInt ->- tInt) Nothing (*)
+cTimes = mkTerm "*" (tInt ->- tInt ->- tInt)   (*)
 
 cMinus :: Expr (Int -> Int -> Int)
-cMinus = Term "-" (tInt ->- tInt ->- tInt) Nothing (-)
+cMinus = mkTerm "-" (tInt ->- tInt ->- tInt)   (-)
 
 cMod :: Expr (Int -> Int -> Int)
-cMod = Term "-" (tInt ->- tInt ->- tInt) Nothing  (-)
+cMod = mkTerm "-" (tInt ->- tInt ->- tInt)    (-)
 
 cRem :: Expr (Int -> Int -> Int)
-cRem = Term "rem" (tInt ->- tInt ->- tInt) Nothing mod
+cRem = mkTerm "rem" (tInt ->- tInt ->- tInt)   mod
 -- | Lists
-cCons = Term ":"  (t ->- TAp tList t ->- TAp tList t)  Nothing (:)
-cAppend = Term "++" (TAp tList t ->- TAp tList t ->- TAp tList t) Nothing (++)
-cHead = Term "head" (TAp tList t ->- t) Nothing head
-cMap = Term "map" ((t ->- t1) ->- TAp tList t ->- TAp tList t1) Nothing map
-cEmpty = Term "[]" (TAp tList t) Nothing []
-cSingle = Term "single" (t ->- TAp tList t) Nothing $ replicate 1 
-cRep = Term "rep" (tInt ->- t ->- TAp tList t) Nothing replicate 
-cFoldl = Term "foldl" ((t ->- t1 ->- t) ->- t ->- TAp tList t1 ->- t) Nothing  List.foldl'
+cCons = mkTerm ":"  (t ->- TAp tList t ->- TAp tList t)    (:)
+cAppend = mkTerm "++" (TAp tList t ->- TAp tList t ->- TAp tList t)   (++)
+cHead = mkTerm "head" (TAp tList t ->- t)   head
+cMap = mkTerm "map" ((t ->- t1) ->- TAp tList t ->- TAp tList t1)   map
+cEmpty = mkTerm "[]" (TAp tList t)   []
+cSingle = mkTerm "single" (t ->- TAp tList t)   $ replicate 1 
+cRep = mkTerm "rep" (tInt ->- t ->- TAp tList t)   replicate 
+cFoldl = mkTerm "foldl" ((t ->- t1 ->- t) ->- t ->- TAp tList t1 ->- t)    List.foldl'
 cInts =  [cInt2Expr i | i <- [1..10]]
 cDoubles =  [cDouble2Expr i | i <- [1..10]]
 

@@ -6,6 +6,8 @@ import Strappy.Expr
 import Strappy.Library
 import Strappy.Type
 import Strappy.Task
+import Strappy.Utils
+import Strappy.Library 
 
 import Data.Maybe
 import Data.List
@@ -27,12 +29,12 @@ descriptionLength gr@(Grammar{grExprDistr=lib}) =
     -- Primed can look through grammar for matching subtrees
     -- This is done so that we don't pick ourselves out of the grammar
     productionLen :: Expr a -> Double
-    productionLen (App {eLeft=l, eRight=r}) =
-      productionLen' l + productionLen' r
+    productionLen a@App{eLeft=l, eRight=r} | isLabeled a = case Map.lookup (toUExpr a) lib of 
+                                               Nothing -> error "descriptionLength::productionLen: labelled application is not in library."
+                                               (Just ll) -> negate ll
+                          | otherwise   = productionLen l + productionLen r
     productionLen _ = 0 -- Terminal production w/o application is always
                         -- in the grammar, so we don't have to count it
-    productionLen' :: Expr a -> Double
-    productionLen'  = exprSize lib 
 
 
 -- Likelihood term in EM
@@ -100,12 +102,13 @@ optimizeGrammar lambda gr primitives exprs_and_scores=
       -- This procedure performs hill climbing
       climb :: Grammar -> Double -> Grammar
       climb g g_score =
-        let gs = grammarNeighbors g primitives exprs_and_scores
-            gsScore = [ (g, lambda * descriptionLength g - grammarLogLikelihood g exprs_and_scores) |
+        let gs = grammarNeighbors g primitives 1.0 exprs_and_scores
+            gsScore = [ (g, lambda * descriptionLength g - grammarLogLikelihood g (relabelFrontier g exprs_and_scores)) |
                         g <- gs ]
             (best_g', best_g'_score) = minimumBy (compare `on` snd) gsScore
         in
          if best_g'_score < g_score
+
          then climb best_g' best_g'_score
          else g
   in
@@ -114,9 +117,10 @@ optimizeGrammar lambda gr primitives exprs_and_scores=
 -- | The neighbors of a grammar are those reachable by one addition/removal of a production
 -- This procedure tries adding/removing one production,
 -- modulo the restriction that the primitives are never removed from the grammar
-grammarNeighbors :: Grammar -> [UExpr] -> [(UExpr, Double)] ->
-                    [Grammar]
-grammarNeighbors (Grammar appProb lib) primitives obs = oneRemoved ++ oneAdded
+grammarNeighbors :: Grammar -> [UExpr] -> Double -- ^ pseudocounts 
+                -> [(UExpr, Double)] 
+                ->  [Grammar]
+grammarNeighbors (Grammar appProb lib) primitives pseudocounts obs = oneRemoved ++ oneAdded
   where oneRemoved = map (\expr -> Grammar appProb (Map.delete expr lib)) 
                          $ Map.keys lib \\ primitives
         oneAdded =
@@ -124,13 +128,14 @@ grammarNeighbors (Grammar appProb lib) primitives obs = oneRemoved ++ oneAdded
                 foldl (\cnt expr_wt -> countSubtreesNotInGrammar lib cnt (first fromUExpr expr_wt)) Map.empty obs 
               subtreeSizes = Map.mapWithKey (\uexpr cnt -> cnt * exprSize lib (fromUExpr uexpr)) duplicatedSubtrees
               maximumAdded = 10 -- Consider at most 10 subtrees. Cuts down search.
-              bestSubtrees = take maximumAdded $
-                             map fst $
-                             sortBy (compare `on` snd) $
+              info = take 10 $ sortBy (\a a' -> flipOrdering $ (compare `on` snd) a a') $
                              Map.toList subtreeSizes
-              labelExpr uexpr = toUExpr expr{eLabel=Just $ show expr} where expr=fromUExpr uexpr
+              bestSubtrees = trace ("INFO: " ++ show info) $ take maximumAdded $
+                             map fst $
+                             sortBy (\a a' -> flipOrdering $ (compare `on` snd) a a') $
+                             Map.toList subtreeSizes
           in
-           map ((\expr -> Grammar appProb (Map.insert expr 0.0 lib)) . labelExpr) bestSubtrees
+           map ((\gr -> estimateGrammar gr pseudocounts obs) . (\expr -> Grammar appProb (Map.insert expr 0.0 lib)) . labelExpr) bestSubtrees
 
 countSubtreesNotInGrammar :: ExprDistr -- <lib>: Distribution over expressions. 
                             -> ExprMap Double -- <cnt>: Map of rules and associated counts.  
@@ -154,17 +159,20 @@ exprSize :: ExprDistr -> Expr a -> Double
 exprSize distr App{eLeft=l, eRight=r, eLabel=Nothing} = 1.0 + exprSize distr l + exprSize distr r
 exprSize _ _ = 1.0 
 
+relabelFrontier :: Grammar -> [(UExpr, a)] -> [(UExpr, a)]
+relabelFrontier gr es = map go (map (first fromUExpr) es)
+    where go (t@Term{}, s) = (toUExpr t, s) 
+          go (a@App{}, s) = if Map.member ua (grExprDistr gr) then (labelExpr ua, s) else (unlabelExpr ua, s)
+                                                                       where ua = toUExpr a
 ----------------------------------------------------------------------
 -- Solve a single task
 
-solveTask :: (MonadPlus m, MonadRandom m) => 
-           Grammar  
-        -> Task
-        -> Int -- ^ <n> plan length
-        -> Int -- ^ <m> branching factor 
-        -> m ( [(UExpr, Double)], -- all expressions tried and associated rewards
-               [UExpr], -- plan of expressions
-               Double) -- score of plan
+-- solveTask :: (MonadPlus m, MonadRandom m) => 
+--         -> Int -- ^ <n> plan length
+--         -> Int -- ^ <m> branching factor 
+--         -> m ( [(UExpr, Double)], -- all expressions tried and associated rewards
+--                [UExpr], -- plan of expressions
+--                Double) -- score of plan
 solveTask gr Task{task=tsk, taskType=tp} n m = go [] [] 0 n 
        where  go exprs_and_scores plan cum_score 0 = return (exprs_and_scores, plan, cum_score)
               go exprs_and_scores plan cum_score steps = 
@@ -177,11 +185,7 @@ solveTask gr Task{task=tsk, taskType=tp} n m = go [] [] 0 n
                        let exprs_and_scores'  
                              = do expr <- exprs 
                                   let score = if steps == n then tsk (toUExpr expr) 
-                                                else tsk (compose (toUExpr expr : plan)) - cum_score
-                                  -- trace ( "\n Expr: " ++ show expr ++
-                                  --         "\n plan: " ++ show plan ++ 
-                                  --         "\n cum_score: " ++ show cum_score ++ 
-                                  --         "\n score " ++ show score) $   return (toUExpr expr, score) 
+                                                else (tsk (compose (toUExpr expr : plan))) / cum_score
                                   return (toUExpr expr, score) 
                            plan' = best_expr : plan                                     
                                    where best_expr = fst $ maximumBy (compare `on` snd) exprs_and_scores' 
