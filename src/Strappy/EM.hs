@@ -29,69 +29,25 @@ descriptionLength gr@(Grammar{grExprDistr=lib}) =
     -- Primed can look through grammar for matching subtrees
     -- This is done so that we don't pick ourselves out of the grammar
     productionLen :: Expr a -> Double
-    productionLen a@App{eLeft=l, eRight=r} | isLabeled a = case Map.lookup (toUExpr a) lib of 
-                                               Nothing -> error "descriptionLength::productionLen: labelled application is not in library."
-                                               (Just ll) -> negate ll
-                          | otherwise   = productionLen l + productionLen r
+    productionLen App{eLeft=l, eRight=r} = productionLen' l + productionLen' r
     productionLen _ = 0 -- Terminal production w/o application is always
                         -- in the grammar, so we don't have to count it
+    productionLen' :: Expr a -> Double
+    productionLen' e | Map.member (toUExpr e) lib =
+      let numAlternatives = genericLength $ fst . runIdentity . runTI $ filterExprsByType (Map.toList distr) tp
+      in log numAlternatives - log 0.5
+    productionLen' App{eLeft = l, eRight = r} =
+      productionLen' l + productionLen' r - log 0.5
+    productionLen' Term{} = error "Terminal not found in library"
 
 
 -- Likelihood term in EM
--- (frontier!!i)!!k   ==   <e_i^k, P(e_i^k | t_i, G^old)>
--- The probabilities should be normalized, eg,
---    forall i.  (sum $ map snd $ frontier!!i) == 1
--- grammarLogLikelihood :: Grammar -> [[(UExpr,Double)]] -> Double
--- grammarLogLikelihood gr frontier =
---   -- Calculate prob of new grammar generating each combinator
---   let combLLs = map (map (\ (e,_) -> exprLogLikelihood gr (fromUExpr e))) frontier
---       wMatrix = map (map snd) frontier
---   in sum $ zipWith (\lls ws -> sum $ zipWith (*) lls ws) combLLs wMatrix
-
-grammarLogLikelihood gr exprs_and_score = sum $ zipWith (\e w -> exprLogLikelihood gr (fromUExpr e) * w) exprs scores where (exprs, scores) = unzip exprs_and_score
+grammarLogLikelihood :: Grammar -> [(UExpr, Double)] -> Double
+grammarLogLikelihood gr exprs_and_score =
+  sum $ zipWith (\e w -> exprLogLikelihood gr (fromUExpr e) * w) exprs scores where (exprs, scores) = unzip exprs_and_score
         
 
--- Returns a given number of samples from the grammar
---sampleFrontier :: MonadRandom m =>
---                  Grammar -> Int -> Type -> m [UExpr]
---sampleFrontier gr size tp =
---  evalStateT (sample' size) 0
---  where sample' 0 = return []
---        sample' n = do
---          maybeSample <- maybeSampleFromGrammar gr ty
---          case maybeSample of
---            Nothing -> sample' n
---            Just s -> liftM (s:) $ sample' (n-1)
-  
--- 
---
--- Takes a grammar and a list of tasks; updates to a new grammar
--- doEMIteration :: (MonadPlus m, MonadRandom m )=>
---                  Double
---                  -> Grammar 
---                  -> [UExpr] 
---                  -> Int 
---                  -> [Task] -> m Grammar 
--- doEMIteration lambda gr primitives size tasks = do
---   let ms = map (sampleExprs size gr . taskType) tasks 
---   xs <- sequence . map sequence $ ms 
---   let frontiers = map (map toUExpr) xs :: [[UExpr]]
---   -- Weight each frontier by likelihood
---   let frontiers' = zipWith (\frontier Task{task=tsk} ->
---                              map (\ expr -> (expr, tsk expr))
---                              frontier)
---                    frontiers tasks
---   -- Compute normalizing constants
---   let zs = map (sum . map snd) frontiers'
---   -- Remove unhit tasks
---   let z_and_frontier = filter ((>0) . fst) $ zip zs frontiers'
---   -- Divide by normalizing constant
---   let frontiers'' = map (\(z, frontier) ->
---                           map (\ (expr, posterior) -> (expr, posterior/z))
---                           frontier)
---                     z_and_frontier
---   return $ optimizeGrammar lambda gr primitives frontiers''
--- 
+
 -- Performs hill climbing upon the given grammar
 optimizeGrammar :: Double -> Grammar -> [UExpr]
                    -> [(UExpr, Double)] -> Grammar
@@ -128,9 +84,7 @@ grammarNeighbors (Grammar appProb lib) primitives pseudocounts obs = oneRemoved 
                 foldl (\cnt expr_wt -> countSubtreesNotInGrammar lib cnt (first fromUExpr expr_wt)) Map.empty obs 
               subtreeSizes = Map.mapWithKey (\uexpr cnt -> cnt * exprSize lib (fromUExpr uexpr)) duplicatedSubtrees
               maximumAdded = 10 -- Consider at most 10 subtrees. Cuts down search.
-              info = take 10 $ sortBy (\a a' -> flipOrdering $ (compare `on` snd) a a') $
-                             Map.toList subtreeSizes
-              bestSubtrees = trace ("INFO: " ++ show info) $ take maximumAdded $
+              bestSubtrees = take maximumAdded $
                              map fst $
                              sortBy (\a a' -> flipOrdering $ (compare `on` snd) a a') $
                              Map.toList subtreeSizes
@@ -162,8 +116,13 @@ exprSize _ _ = 1.0
 relabelFrontier :: Grammar -> [(UExpr, a)] -> [(UExpr, a)]
 relabelFrontier gr es = map go (map (first fromUExpr) es)
     where go (t@Term{}, s) = (toUExpr t, s) 
-          go (a@App{}, s) = if Map.member ua (grExprDistr gr) then (labelExpr ua, s) else (unlabelExpr ua, s)
-                                                                       where ua = toUExpr a
+          go (a@App{eLeft = l, eRight = r}, s) =
+            if Map.member ua (grExprDistr gr)
+            then (labelExpr ua, s)
+            else (unlabelExpr ua { eLeft = relabelFrontier gr l,
+                                   eRight = relabelFrontier gr r },
+                  s)
+            where ua = toUExpr a
 ----------------------------------------------------------------------
 -- Solve a single task
 

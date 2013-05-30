@@ -67,3 +67,10 @@ putSampleExprs n library tp
            return x''
 
                                           
+annotateRequested :: Monad m =>
+                     Type -> -- ^ Requested type of the expression
+                     Expr a -> -- ^ The expression
+                     TypeInference m (Expr a) -- ^ The freshly annotate expression
+-- This is nicer to write using a different implementation of type inference
+--annotateRequested tp e@(Term { eType = tp' }) = do
+annotateRequested = undefined

@@ -50,7 +50,7 @@ toUExpr :: Expr a -> UExpr
 toUExpr expr = UExpr $ unsafeCoerce expr 
 
 fromUExpr :: UExpr -> Expr a
--- | Cvonert back from a hidden Expr object to an expression.
+-- | Convert back from a hidden Expr object to an expression.
 fromUExpr (UExpr any) = unsafeCoerce any
           
 instance Show (Expr a)   where
