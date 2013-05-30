@@ -110,6 +110,7 @@ isLeaf :: Expr a -> Bool
 -- | Returns True if the expression is a leaf, i.e., it is either a terminal or
 -- it is a labelled application
 isLeaf App{eLabel=Just _} = True
+isLeaf Term{} = True
 isLeaf _ = False
 
 isTerm Term{} = True

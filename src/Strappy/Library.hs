@@ -54,7 +54,7 @@ exprLogLikelihood :: Grammar -> Expr a -> Double
 exprLogLikelihood gr expr = let e = toUExpr expr in
     -- | Is this expr a leaf?
     -- trace ("\nExpr: " ++ showExprLong expr ++ "\n ExprDistr: " ++ showExprDistrLong (grExprDistr gr)) $ 
-    if Map.member e (grExprDistr gr)
+    if isLeaf expr 
         then calcLogProb gr expr (fromMaybe (eType expr) (eReqType expr)) +
             log (1 - exp (grApp gr))
         else case expr of 

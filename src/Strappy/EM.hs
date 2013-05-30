@@ -22,20 +22,27 @@ import Debug.Trace
 -- Evaluates to the number of nats required to encode the grammar
 -- Does not include production probabilities TODO: why not?
 descriptionLength :: Grammar -> Double
-descriptionLength gr@(Grammar{grExprDistr=lib}) =
-  Map.foldWithKey (\ k _ s -> s + productionLen (fromUExpr k)) 0.0 lib
+descriptionLength gr@(Grammar{grApp=app, grExprDistr=lib}) =
+  Map.foldWithKey (\ k _ s -> s + productionLenTopLevel (fromUExpr k)) 0.0 lib
   where 
-    -- Unprimed is invoked first, and doesn't look through grammar
-    -- Primed can look through grammar for matching subtrees
-    -- This is done so that we don't pick ourselves out of the grammar
+    productionLenTopLevel :: Expr a -> Double
+    productionLenTopLevel a@App{eLeft=l, eRight=r} 
+        = case Map.lookup (toUExpr a) lib of
+              Nothing -> error "descriptionLength::productionLenTopLevel: labelled application is not in library."
+              (Just ll) -> negate ll + app + productionLen l + productionLen r 
+    productionLenTopLevel t@Term{}
+        = case Map.lookup (toUExpr t) lib of
+              Nothing -> error "descriptionLength::productionLenTopLevel: labelled application is not in library."
+              (Just ll) -> negate ll
     productionLen :: Expr a -> Double
     productionLen a@App{eLeft=l, eRight=r} | isLabeled a = case Map.lookup (toUExpr a) lib of 
                                                Nothing -> error "descriptionLength::productionLen: labelled application is not in library."
                                                (Just ll) -> negate ll
-                          | otherwise   = productionLen l + productionLen r
-    productionLen _ = 0 -- Terminal production w/o application is always
-                        -- in the grammar, so we don't have to count it
-
+                                           | otherwise  = app + productionLen l + productionLen r
+    productionLen t@Term{}
+        = case Map.lookup (toUExpr t) lib of
+              Nothing -> error "descriptionLength::productionLen: labelled application is not in library."
+              (Just ll) -> negate ll
 
 -- Likelihood term in EM
 -- (frontier!!i)!!k   ==   <e_i^k, P(e_i^k | t_i, G^old)>
@@ -94,23 +101,24 @@ grammarLogLikelihood gr exprs_and_score = sum $ zipWith (\e w -> exprLogLikeliho
 -- 
 -- Performs hill climbing upon the given grammar
 optimizeGrammar :: Double -> Grammar -> [UExpr]
+
                    -> [(UExpr, Double)] -> Grammar
 optimizeGrammar lambda gr primitives exprs_and_scores=
   let gr' = estimateGrammar gr 1.0 exprs_and_scores
       -- TODO: BIC or something like that for continuous params
-      initial_score = lambda * (descriptionLength gr' - grammarLogLikelihood gr' exprs_and_scores)
+      initial_score = lambda * (descriptionLength gr') - grammarLogLikelihood gr' exprs_and_scores
       -- This procedure performs hill climbing
       climb :: Grammar -> Double -> Grammar
       climb g g_score =
         let gs = grammarNeighbors g primitives 1.0 exprs_and_scores
             gsScore = [ (g, lambda * descriptionLength g - grammarLogLikelihood g (relabelFrontier g exprs_and_scores)) |
                         g <- gs ]
-            (best_g', best_g'_score) = minimumBy (compare `on` snd) gsScore
+            (best_g', best_g'_score) = trace ("\n\nGrScores: " ++ concat [showGrammar g ++ "\n\n" ++ show d ++ "\n\n"| (g, d) <- gsScore] ) $ minimumBy (compare `on` snd) gsScore
         in
          if best_g'_score < g_score
 
          then climb best_g' best_g'_score
-         else g
+         else trace ("Best scores: " ++ best_g'_score ++ " " ++ g_score ++ "\n\n") g
   in
    climb gr' initial_score
 
