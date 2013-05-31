@@ -2,9 +2,23 @@
 
 \usepackage[ruled,vlined,linesnumbered]{algorithm2e}
 \usepackage{amsmath} 
-
+\usepackage{algpseudocode}
 \usepackage{ amssymb }
 \usepackage{listings}
+\usepackage{syntax}
+
+\newcommand{\funtype}[2]{#1 \rightarrow #2}
+\newcommand{\weightedrule}[3]{[#1 \mapsto #2 \, | \, #3]}
+\newcommand{\typedexp}[2]{#1 : #2} 
+\newcommand{\type}[1]{type(#1)}
+
+\renewcommand{\grammarlabel}[2]{#1 #2}
+\newcommand{\given}{\, | \,}
+
+\DeclareMathOperator*{\argmin}{argmin}
+\DeclareMathOperator*{\argmax}{argmax}
+
+
 \lstloadlanguages{Haskell}
 \lstnewenvironment{code}
     {\lstset{}%
@@ -30,95 +44,77 @@
 
 \newcommand{\learner}{\emph{Learner }}
 \newcommand{\evaluator}{\emph{Evaluator }}
+\section{The problem}
+In all but the simplest problems, problem solving agents suffer from vast
+search spaces. Much of the research in AI, machine learning, and optimization
+focuses on how to overcome this search problem. Local information can help find
+better nearby solutions but make few gaurantees about global optima. Heuristic
+search techniques make use of the structure of the search space and information
+about the utility of partial solutions to hopefully minimize the numeber of
+candidate solutions that need to be explored. Other frameworks attempt to
+approximate the target search space with a more tractable, convex, surrogate
+search space. 
+
+But since the begining of AI, a central idea -- at center stage at times and
+lurking in the shadows at others -- is that as problem solving agents solve
+more problems they should learn to solve problems better.
+
+Here, we present a unified perspective on learning to solve problems, grounding the
+problem as one of Bayesian inference over a grammar that generates candidate
+problem solutions. 
+
+
+Types:
+
+\begin{grammar}
+<$t$> ::= $\tau$, $\sigma$  (type variables)
+  \alt $a$, $b$ (concrete types e.g. real, bool, int, etc.)
+  \alt $\funtype{t'}{t}$ (function type)
+\end{grammar}
+
+
+Expressions: 
+\begin{grammar}
+<$\typedexp{e}{t}$> ::= $\typedexp{c}{t'}$ s.t. $t' = mgu(t,
+\type{c})$ (substitute a terminal tree that unifies with the requesting type)
+  \alt ($\typedexp{e}{\funtype{t'}{t}} \;\;\; \typedexp{e}{t'}$)
+\end{grammar}
 
 
 
-\section{The Learning Problem}
-We want to characterize the general task of the learner, whom we will
-call Linda. At various intervals, Linda is provided with sensory data
-$x$. In reponse, she is given the opportunity of submitting a program
-$\phi$ to an evaluator, henceforth named Dr. Eval. Dr. Eval produces a
-reward $R(\phi, x; \bar{y})$ which he delivers back to Linda, where
-$\bar{y}$ simply denotes any other variables Linda is not aware of
-that influences Dr. Eval's reward. Linda processes the information,
-hopefully learning from her experience with Dr. Eval.
 
-What kinds of scenarios can this learning paradigm (naturally)
-contain? Most basically, Linda might be a simple organism: the data
-$x$ might be local chemical gradients, the program $\phi$ the motor
-program Linda will execute upon sensing $x$, and Dr. Eval might return
-the cumulative effect upon Linda of executing that motor program. Note
-that in this case $\phi$ does not take $x$ as an input. It has no
-input; it is merely a motor program built anew for each sensory datum
-that Linda receives.
+First we will present the model over solutions in which our problem solving
+agent will be doing inference. Second, we will present a hybrid inference and
+problem solving algorithm. 
 
-Of course, we might want Linda, the still humble organism, to be
-capable of learning a higher-level planning procedure. Such a
-procedure would be a program that, given sensory data, would produce a
-motor program. In our framework, this would be represented by letting
-$x$ stand for a list of data (maybe several days worth of discrete
-food finding missions) and letting $\phi$ be the planing
-procedure. Dr. Eval would accordingly take $\phi$, apply it to each
-datum in $x$ and return a cumulative reward of some sort. We will
-defer for now the problem of deferred reward, in which most learners
-do not receive immediate signals about the utility of their actions.
+\section{The model}
+Our goal in this section is to describe a generic probability distribution over
+solutions spaces. Learning to search will be implemented by learning a
+distribution over the solution space which describes the probability of a 
+candidate solution being the solution for a given problem. 
 
-Moving upward somewhat in the hierarchy of intelligent beings,
-consider Linda the electrical engineer. She is requested to construct
-a circuit $\phi$ to a certain specification $x$. Dr. Eval, her
-professor tests the circuit against the requested specification and
-gives her a grade. Or perhaps she doubles as the evaluator. As in the
-case of Linda the simple organism, we can conceive of $\phi$ as the
-general circuit creation procedure rather than the circuit, and create
-a higher-level learning problem.
+Problems vary considerably in their solution spaces. Some are numeric and
+continuous, others are integral and discrete, and still others consist of
+structured data like trees. Some solutions have a finite number of elements, or
+are bounded in some fashion. Others are infinite and unbounded. To present a
+framework for general problem solving, we need a representation of a solution
+space that subsumes all of these possibilities. 
 
-A different perspective on this learning problem is one that is
-removed from this supervised reinforcement paradigm: instead of
-acheiving a reward of some sort, we can imagine that Linda wants to
-find the program $\phi$ which generated the data $x$. Here, Dr. Eval
-is the world or some simulator of the world and a comparator which
-signals to Linda whether she has successfully simulated the data. This
-paradigm corresponds to a deterministic version of the generative
-model learning task common these days in probabilistic machine
-learning and AI.
+As has long been noted by
+Genetic Programming researchers, any solution space can be modeled as a set of
+programs that generate space. As an example, if the solution space to a problem
+is the set of all boolean circuits constructed from some set of gates, then the
+corresponding space of programs is the set of programs that wire up boolean
+circuits from those gates. 
 
-TODO: concept learning
-TODO: physicist (or scientist in general) 
+How does this realization help us? It means that if we can formulate a single
+model that places a distribution over solution distributions by describing a
+distribution over program generating processes.
 
-
-\section{A Universal Basis for Computation}
-Our goal is to explain the minimal conditions necessary for concept
-learning, and to do so we posit a minimal model of
-computation. Various universal models of computation have been
-proposed; the most famous is the Turing machine. Though the Turing
-machine is an intuitive abstract machine, and though its construction
-corresponds to various parts of real-world computing machines,
-formally simpler models of computation have been proposed. Most
-importantly is the Lambda calculus, proposed by Church, and the basis
-of modern functional programming languages. The Lambda calculus is a
-rewrite system that is provably equally powerful to Turing
-machines. Despite its popularity, the implementation of the Lambda
-calculus is complicated by the presence of variables bound by the
-abstracting $\lambda$s. The necessary relationships between variables
-and their binding $\lambda$s means that the syntax of the Lambda
-calculus is not entirely modular. That is, if we represent an
-expression in the lambda calculus as a tree, then every subtree of this
-expression tree is not itself a valid expression tree in the langauge. 
-
-An alternative to the $\lambda$ calculus we use the variable-free
-model of computation known as Combinatory Logic (CL). CL was
-introduced by Shonfinkel in order to avoid of the mathematical
-complexities of $\lambda$-calculus. The CL has a simpler syntax than
-$lambda$-calculus: a combinator $C$ is merely the application of two
-other combinators $ C = A B$. The semantics of the language is defined
-by the primitive combinators chosen for the particular instance of
-$CL$. It is well known that a universal basis of two primitive
-combinators exists, the $SK$ basis. However, expressions in CL are
-much more readible if we extend this primitive basis with a few other
-high order combinators. Namely, we include identity $I$, and two
-composition combinators $B$ and $C$.
-
-\section{History and related literature}
+We will first describe a simplified version of the hierarchical model over programs that we will be using. We start with a base grammar $\mathcal{G}$ of the form 
+\section{The model}
+The elements of any solution space can be represented as programs. u
+ \section{History and related literature}
 Angluin 1988~\cite{angluin1988queries}: investigates the complexity of
 learning concepts that are subsets of a hypothesis space via a number
 of primitive queries such as membership, equivalence, subset, etc. \\
@@ -160,13 +156,6 @@ parcticular, one can always susbtitute a module with another of the
 same type, in the vent of a breakdown, or for the purpose of
 optimisation.
 \end{quote}
-
-\section{Domains for concept learning}
-
-\section{Coding Theory}
-Consider a distribution $P(\cdot)$ over strings in some set $X \in
-\{0, 1\}^*$. Our goal is to find a code $D$ that minimizes the
-expected length of a sample from $X$.
 
 \section{Learnable Curriculum}
 We would like to formally characterize when a program can be learned
@@ -220,97 +209,6 @@ the application of the function to an argument returns a function
 whose argument is the next argument in the original series of
 arguments.)
 
-
-
-\section{Intuitive Psychology}
-How can we express the knowledge and relationships of intuitive
-psychology as a set of expressions in combinatory logic? To simplify
-this task, we will attempt to express these relationships in Haskell,
-a sugared and polymorphically typed lambda calculus, knowing that any
-expression in this lambda calculus can be systematically translated
-into combinatory logic. Most importantly, any modularization and
-compositional structure present in the Haskell code will remain
-present in its CL translation.
-
-Let's imagine the following situation. You observe several agents
-(say, Josh, Max, and Chris) in various scenarios in which they choose,
-from among the various options, one of three bars (say, a Zone bar, a
-Luna bar and a dark chocolate bar). We will try to represent our
-knowledge about these agents, their propensities, and the properties
-of these bars in Haskell, as a demonstration that such a
-representation is both possible in this langauge, and can be somewhat
-natural.
-
-Let's first define the primitive types and combinators at our disposal:
-
-
-\begin{lstlisting}[mathescape]
--- | Primitive Types
--------------------------
-Int -- integers 1, 2, etc.
-Bool -- {True, False}
-Person $\triangleq$ Int
-Object $\triangleq$ Int
-Scenario  $\triangleq$ (Person, [Object])
-
--- | Primitive Combinators
-------------------------
--- List Combinators:
-map :: (a -> b) -> [b] -> [a]
-foldl1 :: (a -> a -> a) -> [a] -> a
-elem :: a -> [a] -> Bool
-head :: [a] -> a
-tail :: [a] -> [a]
-case :: [(Bool, a)] -- a set of boolean tests and the result if True
-        -> a -- the default result (else clause) 
-        -> a
-(:) :: a -> [a] -> [a] -- cons
-(++) :: [a] -> [a] -> [a] -- concatenate
-
--- Boolean Combinators
-If _ Then _ Else :: Bool -> a -> a
-And :: Bool -> Bool -> Bool
-Or ::  Bool -> Bool -> Bool
-Not ::  Bool -> Bool -> Bool
-
--- Arithmetic Combinators
-(>) :: Int -> Int -> Bool
-(<) :: Int -> Int -> Bool
-(==) :: Int -> Int -> Bool
-(+) ::  Int -> Int -> Bool
-(-) :: Int -> Int -> Bool
-1, 2, $\dots$, 10 :: Int -- | the integers, 1 through 10
-
--- Givens
-------------
-
-Josh :: Person -- | this is just shorthand, i.e., Josh would be mapped
-                  to some integer, say, 1, Max to 2, etc..
-Max :: Person
-Chris :: Person
-
-ZoneBar :: Object
-LunaBar :: Object
-ChocolateBar :: Object
-
--- Learned representation
--------------------------
-choose' :: Scenario -> Object
-choose' (person, objs) = max' (map (util' person) objs)
-
-max' :: [Int] -> Int
-max = foldl1 (>)
-
-util' = Person -> Object -> Int
-util' person obj = case (utilityCases' person obj) 0 -- | 0 is the default utility in this case
-
-utilityCases' :: [Person -> Object -> (Bool, Int)]
-utilityCases' = \p -> \o -> (
-                     \p -> \o -> (isHealthyPerson p, healthyPersonCalculus o)
-
-
-
-\end{lstlisting}
 
 
 \section{Algorithm 0}
@@ -487,3 +385,4 @@ for example, would be assigned a low likelihood.
 
 
 \end{document}
+
