@@ -19,27 +19,27 @@ import Strappy.Type
 data Expr a where
     Term :: {eName  :: String, 
              eType  :: Type, 
-             eCurrType :: Maybe Type, 
              eReqType :: Maybe Type, 
              eThing :: a} -> Expr a
     App  :: {eLeft  :: (Expr (b -> a)),
              eRight :: (Expr b),
              eType  :: Type,
-             eCurrType :: Maybe Type, 
              eReqType :: Maybe Type, 
              eLabel :: Maybe String}         ->  Expr a 
              
 -- | smart constructor for terms
-mkTerm name tp thing = Term name tp Nothing Nothing thing
+mkTerm name tp thing = Term { eName = name,
+                              eType = tp, 
+                              eReqType = Nothing,
+                              eThing = thing }
 
 -- | smart constructor for applications
-a <> b = App a b tp Nothing Nothing Nothing where tp = runIdentity . runTI $ typeOfApp a b
-
--- | get the current type of the expr, defaulting to base type
-currentType :: Expr a -> Type
-currentType expr = case eCurrType expr of
-                       Nothing -> eType expr
-                       Just tp -> tp
+a <> b = App { eLeft = a, 
+               eRight = b, 
+               eType = tp, 
+               eReqType = Nothing, 
+               eLabel = Nothing }
+         where tp = runIdentity . runTI $ typeOfApp a b
 
 -- | Hide expression type in an Any type.  
 data UExpr = UExpr Any
@@ -58,10 +58,10 @@ instance Show (Expr a)   where
     show App{eLeft=el, eRight=er} = "(" ++ show el ++ " " ++  show er ++ ")"
 
 showExprLong :: Expr a -> String
-showExprLong Term{eName=n, eType=t, eCurrType=ct, eReqType=rt} = printf "%7s, type: %50s, currType: %50s, reqType: %50s" 
-                                                n (show t) (show ct) (show rt)  
-showExprLong App{eLeft=l, eRight=r, eType=t, eCurrType=ct,  eReqType=rt, eLabel=lb}
-    = printf ("app, type: %7s, currType: %50s, reqType: %7s\n--"++showExprLong l ++ "\n--" ++ showExprLong r ++ "\n")  (show t) (show ct)  (show rt)
+showExprLong Term{eName=n, eType=t, eReqType=rt} = printf "%7s, type: %50s, reqType: %50s" 
+                                                n (show t) (show rt)  
+showExprLong App{eLeft=l, eRight=r, eType=t, eReqType=rt, eLabel=lb}
+    = printf ("app, type: %7s, reqType: %7s\n--"++showExprLong l ++ "\n--" ++ showExprLong r ++ "\n")  (show t)  (show rt)
 
 showUExprLong = showExprLong . fromUExpr
 
@@ -93,7 +93,7 @@ intToExpr d = showableToExpr d tInt
 typeOfApp :: Monad m => Expr a -> Expr b -> TypeInference m Type
 typeOfApp e_left e_right 
     = do t <- mkTVar
-         unify (currentType e_left) (currentType e_right ->- t)
+         unify (eType e_left) (eType e_right ->- t)
          chaseVar t
 
 eval :: Expr a -> a
@@ -142,9 +142,9 @@ cDouble2Expr i = mkTerm (show i) tDouble i
 -- Hashable instance ------------------- 
 ----------------------------------------
 instance Hashable (Expr a) where
-    hashWithSalt a (Term name tp _  _ thing) = hash a `hashWithSalt` hash name 
+    hashWithSalt a (Term name tp _ thing) = hash a `hashWithSalt` hash name 
                                                   
-    hashWithSalt a (App left right tp _ reqType name) =  hash a `hashWithSalt` hash left `hashWithSalt` 
+    hashWithSalt a (App left right tp reqType name) =  hash a `hashWithSalt` hash left `hashWithSalt` 
                                                          hash right `hashWithSalt` hash name 
 
 ----------------------------------------
