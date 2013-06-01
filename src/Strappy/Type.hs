@@ -3,63 +3,16 @@
 {-# Language GeneralizedNewtypeDeriving, BangPatterns,
   DeriveFunctor, ScopedTypeVariables #-}
 
--- | This module defines a Hindley-Milner type system. It is based on
--- Mark P. Jone's paper "Typing Haskell in Haskell"
--- <http://web.cecs.pdx.edu/~mpj/thih/>.
+-- | This is a different approach to type inference.
+-- The type inference monad maintains a union-find data structure
+-- This allows for transparent handling of the substitution
 
-module Strappy.Type (
-                    -- * Types
-                    Kind(..)
-                    , Type(..)
-                    , TyVar(..)
-                    , TyCon(..)
-                    , Subst(..)
-                    , TypeInference
-                    , runTI
-                    , Typeable                        
-                    -- * Functions
-                    , (->-)
-                    , kind
-                    , freshInst
-                    , newTVar
-                    , mkTVar
-                    , maxTVar
-                    , mgu
-                    , apply
-                    , merge
-                    , match
-                    , eqModTyVars
-                    , fromType
-                    , toType
-                    , tv
-                    , isTAp
-                    , isTVar
-                    , enumId
-                    , readId
-                    , nullSubst
-                    , (-->)
-                    , typeOf
-                    
-                           
-                    -- * Combinator Types
-                    , tChar 
-                    , tInt
-                    , tDouble
-                    , tBool 
-                    , tArrow
-                    , tList 
-                    , tMaybe
-                    , tPair 
-                    , tTriple
-                    , tQuad 
-                    , tQuint
+module Strappy.Type where
 
-                    ) where
 
 --  standard library imports
-import qualified Data.Set as Set
-import Data.List (intersect, union, nub, foldl')
-import Data.Maybe (fromJust)
+import qualified Data.Map as M
+import Data.List (nub)
 import Data.Hashable (Hashable, hash, hashWithSalt) 
 
 import Control.Monad (foldM)
@@ -68,259 +21,176 @@ import Control.Monad.Trans.Class
 import Control.Monad.Error
 import Control.Monad.State
 
--- type inference monad
-type TypeInference = StateT Int
-runTI :: (Monad m) => TypeInference m a -> m (a, Int)
-runTI m = runStateT m 0
+type Id = Int
+data Type = TVar Int
+          | TCon String [Type]
+            deriving(Ord, Eq, Show)
+infixr 6 ->-
+t1 ->- t2 = TCon "->" [t1,t2]
 
---  define a type scheme
-type Id = String
-enumId :: Int -> Id
-enumId n = "v" ++ show n
-readId :: String -> Int
-readId ('v':xs) = read xs
+-- | type inference monad
+type TypeInference = StateT (Int, -- ^ next type var
+                             M.Map Int Type) -- ^ Union-Find substitution
+runTI :: Monad m => TypeInference m a -> m a
+runTI = runTIVar 0
 
-data Kind = Star | Kfun Kind Kind
-          deriving (Eq, Ord)
-
-instance Show Kind where
-    show Star = "*"
-    show (Kfun k k') = "(" ++ show k ++ " -> " ++ show k' ++ ")" 
-
-data Type = TVar TyVar
-          | TCon TyCon
-          | TAp {tLeft :: Type, tRight ::  Type}
-          deriving (Eq, Ord)
-
-data TyVar = TyVar {tyVarId :: Id, tyVarKind :: Kind}
-             deriving (Eq, Ord)
-
-instance Show TyVar where
-    show (TyVar i k) = i
-
-data TyCon = TyCon {tyConId :: Id, tyConKind :: Kind }
-           deriving (Eq, Ord)
-instance Show TyCon where
-    show (TyCon i k) = i
+runTIVar :: Monad m => Int -> TypeInference m a -> m a
+runTIVar nextTVar m =
+  evalStateT m (nextTVar, M.empty)
 
 
-class HasKind t where
-    kind :: t -> Kind
-instance HasKind TyVar where
-    kind (TyVar v k) = k
-instance HasKind TyCon where
-    kind (TyCon v k ) = k
-instance HasKind Type where
-    kind (TVar u) = kind u
-    kind (TCon tc) = kind tc
-    kind (TAp t _) = case (kind t) of 
-                       (Kfun _ k) -> k
+-- Create an unbound type variable
+mkTVar :: Monad m => TypeInference m Type
+mkTVar = do
+  (n, s) <- get
+  put (n+1, s)
+  return $ TVar n
+  
+-- Binds a type variable to a type
+-- Does not check to see if the variable is not already bound
+bindTVar :: Monad m => Int -> Type -> TypeInference m ()
+bindTVar var ty = do
+  (n, s) <- get
+  put (n, M.insert var ty s)
 
-infixr 4 ->-
-(->-) :: Type -> Type -> Type
--- | Function application.
---
--- >>> tInt ->- tInt
--- (Int -> Int)  
-a ->- b = TAp (TAp tArrow a) b
+-- Applies the current substitution to the type,
+-- "chasing" bound type variables.
+-- Performs path compression optimization.
+-- The smaller-into-larger optimization does not apply.
+chaseVar :: Monad m => Type -> TypeInference m Type
+chaseVar t@(TVar v) = do
+  (n, s) <- get
+  case M.lookup v s of
+    Just t' -> do t'' <- chaseVar t'
+                  (n', s') <- get
+                  put (n', M.insert v t'' s')
+                  return t''
+    Nothing -> return t
+chaseVar (TCon k ts) =
+  mapM chaseVar ts >>= return . TCon k
+
+-- Unification
+-- Primed unify is for types that have already had the substitution applied
+unify t1 t2 = do
+  t1' <- chaseVar t1
+  t2' <- chaseVar t2
+  unify' t1' t2'
+unify' (TVar v) (TVar v') | v == v' = return ()
+unify' (TVar v) t | occurs v t = lift $ fail "Occurs check"
+unify' (TVar v) t = bindTVar v t
+unify' t (TVar v) | occurs v t = lift $ fail "Occurs check"
+unify' t (TVar v) = bindTVar v t
+unify' (TCon k []) (TCon k' []) | k == k' = return ()
+unify' (TCon k ts) (TCon k' ts') | k == k' = do
+  zipWithM_ unify ts ts'
+unify' _ _ = lift $ fail "Could not unify"
+
+-- Occurs check: does the variable occur in the type?
+occurs :: Int -> Type -> Bool
+occurs v (TVar v') = v == v'
+occurs v (TCon _ ts) = any (occurs v) ts
+
+
+-- Checks to see if two types can unify, using current substitution
+canUnifyM :: Monad m => Type -> Type -> TypeInference m Bool
+canUnifyM t1 t2 = do
+  state <- get
+  case evalStateT (unify t1 t2) state of
+    Nothing -> return False
+    Just () -> return True
+  
+-- Non-monadic wrapper
+canUnify :: Type -> Type -> Bool
+canUnify t1 t2 =
+  -- Ensure no clashes between type variables
+  let t1' = normalizeTVars t1
+      t2' = normalizeTVars t2
+      t1Max = largestTVar t1'
+      t2Max = largestTVar t2'
+      t2'' = applyTVarSub (map (\v->(v,TVar (v+t1Max+10))) [0..t2Max]) t2'
+  in case runTIVar (t1Max+t2Max+10) (canUnifyM t1' t2'') of
+    Nothing -> False
+    Just x -> x
+
+-- Ground a universally quantified type by instantiating new type vars
+instantiateType :: Monad m => 
+                   Type -> TypeInference m Type
+instantiateType ty = do
+  let tvars = nub $ getTVars ty
+  newTVars <- mapM (const mkTVar) tvars
+  return $ applyTVarSub (zip tvars newTVars) ty
+  
+getTVars :: Type -> [Int]
+getTVars (TVar v) = [v]
+getTVars (TCon k ts) = concatMap getTVars ts
+
+applyTVarSub :: [(Int,Type)] -> Type -> Type
+applyTVarSub sub (TVar v) =
+  case lookup v sub of
+    Nothing -> TVar v
+    Just v' -> v'
+applyTVarSub sub (TCon k ts) =
+  TCon k $ map (applyTVarSub sub) ts
+
+
+-- Changes types like 57 -> 8 -> 57 into 0 -> 1 -> 0
+normalizeTVars :: Type -> Type
+normalizeTVars = snd . norm []
+  where norm bs (TVar v) =
+          case lookup v bs of
+            Nothing -> ((v,length bs):bs, TVar (length bs))
+            Just v' -> (bs, TVar v')
+        norm bs t@(TCon k []) = (bs, t)
+        norm bs (TCon k (t:ts)) =
+          let (bs', t') = norm bs t
+              (bs'', (TCon _ ts')) = norm bs' (TCon k ts)
+          in (bs'', TCon k (t':ts'))
+
+-- Gets largest type variable, returns -1 if no tvars
+largestTVar :: Type -> Int
+largestTVar (TVar v) = v
+largestTVar (TCon _ ts) = maximum $ (-1) : map largestTVar ts
 
 fromType :: Type -> Type
 -- | Get the source type of a function type (if it is not a function
 -- type then error).
-fromType (TAp (TAp tArrow a) b) = a
+fromType (TCon "->" [a,_]) = a
 fromType t = error $ "Cannot apply fromType to: " ++ show t
 
 toType :: Type -> Type
 -- | Get the target type of a function type (if it is not a function
 -- type then error).
-toType (TAp (TAp tArrow a) b) = b
+toType (TCon "->" [_,a]) = a
+toType t = error $ "Cannot apply toType to: " ++ show t
 
-mkTVar :: Int -> Type 
--- | Convenience function that returns a singleton type consisting of
--- a type variable with specified integer id.
---
--- >>> mkTVar 5
--- v5
-mkTVar i = TVar (TyVar (enumId i) Star)
 
-isTAp :: Type -> Bool
--- | Returns true if type is a function type. 
-isTAp (TAp t1 t2) = True
-isTAp _ = False
 
 isTVar :: Type -> Bool
 -- | Returns true if type is a singleton type variable.
 isTVar (TVar _) = True
 isTVar _ = False
-
-instance Show Type where
-    show (TVar u) = show u
-    show (TCon tc) = show tc
-    show (TAp t@(TAp t1 t2) t3) | t1 == tArrow = "(" ++ show t2 ++ " -> " ++ show t3 ++ ")"
-    show (TAp a b) = "(" ++ show a ++ " " ++ show b ++ ")"
-
-eqModTyVars :: Type -- ^ t1
-            -> Type -- ^ t2
-            -> Bool
--- | Type equality modulo type variables. Returns true if the mgu
--- susbtitution from t1 to t2 is just a renaming of type variables.
-eqModTyVars t1 t2 = case mgu t1 t2 of
-                      Just s -> all (isTVar . snd ) s
-                      Nothing -> False
-
-
--- | Substitutions
-type Subst = [ (TyVar, Type) ] -- ^ list of type variable - type
-                                -- associations
-nullSubst :: Subst
--- | The empty substitution. 
-nullSubst = []
-
-(-->) :: TyVar -- ^ u, a type variable
-      -> Type  -- ^ t, a type
-      -> Subst
--- | Returns the substitution of u for t.
-u --> t = [(u, t)]
-
-class Types t where
-    apply :: Subst -> t -> t
-    tv ::  t -> [TyVar]
-
-instance Types Type where
-    --  apply a substitution to a type
-    {-# INLINE apply #-}
-    apply s (TVar u) = case lookup u s of
-                         Just t -> t
-                         Nothing -> TVar u
-    apply s (TAp l r) = TAp (apply s l) (apply s r)
-    apply s t = t
-
-    -- extract all type variables from a type
-    tv (TVar u) = [u]
-    tv (TAp l r) = tv l `union` tv r
-    tv _ = []
-
-instance Types a => Types [a] where
-    apply s = map (apply s)
-    tv  = nub . concat . map tv
-
--- combine two substitutions into one
-infixr 4 @@
-(@@) :: Subst -> Subst -> Subst
-{-# INLINE (@@) #-}
-s1 @@ s2 = [(u, apply s1 t) | (u, t) <- s2] ++ s1
-
--- merge two substitutions ensuring that both agree on all variables
-merge :: Subst -> Subst -> Maybe Subst
-merge s1 s2 = if agree then Just s else Nothing
-    where dom s = map fst s
-          s = s1 ++ s2
-          agree = all ( \v -> apply s1 (TVar v) == 
-                             apply s2 (TVar v))
-                  (dom s1 `intersect` dom s2)
-
--- most general unifier 
-mgu :: Type -> Type -> Maybe Subst
-mgu (TAp l r) (TAp l' r') = do s1 <- mgu l l'
-                               s2 <- mgu (apply s1 r)
-                                     (apply s1 r')
-                               Just (s2 @@ s1)
-mgu (TVar u) t = varBind u t
-mgu t (TVar u) = varBind u t
-mgu (TCon tc1) (TCon tc2) | tc1 == tc2 = Just nullSubst
-mgu t s = Nothing
-
--- bind variable to type, performing occurs check
-varBind :: TyVar -> Type -> Maybe Subst
-varBind u t | t == TVar u  = Just nullSubst
-            | u `elem` tv t = Nothing
-            | kind u /= kind t = Nothing
-            | otherwise = Just $ u --> t
-
--- matching : given types t1 t2, find substitution s s.t. apply s t1 =
--- t2
-match' :: Type -> Type -> Type -> Type -> Maybe Subst
-match' l r l' r' = do s1 <- match l l'
-                      s2 <- match r r'
-                      merge s1 s2
-
-match :: Type -> Type -> Maybe Subst
-match (TAp l r) (TAp l' r') = do sl <- match l l'
-                                 sr <- match r r'
-                                 merge sl sr
-match (TVar u) t 
-    | kind u  == kind t   = Just $ u --> t
-match (TCon tc1) (TCon tc2) | tc1 == tc2 = Just nullSubst
-match t1 t2 = Nothing
-
-makeNewTVar :: [Type] -> TyVar
-makeNewTVar tps = TyVar (enumId ts_next) Star
-    where ts = concat (map tv tps)
-          ts_next = case map (\(TyVar s k) -> readId s) ts of
-                      [] -> 0
-                      xs -> 1 + maximum xs
-
-newTVar :: Monad m => Kind -> TypeInference m Type
-newTVar k = do i <- get
-               put (i+1)
-               return $ mkTVar i
-
-maxTVar :: Type -> Int
-maxTVar (TVar (TyVar v _)) = readId v
-maxTVar (TAp t t') = (maxTVar t) `max` (maxTVar t')
-maxTVar _ = 0
-
-freshInst :: Monad m => Type -> TypeInference m Type
--- | Return a type where each type variable is replaced with a new,
--- unbound, type variable.
-freshInst t = do let tvs = tv t 
-                 ts <- mapM newTVar (map kind tvs)
-                 let lk = zip (map TVar tvs) ts
-                 return $ inst t lk
-    where inst t@(TVar _) lk = fromJust (lookup t lk)
-          inst (TAp t1 t2) lk= TAp (inst t1 lk) (inst t2 lk)
-          inst t _ = t
-
-typeLeftDepth :: Type -> Int 
--- | Returns the number of possible applications onto an expression of
--- this type.
-typeLeftDepth (TAp t1 t2) = typeLeftDepth t2 + 1
-typeLeftDepth _ = 1
-
-extendTypeOnLeft :: Monad m => Type -> TypeInference m Type
--- | Returns a function type whose target is the input type and whose
--- source is a new type variable.
-extendTypeOnLeft t = do tnew <- newTVar Star
-                        return (tnew ->- t)
-
-extendTypeOnLeftN :: Monad m => Type -> Int -> TypeInference m Type
--- | Apply extendTypeOnLeft N times. 
-extendTypeOnLeftN t 0 = return $ t
-extendTypeOnLeftN t n = do t' <- extendTypeOnLeft t
-                           extendTypeOnLeftN t' (n-1)
-
-
-instance Hashable Type where
+-- TODO: Not sure what to do with this. -Kevin
+{-instance Hashable Type where
     hashWithSalt a (TVar v) = hash a `hashWithSalt` hash "TyVar" `hashWithSalt`
-                         hash (tyVarId v) 
+                         hash v
     hashWithSalt a (TCon v) = hash a `hashWithSalt` hash "TyCon" `hashWithSalt`
                          hash (tyConId v) 
-    hashWithSalt a (TAp t1 t2) = hash a `hashWithSalt` hash "TAp" `hashWithSalt` hash t1 `hashWithSalt` hash t2
+-}
 
                          
 
 -- | Useful types. 
-tChar = TCon (TyCon "Char" Star)
-tInt = TCon (TyCon "Int" Star)
-tDouble = TCon (TyCon "Double" Star)
-tBool = TCon (TyCon "Bool" Star)
-tArrow = TCon (TyCon "(->)" (Kfun Star (Kfun Star Star)))
-tList = TCon $ TyCon "[]" (Kfun Star Star)
-tMaybe = TCon $ TyCon "Maybe" (Kfun Star Star)                                         
-tPair = TCon $ TyCon "(,)" (Kfun Star (Kfun Star Star))
-tTriple = TCon $ TyCon "(,,)" (Kfun Star (Kfun Star (Kfun Star Star)))
-tQuad = TCon $ TyCon "(,,,)" (Kfun Star Star)
-tQuint = TCon $ TyCon "(,,,,)" (Kfun Star Star)
+tGnd g = TCon g []
+tChar = tGnd "Char"
+tInt = tGnd "Int"
+tDouble = tGnd "Double"
+tBool = tGnd "Bool"
+tList t = TCon "[]" [t]
+tMaybe t = TCon "Maybe" [t]
+tPair a b = TCon "(,)" [a,b]
+tTriple a b c = TCon "(,,)" [a,b,c]
+tQuad a b c d = TCon "(,,,)" [a,b,c,d]
+tQuint a b c d e = TCon "(,,,,)" [a,b,c,d,e]
 
 ----------------------------------------                    
 -- Typeable ----------------------------
@@ -337,11 +207,9 @@ instance Typeable Double where
 instance Typeable Bool where
 	typeOf v = tBool
 instance (Typeable a, Typeable b) =>  Typeable (a -> b)  where
-	typeOf v = TAp (TAp tArrow (typeOf (undefined :: a))) 
-					(typeOf (undefined :: b)) 
+	typeOf v = (typeOf (undefined :: a)) ->- (typeOf (undefined :: b)) 
 instance (Typeable a) => Typeable [a] where
-	typeOf v = TAp tList (typeOf $ (undefined :: a))
+	typeOf v = tList (typeOf $ (undefined :: a))
 instance (Typeable a, Typeable b) => Typeable (a, b) where
-	typeOf v = TAp (TAp tPair  (typeOf (undefined :: a))) 
-					(typeOf (undefined :: b)) 
+	typeOf v = tPair (typeOf (undefined :: a)) (typeOf (undefined :: b))
 

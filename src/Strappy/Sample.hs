@@ -20,14 +20,10 @@ import Debug.Trace
 -- variable counter in the state of the TypeInference monad is greater
 -- that that counter.
 initializeTI :: Monad m => ExprDistr -> TypeInference m ()
-initializeTI exprDistr = do put (i + 1)
-                            return ()
-    where go n (uexpr:rest) = let tvs = getTVars uexpr
-                                  getTVars expr = tv . eType $ fromUExpr expr
-                                  m = maximum $ map (readId . tyVarId) tvs 
-                             in if null tvs then 0 else go (max n m) rest
-          go n [] = n
-          i = go 0 $ map fst (Map.toList exprDistr)
+initializeTI exprDistr = modify $ \(_, s) -> (i, s)
+    where i = maximum $
+              concatMap (getTVars . eType . fromUExpr . fst) $
+              Map.toList exprDistr
           
              
 ----------------------------------------------------------------------
@@ -37,40 +33,65 @@ sampleExpr ::
   (MonadPlus m, MonadRandom m) => Grammar -> Type -> m (Expr a)
 -- | Samples a combinator of type t from a stochastic grammar G. 
 sampleExpr gr@Grammar{grApp=p, grExprDistr=exprDistr} tp 
-    = liftM fst $ runTI $ do initializeTI exprDistr
-                             tp' <- freshInst tp
-                             let out = sample tp'
-                             liftM fromUExpr  out
+    = runTI $ do initializeTI exprDistr
+                 tp' <- instantiateType tp
+                 expr <- sample tp'
+                 return $ fromUExpr expr
     where 
       sample tp = do
-            shouldExpand <- flip (exp p)
+            shouldExpand <- lift $ flip (exp p)
             case shouldExpand of
-              True -> do t <- newTVar Star
+              True -> do t <- mkTVar
                          e_left  <- sample (t ->- tp)
-                         e_right <- sample (fromType (currentType (fromUExpr e_left)))
-                         let e = fromUExpr e_left <> fromUExpr e_right 
-                         return $ toUExpr $ e{eReqType=Just tp}
-              False -> do cs <- filterExprsByType (Map.toList exprDistr) tp
-                          guard (not . null $ cs) 
-                          e <- liftM fromUExpr $ sampleMultinomial $ map (second exp) $   
+                         t' <- chaseVar t
+                         e_right <- sample t'
+                         tp' <- chaseVar tp
+                         return $ toUExpr $
+                           App { eReqType = Just tp,
+                                 eType = tp',
+                                 eLeft = fromUExpr e_left,
+                                 eRight = fromUExpr e_right, 
+                                 eLabel = Nothing }
+              False -> do let cs = filter (\(e, _) -> canUnify tp (eType $ fromUExpr e)) $
+                                   Map.toList exprDistr
+                          lift $ guard (not . null $ cs)
+                          e <- liftM fromUExpr $ lift $ sampleMultinomial $ map (second exp) $   
                                              normalizeDist cs
-                          return $ toUExpr $ e{eReqType=Just tp}
+                          eTp <- instantiateType (eType e)
+                          unify eTp tp
+                          e' <- annotateRequested tp e
+                          return $ toUExpr e'
+
+
+
 
 sampleExprs n library tp = replicate n $ sampleExpr library tp
 
-putSampleExprs n library tp  
+{-putSampleExprs n library tp  
     = sequence 
       $ do x <- sampleExprs n library tp
            let x' = do z <- x
                        return $ show  z
            let x'' = catch x' (const (return "error") :: IOException -> IO String)
-           return x''
+           return x''-}
 
                                           
 annotateRequested :: Monad m =>
                      Type -> -- ^ Requested type of the expression
                      Expr a -> -- ^ The expression
-                     TypeInference m (Expr a) -- ^ The freshly annotate expression
--- This is nicer to write using a different implementation of type inference
---annotateRequested tp e@(Term { eType = tp' }) = do
-annotateRequested = undefined
+                     TypeInference m (Expr a) -- ^ The freshly annotated expression
+annotateRequested tp (App { eLeft = l, eRight = r, eType = eTp }) = do
+  t <- mkTVar
+  l' <- annotateRequested (t ->- tp) l
+  t' <- chaseVar t
+  r' <- annotateRequested t' r
+  let e = App { eLeft  = fromUExpr (toUExpr l'),
+                eRight = fromUExpr (toUExpr r'),
+                eType = eTp,
+                eReqType = Just tp, 
+                eLabel = Nothing }
+  return e
+annotateRequested tp e@(Term { eType = eTp }) = do
+  eTp' <- instantiateType eTp
+  unify tp eTp'
+  return $ e { eReqType = Just tp }

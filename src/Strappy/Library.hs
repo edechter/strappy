@@ -68,7 +68,7 @@ exprLogLikelihood gr expr = let e = toUExpr expr in
 calcLogProb :: Grammar -> Expr a -> Type -> Double
 calcLogProb gr@Grammar{grExprDistr=distr} expr tp 
     | isTerm expr || isLabeled expr
-    = let m = fst . runIdentity . runTI $ filterExprsByType (Map.toList distr) tp
+    = let m = filter (\(e, _) -> canUnify (eType $ fromUExpr e) tp) $ Map.toList distr
           logp_e = distr Map.! toUExpr expr
           logp_e_tot = logsumexp (map snd m) 
       in  logp_e - logp_e_tot
@@ -91,7 +91,7 @@ estimateGrammar Grammar{grExprDistr=distr, grApp = app} pseudocounts obs
           go (Counts ac tc uc pc) expr@Term{eReqType=(Just tp)} weight =
             let tc' = tc + weight
                 uc' = Map.adjust (+ weight) (toUExpr expr) uc
-                otherTerms = map fst . fst . runIdentity . runTI $ filterExprsByType es tp
+                otherTerms = map fst $ filter (\(e,_) -> canUnify (eType $ fromUExpr e) tp) es
                 pc' = List.foldl' (Prelude.flip $ Map.adjust (+ weight)) pc otherTerms 
             in Counts ac tc' uc' pc'
           go counts@(Counts ac tc uc pc) expr@App{eRight=r, eLeft=l} weight = let countsLeft = go counts l weight
@@ -109,10 +109,10 @@ mkAny :: a -> Any
 mkAny = unsafeCoerce  
 
 --  Some basic library entires. 
-t = mkTVar 0                  
-t1 = mkTVar 1               
-t2 = mkTVar 2                  
-t3 = mkTVar 3                  
+t = TVar 0                  
+t1 = TVar 1               
+t2 = TVar 2                  
+t3 = TVar 3                  
 
 -- | Basic combinators
 cI = mkTerm "I" (t ->- t)   id
@@ -142,14 +142,14 @@ cMod = mkTerm "-" (tInt ->- tInt ->- tInt)    (-)
 cRem :: Expr (Int -> Int -> Int)
 cRem = mkTerm "rem" (tInt ->- tInt ->- tInt)   mod
 -- | Lists
-cCons = mkTerm ":"  (t ->- TAp tList t ->- TAp tList t)    (:)
-cAppend = mkTerm "++" (TAp tList t ->- TAp tList t ->- TAp tList t)   (++)
-cHead = mkTerm "head" (TAp tList t ->- t)   head
-cMap = mkTerm "map" ((t ->- t1) ->- TAp tList t ->- TAp tList t1)   map
-cEmpty = mkTerm "[]" (TAp tList t)   []
-cSingle = mkTerm "single" (t ->- TAp tList t)   $ replicate 1 
-cRep = mkTerm "rep" (tInt ->- t ->- TAp tList t)   replicate 
-cFoldl = mkTerm "foldl" ((t ->- t1 ->- t) ->- t ->- TAp tList t1 ->- t)    List.foldl'
+cCons = mkTerm ":"  (t ->- tList t ->- tList t)    (:)
+cAppend = mkTerm "++" (tList t ->- tList t ->- tList t)   (++)
+cHead = mkTerm "head" (tList t ->- t)   head
+cMap = mkTerm "map" ((t ->- t1) ->- tList t ->- tList t1)   map
+cEmpty = mkTerm "[]" (tList t)   []
+cSingle = mkTerm "single" (t ->- tList t)   $ replicate 1 
+cRep = mkTerm "rep" (tInt ->- t ->- tList t)   replicate 
+cFoldl = mkTerm "foldl" ((t ->- t1 ->- t) ->- t ->- tList t1 ->- t)    List.foldl'
 cInts =  [cInt2Expr i | i <- [1..10]]
 cDoubles =  [cDouble2Expr i | i <- [1..10]]
 

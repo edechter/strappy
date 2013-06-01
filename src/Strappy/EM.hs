@@ -63,7 +63,7 @@ optimizeGrammar lambda gr primitives exprs_and_scores=
       climb :: Grammar -> Double -> Grammar
       climb g g_score =
         let gs = grammarNeighbors g primitives 1.0 exprs_and_scores
-            gsScore = [ (g, lambda * descriptionLength g - grammarLogLikelihood g (relabelFrontier g exprs_and_scores)) |
+            gsScore = [ (g, lambda * descriptionLength g - grammarLogLikelihood g exprs_and_scores) |
                         g <- gs ]
             (best_g', best_g'_score) = trace ("\n\nGrScores: " ++ concat [showGrammar g ++ "\n\n" ++ show d ++ "\n\n"| (g, d) <- gsScore] ) $ minimumBy (compare `on` snd) gsScore
         in
@@ -117,16 +117,6 @@ exprSize :: ExprDistr -> Expr a -> Double
 exprSize distr App{eLeft=l, eRight=r, eLabel=Nothing} = 1.0 + exprSize distr l + exprSize distr r
 exprSize _ _ = 1.0 
 
-relabelFrontier :: Grammar -> [(UExpr, a)] -> [(UExpr, a)]
-relabelFrontier gr es = map go (map (first fromUExpr) es)
-    where go (t@Term{}, s) = (toUExpr t, s) 
-          go (a@App{eLeft = l, eRight = r}, s) =
-            if Map.member ua (grExprDistr gr)
-            then (labelExpr ua, s)
-            else (unlabelExpr ua { eLeft = relabelFrontier gr l,
-                                   eRight = relabelFrontier gr r },
-                  s)
-            where ua = toUExpr a
 ----------------------------------------------------------------------
 -- Solve a single task
 
