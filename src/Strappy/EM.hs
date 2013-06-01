@@ -88,7 +88,8 @@ grammarNeighbors (Grammar appProb lib) primitives pseudocounts obs = oneRemoved 
                 foldl (\cnt expr_wt -> countSubtreesNotInGrammar lib cnt (first fromUExpr expr_wt)) Map.empty obs 
               subtreeSizes = Map.mapWithKey (\uexpr cnt -> cnt * exprSize lib (fromUExpr uexpr)) duplicatedSubtrees
               maximumAdded = 10 -- Consider at most 10 subtrees. Cuts down search.
-              bestSubtrees = take maximumAdded $
+              bestSubtrees = map annotateRequested $
+                             take maximumAdded $
                              map fst $
                              sortBy (\a a' -> flipOrdering $ (compare `on` snd) a a') $
                              Map.toList subtreeSizes

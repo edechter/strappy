@@ -94,7 +94,7 @@ typeOfApp :: Monad m => Expr a -> Expr b -> TypeInference m Type
 typeOfApp e_left e_right 
     = do t <- mkTVar
          unify (eType e_left) (eType e_right ->- t)
-         chaseVar t
+         applySub t
 
 eval :: Expr a -> a
 -- | Evaluates an Expression of type a into a Haskell object of that

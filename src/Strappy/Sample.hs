@@ -43,9 +43,9 @@ sampleExpr gr@Grammar{grApp=p, grExprDistr=exprDistr} tp
             case shouldExpand of
               True -> do t <- mkTVar
                          e_left  <- sample (t ->- tp)
-                         t' <- chaseVar t
+                         t' <- applySub t
                          e_right <- sample t'
-                         tp' <- chaseVar tp
+                         tp' <- applySub tp
                          return $ toUExpr $
                            App { eReqType = Just tp,
                                  eType = tp',
@@ -59,7 +59,7 @@ sampleExpr gr@Grammar{grApp=p, grExprDistr=exprDistr} tp
                                              normalizeDist cs
                           eTp <- instantiateType (eType e)
                           unify eTp tp
-                          e' <- annotateRequested tp e
+                          e' <- annotateRequestedM tp e
                           return $ toUExpr e'
 
 
@@ -76,22 +76,32 @@ sampleExprs n library tp = replicate n $ sampleExpr library tp
            return x''-}
 
                                           
-annotateRequested :: Monad m =>
+-- | Annotates the requested types
+-- Takes as input the top-level type request
+annotateRequestedM :: Monad m =>
                      Type -> -- ^ Requested type of the expression
                      Expr a -> -- ^ The expression
                      TypeInference m (Expr a) -- ^ The freshly annotated expression
-annotateRequested tp (App { eLeft = l, eRight = r, eType = eTp }) = do
+annotateRequestedM tp (App { eLeft = l, eRight = r }) = do
   t <- mkTVar
-  l' <- annotateRequested (t ->- tp) l
-  t' <- chaseVar t
-  r' <- annotateRequested t' r
-  let e = App { eLeft  = fromUExpr (toUExpr l'),
-                eRight = fromUExpr (toUExpr r'),
-                eType = eTp,
+  l' <- annotateRequestedM (t ->- tp) l
+  t' <- applySub t
+  r' <- annotateRequestedM t' r
+  tp' <- applySub tp
+  let e = App { eLeft    = fromUExpr (toUExpr l'),
+                eRight   = fromUExpr (toUExpr r'),
+                eType    = tp',
                 eReqType = Just tp, 
-                eLabel = Nothing }
+                eLabel   = Nothing }
   return e
-annotateRequested tp e@(Term { eType = eTp }) = do
+annotateRequestedM tp e@(Term { eType = eTp }) = do
   eTp' <- instantiateType eTp
   unify tp eTp'
   return $ e { eReqType = Just tp }
+
+-- | Non-monadic wrapper
+-- Presumes no constraint on top-level type
+annotateRequested :: UExpr -> UExpr
+annotateRequested expr = runIdentity $ runTIVar $ do
+  tp <- mkTVar
+  liftM toUExpr $ annotateRequestedM tp (fromUExpr expr)

@@ -57,23 +57,23 @@ bindTVar var ty = do
 -- "chasing" bound type variables.
 -- Performs path compression optimization.
 -- The smaller-into-larger optimization does not apply.
-chaseVar :: Monad m => Type -> TypeInference m Type
-chaseVar t@(TVar v) = do
+applySub :: Monad m => Type -> TypeInference m Type
+applySub t@(TVar v) = do
   (n, s) <- get
   case M.lookup v s of
-    Just t' -> do t'' <- chaseVar t'
+    Just t' -> do t'' <- applySub t'
                   (n', s') <- get
                   put (n', M.insert v t'' s')
                   return t''
     Nothing -> return t
-chaseVar (TCon k ts) =
-  mapM chaseVar ts >>= return . TCon k
+applySub (TCon k ts) =
+  mapM applySub ts >>= return . TCon k
 
 -- Unification
 -- Primed unify is for types that have already had the substitution applied
 unify t1 t2 = do
-  t1' <- chaseVar t1
-  t2' <- chaseVar t2
+  t1' <- applySub t1
+  t2' <- applySub t2
   unify' t1' t2'
 unify' (TVar v) (TVar v') | v == v' = return ()
 unify' (TVar v) t | occurs v t = lift $ fail "Occurs check"
