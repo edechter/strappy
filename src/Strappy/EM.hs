@@ -70,7 +70,7 @@ optimizeGrammar lambda gr primitives exprs_and_scores=
          if best_g'_score < g_score
 
          then climb best_g' best_g'_score
-         else trace ("Best scores: " ++ best_g'_score ++ " " ++ g_score ++ "\n\n") g
+         else g
   in
    climb gr' initial_score
 
