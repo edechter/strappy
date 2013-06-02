@@ -1,6 +1,7 @@
 
 module Strappy.EM where
 
+
 import Strappy.Sample
 import Strappy.Expr
 import Strappy.Library
@@ -21,6 +22,10 @@ import Debug.Trace
 
 -- Evaluates to the number of nats required to encode the grammar
 -- Does not include production probabilities TODO: why not?
+-- Also assumes uniform production probabilities
+-- The justification for this is that the production probabilities in the programs
+-- might be very different from the production probabilities in the grammar
+-- This isn't a very good solution, and we should do something better.
 descriptionLength :: Grammar -> Double
 descriptionLength gr@(Grammar{grApp=app, grExprDistr=lib}) =
   Map.foldWithKey (\ k _ s -> s + productionLenTopLevel (fromUExpr k)) 0.0 lib
@@ -30,14 +35,20 @@ descriptionLength gr@(Grammar{grApp=app, grExprDistr=lib}) =
       productionLen l + productionLen r 
     productionLenTopLevel Term{} = 0
     productionLen :: Expr a -> Double
-    productionLen a@App{eLeft=l, eRight=r} | isLabeled a = case Map.lookup (toUExpr a) lib of 
-                                               Nothing -> error "descriptionLength::productionLen: labelled application is not in library."
-                                               (Just ll) -> negate ll - log (1 - exp app)
-                                           | otherwise  = app + productionLen l + productionLen r
-    productionLen t@Term{}
-        = case Map.lookup (toUExpr t) lib of
-              Nothing -> error "descriptionLength::productionLen: labelled application is not in library."
-              (Just ll) -> negate ll - log (1 - exp app)
+    productionLen a@App{eLeft=l, eRight=r, eReqType = Just tp} =
+      if Map.member (toUExpr a) lib
+      then logSumExp (log 2 + log (numDistractors tp) - log (1 - exp app))
+                     (log 2 + productionLen l + productionLen r)
+      else log 2 + productionLen l + productionLen r
+    productionLen t@Term{eReqType = Just tp}
+      = log (numDistractors tp) - log (1 - exp app)
+    numDistractors tp = 
+      foldl
+      (\acc tp' -> if canUnify tp tp'
+                   then acc+1.0
+                   else acc)
+      0.0 libTypes
+    libTypes = map (eType . fromUExpr) (Map.keys lib)
 
 -- Likelihood term in EM
 grammarLogLikelihood :: Grammar -> [(UExpr, Double)] -> Double
@@ -59,7 +70,7 @@ optimizeGrammar lambda pseudocounts gr exprs_and_scores=
         let gs = grammarNeighbors g pseudocounts exprs_and_scores
             gsScore = [ (g, lambda * descriptionLength g - grammarLogLikelihood g exprs_and_scores) |
                         g <- gs ]
-            (best_g', best_g'_score) = trace ("\n\nGrScores: " ++ concat [showGrammar g ++ "\n\n" ++ show d ++ "\n\n"| (g, d) <- gsScore] ) $ minimumBy (compare `on` snd) gsScore
+            (best_g', best_g'_score) = trace ("\n\nOld GrScore: " ++ show g_score ++ "\nGrScores:\n" ++ concat [showGrammar g ++ "\n\n" ++ show d ++ "\n\n"| (g, d) <- gsScore] ) $ minimumBy (compare `on` snd) gsScore
         in
          if best_g'_score < g_score
 
@@ -115,18 +126,19 @@ exprSize _ _ = 1.0
 
 
 -- | Performs one iterations of EM on multitask learning
-doEMIter :: (MonadRandom m, MonadPlus m) =>
+{-doEMIter :: (MonadRandom m, MonadPlus m) =>
             [(UExpr -> Double, Type)] -- ^ Tasks
             -> Double -- ^ Lambda
             -> Double -- ^ pseudocounts
             -> Int -- ^ frontier size
             -> Grammar -- ^ Initial grammar
-            -> m Grammar -- ^ Improved grammar
+            -> m Grammar -- ^ Improved grammar-}
 doEMIter tasks lambda pseudocounts frontierSize grammar = do
   -- For each type, sample a frontier
   frontiers <- mapM (\tp -> do sample <- sampleExprs frontierSize grammar tp
                                return (tp, sample))
                     $ nub $ map snd tasks
+  putStrLn "Sampled frontiers."
   -- For each task, weight the corresponding frontier by likelihood
   let weightedFrontiers = Prelude.flip map tasks $ \(tsk, tp) ->
         let frontier = fromJust (lookup tp frontiers)
@@ -137,12 +149,41 @@ doEMIter tasks lambda pseudocounts frontierSize grammar = do
                     if z > 0.0
                     then Map.unionWith (+) acc $ Map.map (/z) frontier
                     else acc) Map.empty $ zip zs weightedFrontiers
-  if Map.size obs == 0
+  if Map.size obs == (trace $ "Hit " ++ show (Map.size obs) ++ " tasks") 0
     then return grammar -- Didn't hit any tasks
     else return $
          optimizeGrammar lambda pseudocounts grammar $
          Map.toList obs
 
+
+
+-- Polynomial regression test for EM
+polyEM :: IO ()
+polyEM = do
+  -- Seed grammar
+  let seed = Grammar { grApp = log 0.35,
+                       grExprDistr = Map.fromList [ (annotateRequested e, 1.0) | e <- basicExprs ] }
+  -- Make nth order polynomial task
+  let mkNthOrder n = do
+        coeffs <- replicateM (n+1) $ randomRIO (0,9::Int)
+        let poly x = sum $ zipWith (*) coeffs $ map (x^) [0..]
+        let score proc =
+              if map (eval (fromUExpr proc)) [0..3] == map poly [0..3]
+              then 1.0
+              else 0.0
+        return (score, tInt ->- tInt)
+  const <- replicateM 100 (mkNthOrder 0)
+  lin  <- replicateM 100 (mkNthOrder 1)
+  quad <- replicateM 100 (mkNthOrder 2)
+  cub  <- replicateM 100 (mkNthOrder 3)
+  loopM seed [1..20] $ \grammar step -> do
+    putStrLn $ "EM Iteration: " ++ show step
+    grammar' <- doEMIter (const++lin++quad++cub) 1.0 0.5 10000 grammar
+    putStrLn $ showGrammar grammar'
+    return grammar'
+  return ()
+                    
+main = polyEM
 
 ----------------------------------------------------------------------
 -- Solve a single task

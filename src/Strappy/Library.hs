@@ -43,7 +43,7 @@ showGrammar (Grammar p exprDistr) = printf "%7s:%7.2f\n" "p" p ++ showExprDistr 
 
 normalizeGrammar :: Grammar -> Grammar 
 normalizeGrammar Grammar{grApp=p, grExprDistr=distr}
-    = let logTotalMass = logsumexp $ p : Map.elems distr
+    = let logTotalMass = logSumExpList $ p : Map.elems distr
           distr' = Map.map (\x -> x - logTotalMass) distr
           p' = p - logTotalMass
       in Grammar  p' distr'
@@ -52,27 +52,25 @@ normalizeGrammar Grammar{grApp=p, grExprDistr=distr}
 exprLogLikelihood :: Grammar -> Expr a -> Double
 -- | Returns the log probability of producing the given expr tree
 exprLogLikelihood gr expr = let e = toUExpr expr in
-    -- | Is this expr a leaf?
-    -- trace ("\nExpr: " ++ showExprLong expr ++ "\n ExprDistr: " ++ showExprDistrLong (grExprDistr gr)) $ 
-    if isLeaf expr 
-        then calcLogProb gr expr (fromMaybe (eType expr) (eReqType expr)) +
-            log (1 - exp (grApp gr))
-        else case expr of 
-            App{eLeft=l, eRight=r} -> exprLogLikelihood gr l +
-                                      exprLogLikelihood gr r +  
-                                      grApp gr
-            _  -> error $ "Expression "++show e++" is not an application, and is not in the library."
+  case (expr, Map.member e (grExprDistr gr)) of
+    (App{eLeft=l, eRight=r}, False) ->
+      exprLogLikelihood gr l + exprLogLikelihood gr r + grApp gr
+    (App{eLeft=l, eRight=r}, True) ->
+      logSumExp (exprLogLikelihood gr l + exprLogLikelihood gr r + grApp gr)
+                (calcLogProb gr expr + log (1 - exp (grApp gr)))
+    (Term{}, _) ->
+      calcLogProb gr expr + log (1 - exp (grApp gr))
 
--- | Returns the probability of using a given expression from the library of
+
+-- | Returns the log probability of using a given expression from the library of
 -- terminals.
-calcLogProb :: Grammar -> Expr a -> Type -> Double
-calcLogProb gr@Grammar{grExprDistr=distr} expr tp 
-    | isTerm expr || isLabeled expr
-    = let m = filter (\(e, _) -> canUnify (eType $ fromUExpr e) tp) $ Map.toList distr
-          logp_e = distr Map.! toUExpr expr
-          logp_e_tot = logsumexp (map snd m) 
-      in  logp_e - logp_e_tot
-    | otherwise = error "calcLogProb: the argument to calcLogProb must be either a Term or an App that is labeled."
+calcLogProb :: Grammar -> Expr a -> Double
+calcLogProb gr@Grammar{grExprDistr=distr} expr
+  = let tp = fromJust (eReqType expr)
+        m = filter (\(e, _) -> canUnify (eType $ fromUExpr e) tp) $ Map.toList distr
+        logp_e = distr Map.! toUExpr expr
+        logp_e_tot = logSumExpList (map snd m) 
+    in  logp_e - logp_e_tot
 
 data Counts = Counts {appCounts :: Double,
                         termCounts :: Double,
@@ -123,6 +121,8 @@ cB = mkTerm "B" ((t1 ->- t) ->- (t2 ->- t1) ->- t2 ->- t)   $ \f g x -> f (g x)
 
 cC = mkTerm "C" ((t1 ->- t2 ->- t) ->- t2 ->- t1 ->- t)   $ \f g x -> f x g 
 
+cK = mkTerm "K" (t1 ->- t2 ->- t1)   $ \x y -> x
+
 
 
 
@@ -136,6 +136,7 @@ cTimes = mkTerm "*" (tInt ->- tInt ->- tInt)   (*)
 cMinus :: Expr (Int -> Int -> Int)
 cMinus = mkTerm "-" (tInt ->- tInt ->- tInt)   (-)
 
+-- What is this supposed to be?
 cMod :: Expr (Int -> Int -> Int)
 cMod = mkTerm "-" (tInt ->- tInt ->- tInt)    (-)
 
@@ -159,7 +160,8 @@ basicExprs = [toUExpr cI,
               toUExpr cS, 
               toUExpr cB, 
               toUExpr cC, 
-              toUExpr cBottom,
+              toUExpr cK, 
+--              toUExpr cBottom, -- Why would we put cBottom in to the library?
               toUExpr cPlus,
               toUExpr cTimes, 
               toUExpr cCons, 

@@ -4,6 +4,7 @@ module Strappy.Sample where
 import Prelude hiding (flip)
 import Control.Monad.Identity
 import Control.Monad.State
+import Control.Monad.Maybe
 import Control.Monad.Random
 import Control.Exception 
 import Control.Arrow (second)
@@ -63,13 +64,19 @@ sampleExpr gr@Grammar{grApp=p, grExprDistr=exprDistr} tp
                           e' <- annotateRequestedM tp e
                           return $ toUExpr e'
 
-
+-- | Wrapper over sampleExpr that keeps trying to sample when it fails
+safeSample :: MonadRandom m => Grammar -> Type -> m (Expr a)
+safeSample gr tp = do
+  maybeSample <- runMaybeT $ sampleExpr gr tp
+  case maybeSample of
+    Nothing -> safeSample gr tp
+    Just s -> return s
 
 sampleExprs :: (MonadPlus m, MonadRandom m) =>
                Int -> Grammar -> Type -> m (ExprMap Int)
 sampleExprs n library tp = foldM accSample Map.empty [1..n]
   where accSample acc _ = do
-          expr <- sampleExpr library tp
+          expr <- safeSample library tp
           return $ Map.insertWith (+) (toUExpr expr) 1 acc
 
 {-putSampleExprs n library tp  
