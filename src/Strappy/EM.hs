@@ -1,7 +1,6 @@
 
 module Strappy.EM where
 
-
 import Strappy.Sample
 import Strappy.Expr
 import Strappy.Library
@@ -121,7 +120,8 @@ incCountIfNotInGrammar lib cnt (expr,wt) | not (Map.member (toUExpr expr) lib) =
 incCountIfNotInGrammar _ cnt _ = cnt
 
 exprSize :: ExprDistr -> Expr a -> Double
-exprSize distr App{eLeft=l, eRight=r, eLabel=Nothing} = 1.0 + exprSize distr l + exprSize distr r
+exprSize distr e | Map.member (toUExpr e) distr = 1.0
+exprSize distr App{eLeft=l, eRight=r} = 1.0 + exprSize distr l + exprSize distr r
 exprSize _ _ = 1.0
 
 

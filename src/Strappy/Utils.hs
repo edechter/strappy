@@ -20,7 +20,7 @@ sampleMultinomial dist = do r <- getRandomR (0, 1)
           
 logSumExpList :: [Double] -> Double
 logSumExpList xs = a + (log . sum . map (exp . (\x -> x - a)) $ xs)
-    where a = if null xs then error "logsumexp: list argument must have length greater than zero, but got []." 
+    where a = if null xs then error $ "logSumExpList: list argument must have length greater than zero, but got [].\n\n"
                          else maximum xs
 
 logSumExp :: Double -> Double -> Double

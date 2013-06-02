@@ -12,7 +12,6 @@ import Text.Printf
 import Data.Function (on)
 import Control.Monad.Identity
 import Control.Arrow (first)
-import Debug.Trace
 
 import Strappy.Type
 import Strappy.Expr
@@ -28,7 +27,7 @@ instance Hashable UExpr where
 -- | Type alias for distribution over expressions. 
 type ExprDistr = ExprMap Double 
 
-showExprDistr exprDistr  = unlines $ map (\(e, i) -> printf "%7s:%7.2f" (show e) i) pairs
+showExprDistr exprDistr  = unlines $ map (\(e, i) -> printf "%7s:%30s:%7.2f" (show e) (show (eType (fromUExpr e))) i) pairs
     where pairs = List.sortBy (compare `on` snd) $ Map.toList exprDistr
                   
 showExprDistrLong exprDistr = unlines $ map (\(e, i) -> printf "%60s, %7.2f" (showUExprLong e) i) pairs
@@ -39,7 +38,7 @@ data Grammar = Grammar {grApp :: Double, -- ^ log probability of application
                         grExprDistr :: ExprDistr -- ^ distribution over functions
                        } 
 
-showGrammar (Grammar p exprDistr) = printf "%7s:%7.2f\n" "p" p ++ showExprDistr exprDistr
+showGrammar (Grammar p exprDistr) = printf "%7s:%7.2f\n" "p" (exp p) ++ showExprDistr exprDistr
 
 normalizeGrammar :: Grammar -> Grammar 
 normalizeGrammar Grammar{grApp=p, grExprDistr=distr}
@@ -80,26 +79,29 @@ estimateGrammar :: Grammar
                 -> Double -- pseudocount by which to weight the grammar as a prior
                 -> [(UExpr, Double)] -- weighted observations 
                 -> Grammar
-estimateGrammar Grammar{grExprDistr=distr, grApp = app} pseudocounts obs 
-    = Grammar{grApp=appLogProb, grExprDistr=distr'}
+estimateGrammar Grammar{grExprDistr=distr, grApp = app} pseudocounts obs
+  = Grammar{grApp=appLogProb, grExprDistr=distr'}
     where es = Map.toList distr -- [(UExpr, Double)]
           -- Accumulator function that takes a current records of counts and an expression and undates the counts.
           go :: Counts -> Expr a -> Double -> Counts
           -- If expression is a terminal. 
-          go (Counts ac tc uc pc) expr@Term{eReqType=(Just tp)} weight =
-            let tc' = tc + weight
-                uc' = Map.adjust (+ weight) (toUExpr expr) uc
+          go (Counts ac tc uc pc) expr weight | Map.member (toUExpr expr) distr =
+            let tp = fromJust $ eReqType expr
+                tc' = tc + weight
+                uc' = Map.adjust (+ weight) (findLibExpr $ toUExpr expr) uc
                 otherTerms = map fst $ filter (\(e,_) -> canUnify (eType $ fromUExpr e) tp) es
                 pc' = List.foldl' (Prelude.flip $ Map.adjust (+ weight)) pc otherTerms 
             in Counts ac tc' uc' pc'
-          go counts@(Counts ac tc uc pc) expr@App{eRight=r, eLeft=l} weight = let countsLeft = go counts l weight
-                                                                                  countsRight = go countsLeft r weight
-                                                                               in countsRight{appCounts= appCounts countsRight + weight} 
+          go counts@(Counts ac tc uc pc) expr@App{eRight=r, eLeft=l} weight =
+            let countsLeft = go counts l weight
+                countsRight = go countsLeft r weight
+            in countsRight { appCounts = appCounts countsRight + weight } 
           empty = Map.map (const pseudocounts) distr
           counts = List.foldl' (\cts (e, w) -> go cts (fromUExpr e) w) (Counts pseudocounts pseudocounts empty empty) obs
-          appLogProb = (trace $ show counts) $ log (appCounts counts) - log (termCounts counts + appCounts counts)
+          appLogProb = log (appCounts counts) - log (termCounts counts + appCounts counts)
           distr' = Map.unionWith (\a a' -> log a - log a') (useCounts counts) (possibleUseCounts counts)
-          
+          findLibExpr expr = fst $ fromJust $ List.find (\(e,_) -> e==expr) es
+
 ---------------------------------------------------------------------      
 
 -- | Helper for turning a Haskell type to Any. 
