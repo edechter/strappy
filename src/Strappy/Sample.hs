@@ -2,6 +2,7 @@
 module Strappy.Sample where
 
 import Prelude hiding (flip)
+import Control.Monad.Identity
 import Control.Monad.State
 import Control.Monad.Random
 import Control.Exception 
@@ -64,8 +65,12 @@ sampleExpr gr@Grammar{grApp=p, grExprDistr=exprDistr} tp
 
 
 
-
-sampleExprs n library tp = replicate n $ sampleExpr library tp
+sampleExprs :: (MonadPlus m, MonadRandom m) =>
+               Int -> Grammar -> Type -> m (ExprMap Int)
+sampleExprs n library tp = foldM accSample Map.empty [1..n]
+  where accSample acc _ = do
+          expr <- sampleExpr library tp
+          return $ Map.insertWith (+) (toUExpr expr) 1 acc
 
 {-putSampleExprs n library tp  
     = sequence 
@@ -102,6 +107,6 @@ annotateRequestedM tp e@(Term { eType = eTp }) = do
 -- | Non-monadic wrapper
 -- Presumes no constraint on top-level type
 annotateRequested :: UExpr -> UExpr
-annotateRequested expr = runIdentity $ runTIVar $ do
+annotateRequested expr = runIdentity $ runTI $ do
   tp <- mkTVar
   liftM toUExpr $ annotateRequestedM tp (fromUExpr expr)
