@@ -1,5 +1,6 @@
 
-module Strappy.EM where
+module Main where
+--module Strappy.EM where
 
 import Strappy.Sample
 import Strappy.Expr
@@ -18,6 +19,8 @@ import Control.Monad
 import Control.Monad.Random
 import Control.Monad.State
 import Debug.Trace 
+
+import System.CPUTime
 
 -- Evaluates to the number of nats required to encode the grammar
 -- Does not include production probabilities TODO: why not?
@@ -69,7 +72,7 @@ optimizeGrammar lambda pseudocounts gr exprs_and_scores=
         let gs = grammarNeighbors g pseudocounts exprs_and_scores
             gsScore = [ (g, lambda * descriptionLength g - grammarLogLikelihood g exprs_and_scores) |
                         g <- gs ]
-            (best_g', best_g'_score) = trace ("\n\nOld GrScore: " ++ show g_score ++ "\nGrScores:\n" ++ concat [showGrammar g ++ "\n\n" ++ show d ++ "\n\n"| (g, d) <- gsScore] ) $ minimumBy (compare `on` snd) gsScore
+            (best_g', best_g'_score) = minimumBy (compare `on` snd) gsScore
         in
          if best_g'_score < g_score
 
@@ -91,7 +94,7 @@ grammarNeighbors (Grammar appProb lib) pseudocounts obs = oneRemoved ++ oneAdded
           let duplicatedSubtrees =
                 foldl (\cnt expr_wt -> countSubtreesNotInGrammar lib cnt (first fromUExpr expr_wt)) Map.empty obs 
               subtreeSizes = Map.mapWithKey (\uexpr cnt -> cnt * exprSize lib (fromUExpr uexpr)) duplicatedSubtrees
-              maximumAdded = 10 -- Consider at most 10 subtrees. Cuts down search.
+              maximumAdded = 5 -- Consider at most 5 subtrees. Cuts down search.
               bestSubtrees = map annotateRequested $
                              take maximumAdded $
                              map fst $
@@ -145,16 +148,35 @@ doEMIter tasks lambda pseudocounts frontierSize grammar = do
         in Map.mapWithKey (\expr cnt -> fromIntegral cnt * tsk expr) frontier
   -- Normalize frontiers
   let zs = map (Map.fold (+) 0.0) weightedFrontiers
+  let numHit = length $ filter (>0.0) zs
+  putStrLn $ "Hit " ++ show numHit ++ " tasks."
   let obs = foldl (\acc (z, frontier) ->
                     if z > 0.0
                     then Map.unionWith (+) acc $ Map.map (/z) frontier
                     else acc) Map.empty $ zip zs weightedFrontiers
-  if Map.size obs == (trace $ "Hit " ++ show (Map.size obs) ++ " tasks") 0
+  if Map.size obs == 0
     then return grammar -- Didn't hit any tasks
-    else return $
-         optimizeGrammar lambda pseudocounts grammar $
-         Map.toList obs
+    else do let grammar' = optimizeGrammar lambda pseudocounts grammar $ Map.toList obs
+            putStrLn $ "Before InOut: " ++ showGrammar grammar'
+            start <- getCPUTime
+            let grammar'' = iterateInOut 5 (clearGrammarProbs grammar') 0.3 $ Map.toList obs
+            putStrLn $ "After InOut: " ++ showGrammar grammar''
+            done <- getCPUTime
+            putStrLn $ "InOut took " ++ show (fromIntegral (done-start) / (10^12)) ++ " seconds."
+            return grammar''
+         
 
+
+-- Library for testing EM+polynomial regressionx
+polyExprs :: [UExpr]
+polyExprs = [toUExpr cI, 
+              toUExpr cS, 
+              toUExpr cB, 
+              toUExpr cC, 
+              toUExpr cK, 
+              toUExpr cPlus,
+              toUExpr cTimes
+              ] ++ map toUExpr cInts
 
 
 -- Polynomial regression test for EM
@@ -162,7 +184,7 @@ polyEM :: IO ()
 polyEM = do
   -- Seed grammar
   let seed = Grammar { grApp = log 0.35,
-                       grExprDistr = Map.fromList [ (annotateRequested e, 1.0) | e <- basicExprs ] }
+                       grExprDistr = Map.fromList [ (annotateRequested e, 1.0) | e <- polyExprs ] }
   -- Make nth order polynomial task
   let mkNthOrder n = do
         coeffs <- replicateM (n+1) $ randomRIO (0,9::Int)
@@ -178,8 +200,7 @@ polyEM = do
   cub  <- replicateM 100 (mkNthOrder 3)
   loopM seed [1..20] $ \grammar step -> do
     putStrLn $ "EM Iteration: " ++ show step
-    grammar' <- doEMIter (const++lin++quad++cub) 1.0 0.5 10000 grammar
-    putStrLn $ showGrammar grammar'
+    grammar' <- doEMIter (const++lin++quad++cub) 1.0 0.5 1000 grammar
     return grammar'
   return ()
                     

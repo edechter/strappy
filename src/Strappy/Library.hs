@@ -27,7 +27,7 @@ instance Hashable UExpr where
 -- | Type alias for distribution over expressions. 
 type ExprDistr = ExprMap Double 
 
-showExprDistr exprDistr  = unlines $ map (\(e, i) -> printf "%7s:%30s:%7.2f" (show e) (show (eType (fromUExpr e))) i) pairs
+showExprDistr exprDistr  = unlines $ map (\(e, i) -> printf "%7s:%7.2f" (show e) i) pairs
     where pairs = List.sortBy (compare `on` snd) $ Map.toList exprDistr
                   
 showExprDistrLong exprDistr = unlines $ map (\(e, i) -> printf "%60s, %7.2f" (showUExprLong e) i) pairs
@@ -79,7 +79,7 @@ estimateGrammar :: Grammar
                 -> Double -- pseudocount by which to weight the grammar as a prior
                 -> [(UExpr, Double)] -- weighted observations 
                 -> Grammar
-estimateGrammar Grammar{grExprDistr=distr, grApp = app} pseudocounts obs
+estimateGrammar Grammar{grExprDistr=distr} pseudocounts obs
   = Grammar{grApp=appLogProb, grExprDistr=distr'}
     where es = Map.toList distr -- [(UExpr, Double)]
           -- Accumulator function that takes a current records of counts and an expression and undates the counts.
@@ -101,6 +101,56 @@ estimateGrammar Grammar{grExprDistr=distr, grApp = app} pseudocounts obs
           appLogProb = log (appCounts counts) - log (termCounts counts + appCounts counts)
           distr' = Map.unionWith (\a a' -> log a - log a') (useCounts counts) (possibleUseCounts counts)
           findLibExpr expr = fst $ fromJust $ List.find (\(e,_) -> e==expr) es
+
+
+iterateInOut :: Int -> Grammar -> Double -> [(UExpr, Double)] -> Grammar
+iterateInOut 0 g _ _ = g
+iterateInOut k g prior obs =
+  iterateInOut (k-1) (inoutEstimateGrammar g prior obs) prior obs
+
+-- | Uses the in-out algorithm to find the production probabilities
+inoutEstimateGrammar :: Grammar -> Double -> [(UExpr, Double)] -> Grammar
+inoutEstimateGrammar gr@Grammar{grExprDistr=distr, grApp = app} pseudocounts obs =
+  Grammar{grApp = appLogProb, grExprDistr = distr'}
+  where es = Map.toList distr -- [(UExpr, Double)]
+        expectedCounts :: Double -> Counts -> Expr a -> Counts
+        expectedCounts weight counts expr@(Term { eReqType = (Just tp) }) =
+          let uc' = Map.adjust (+weight) (findLibExpr $ toUExpr expr) (useCounts counts)
+              otherTerms = map fst $ filter (\(e,_) -> canUnify (eType $ fromUExpr e) tp) es
+              pc' = List.foldl' (Prelude.flip $ Map.adjust (+ weight)) (possibleUseCounts counts) otherTerms
+          in counts { termCounts = termCounts counts + weight,
+                      useCounts = uc',
+                      possibleUseCounts = pc' }
+        expectedCounts weight counts expr@(App { eLeft = left,
+                                                 eRight = right,
+                                                 eReqType = (Just tp) }) =
+          if Map.member (toUExpr expr) distr
+          then let logProbLib = calcLogProb gr expr + log (1 - exp app)
+                   -- BAD: Not memoizing these values gives O(n^2), when we could have O(n)
+                   -- But it's simpler like this, and premature optimization should be avoided.
+                   logProbApp = app + exprLogLikelihood gr left + exprLogLikelihood gr right
+                   probUsedApp = exp $ logProbApp - logSumExp logProbApp logProbLib
+                   probUsedLib = 1 - probUsedApp
+                   uc' = Map.adjust (+(weight*probUsedLib)) (findLibExpr $ toUExpr expr) (useCounts counts)
+                   otherTerms = map fst $ filter (\(e,_) -> canUnify (eType $ fromUExpr e) tp) es
+                   pc' = List.foldl' (Prelude.flip $ Map.adjust (+ (weight*probUsedLib))) (possibleUseCounts counts) otherTerms
+                   counts' = counts { appCounts = appCounts counts + weight * probUsedApp,
+                                      termCounts = termCounts counts + weight * probUsedLib, 
+                                      useCounts = uc',
+                                      possibleUseCounts = pc' }
+                   counts'' = expectedCounts (weight * probUsedApp) counts' left
+                   counts''' = expectedCounts (weight * probUsedApp) counts'' right
+               in counts'''
+          else let counts'   = counts { appCounts = appCounts counts + weight }
+                   counts''  = expectedCounts weight counts' left
+                   counts''' = expectedCounts weight counts'' right
+               in counts'''
+        empty = Map.map (const pseudocounts) distr
+        counts = List.foldl' (\cts (e, w) -> expectedCounts w cts (fromUExpr e)) (Counts pseudocounts pseudocounts empty empty) obs
+        appLogProb = log (appCounts counts) - log (termCounts counts + appCounts counts)
+        distr' = Map.unionWith (\a a' -> log a - log a') (useCounts counts) (possibleUseCounts counts)
+        findLibExpr expr = fst $ fromJust $ List.find (\(e,_) -> e==expr) es
+
 
 ---------------------------------------------------------------------      
 
@@ -198,3 +248,8 @@ compose :: [UExpr] -> UExpr
 compose (x:[]) = x
 compose (x:xs) = toUExpr $ fromUExpr x <> fromUExpr (compose xs) 
 compose []  = error "compose: applied to empty list"
+
+clearGrammarProbs :: Grammar -> Grammar
+clearGrammarProbs Grammar { grExprDistr = distr } =
+  Grammar { grExprDistr = Map.map (const $ log 0.5) distr,
+            grApp = log 0.4 }
