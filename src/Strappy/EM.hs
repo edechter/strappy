@@ -1,6 +1,6 @@
 
-module Main where
---module Strappy.EM where
+--module Main where
+module Strappy.EM where
 
 import Strappy.Sample
 import Strappy.Expr
@@ -125,7 +125,7 @@ doEMIter tasks lambda pseudocounts frontierSize grammar = do
   -- For each task, weight the corresponding frontier by likelihood
   let weightedFrontiers = Prelude.flip map tasks $ \(tsk, tp) ->
         let frontier = fromJust (lookup tp frontiers)
-        in Map.mapWithKey (\expr cnt -> fromIntegral cnt * tsk expr) frontier
+        in Map.mapWithKey (\expr cnt -> cnt * tsk expr) frontier
   -- Normalize frontiers
   let zs = map (Map.fold (+) 0.0) weightedFrontiers
   let numHit = length $ filter (>0.0) zs

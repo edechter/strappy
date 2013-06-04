@@ -11,23 +11,13 @@ import Control.Arrow (second)
 import qualified Data.HashMap as Map
 
 import Strappy.Type
+import Strappy.EnumBF
 import Strappy.Expr
 import Strappy.Library
 import Strappy.Utils 
 import Debug.Trace
 
 
--- | Initializing a TypeInference monad with a Library. We need to
--- grab all type variables in the library and make sure that the type
--- variable counter in the state of the TypeInference monad is greater
--- that that counter.
-initializeTI :: Monad m => ExprDistr -> TypeInference m ()
-initializeTI exprDistr = modify $ \(_, s) -> (i+1, s)
-    where i = maximum $
-              concatMap (getTVars . eType . fromUExpr . fst) $
-              Map.toList exprDistr
-          
-             
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
 -- Main functions. 
@@ -74,11 +64,18 @@ safeSample gr tp = do
     Just s -> return s
 
 sampleExprs :: (MonadPlus m, MonadRandom m) =>
-               Int -> Grammar -> Type -> m (ExprMap Int)
-sampleExprs n library tp = foldM accSample Map.empty [1..n]
+               Int -> Grammar -> Type -> m (ExprMap Double)
+sampleExprs n library tp =
+  liftM (Map.map fromIntegral) $ foldM accSample Map.empty [1..n]
   where accSample acc _ = do
           expr <- safeSample library tp
           return $ Map.insertWith (+) (toUExpr expr) 1 acc
+
+-- | Uses breadth-first enumeration to "sample" a grammar
+-- This allows us to get many more programs
+sampleBF :: Int -> Grammar -> Type -> ExprMap Double
+sampleBF n gr tp =
+  Map.fromList $ map (\CombBase{comb=c} -> (toUExpr c, 1.0)) $ enumBF gr n tp
 
 {-putSampleExprs n library tp  
     = sequence 
