@@ -22,7 +22,7 @@ import Debug.Trace
 -- variable counter in the state of the TypeInference monad is greater
 -- that that counter.
 initializeTI :: Monad m => ExprDistr -> TypeInference m ()
-initializeTI exprDistr = modify $ \(_, s) -> (i, s)
+initializeTI exprDistr = modify $ \(_, s) -> (i+1, s)
     where i = maximum $
               concatMap (getTVars . eType . fromUExpr . fst) $
               Map.toList exprDistr
