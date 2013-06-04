@@ -53,7 +53,8 @@ sampleExpr gr@Grammar{grApp=p, grExprDistr=exprDistr} tp
                                  eType = tp',
                                  eLeft = fromUExpr e_left,
                                  eRight = fromUExpr e_right, 
-                                 eLabel = Nothing }
+                                 eLabel = Nothing, 
+                                 eLogLikelihood = Nothing }
               False -> do let cs = filter (\(e, _) -> canUnify tp (eType $ fromUExpr e)) $
                                    Map.toList exprDistr
                           lift $ guard (not . null $ cs)
@@ -104,7 +105,8 @@ annotateRequestedM tp (App { eLeft = l, eRight = r }) = do
                 eRight   = fromUExpr (toUExpr r'),
                 eType    = tp',
                 eReqType = Just tp, 
-                eLabel   = Nothing }
+                eLabel   = Nothing, 
+                eLogLikelihood = Nothing }
   return e
 annotateRequestedM tp e@(Term { eType = eTp }) = do
   eTp' <- instantiateType eTp

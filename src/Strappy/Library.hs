@@ -50,15 +50,30 @@ normalizeGrammar Grammar{grApp=p, grExprDistr=distr}
 -- | Methods for calculating the loglikelihood of an expression draw from grammar
 exprLogLikelihood :: Grammar -> Expr a -> Double
 -- | Returns the log probability of producing the given expr tree
-exprLogLikelihood gr expr = let e = toUExpr expr in
+exprLogLikelihood gr = fromJust . eLogLikelihood . annotateLogLikelihoods gr
+
+-- | Fills in the eLogLikelihood fields of the tree
+annotateLogLikelihoods :: Grammar -> Expr a -> Expr a
+annotateLogLikelihoods gr expr = let e = toUExpr expr in
   case (expr, Map.member e (grExprDistr gr)) of
-    (App{eLeft=l, eRight=r}, False) ->
-      exprLogLikelihood gr l + exprLogLikelihood gr r + grApp gr
-    (App{eLeft=l, eRight=r}, True) ->
-      logSumExp (exprLogLikelihood gr l + exprLogLikelihood gr r + grApp gr)
-                (calcLogProb gr expr + log (1 - exp (grApp gr)))
+    (App{eLeft=l, eRight=r}, inGr) ->
+      let l' = annotateLogLikelihoods gr l
+          r' = annotateLogLikelihoods gr r
+          l'LL = fromJust $ eLogLikelihood l'
+          r'LL = fromJust $ eLogLikelihood r'
+          ll = if inGr
+               then logSumExp (l'LL + r'LL + grApp gr)
+                              (calcLogProb gr expr + log (1 - exp (grApp gr)))
+               else grApp gr + l'LL + r'LL
+      in App { eLogLikelihood = Just ll,
+               eType = eType expr,
+               eReqType = eReqType expr,
+               eLabel = eLabel expr,
+               eLeft = fromUExpr (toUExpr l'),
+               eRight = fromUExpr (toUExpr r') }
     (Term{}, _) ->
-      calcLogProb gr expr + log (1 - exp (grApp gr))
+      let ll = calcLogProb gr expr + log (1 - exp (grApp gr))
+      in expr { eLogLikelihood = Just ll }
 
 
 -- | Returns the log probability of using a given expression from the library of
@@ -126,9 +141,7 @@ inoutEstimateGrammar gr@Grammar{grExprDistr=distr, grApp = app} pseudocounts obs
                                                  eReqType = (Just tp) }) =
           if Map.member (toUExpr expr) distr
           then let logProbLib = calcLogProb gr expr + log (1 - exp app)
-                   -- BAD: Not memoizing these values gives O(n^2), when we could have O(n)
-                   -- But it's simpler like this, and premature optimization should be avoided.
-                   logProbApp = app + exprLogLikelihood gr left + exprLogLikelihood gr right
+                   logProbApp = app + fromJust (eLogLikelihood left) + fromJust (eLogLikelihood right)
                    probUsedApp = exp $ logProbApp - logSumExp logProbApp logProbLib
                    probUsedLib = 1 - probUsedApp
                    uc' = Map.adjust (+(weight*probUsedLib)) (findLibExpr $ toUExpr expr) (useCounts counts)
@@ -146,7 +159,8 @@ inoutEstimateGrammar gr@Grammar{grExprDistr=distr, grApp = app} pseudocounts obs
                    counts''' = expectedCounts weight counts'' right
                in counts'''
         empty = Map.map (const pseudocounts) distr
-        counts = List.foldl' (\cts (e, w) -> expectedCounts w cts (fromUExpr e)) (Counts pseudocounts pseudocounts empty empty) obs
+        obs' = map (\(e,w) -> (toUExpr $ annotateLogLikelihoods gr $ fromUExpr e, w)) obs
+        counts = List.foldl' (\cts (e, w) -> expectedCounts w cts (fromUExpr e)) (Counts pseudocounts pseudocounts empty empty) obs'
         appLogProb = log (appCounts counts) - log (termCounts counts + appCounts counts)
         distr' = Map.unionWith (\a a' -> log a - log a') (useCounts counts) (possibleUseCounts counts)
         findLibExpr expr = fst $ fromJust $ List.find (\(e,_) -> e==expr) es

@@ -20,17 +20,20 @@ data Expr a where
     Term :: {eName  :: String, 
              eType  :: Type, 
              eReqType :: Maybe Type, 
-             eThing :: a} -> Expr a
+             eThing :: a,
+             eLogLikelihood :: Maybe Double } -> Expr a
     App  :: {eLeft  :: (Expr (b -> a)),
              eRight :: (Expr b),
              eType  :: Type,
              eReqType :: Maybe Type, 
+             eLogLikelihood :: Maybe Double,
              eLabel :: Maybe String}         ->  Expr a 
              
 -- | smart constructor for terms
 mkTerm name tp thing = Term { eName = name,
                               eType = tp, 
                               eReqType = Nothing,
+                              eLogLikelihood = Nothing,
                               eThing = thing }
 
 -- | smart constructor for applications
@@ -38,6 +41,7 @@ a <> b = App { eLeft = a,
                eRight = b, 
                eType = tp, 
                eReqType = Nothing, 
+               eLogLikelihood = Nothing,
                eLabel = Nothing }
          where tp = runIdentity . runTI $ typeOfApp a b
 
@@ -143,9 +147,9 @@ cDouble2Expr i = mkTerm (show i) tDouble i
 -- Hashable instance ------------------- 
 ----------------------------------------
 instance Hashable (Expr a) where
-    hashWithSalt a (Term name tp _ thing) = hash a `hashWithSalt` hash name 
+    hashWithSalt a (Term name tp _ thing _) = hash a `hashWithSalt` hash name 
                                                   
-    hashWithSalt a (App left right tp reqType name) =  hash a `hashWithSalt` hash left `hashWithSalt` 
+    hashWithSalt a (App left right tp reqType _ name) =  hash a `hashWithSalt` hash left `hashWithSalt` 
                                                          hash right `hashWithSalt` hash name 
 
 ----------------------------------------

@@ -22,35 +22,16 @@ import Debug.Trace
 
 import System.CPUTime
 
--- Evaluates to the number of nats required to encode the grammar
--- Does not include production probabilities TODO: why not?
--- Also assumes uniform production probabilities
--- The justification for this is that the production probabilities in the programs
--- might be very different from the production probabilities in the grammar
--- This isn't a very good solution, and we should do something better.
-descriptionLength :: Grammar -> Double
-descriptionLength gr@(Grammar{grApp=app, grExprDistr=lib}) =
-  Map.foldWithKey (\ k _ s -> s + productionLenTopLevel (fromUExpr k)) 0.0 lib
-  where 
-    productionLenTopLevel :: Expr a -> Double
-    productionLenTopLevel App{eLeft=l, eRight=r} =
-      productionLen l + productionLen r 
-    productionLenTopLevel Term{} = 0
-    productionLen :: Expr a -> Double
-    productionLen a@App{eLeft=l, eRight=r, eReqType = Just tp} =
-      if Map.member (toUExpr a) lib
-      then logSumExp (log 2 + log (numDistractors tp) - log (1 - exp app))
-                     (log 2 + productionLen l + productionLen r)
-      else log 2 + productionLen l + productionLen r
-    productionLen t@Term{eReqType = Just tp}
-      = log (numDistractors tp) - log (1 - exp app)
-    numDistractors tp = 
-      foldl
-      (\acc tp' -> if canUnify tp tp'
-                   then acc+1.0
-                   else acc)
-      0.0 libTypes
-    libTypes = map (eType . fromUExpr) (Map.keys lib)
+-- Negative Log Prior
+grammarNLP :: Grammar -> Double
+grammarNLP gr@(Grammar{grExprDistr = lib}) =
+  let corpus  = filter (not . isTerm . fromUExpr) $ Map.keys lib
+      destructureAndWeight (App{eLeft = l, eRight = r}) =
+        [(toUExpr l,1.0), (toUExpr r,1.0)]
+      corpus' = concatMap destructureAndWeight $ map fromUExpr corpus
+      gr' = iterateInOut 10 (clearGrammarProbs gr) 0.0 corpus'
+  in - grammarLogLikelihood gr' corpus'
+
 
 -- Likelihood term in EM
 grammarLogLikelihood :: Grammar -> [(UExpr, Double)] -> Double
@@ -64,18 +45,16 @@ optimizeGrammar :: Double -> -- ^ Lambda
                    Grammar -> [(UExpr, Double)] -> Grammar
 optimizeGrammar lambda pseudocounts gr exprs_and_scores=
   let gr' = estimateGrammar gr 1.0 exprs_and_scores
-      -- TODO: BIC or something like that for continuous params
-      initial_score = lambda * (descriptionLength gr') - grammarLogLikelihood gr' exprs_and_scores
+      initial_score = lambda * (grammarNLP gr') - grammarLogLikelihood gr' exprs_and_scores
       -- This procedure performs hill climbing
       climb :: Grammar -> Double -> Grammar
       climb g g_score =
         let gs = grammarNeighbors g pseudocounts exprs_and_scores
-            gsScore = [ (g, lambda * descriptionLength g - grammarLogLikelihood g exprs_and_scores) |
+            gsScore = [ (g, lambda * grammarNLP g - grammarLogLikelihood g exprs_and_scores) |
                         g <- gs ]
             (best_g', best_g'_score) = minimumBy (compare `on` snd) gsScore
         in
          if best_g'_score < g_score
-
          then climb best_g' best_g'_score
          else g
   in
