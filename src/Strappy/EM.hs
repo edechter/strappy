@@ -29,7 +29,7 @@ grammarNLP gr@(Grammar{grExprDistr = lib}) =
       destructureAndWeight (App{eLeft = l, eRight = r}) =
         [(toUExpr l,1.0), (toUExpr r,1.0)]
       corpus' = concatMap destructureAndWeight $ map fromUExpr corpus
-      gr' = iterateInOut 10 (clearGrammarProbs gr) 0.0 corpus'
+      gr' = iterateInOut 5 (clearGrammarProbs gr) 0.0 corpus'
   in - grammarLogLikelihood gr' corpus'
 
 
@@ -120,7 +120,8 @@ doEMIter tasks lambda pseudocounts frontierSize grammar = do
   frontiers <- mapM (\tp -> do sample <- sampleExprs frontierSize grammar tp
                                return (tp, sample))
                     $ nub $ map snd tasks
-  putStrLn "Sampled frontiers."
+  let numUniq = sum $ map (Map.size . snd) frontiers
+  putStrLn $ "Sampled frontiers; got " ++ show numUniq ++ " programs."
   -- For each task, weight the corresponding frontier by likelihood
   let weightedFrontiers = Prelude.flip map tasks $ \(tsk, tp) ->
         let frontier = fromJust (lookup tp frontiers)
@@ -128,7 +129,7 @@ doEMIter tasks lambda pseudocounts frontierSize grammar = do
   -- Normalize frontiers
   let zs = map (Map.fold (+) 0.0) weightedFrontiers
   let numHit = length $ filter (>0.0) zs
-  putStrLn $ "Hit " ++ show numHit ++ " tasks."
+  putStrLn $ "Hit " ++ show numHit ++ "/" ++ show (length tasks) ++ " tasks."
   let obs = foldl (\acc (z, frontier) ->
                     if z > 0.0
                     then Map.unionWith (+) acc $ Map.map (/z) frontier
@@ -136,12 +137,8 @@ doEMIter tasks lambda pseudocounts frontierSize grammar = do
   if Map.size obs == 0
     then return grammar -- Didn't hit any tasks
     else do let grammar' = optimizeGrammar lambda pseudocounts grammar $ Map.toList obs
-            putStrLn $ "Before InOut: " ++ showGrammar grammar'
-            start <- getCPUTime
             let grammar'' = iterateInOut 5 (clearGrammarProbs grammar') 0.3 $ Map.toList obs
-            putStrLn $ "After InOut: " ++ showGrammar grammar''
-            done <- getCPUTime
-            putStrLn $ "InOut took " ++ show (fromIntegral (done-start) / (10^12)) ++ " seconds."
+            putStrLn $ showGrammar grammar''
             return grammar''
          
 
@@ -164,7 +161,7 @@ polyEM = do
   -- Seed grammar
   let seed = Grammar { grApp = log 0.35,
                        grExprDistr = Map.fromList [ (annotateRequested e, 1.0) | e <- polyExprs ] }
-  -- Make nth order polynomial task
+  -- Make nth order polynomial task with random coefficients
   let mkNthOrder n = do
         coeffs <- replicateM (n+1) $ randomRIO (0,9::Int)
         let poly x = sum $ zipWith (*) coeffs $ map (x^) [0..]
@@ -173,13 +170,18 @@ polyEM = do
               then 1.0
               else 0.0
         return (score, tInt ->- tInt)
-  const <- replicateM 100 (mkNthOrder 0)
-  lin  <- replicateM 100 (mkNthOrder 1)
+  -- Make nth order polynomial task with fixed coefficients
+  let mkNthDet coeffs = let poly x = sum $ zipWith (*) coeffs $ map (x^) [0..]
+                            score proc = if map (eval (fromUExpr proc)) [0..3] == map poly [0..3]
+                                         then 1.0
+                                         else 0.0
+                        in (score, tInt ->- tInt)
+  let const = [ mkNthDet [x] | x <- [1..9] ]
+  let lin = [ mkNthDet [x,y] | x <- [1..9], y <- [1..9] ]
   quad <- replicateM 100 (mkNthOrder 2)
-  cub  <- replicateM 100 (mkNthOrder 3)
   loopM seed [1..20] $ \grammar step -> do
     putStrLn $ "EM Iteration: " ++ show step
-    grammar' <- doEMIter (const++lin++quad++cub) 1.0 0.5 1000 grammar
+    grammar' <- doEMIter (const++lin++quad) 0.3 1.0 1000 grammar
     return grammar'
   return ()
                     
