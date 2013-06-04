@@ -11,6 +11,7 @@ import qualified Data.List as List
 import Text.Printf
 import Data.Function (on)
 import Control.Monad.Identity
+import Control.Monad.State
 import Control.Arrow (first)
 
 import Strappy.Type
@@ -267,3 +268,15 @@ clearGrammarProbs :: Grammar -> Grammar
 clearGrammarProbs Grammar { grExprDistr = distr } =
   Grammar { grExprDistr = Map.map (const $ log 0.5) distr,
             grApp = log 0.4 }
+
+
+-- | Initializing a TypeInference monad with a Library. We need to
+-- grab all type variables in the library and make sure that the type
+-- variable counter in the state of the TypeInference monad is greater
+-- that that counter.
+initializeTI :: Monad m => ExprDistr -> TypeInference m ()
+initializeTI exprDistr = modify $ \(_, s) -> (i+1, s)
+    where i = maximum $
+              concatMap (getTVars . eType . fromUExpr . fst) $
+              Map.toList exprDistr
+

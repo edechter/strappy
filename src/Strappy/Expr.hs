@@ -16,6 +16,10 @@ import Strappy.Type
 
 -- | Main data type. Holds primitive functions (Term), their
 -- application (App) and annotations.
+-- TODO: GHC doesn't let us update polymorphic fields in GADT's.
+-- This leads to very verbose code.
+-- Should we have universally quantified type variable here, or could we use
+-- either an existential quantifier, or just use Any, obsoleting UExpr in the process?
 data Expr a where
     Term :: {eName  :: String, 
              eType  :: Type, 
