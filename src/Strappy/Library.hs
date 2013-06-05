@@ -338,6 +338,10 @@ basicExprDistr = Map.adjust (const (-5)) cBottom
 basicGrammar :: Grammar
 basicGrammar = normalizeGrammar $ Grammar 3 basicExprDistr
 
+extendedGrammar :: Grammar
+extendedGrammar = normalizeGrammar $ Grammar 3 $ Map.fromList $
+                  [(e, 1) | e <- basicExprs] ++ [ (cK <> cI, 1), (cK <> (cInts!!2), 1) ]
+
 -- | Helpers 
 -- | compose epressions together
 compose :: [Expr] -> Expr

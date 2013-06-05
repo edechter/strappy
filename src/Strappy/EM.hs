@@ -39,7 +39,7 @@ grammarNLP gr@(Grammar{grExprDistr = lib}) =
 -- Likelihood term in EM
 grammarLogLikelihood :: Grammar -> [(Expr, Double)] -> Double
 grammarLogLikelihood gr exprs_and_score =
-  sum $ map (\(e, w) -> fromJust (eLogLikelihood e) * w) exprs_and_score
+  sum $ map (\(e, w) -> fromJust (eLogLikelihood $ annotateLogLikelihoods gr e) * w) exprs_and_score
 
 
 -- Performs hill climbing upon the given grammar
@@ -52,13 +52,14 @@ optimizeGrammar lambda pseudocounts gr exprs_and_scores=
       -- This procedure performs hill climbing
       climb :: Grammar -> [(Expr, Double)] -> Double -> Grammar
       climb g corpus g_score =
-        let gsAndCorpi = grammarNeighbors g pseudocounts corpus
+        let gsAndCorpi = grammarNeighbors g lambda pseudocounts corpus
             gsScore = [ ((g, corpus'), lambda * grammarNLP g - grammarLogLikelihood g corpus') |
                         (g, corpus') <- gsAndCorpi ]
-            ((best_g', best_corpus), best_g'_score) = minimumBy (compare `on` snd) gsScore
+            ((best_g', best_corpus), best_g'_score) =
+              minimumBy (compare `on` snd) gsScore
         in
          if best_g'_score < g_score
-         then climb best_g' best_corpus best_g'_score
+         then trace ("Improved grammar to: " ++ showGrammar best_g' ++ "\n") $ climb best_g' best_corpus best_g'_score
          else g
   in
    climb gr' exprs_and_scores initial_score
@@ -67,22 +68,25 @@ optimizeGrammar lambda pseudocounts gr exprs_and_scores=
 -- This procedure tries adding/removing one production,
 -- modulo the restriction that the primitives are never removed from the grammar.
 -- Returns new grammars and freshly annotated corpuses.
-grammarNeighbors :: Grammar -> Double -- ^ pseudocounts 
-                -> [(Expr, Double)] 
-                -> [(Grammar, [(Expr, Double)])]
-grammarNeighbors (Grammar appProb lib) pseudocounts obs = neighbors
+grammarNeighbors :: Grammar ->
+                    Double -> -- ^ regularization coefficient
+                    Double -> -- ^ pseudocounts 
+                    [(Expr, Double)] ->
+                    [(Grammar, [(Expr, Double)])]
+grammarNeighbors (Grammar appProb lib) lambda pseudocounts obs = neighbors
   where -- A "grammar delta" is a tuple of ([added], [removed])
     removeDeltas = map (\e -> ([], [e])) $ filter (not . isTerm) $ Map.keys lib
     -- Heuristic: Find large, duplicated subtrees not in grammar
     duplicatedSubtrees =
       foldl (\cnt expr_wt -> countSubtreesNotInGrammar lib cnt expr_wt) Map.empty obs 
-    subtreeSizes = Map.mapWithKey (\expr cnt -> cnt * exprSize lib expr) duplicatedSubtrees
+    subtreeSizes = Map.mapWithKey (\expr cnt -> (cnt - lambda) * exprSize lib expr) duplicatedSubtrees
     maximumAdded = 10 -- Consider at most 10 subtrees. Cuts down search.
-    bestSubtrees = map annotateRequested $
-                   take maximumAdded $
+    compressiveTrees = take maximumAdded $
+                       sortBy (\a a' -> flipOrdering $ (compare `on` snd) a a') $
+                       Map.toList subtreeSizes
+    bestSubtrees = trace ("Compressions: " ++ unlines (map show compressiveTrees)) $ map annotateRequested $
                    map fst $
-                   sortBy (\a a' -> flipOrdering $ (compare `on` snd) a a') $
-                   Map.toList subtreeSizes
+                   compressiveTrees
     addDeltas = map (\e -> ([e], [])) bestSubtrees
     deltas = trace ("Best subtrees:" ++ show bestSubtrees) $ addDeltas ++ removeDeltas
     -- Now that we have the grammar deltas, construct each alternative grammar + corpus
@@ -135,19 +139,18 @@ doEMIter tasks lambda pseudocounts frontierSize grammar = do
                     $ nub $ map snd tasks
   -- For each task, weight the corresponding frontier by likelihood
   let weightedFrontiers = Prelude.flip map tasks $ \(tsk, tp) ->
-        Map.mapWithKey (\expr cnt -> log (tsk expr)) $ fromJust $ lookup tp frontiers
+        Map.mapWithKey (\expr cnt -> cnt + log (tsk expr)) $ fromJust $ lookup tp frontiers
   -- Normalize frontiers
   let logZs = map (Map.fold logSumExp (log 0.0)) weightedFrontiers
   let weightedFrontiers' = zipWith (\logZ -> filter ((>0) . snd) . Map.toList .
                                              Map.map (\x-> if isNaN x || isInfinite x then 0.0 else exp (x-logZ)))
                                    logZs weightedFrontiers
-  putStrLn $ show $ weightedFrontiers'
   let numHit = length $ filter (not . null) weightedFrontiers'
   putStrLn $ "Hit " ++ show numHit ++ "/" ++ show (length tasks) ++ " tasks."
   let obs = foldl (\acc (logZ, frontier) ->
-                    if not (isNaN logZ) && not (isInfinite logZ)
-                    then Map.unionWith logSumExp acc $ Map.map (\x -> x-logZ) frontier
-                    else acc) Map.empty $ zip logZs weightedFrontiers
+                    if not (isNaN logZ) && not (isInfinite logZ) && not (null frontier)
+                    then Map.unionWith logSumExp acc $ Map.map (\x -> x-logZ) $ Map.fromList frontier
+                    else acc) Map.empty $ zip logZs weightedFrontiers'
   -- Exponentiate log likelihoods to get final weights
   let obs' = map (\(e,logW) -> (e, exp logW)) $
              filter (\(_,w) -> not (isNaN w) && not (isInfinite w)) $
@@ -202,7 +205,7 @@ polyEM = do
 --  quad <- replicateM 100 (mkNthOrder 2)
   loopM seed [1..4] $ \grammar step -> do
     putStrLn $ "EM Iteration: " ++ show step
-    grammar' <- doEMIter (const) 0.001 0.3 10000 grammar
+    grammar' <- doEMIter (const) 0.9 0.3 1000 grammar
     return grammar'
   return ()
                     
