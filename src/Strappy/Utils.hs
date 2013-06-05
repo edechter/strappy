@@ -24,6 +24,8 @@ logSumExpList xs = a + (log . sum . map (exp . (\x -> x - a)) $ xs)
                          else maximum xs
 
 logSumExp :: Double -> Double -> Double
+logSumExp x y | isNaN x = y
+logSumExp x y | isNaN y = x
 logSumExp x y | x > y = x + log (1 - exp (y-x))
 logSumExp x y = y + log (1 - exp (x-y))
 
