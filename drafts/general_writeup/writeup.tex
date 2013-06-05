@@ -6,6 +6,7 @@
 \usepackage{ amssymb }
 \usepackage{listings}
 \usepackage{syntax}
+\usepackage{mdframed}
 
 \newcommand{\funtype}[2]{#1 \rightarrow #2}
 \newcommand{\weightedrule}[3]{[#1 \mapsto #2 \, | \, #3]}
@@ -38,7 +39,6 @@
                {|}{{$\mid$}}1               
     }
 
-\DeclareMathOperator*{\argmax}{arg\,max} 
 
 \begin{document}
 
@@ -48,7 +48,7 @@
 In all but the simplest problems, problem solving agents suffer from vast
 search spaces. Much of the research in AI, machine learning, and optimization
 focuses on how to overcome this search problem. Local information can help find
-better nearby solutions but make few gaurantees about global optima. Heuristic
+better nearby solutions but makes few gaurantees about global optima. Heuristic
 search techniques make use of the structure of the search space and information
 about the utility of partial solutions to hopefully minimize the numeber of
 candidate solutions that need to be explored. Other frameworks attempt to
@@ -62,25 +62,6 @@ more problems they should learn to solve problems better.
 Here, we present a unified perspective on learning to solve problems, grounding the
 problem as one of Bayesian inference over a grammar that generates candidate
 problem solutions. 
-
-
-Types:
-
-\begin{grammar}
-<$t$> ::= $\tau$, $\sigma$  (type variables)
-  \alt $a$, $b$ (concrete types e.g. real, bool, int, etc.)
-  \alt $\funtype{t'}{t}$ (function type)
-\end{grammar}
-
-
-Expressions: 
-\begin{grammar}
-<$\typedexp{e}{t}$> ::= $\typedexp{c}{t'}$ s.t. $t' = mgu(t,
-\type{c})$ (substitute a terminal tree that unifies with the requesting type)
-  \alt ($\typedexp{e}{\funtype{t'}{t}} \;\;\; \typedexp{e}{t'}$)
-\end{grammar}
-
-
 
 
 First we will present the model over solutions in which our problem solving
@@ -100,20 +81,34 @@ are bounded in some fashion. Others are infinite and unbounded. To present a
 framework for general problem solving, we need a representation of a solution
 space that subsumes all of these possibilities. 
 
-As has long been noted by
-Genetic Programming researchers, any solution space can be modeled as a set of
-programs that generate space. As an example, if the solution space to a problem
-is the set of all boolean circuits constructed from some set of gates, then the
-corresponding space of programs is the set of programs that wire up boolean
-circuits from those gates. 
+As has long been noted by Genetic Programming researchers, any solution space
+can be modeled as a set of programs. As an example, if the solution space to a
+problem is the set of all boolean circuits constructed from some set of gates,
+then the orresponding space of programs is the set of programs that wire up
+boolean circuits from those gates. 
 
-How does this realization help us? It means that if we can formulate a single
+How does this realization help us? It means that we can formulate a single
 model that places a distribution over solution distributions by describing a
 distribution over program generating processes.
 
-We will first describe a simplified version of the hierarchical model over programs that we will be using. We start with a base grammar $\mathcal{G}$ of the form 
-\section{The model}
-The elements of any solution space can be represented as programs. u
+We will first describe a simplified version of the hierarchical model over
+programs that we will be using. We start with a base grammar $\mathcal{G}$ of
+the form shown in Figure~\ref{fig:grammar}. 
+
+\begin{figure}
+  \begin{grammar}
+    <$e$> ::= $p_1$ | $p_2$ | \dots | $p_N$   \text{ (primitive combinators)}
+              \alt (e e) \text{ (application) }
+  \end{grammar}
+ \caption{A grammar for a typed combinatory programming language.\label{fig:grammar}}
+\end{figure}
+
+Our probabilistic model is motivated by the fact that while $\mathcal{G}$
+represents the language in which solutions are written, in any particular
+domain there is a distribution $\mathcal{H}$ over solutions that is itself drawn
+according to an adaptor grammar~\cite{} based on $\mathcal{G}$ and some
+parameters $\theta$. 
+
  \section{History and related literature}
 Angluin 1988~\cite{angluin1988queries}: investigates the complexity of
 learning concepts that are subsets of a hypothesis space via a number
