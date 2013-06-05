@@ -138,7 +138,11 @@ doEMIter tasks lambda pseudocounts frontierSize grammar = do
         Map.mapWithKey (\expr cnt -> log (tsk expr)) $ fromJust $ lookup tp frontiers
   -- Normalize frontiers
   let logZs = map (Map.fold logSumExp (log 0.0)) weightedFrontiers
-  let numHit = length $ filter (\z -> not (isNaN z) && not (isInfinite z)) logZs
+  let weightedFrontiers' = zipWith (\logZ -> filter ((>0) . snd) . Map.toList .
+                                             Map.map (\x-> if isNaN x || isInfinite x then 0.0 else exp (x-logZ)))
+                                   logZs weightedFrontiers
+  putStrLn $ show $ weightedFrontiers'
+  let numHit = length $ filter (not . null) weightedFrontiers'
   putStrLn $ "Hit " ++ show numHit ++ "/" ++ show (length tasks) ++ " tasks."
   let obs = foldl (\acc (logZ, frontier) ->
                     if not (isNaN logZ) && not (isInfinite logZ)
@@ -198,7 +202,7 @@ polyEM = do
 --  quad <- replicateM 100 (mkNthOrder 2)
   loopM seed [1..4] $ \grammar step -> do
     putStrLn $ "EM Iteration: " ++ show step
-    grammar' <- doEMIter (const++lin++quad) 0.001 0.3 10000 grammar
+    grammar' <- doEMIter (const) 0.001 0.3 10000 grammar
     return grammar'
   return ()
                     
