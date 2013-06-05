@@ -1,6 +1,6 @@
 
---module Main where
-module Strappy.EM where
+module Main where
+--module Strappy.EM where
 
 import Strappy.Sample
 import Strappy.Expr
@@ -25,24 +25,24 @@ import System.CPUTime
 -- Negative Log Prior
 grammarNLP :: Grammar -> Double
 grammarNLP gr@(Grammar{grExprDistr = lib}) =
-  let corpus  = filter (not . isTerm . fromUExpr) $ Map.keys lib
+  let corpus  = filter (not . isTerm) $ Map.keys lib
       destructureAndWeight (App{eLeft = l, eRight = r}) =
-        [(toUExpr l,1.0), (toUExpr r,1.0)]
-      corpus' = concatMap destructureAndWeight $ map fromUExpr corpus
+        [(l,1.0), (r,1.0)]
+      corpus' = concatMap destructureAndWeight corpus
       gr' = iterateInOut 5 (clearGrammarProbs gr) 0.0 corpus'
   in - grammarLogLikelihood gr' corpus'
 
 
 -- Likelihood term in EM
-grammarLogLikelihood :: Grammar -> [(UExpr, Double)] -> Double
+grammarLogLikelihood :: Grammar -> [(Expr, Double)] -> Double
 grammarLogLikelihood gr exprs_and_score =
-  sum $ map (\(e, w) -> exprLogLikelihood gr (fromUExpr e) * w) exprs_and_score
+  sum $ map (\(e, w) -> exprLogLikelihood gr e * w) exprs_and_score
 
 
 -- Performs hill climbing upon the given grammar
 optimizeGrammar :: Double -> -- ^ Lambda
                    Double -> -- ^ pseudocounts
-                   Grammar -> [(UExpr, Double)] -> Grammar
+                   Grammar -> [(Expr, Double)] -> Grammar
 optimizeGrammar lambda pseudocounts gr exprs_and_scores=
   let gr' = estimateGrammar gr 1.0 exprs_and_scores
       initial_score = lambda * (grammarNLP gr') - grammarLogLikelihood gr' exprs_and_scores
@@ -64,15 +64,15 @@ optimizeGrammar lambda pseudocounts gr exprs_and_scores=
 -- This procedure tries adding/removing one production,
 -- modulo the restriction that the primitives are never removed from the grammar
 grammarNeighbors :: Grammar -> Double -- ^ pseudocounts 
-                -> [(UExpr, Double)] 
-                ->  [Grammar]
+                -> [(Expr, Double)] 
+                -> [Grammar]
 grammarNeighbors (Grammar appProb lib) pseudocounts obs = oneRemoved ++ oneAdded
   where oneRemoved = map (\expr -> Grammar appProb (Map.delete expr lib)) 
-                         $ filter (not . isTerm . fromUExpr) $ Map.keys lib 
+                         $ filter (not . isTerm) $ Map.keys lib 
         oneAdded =
           let duplicatedSubtrees =
-                foldl (\cnt expr_wt -> countSubtreesNotInGrammar lib cnt (first fromUExpr expr_wt)) Map.empty obs 
-              subtreeSizes = Map.mapWithKey (\uexpr cnt -> cnt * exprSize lib (fromUExpr uexpr)) duplicatedSubtrees
+                foldl (\cnt expr_wt -> countSubtreesNotInGrammar lib cnt expr_wt) Map.empty obs 
+              subtreeSizes = Map.mapWithKey (\expr cnt -> cnt * exprSize lib expr) duplicatedSubtrees
               maximumAdded = 5 -- Consider at most 5 subtrees. Cuts down search.
               bestSubtrees = map annotateRequested $
                              take maximumAdded $
@@ -85,7 +85,7 @@ grammarNeighbors (Grammar appProb lib) pseudocounts obs = oneRemoved ++ oneAdded
 
 countSubtreesNotInGrammar :: ExprDistr -- <lib>: Distribution over expressions. 
                             -> ExprMap Double -- <cnt>: Map of rules and associated counts.  
-                            -> (Expr a, Double) -- <expr>: the expression
+                            -> (Expr, Double) -- <expr>: the expression
                             -> ExprMap Double
 countSubtreesNotInGrammar lib cnt (expr@(App{eLeft=l, eRight=r}),wt) =
   let cnt'   = incCountIfNotInGrammar lib cnt (expr,wt)
@@ -95,37 +95,34 @@ countSubtreesNotInGrammar lib cnt (expr@(App{eLeft=l, eRight=r}),wt) =
    cnt'''
 countSubtreesNotInGrammar _ cnt _ = cnt
 
-incCountIfNotInGrammar :: ExprDistr -> ExprMap Double -> (Expr a,Double) 
+incCountIfNotInGrammar :: ExprDistr -> ExprMap Double -> (Expr, Double) 
                           -> ExprMap Double
-incCountIfNotInGrammar lib cnt (expr,wt) | not (Map.member (toUExpr expr) lib) =
-  Map.insertWith (+) (toUExpr expr) wt cnt
+incCountIfNotInGrammar lib cnt (expr,wt) | not (Map.member expr lib) =
+  Map.insertWith (+) expr wt cnt
 incCountIfNotInGrammar _ cnt _ = cnt
 
-exprSize :: ExprDistr -> Expr a -> Double
-exprSize distr e | Map.member (toUExpr e) distr = 1.0
+exprSize :: ExprDistr -> Expr -> Double
+exprSize distr e | Map.member e distr = 1.0
 exprSize distr App{eLeft=l, eRight=r} = 1.0 + exprSize distr l + exprSize distr r
 exprSize _ _ = 1.0
 
 
 -- | Performs one iterations of EM on multitask learning
-{-doEMIter :: (MonadRandom m, MonadPlus m) =>
-            [(UExpr -> Double, Type)] -- ^ Tasks
+doEMIter :: 
+            [(Expr -> Double, Type)] -- ^ Tasks
             -> Double -- ^ Lambda
             -> Double -- ^ pseudocounts
             -> Int -- ^ frontier size
             -> Grammar -- ^ Initial grammar
-            -> m Grammar -- ^ Improved grammar-}
+            -> IO Grammar -- ^ Improved grammar-}
 doEMIter tasks lambda pseudocounts frontierSize grammar = do
   -- For each type, sample a frontier
-  frontiers <- mapM (\tp -> do sample <- sampleExprs frontierSize grammar tp
+  frontiers <- mapM (\tp -> do sample <- return $ sampleBF frontierSize grammar tp
                                return (tp, sample))
                     $ nub $ map snd tasks
-  let numUniq = sum $ map (Map.size . snd) frontiers
-  putStrLn $ "Sampled frontiers; got " ++ show numUniq ++ " programs."
   -- For each task, weight the corresponding frontier by likelihood
   let weightedFrontiers = Prelude.flip map tasks $ \(tsk, tp) ->
-        let frontier = fromJust (lookup tp frontiers)
-        in Map.mapWithKey (\expr cnt -> cnt * tsk expr) frontier
+        Map.mapWithKey (\expr cnt -> cnt * tsk expr) $ fromJust $ lookup tp frontiers
   -- Normalize frontiers
   let zs = map (Map.fold (+) 0.0) weightedFrontiers
   let numHit = length $ filter (>0.0) zs
@@ -141,18 +138,16 @@ doEMIter tasks lambda pseudocounts frontierSize grammar = do
             putStrLn $ showGrammar grammar''
             return grammar''
          
-
-
 -- Library for testing EM+polynomial regressionx
-polyExprs :: [UExpr]
-polyExprs = [toUExpr cI, 
-              toUExpr cS, 
-              toUExpr cB, 
-              toUExpr cC, 
-              toUExpr cK, 
-              toUExpr cPlus,
-              toUExpr cTimes
-              ] ++ map toUExpr cInts
+polyExprs :: [Expr]
+polyExprs = [cI, 
+              cS, 
+              cB, 
+              cC, 
+              cK, 
+              cPlus,
+              cTimes
+              ] ++ cInts
 
 
 -- Polynomial regression test for EM
@@ -162,26 +157,30 @@ polyEM = do
   let seed = Grammar { grApp = log 0.35,
                        grExprDistr = Map.fromList [ (annotateRequested e, 1.0) | e <- polyExprs ] }
   -- Make nth order polynomial task with random coefficients
-  let mkNthOrder n = do
-        coeffs <- replicateM (n+1) $ randomRIO (0,9::Int)
-        let poly x = sum $ zipWith (*) coeffs $ map (x^) [0..]
-        let score proc =
-              if map (eval (fromUExpr proc)) [0..3] == map poly [0..3]
+{-  let mkNthOrder :: Int -> IO (Expr -> Double, Type)
+      mkNthOrder n = replicateM (n+1) $ randomRIO (0,9::Int) >>= \coeffs ->
+        let poly :: Int -> Int
+            poly x = sum $ zipWith (*) coeffs $ map (x^) [0..]
+            score proc =
+              if map (eval proc) [0..3] == map poly [0..3]
               then 1.0
               else 0.0
-        return (score, tInt ->- tInt)
+        in return (score, tInt ->- tInt)
+-}
   -- Make nth order polynomial task with fixed coefficients
-  let mkNthDet coeffs = let poly x = sum $ zipWith (*) coeffs $ map (x^) [0..]
-                            score proc = if map (eval (fromUExpr proc)) [0..3] == map poly [0..3]
+  let mkNthDet :: [Int] -> (Expr -> Double, Type)
+      mkNthDet coeffs = let poly :: Int -> Int
+                            poly x = sum $ zipWith (*) coeffs $ map (x^) [0..]
+                            score proc = if map (eval proc) [0..3] == map poly [0..3]
                                          then 1.0
                                          else 0.0
                         in (score, tInt ->- tInt)
   let const = [ mkNthDet [x] | x <- [1..9] ]
   let lin = [ mkNthDet [x,y] | x <- [1..9], y <- [1..9] ]
-  quad <- replicateM 100 (mkNthOrder 2)
+--  quad <- replicateM 100 (mkNthOrder 2)
   loopM seed [1..100] $ \grammar step -> do
     putStrLn $ "EM Iteration: " ++ show step
-    grammar' <- doEMIter (const++lin++quad) 0.3 1.0 10000 grammar
+    grammar' <- doEMIter (const++lin) 0.3 1.0 10000 grammar
     return grammar'
   return ()
                     

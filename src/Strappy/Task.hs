@@ -8,7 +8,7 @@ import Strappy.Type
 import Strappy.Utils
 
 data Task =  Task {taskName :: String, 
-                   task :: UExpr -> Double,
+                   task :: Expr -> Double,
                    taskType :: Type} 
 
 type TaskSet = [Task]
@@ -19,7 +19,7 @@ instance Show Task where
 	
 mkIntTask :: Int -> Task
 mkIntTask i = Task (show i) tsk tInt
-        where tsk uexpr = case safeEval (fromUExpr uexpr :: Expr Int ) of
+        where tsk expr = case safeEval expr of
                                 Nothing -> 0
                                 Just r -> exp $ negate $ fromIntegral $ abs $ r - i
 

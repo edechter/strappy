@@ -22,13 +22,13 @@ import Debug.Trace
 ----------------------------------------------------------------------
 -- Main functions. 
 sampleExpr ::
-  (MonadPlus m, MonadRandom m) => Grammar -> Type -> m (Expr a)
+  (MonadPlus m, MonadRandom m) => Grammar -> Type -> m Expr
 -- | Samples a combinator of type t from a stochastic grammar G. 
 sampleExpr gr@Grammar{grApp=p, grExprDistr=exprDistr} tp 
     = runTI $ do initializeTI exprDistr
                  tp' <- instantiateType tp
                  expr <- sample tp'
-                 return $ fromUExpr expr
+                 return expr
     where 
       sample tp = do
             shouldExpand <- lift $ flip (exp p)
@@ -38,25 +38,23 @@ sampleExpr gr@Grammar{grApp=p, grExprDistr=exprDistr} tp
                          t' <- applySub t
                          e_right <- sample t'
                          tp' <- applySub tp
-                         return $ toUExpr $
+                         return $
                            App { eReqType = Just tp,
                                  eType = tp',
-                                 eLeft = fromUExpr e_left,
-                                 eRight = fromUExpr e_right, 
-                                 eLabel = Nothing, 
+                                 eLeft = e_left,
+                                 eRight = e_right, 
                                  eLogLikelihood = Nothing }
-              False -> do let cs = filter (\(e, _) -> canUnify tp (eType $ fromUExpr e)) $
+              False -> do let cs = filter (\(e, _) -> canUnify tp (eType e)) $
                                    Map.toList exprDistr
                           lift $ guard (not . null $ cs)
-                          e <- liftM fromUExpr $ lift $ sampleMultinomial $ map (second exp) $   
-                                             normalizeDist cs
+                          e <- lift $ sampleMultinomial $ map (second exp) $   
+                               normalizeDist cs
                           eTp <- instantiateType (eType e)
                           unify eTp tp
-                          e' <- annotateRequestedM tp e
-                          return $ toUExpr e'
+                          annotateRequestedM tp e
 
 -- | Wrapper over sampleExpr that keeps trying to sample when it fails
-safeSample :: MonadRandom m => Grammar -> Type -> m (Expr a)
+safeSample :: MonadRandom m => Grammar -> Type -> m Expr
 safeSample gr tp = do
   maybeSample <- runMaybeT $ sampleExpr gr tp
   case maybeSample of
@@ -69,13 +67,13 @@ sampleExprs n library tp =
   liftM (Map.map fromIntegral) $ foldM accSample Map.empty [1..n]
   where accSample acc _ = do
           expr <- safeSample library tp
-          return $ Map.insertWith (+) (toUExpr expr) 1 acc
+          return $ Map.insertWith (+) expr 1 acc
 
 -- | Uses breadth-first enumeration to "sample" a grammar
 -- This allows us to get many more programs
 sampleBF :: Int -> Grammar -> Type -> ExprMap Double
 sampleBF n gr tp =
-  Map.fromList $ map (\CombBase{comb=c} -> (toUExpr c, 1.0)) $ enumBF gr n tp
+  Map.fromList $ map (\c -> (c, 1.0)) $ enumBF gr n tp
 
 {-putSampleExprs n library tp  
     = sequence 
@@ -86,33 +84,3 @@ sampleBF n gr tp =
            return x''-}
 
                                           
--- | Annotates the requested types
--- Takes as input the top-level type request
-annotateRequestedM :: Monad m =>
-                     Type -> -- ^ Requested type of the expression
-                     Expr a -> -- ^ The expression
-                     TypeInference m (Expr a) -- ^ The freshly annotated expression
-annotateRequestedM tp (App { eLeft = l, eRight = r }) = do
-  t <- mkTVar
-  l' <- annotateRequestedM (t ->- tp) l
-  t' <- applySub t
-  r' <- annotateRequestedM t' r
-  tp' <- applySub tp
-  let e = App { eLeft    = fromUExpr (toUExpr l'),
-                eRight   = fromUExpr (toUExpr r'),
-                eType    = tp',
-                eReqType = Just tp, 
-                eLabel   = Nothing, 
-                eLogLikelihood = Nothing }
-  return e
-annotateRequestedM tp e@(Term { eType = eTp }) = do
-  eTp' <- instantiateType eTp
-  unify tp eTp'
-  return $ e { eReqType = Just tp }
-
--- | Non-monadic wrapper
--- Presumes no constraint on top-level type
-annotateRequested :: UExpr -> UExpr
-annotateRequested expr = runIdentity $ runTI $ do
-  tp <- mkTVar
-  liftM toUExpr $ annotateRequestedM tp (fromUExpr expr)

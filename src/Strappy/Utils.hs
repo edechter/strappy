@@ -47,6 +47,12 @@ flipOrdering GT = LT
 flipOrdering EQ = EQ
 
 
+-- | Like fromJust, but with error reporting
+safeFromJust :: String -> Maybe a -> a
+safeFromJust str Nothing = error str
+safeFromJust _ (Just x) = x
+
+
 instance (MonadRandom m) => MonadRandom (MaybeT m) where
   getRandom = lift getRandom
   getRandoms = lift getRandoms

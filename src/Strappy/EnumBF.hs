@@ -10,11 +10,13 @@ import Control.Monad.State
 import Control.Monad.Identity
 import Data.Maybe
 import qualified Data.Map as Map
+import qualified Data.Set as Set
 import qualified Data.HashMap as HashMap
 import Data.PQueue.Max (MaxQueue)
 import qualified Data.PQueue.Max as PQ
 import Debug.Trace 
 
+import Strappy.Utils
 import Strappy.Type
 import Strappy.Expr
 import Strappy.Library
@@ -25,13 +27,13 @@ type Path = [Turn]
 
 -- | An ADT corresponding to a ``solution base.'' See Pearl Heuristics
 -- book Chapter 2.
-data CombBase = forall a. CombBase {comb :: Expr a, 
-                                    path :: Maybe Path, -- ^ a path to the
-                                                        -- current node of
-                                                        -- interest
-                                    inferState :: (Int, Map.Map Int Type),
-                                    value :: Double
-                                   }
+data CombBase = CombBase {comb :: Expr, 
+                          path :: Maybe Path, -- ^ a path to the
+                                              -- current node of
+                                              -- interest
+                          inferState :: (Int, Map.Map Int Type),
+                          value :: Double
+                         }
 
 -- Existential type prevents us from deriving instances
 instance Eq CombBase where
@@ -41,7 +43,8 @@ instance Ord CombBase where
     compare = compare `on` value
 
 data BFState = BFState {open :: MaxQueue CombBase, 
-                        closed :: MaxQueue CombBase }
+                        closed :: MaxQueue CombBase, 
+                        bfHistory :: Set.Set Expr }
 
 isClosed :: CombBase -> Bool
 isClosed CombBase{ path = Nothing }  = True
@@ -55,13 +58,13 @@ cInnerNode tp = Term { eName = "?", eType = tp, eThing = undefined,
 enumBF :: Grammar 
        -> Int -- max num combinators
        -> Type
-       -> [CombBase]
+       -> [Expr]
 -- | Breadth-first AO enumeration of combinators with highest scores
 -- under the grammar.
-enumBF gr i tp = PQ.take i $ closed $ enumBF' gr' i initBFState
+enumBF gr i tp = map comb $ PQ.take i $ closed $ enumBF' gr' i initBFState
     where root = CombBase (cInnerNode tp) (Just []) tiState 0.0
           tiState = execState (initializeTI $ grExprDistr gr) (0, Map.empty)
-          initBFState = BFState (PQ.singleton root) PQ.empty
+          initBFState = BFState (PQ.singleton root) PQ.empty Set.empty
           gr' = normalizeGrammar gr
 
 enumBF' :: Grammar -> Int -> BFState -> BFState
@@ -69,55 +72,53 @@ enumBF' :: Grammar -> Int -> BFState -> BFState
 -- resulting elements are added either to the open list or to the
 -- closed list. This process is repeated until there are at least i
 -- elements in closed list. 
-enumBF' gr i bfState@(BFState openPQ closedPQ) | PQ.size openPQ == 0 = bfState
-enumBF' gr i bfState@(BFState openPQ closedPQ) = 
+enumBF' _  _ bfState@(BFState { open = openPQ }) | PQ.size openPQ == 0 = bfState
+enumBF' gr i bfState@(BFState openPQ closedPQ hist) = 
     if PQ.size closedPQ >= i then bfState else
         let (cb, openPQ') = PQ.deleteFindMax openPQ -- get best open solution
         in if isClosed cb
-           then enumBF' gr i $ BFState openPQ' $ PQ.insert cb closedPQ
+           then if Set.member (comb cb) hist
+                then enumBF' gr i $ BFState openPQ' closedPQ hist
+                else let expr = annotateLogLikelihoods gr $ annotateRequested $ comb cb
+                         closedPQ' = PQ.insert (cb { comb = expr,
+                                                     value = safeFromJust "No eLL for closed" $
+                                                             eLogLikelihood expr }) closedPQ
+                         hist' = Set.insert expr hist
+                     in enumBF' gr i $ BFState openPQ' closedPQ' hist'
            else let cbs = expand gr cb
                     openPQ'' = PQ.fromList cbs `PQ.union` openPQ'
-                in enumBF' gr i $ BFState openPQ'' closedPQ
+                in enumBF' gr i $ BFState openPQ'' closedPQ hist
 
 expand :: Grammar 
        -> CombBase 
        -> [CombBase]
 expand gr cb@(CombBase (Term { eType = tp }) (Just []) ti v) =
-  let cs = filter (\(e, _) -> canUnify tp (eType $ fromUExpr e)) $ HashMap.toList $ grExprDistr gr
-      cbs = map (\(e, ll) -> CombBase (fromUExpr e) Nothing (ti' e) (v+ll)) cs
-      ti' e = execState (instantiateType (eType $ fromUExpr e) >>= unify tp) ti
+  let tp' = runIdentity $ evalStateT (applySub tp) ti
+      cs = filter (\(e, _) -> canUnify tp' (eType e)) $ HashMap.toList $ grExprDistr gr
+      cbs = map (\(e, ll) -> CombBase e Nothing (ti' e) (v+ll)) cs
+      ti' e = execState (instantiateType (eType e) >>= unify tp) ti
       cbApp = expandToApp gr cb
   in if null cs then [] else cbApp : cbs
-expand gr (CombBase (App { eLeft = left, eRight = right, eType = tp }) (Just (L:rest)) ti v) = do
+expand gr (CombBase expr@(App { eLeft = left }) (Just (L:rest)) ti v) = do
   (CombBase left' rest' ti' v') <- expand gr $ CombBase left (Just rest) ti v
   let path' =
         case rest' of
           Nothing -> Just [R]
           Just ys -> Just (L:ys)
-  let expr = App { eLeft = fromUExpr $ toUExpr left',
-                   eRight = right,
-                   eType = tp,
-                   eReqType = Nothing,
-                   eLogLikelihood = Nothing,
-                   eLabel = Nothing }
-  return $ CombBase expr path' ti' v'
-expand gr (CombBase (App { eLeft = left, eRight = right, eType = tp }) (Just (R:rest)) ti v) = do
+  let expr' = expr { eLeft = left' }
+  return $ CombBase expr' path' ti' v'
+expand gr (CombBase expr@(App { eRight = right }) (Just (R:rest)) ti v) = do
   (CombBase right' rest' ti' v') <- expand gr $ CombBase right (Just rest) ti v
   let path' =
         case rest' of
           Nothing -> Nothing
           Just ys -> Just (R:ys)
-  let expr = App { eRight = fromUExpr $ toUExpr right',
-                   eLeft = left,
-                   eType = tp,
-                   eReqType = Nothing,
-                   eLogLikelihood = Nothing,
-                   eLabel = Nothing }
-  return $ CombBase expr path' ti' v'
+  let expr' = expr { eRight = right' }
+  return $ CombBase expr' path' ti' v'
 
 expandToApp :: Grammar -> CombBase -> CombBase
 expandToApp gr (CombBase (Term { eType = tp }) (Just []) ti v) =
-  let ((lTp, rTp), ti') = runIdentity $ flip runStateT ti $ do
+  let ((lTp, rTp), ti') = runIdentity $ Prelude.flip runStateT ti $ do
         rightType <- mkTVar
         leftType <- applySub $ rightType ->- tp
         return (leftType, rightType)
@@ -125,8 +126,7 @@ expandToApp gr (CombBase (Term { eType = tp }) (Just []) ti v) =
                    eRight = cInnerNode rTp,
                    eType = tp, -- type is actually irrelevant
                    eReqType = Nothing,
-                   eLogLikelihood = Nothing,
-                   eLabel = Nothing }
+                   eLogLikelihood = Nothing }
   in CombBase expr (Just [L]) ti' (v + grApp gr)
 
 
