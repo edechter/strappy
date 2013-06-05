@@ -14,7 +14,6 @@ import qualified Data.Set as Set
 --import qualified Data.HashMap as HashMap
 import Data.PQueue.Max (MaxQueue)
 import qualified Data.PQueue.Max as PQ
-import Debug.Trace 
 
 import Strappy.Utils
 import Strappy.Type
@@ -53,7 +52,7 @@ isClosed _ = False
 -- | Inner nodes are represented by Terminals with ?'s for names
 -- This is done so that we can use the existing Expr gadt without defining our own new structure
 cInnerNode tp = Term { eName = "?", eType = tp, eThing = undefined,
-                       eReqType = Nothing, eLogLikelihood = Nothing }
+                       eReqType = Nothing, eLogLikelihood = Nothing, eAlternatives = Nothing }
 
 enumBF :: Grammar 
        -> Int -- max num combinators
@@ -79,7 +78,10 @@ enumBF' gr i bfState@(BFState openPQ closedPQ hist) =
         in if isClosed cb
            then if Set.member (comb cb) hist
                 then enumBF' gr i $ BFState openPQ' closedPQ hist
-                else let expr = annotateLogLikelihoods gr $ annotateRequested $ comb cb
+                else let expr = annotateLogLikelihoods gr $
+                                annotateAlternatives gr $
+                                annotateRequested' (eType $ comb cb) $
+                                comb cb
                          closedPQ' = PQ.insert (cb { comb = expr,
                                                      value = safeFromJust "No eLL for closed" $
                                                              eLogLikelihood expr }) closedPQ
@@ -95,7 +97,9 @@ expand :: Grammar
 expand gr cb@(CombBase (Term { eType = tp }) (Just []) ti v) =
   let tp' = runIdentity $ evalStateT (applySub tp) ti
       cs = filter (\(e, _) -> canUnifyFast tp' (eType e)) $ Map.toList $ grExprDistr gr
-      cbs = map (\(e, ll) -> CombBase e Nothing (ti' e) (v+ll)) cs
+      totalLL = logSumExpList $ map snd cs
+      cs' = map (\(e, w) -> (e, w - totalLL)) cs
+      cbs = map (\(e, ll) -> CombBase e Nothing (ti' e) (v+ll)) cs'
       ti' e = execState (instantiateType (eType e) >>= unify tp) ti
       cbApp = expandToApp gr cb
   in if null cs then [] else cbApp : cbs
@@ -124,9 +128,10 @@ expandToApp gr (CombBase (Term { eType = tp }) (Just []) ti v) =
         return (leftType, rightType)
       expr = App { eLeft = cInnerNode lTp,
                    eRight = cInnerNode rTp,
-                   eType = tp, -- type is actually irrelevant
+                   eType = tp,
                    eReqType = Nothing,
-                   eLogLikelihood = Nothing }
+                   eLogLikelihood = Nothing, 
+                   eAlternatives = Nothing }
   in CombBase expr (Just [L]) ti' (v + grApp gr)
 
 

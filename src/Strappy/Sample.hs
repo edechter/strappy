@@ -43,7 +43,8 @@ sampleExpr gr@Grammar{grApp=p, grExprDistr=exprDistr} tp
                                  eType = tp',
                                  eLeft = e_left,
                                  eRight = e_right, 
-                                 eLogLikelihood = Nothing }
+                                 eLogLikelihood = Nothing, 
+                                 eAlternatives = Nothing }
               False -> do let cs = filter (\(e, _) -> canUnifyFast tp (eType e)) $
                                    Map.toList exprDistr
                           lift $ guard (not . null $ cs)
@@ -71,6 +72,7 @@ sampleExprs n library tp =
 
 -- | Uses breadth-first enumeration to "sample" a grammar
 -- This allows us to get many more programs
+-- Each program keys its log likelihood
 sampleBF :: Int -> Grammar -> Type -> ExprMap Double
 sampleBF n gr tp =
   Map.fromList $ map (\c -> (c, safeFromJust "BF expr has no LL" $ eLogLikelihood c)) $ enumBF gr n tp

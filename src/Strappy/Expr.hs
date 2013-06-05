@@ -21,18 +21,24 @@ data Expr = forall a.
                   eType  :: Type, 
                   eReqType :: Maybe Type, 
                   eThing :: a,
-                  eLogLikelihood :: Maybe Double }
+                  -- Log likelihood under a specific grammar
+                  eLogLikelihood :: Maybe Double, 
+                  -- Alternative choices under a specific grammar
+                  -- This is Nothing for expressions without alternatives, eg, non-productions
+                  eAlternatives :: Maybe [Expr] }
           | App {eLeft  :: Expr,
                  eRight :: Expr,
                  eType  :: Type,
                  eReqType :: Maybe Type, 
-                 eLogLikelihood :: Maybe Double }
+                 eLogLikelihood :: Maybe Double, 
+                 eAlternatives :: Maybe [Expr] }
              
 -- | smart constructor for terms
 mkTerm name tp thing = Term { eName = name,
                               eType = tp, 
                               eReqType = Nothing,
                               eLogLikelihood = Nothing,
+                              eAlternatives = Nothing,
                               eThing = thing }
 
 -- | smart constructor for applications
@@ -40,7 +46,8 @@ a <> b = App { eLeft = a,
                eRight = b, 
                eType = tp, 
                eReqType = Nothing, 
-               eLogLikelihood = Nothing }
+               eLogLikelihood = Nothing, 
+               eAlternatives = Nothing }
          where tp = runIdentity . runTI $ typeOfApp a b
 
 instance Show Expr where
