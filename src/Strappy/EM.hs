@@ -13,6 +13,7 @@ import Strappy.Library
 import Data.Maybe
 import Data.List
 import Data.Function
+import Control.Parallel.Strategies
 import Control.Arrow (first)
 import qualified Data.HashMap as Map
 import Control.Monad
@@ -122,19 +123,23 @@ doEMIter tasks lambda pseudocounts frontierSize grammar = do
                     $ nub $ map snd tasks
   -- For each task, weight the corresponding frontier by likelihood
   let weightedFrontiers = Prelude.flip map tasks $ \(tsk, tp) ->
-        Map.mapWithKey (\expr cnt -> cnt * tsk expr) $ fromJust $ lookup tp frontiers
+        Map.mapWithKey (\expr cnt -> cnt + log (tsk expr)) $ fromJust $ lookup tp frontiers
   -- Normalize frontiers
-  let zs = map (Map.fold (+) 0.0) weightedFrontiers
-  let numHit = length $ filter (>0.0) zs
+  let logZs = map (Map.fold logSumExp (log 0.0)) weightedFrontiers
+  let numHit = length $ filter (\z -> not (isNaN z) && not (isInfinite z)) logZs
   putStrLn $ "Hit " ++ show numHit ++ "/" ++ show (length tasks) ++ " tasks."
-  let obs = foldl (\acc (z, frontier) ->
-                    if z > 0.0
-                    then Map.unionWith (+) acc $ Map.map (/z) frontier
-                    else acc) Map.empty $ zip zs weightedFrontiers
-  if Map.size obs == 0
-    then return grammar -- Didn't hit any tasks
-    else do let grammar' = optimizeGrammar lambda pseudocounts grammar $ Map.toList obs
-            let grammar'' = iterateInOut 5 (clearGrammarProbs grammar') 0.3 $ Map.toList obs
+  let obs = foldl (\acc (logZ, frontier) ->
+                    if not (isNaN logZ) && not (isInfinite logZ)
+                    then Map.unionWith logSumExp acc $ Map.map (\x -> x-logZ) frontier
+                    else acc) Map.empty $ zip logZs weightedFrontiers
+  -- Exponentiate log likelihoods to get final weights
+  let obs' = filter (\(_,w) -> not (isNaN w) && not (isInfinite w)) $
+             map (\(e,logW) -> (e, exp logW)) $ Map.toList obs
+  if length obs' == 0
+    then do putStrLn "Hit no tasks."
+            return grammar -- Didn't hit any tasks
+    else do let grammar' = optimizeGrammar lambda pseudocounts grammar obs'
+            let grammar'' = iterateInOut 5 (clearGrammarProbs grammar') 0.3 obs'
             putStrLn $ showGrammar grammar''
             return grammar''
          
@@ -177,10 +182,11 @@ polyEM = do
                         in (score, tInt ->- tInt)
   let const = [ mkNthDet [x] | x <- [1..9] ]
   let lin = [ mkNthDet [x,y] | x <- [1..9], y <- [1..9] ]
+  let quad = [ mkNthDet [x,y,z] | x <- [1..9], y <- [1..9], z <- [1..3] ]
 --  quad <- replicateM 100 (mkNthOrder 2)
   loopM seed [1..100] $ \grammar step -> do
     putStrLn $ "EM Iteration: " ++ show step
-    grammar' <- doEMIter (const++lin) 0.3 1.0 10000 grammar
+    grammar' <- doEMIter (const++lin++quad) 0.1 1.0 2000 grammar
     return grammar'
   return ()
                     

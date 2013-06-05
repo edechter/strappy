@@ -73,7 +73,7 @@ sampleExprs n library tp =
 -- This allows us to get many more programs
 sampleBF :: Int -> Grammar -> Type -> ExprMap Double
 sampleBF n gr tp =
-  Map.fromList $ map (\c -> (c, 1.0)) $ enumBF gr n tp
+  Map.fromList $ map (\c -> (c, safeFromJust "BF expr has no LL" $ eLogLikelihood c)) $ enumBF gr n tp
 
 {-putSampleExprs n library tp  
     = sequence 
