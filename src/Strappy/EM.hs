@@ -13,9 +13,8 @@ import Strappy.Library
 import Data.Maybe
 import Data.List
 import Data.Function
-import Control.Parallel.Strategies
 import Control.Arrow (first)
-import qualified Data.HashMap as Map
+import qualified Data.Map as Map
 import Control.Monad
 import Control.Monad.Random
 import Control.Monad.State
@@ -45,7 +44,7 @@ optimizeGrammar :: Double -> -- ^ Lambda
                    Double -> -- ^ pseudocounts
                    Grammar -> [(Expr, Double)] -> Grammar
 optimizeGrammar lambda pseudocounts gr exprs_and_scores=
-  let gr' = estimateGrammar gr 1.0 exprs_and_scores
+  let gr' = iterateInOut 5 (clearGrammarProbs gr) 0.3 exprs_and_scores
       initial_score = lambda * (grammarNLP gr') - grammarLogLikelihood gr' exprs_and_scores
       -- This procedure performs hill climbing
       climb :: Grammar -> Double -> Grammar
@@ -81,7 +80,7 @@ grammarNeighbors (Grammar appProb lib) pseudocounts obs = oneRemoved ++ oneAdded
                              sortBy (\a a' -> flipOrdering $ (compare `on` snd) a a') $
                              Map.toList subtreeSizes
           in
-           [ estimateGrammar (Grammar appProb (Map.insert subtree 0.0 lib)) pseudocounts obs |
+           [ iterateInOut 5 (clearGrammarProbs (Grammar appProb (Map.insert subtree 0.0 lib))) pseudocounts obs |
              subtree <- bestSubtrees ]
 
 countSubtreesNotInGrammar :: ExprDistr -- <lib>: Distribution over expressions. 
@@ -139,9 +138,8 @@ doEMIter tasks lambda pseudocounts frontierSize grammar = do
     then do putStrLn "Hit no tasks."
             return grammar -- Didn't hit any tasks
     else do let grammar' = optimizeGrammar lambda pseudocounts grammar obs'
-            let grammar'' = iterateInOut 5 (clearGrammarProbs grammar') 0.3 obs'
-            putStrLn $ showGrammar grammar''
-            return grammar''
+            putStrLn $ showGrammar grammar'
+            return grammar'
          
 -- Library for testing EM+polynomial regressionx
 polyExprs :: [Expr]
@@ -184,9 +182,9 @@ polyEM = do
   let lin = [ mkNthDet [x,y] | x <- [1..9], y <- [1..9] ]
   let quad = [ mkNthDet [x,y,z] | x <- [1..9], y <- [1..9], z <- [1..3] ]
 --  quad <- replicateM 100 (mkNthOrder 2)
-  loopM seed [1..100] $ \grammar step -> do
+  loopM seed [1..4] $ \grammar step -> do
     putStrLn $ "EM Iteration: " ++ show step
-    grammar' <- doEMIter (const++lin++quad) 0.1 1.0 2000 grammar
+    grammar' <- doEMIter (const++lin++quad) 0.1 1.0 1000 grammar
     return grammar'
   return ()
                     

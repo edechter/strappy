@@ -8,7 +8,7 @@ import Control.Monad.Maybe
 import Control.Monad.Random
 import Control.Exception 
 import Control.Arrow (second)
-import qualified Data.HashMap as Map
+import qualified Data.Map as Map
 
 import Strappy.Type
 import Strappy.EnumBF
@@ -44,7 +44,7 @@ sampleExpr gr@Grammar{grApp=p, grExprDistr=exprDistr} tp
                                  eLeft = e_left,
                                  eRight = e_right, 
                                  eLogLikelihood = Nothing }
-              False -> do let cs = filter (\(e, _) -> canUnify tp (eType e)) $
+              False -> do let cs = filter (\(e, _) -> canUnifyFast tp (eType e)) $
                                    Map.toList exprDistr
                           lift $ guard (not . null $ cs)
                           e <- lift $ sampleMultinomial $ map (second exp) $   

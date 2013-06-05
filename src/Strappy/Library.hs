@@ -3,7 +3,7 @@
 module Strappy.Library where
 
 import Data.Maybe 
-import qualified Data.HashMap as Map
+import qualified Data.Map as Map
 import Data.Hashable
 import GHC.Prim
 import Unsafe.Coerce (unsafeCoerce)
@@ -108,7 +108,7 @@ annotateRequested expr = runIdentity $ runTI $ do
 calcLogProb :: Grammar -> Expr -> Double
 calcLogProb gr@Grammar{grExprDistr=distr} expr
   = let tp = safeFromJust "Calculating log prob of expression w/o eReqType" (eReqType expr)
-        m = filter (\(e, _) -> canUnify (eType e) tp) $ Map.toList distr
+        m = filter (\(e, _) -> canUnifyFast (eType e) tp) $ Map.toList distr
         logp_e = distr Map.! expr
         logp_e_tot = logSumExpList (map snd m) 
     in  logp_e - logp_e_tot
@@ -131,7 +131,7 @@ estimateGrammar Grammar{grExprDistr=distr} pseudocounts obs
             let tp = fromJust $ eReqType expr
                 tc' = tc + weight
                 uc' = Map.adjust (+ weight) (findLibExpr expr) uc
-                otherTerms = map fst $ filter (\(e,_) -> canUnify (eType e) tp) es
+                otherTerms = map fst $ filter (\(e,_) -> canUnifyFast (eType e) tp) es
                 pc' = List.foldl' (Prelude.flip $ Map.adjust (+ weight)) pc otherTerms 
             in Counts ac tc' uc' pc'
           go counts@(Counts ac tc uc pc) expr@App{eRight=r, eLeft=l} weight =
@@ -158,7 +158,7 @@ inoutEstimateGrammar gr@Grammar{grExprDistr=distr, grApp = app} pseudocounts obs
         expectedCounts :: Double -> Counts -> Expr -> Counts
         expectedCounts weight counts expr@(Term { eReqType = (Just tp) }) =
           let uc' = Map.adjust (+weight) (findLibExpr expr) (useCounts counts)
-              otherTerms = map fst $ filter (\(e,_) -> canUnify (eType e) tp) es
+              otherTerms = map fst $ filter (\(e,_) -> canUnifyFast (eType e) tp) es
               pc' = List.foldl' (Prelude.flip $ Map.adjust (+ weight)) (possibleUseCounts counts) otherTerms
           in counts { termCounts = termCounts counts + weight,
                       useCounts = uc',
@@ -172,7 +172,7 @@ inoutEstimateGrammar gr@Grammar{grExprDistr=distr, grApp = app} pseudocounts obs
                    probUsedApp = exp $ logProbApp - logSumExp logProbApp logProbLib
                    probUsedLib = 1 - probUsedApp
                    uc' = Map.adjust (+(weight*probUsedLib)) (findLibExpr expr) (useCounts counts)
-                   otherTerms = map fst $ filter (\(e,_) -> canUnify (eType e) tp) es
+                   otherTerms = map fst $ filter (\(e,_) -> canUnifyFast (eType e) tp) es
                    pc' = List.foldl' (Prelude.flip $ Map.adjust (+ (weight*probUsedLib))) (possibleUseCounts counts) otherTerms
                    counts' = counts { appCounts = appCounts counts + weight * probUsedApp,
                                       termCounts = termCounts counts + weight * probUsedLib, 
@@ -198,12 +198,6 @@ inoutEstimateGrammar gr@Grammar{grExprDistr=distr, grApp = app} pseudocounts obs
 -- | Helper for turning a Haskell type to Any. 
 mkAny :: a -> Any
 mkAny = unsafeCoerce  
-
---  Some basic library entires. 
-t = TVar 0                  
-t1 = TVar 1               
-t2 = TVar 2                  
-t3 = TVar 3                  
 
 -- | Basic combinators
 cI = mkTerm "I" (t ->- t)   id
@@ -291,7 +285,7 @@ compose = foldl1 (<>)
 clearGrammarProbs :: Grammar -> Grammar
 clearGrammarProbs Grammar { grExprDistr = distr } =
   Grammar { grExprDistr = Map.map (const $ log 0.5) distr,
-            grApp = log 0.4 }
+            grApp = log 0.5 }
 
 
 -- | Initializing a TypeInference monad with a Library. We need to

@@ -11,7 +11,7 @@ import Control.Monad.Identity
 import Data.Maybe
 import qualified Data.Map as Map
 import qualified Data.Set as Set
-import qualified Data.HashMap as HashMap
+--import qualified Data.HashMap as HashMap
 import Data.PQueue.Max (MaxQueue)
 import qualified Data.PQueue.Max as PQ
 import Debug.Trace 
@@ -94,7 +94,7 @@ expand :: Grammar
        -> [CombBase]
 expand gr cb@(CombBase (Term { eType = tp }) (Just []) ti v) =
   let tp' = runIdentity $ evalStateT (applySub tp) ti
-      cs = filter (\(e, _) -> canUnify tp' (eType e)) $ HashMap.toList $ grExprDistr gr
+      cs = filter (\(e, _) -> canUnifyFast tp' (eType e)) $ Map.toList $ grExprDistr gr
       cbs = map (\(e, ll) -> CombBase e Nothing (ti' e) (v+ll)) cs
       ti' e = execState (instantiateType (eType e) >>= unify tp) ti
       cbApp = expandToApp gr cb

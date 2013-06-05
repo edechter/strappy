@@ -1,7 +1,7 @@
 -- Type.hs
 -- Eyal Dechhter
 {-# Language GeneralizedNewtypeDeriving, BangPatterns,
-  DeriveFunctor, ScopedTypeVariables #-}
+  DeriveFunctor, ScopedTypeVariables, TupleSections, GADTs #-}
 
 -- | This is a different approach to type inference.
 -- The type inference monad maintains a union-find data structure
@@ -14,12 +14,15 @@ module Strappy.Type where
 import qualified Data.Map as M
 import Data.List (nub)
 import Data.Hashable (Hashable, hash, hashWithSalt) 
+import Data.Maybe
 
 import Control.Monad (foldM)
 import Control.Monad.Identity
 import Control.Monad.Trans.Class
 import Control.Monad.Error
 import Control.Monad.State
+import Data.IORef
+import System.IO.Unsafe
 
 type Id = Int
 data Type = TVar Int
@@ -112,6 +115,66 @@ canUnify t1 t2 =
     Nothing -> False
     Just x -> x
 
+-- | Fast types that hold an implicit substitution
+-- Using IORef's is dirty, and I should be using STRef's,
+-- but I had difficulty appeasing the type checker using STRef's
+data FType = FTVar (IORef (Maybe FType))
+           | FTCon String [FType]
+
+-- Fast, imperative procedure for checking if two types can unify
+canUnifyFast :: Type -> Type -> Bool
+canUnifyFast t1 t2 | structureMismatch t1 t2 = False
+  where structureMismatch (TCon k xs) (TCon k' ys) = k /= k' || mismatchList xs ys
+        structureMismatch _ _ = False
+        mismatchList [] [] = False
+        mismatchList (x:xs) (y:ys) = structureMismatch x y || mismatchList xs ys
+        mismatchList _ _ = True
+canUnifyFast t1 t2 = unsafePerformIO $ do
+  (t1', _) <- mkFastType [] t1
+  (t2', _) <- mkFastType [] t2
+  uni t1' t2'
+  where mkFastType dict (TVar v) =
+          case lookup v dict of
+            Just r -> return $ (FTVar r, dict)
+            Nothing -> do r <- newIORef Nothing
+                          return $ (FTVar r, (v, r) : dict)
+        mkFastType dict (TCon k []) = return (FTCon k [], dict)
+        mkFastType dict (TCon k ts) = do (ts', dict') <- mkFastList dict ts
+                                         return (FTCon k ts', dict')
+        mkFastList dict [] = return ([], dict)
+        mkFastList dict (t:ts) = do
+          (t', dict') <- mkFastType dict t
+          (ts', dict'') <- mkFastList dict' ts
+          return (t' : ts', dict'')
+        
+        -- Assumes both t1 and t2 have had the current substitution applied
+        uni (FTVar v1) (FTVar v2) | v1 == v2 = return True
+        uni (FTVar v1) t2 = if fOccurs v1 t2 then return False else (writeIORef v1 (Just t2) >> return True)
+        uni t1 (FTVar v2) = if fOccurs v2 t1 then return False else (writeIORef v2 (Just t1) >> return True)
+        uni (FTCon k _) (FTCon k' _) | k /= k' = return False
+        uni (FTCon _ []) (FTCon _ []) = return True
+        uni (FTCon _ (x:xs)) (FTCon _ (y:ys)) = do
+          xy <- uni x y
+          if xy then uniList xs ys else return False
+        uniList [] [] = return True
+        uniList (x:xs) (y:ys) = do
+          x' <- traceVars x
+          y' <- traceVars y
+          xy <- uni x' y'
+          if xy then uniList xs ys else return False
+        traceVars tp@(FTVar ref) = do
+          sub <- readIORef ref
+          case sub of
+            Nothing -> return tp
+            Just tp' -> do tp'' <- traceVars tp'
+                           writeIORef ref (Just tp'')
+                           return tp''
+        traceVars (FTCon k xs) = mapM traceVars xs >>= return . FTCon k
+        fOccurs ref (FTVar ref') = ref == ref'
+        fOccurs ref (FTCon _ []) = False
+        fOccurs ref (FTCon _ xs) = any (fOccurs ref) xs
+
+
 -- Ground a universally quantified type by instantiating new type vars
 instantiateType :: Monad m => 
                    Type -> TypeInference m Type
@@ -191,6 +254,10 @@ tPair a b = TCon "(,)" [a,b]
 tTriple a b c = TCon "(,,)" [a,b,c]
 tQuad a b c d = TCon "(,,,)" [a,b,c,d]
 tQuint a b c d e = TCon "(,,,,)" [a,b,c,d,e]
+t = TVar 0                  
+t1 = TVar 1               
+t2 = TVar 2                  
+t3 = TVar 3                  
 
 ----------------------------------------                    
 -- Typeable ----------------------------
