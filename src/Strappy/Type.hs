@@ -27,9 +27,18 @@ import System.IO.Unsafe
 type Id = Int
 data Type = TVar Int
           | TCon String [Type]
-            deriving(Ord, Eq, Show)
+            deriving (Ord, Eq)
 infixr 6 ->-
 t1 ->- t2 = TCon "->" [t1,t2]
+
+instance Show Type where 
+    show (TVar i) = "t" ++ show i
+    show (TCon con ts) | con == "->" && length ts == 2  = "(" ++ show t1 ++ " -> " ++ show t2 ++ ")" 
+                       | otherwise   = "(" ++ show con ++ " " ++ show' ts  ++ ")" 
+                where show' (t:ts) = show t ++ " " ++ show' ts
+                      show' [] = ""
+                      t1 = ts !! 0
+                      t2 = ts !! 1
 
 -- | type inference monad
 type TypeInference = StateT (Int, -- ^ next type var
