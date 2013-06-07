@@ -64,6 +64,7 @@ doEMIter tasks lambda pseudocounts frontierSize grammar = do
   let obs' = map (\(e,logW) -> (e, exp logW)) $
              filter (\(_,w) -> not (isNaN w) && not (isInfinite w)) $
              Map.toList obs
+  putStrLn $ "Total mass: " ++ show (sum $ map snd obs')
   if length obs' == 0
     then do putStrLn "Hit no tasks."
             return grammar -- Didn't hit any tasks
@@ -117,7 +118,7 @@ polyEM = do
   let const = [ mkNthDet [x] | x <- [1..9] ]
   let lin = [ mkNthDet [x,y] | x <- [1..9], y <- [1..9] ]
   let quad = [ mkNthDet [x,y,z] | x <- [1..9], y <- [1..9], z <- [1..3] ]
-  loopM seed [1..100] $ \grammar step -> do
+  loopM seed [1..20] $ \grammar step -> do
     putStrLn $ "EM Iteration: " ++ show step
     grammar' <- doEMIter (const++lin) 6000 1.0 5000 grammar
     return grammar'
