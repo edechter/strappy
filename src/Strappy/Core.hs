@@ -1,7 +1,13 @@
 
 -- | This module imports all of the important bits of Strappy
 
-module Core where
+module Strappy.Core (
+    module Strappy.Type,
+    module Strappy.Expr,
+    module Strappy.Library,
+    module Strappy.Task,
+    module Strappy.Sample,
+    module Strappy.Utils) where
 
 import Strappy.Type
 import Strappy.Expr
