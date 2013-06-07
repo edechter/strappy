@@ -7,6 +7,7 @@
 \usepackage{listings}
 \usepackage{syntax}
 \usepackage{mdframed}
+\usepackage{graphicx}
 
 \newcommand{\funtype}[2]{#1 \rightarrow #2}
 \newcommand{\weightedrule}[3]{[#1 \mapsto #2 \, | \, #3]}
@@ -106,10 +107,87 @@ the form shown in Figure~\ref{fig:grammar}.
 Our probabilistic model is motivated by the fact that while $\mathcal{G}$
 represents the language in which solutions are written, in any particular
 domain there is a distribution $\mathcal{H}$ over solutions that is itself drawn
-according to an adaptor grammar~\cite{} based on $\mathcal{G}$ and some
-parameters $\theta$. 
+according to an adaptor grammar prior~\cite{} based on $\mathcal{G}$ and some
+parameters $\theta$. $\mathcal{H}$ is a probabilistic context-free grammar
+(PCFG), and this PCFG generates programs $\{e_n\}$ that solve problems in the
+domain. Finally, any candidate solution $s_n$ is scored according to its
+likelihood given the latent $e_i$. Thus we have the generative model pictured in
+Figure~\ref{fig:generativeModel}.
 
- \section{History and related literature}
+\begin{figure}[h] 
+  \includegraphics[width=.3\linewidth]{./figures/basicGM.pdf}  
+  \caption{Generative model for expressions.\label{fig:generativeModel}}  
+\end{figure}
+
+The likelihood function $p_{s|e}(\cdot | e)$ takes the place in our framework that the fitness function would take in genetic programming. 
+
+How does the specification of the generative model relate to the specification
+of the problems our agent needs to solve? The idea is that for any objective
+function $ r:S \rightarrow \mathcal{D}$, where $S$ is the set of solutions and
+$\mathcal{D}$ is the domain, we can map $\mathcal{D}$ to the interval $[0,1]$,
+thereby generating a likelihood function that scores candidate solutions
+relative to the latent program $e_n$.   
+
+How can we learn in this model? Our goal is to learn the distribution
+$\mathcal{H}$.  
+
+\section{Potential application}
+\begin{itemize}
+  \item Learning GP kernels
+  \item Learning control circuits (signals \& systems book)
+  \item Gen audio
+    Ryan suggested this. MAX MSP and its open source version (Pd or
+    Pd-extended) allow composers to generate sounds by using a graphical
+    programming language. 
+  \item Gen vis
+  \item Compositional object detectors
+  \item Constructive solid geometry
+\end{itemize}
+
+\subsection{Discovering the laws of physics}
+One of the main challenges that scientists face when discovering theories that
+explain the world's phenomena is that they must perform inference over the
+latent properties of objects in the world and the way in which these properties
+relate to each other and the observable world. For example, Newton's first law
+of motion postulates that things called forces exist in the world, and that
+they obey the property that their vector sum is equal to the mass times the
+acceleration of the object on which they act. 
+
+Here we consider simpler example of this joint inference problem: suppose you
+observe various sets of charged particles interacting, but you do not know that
+they are charged or that the property of electromagnetic charge exists. How can
+you learn both that each particle has a charge, which is a positive or negative
+scalar property, and that Coulomb's law dictates the force between those
+particles. 
+
+Understanding Coulomb's law consists of holding that the following are true: 1)
+every particle has a unique charge and, under normal circumstances, the charge
+of a particle does not change. 2) Charge is a scalar quantity on the real line
+that can take values on in the reals. 3) The force on any object $i$ with charge $q_i$ at location $r_i$ due to charged object j with charge $q_j$ at location $r_j$ is 
+
+\begin{align}
+  F_i \propto \frac{q_i q_j}{|r_i - r_j|^2}
+\end{align}
+
+To simplify matters, and remove the complexities of vector arithmetic, we can
+suppose that this is a one-dimensional problem: 
+
+\begin{align}
+  F_i \propto \frac{q_i q_j}{(r_i - r_j)^2} \text{sign}(r_i - r_j)
+\end{align}
+
+Conceptually, this force law has two components. The first is that the force is
+inversely propotional to the distance between the objects squared. The second
+is that the force is proportional to the product of the charges. The scientist
+can learn these two facts separately. By comparing the force between two
+objects at different distances, she can discover the inverse squared distance
+behavior. By noting that the force differs by the same multiplicative factor
+when you swap object a for object c regardless of the paired object b. 
+
+In order to do this though, the scientist needs to be able to focus her
+attention an different scenarios. 
+
+\section{History and related literature}
 Angluin 1988~\cite{angluin1988queries}: investigates the complexity of
 learning concepts that are subsets of a hypothesis space via a number
 of primitive queries such as membership, equivalence, subset, etc. \\
