@@ -152,7 +152,7 @@ inoutEstimateGrammar gr@Grammar{grExprDistr=distr, grApp = app} pseudocounts obs
           let logProbLib = distr Map.! expr + log (1 - exp app)
               logProbApp = app + exprLogLikelihood gr left + exprLogLikelihood gr right
               probUsedApp = exp $ logProbApp - logSumExp logProbApp logProbLib
-              probUsedLib = trace ("pApp: " ++ show (1 - probUsedApp)) $ 1 - probUsedApp
+              probUsedLib = 1 - probUsedApp
               uc' = Map.insertWith (+) expr (weight*probUsedLib) $ useCounts counts
               counts' = counts { appCounts = appCounts counts + weight * probUsedApp,
                                  termCounts = termCounts counts + weight * probUsedLib, 
@@ -170,8 +170,7 @@ inoutEstimateGrammar gr@Grammar{grExprDistr=distr, grApp = app} pseudocounts obs
         uses' = List.foldl' (\cts e -> Map.insertWith (+) e pseudocounts cts) (useCounts counts) $ Map.keys distr
         logTotalUses = log $ Map.fold (+) 0.0 uses'
         appLogProb = log (appCounts counts) - log (termCounts counts + appCounts counts)
-        distr' = trace ("Num apps: " ++ show (appCounts counts) ++ ", num terms: " ++ show (termCounts counts)) $
-                 Map.map (\uses -> log uses - logTotalUses) uses'
+        distr' = Map.map (\uses -> log uses - logTotalUses) uses'
 
 
 
@@ -241,8 +240,7 @@ basicExprs = [cI,
               cFoldl,
               cSingle,
               cRep
-             ] 
-             ++ cInts
+             ] ++ cInts
 
 mkExprDistr :: [Expr] -> ExprDistr
 mkExprDistr exprs = Map.adjust (const (-5)) cBottom

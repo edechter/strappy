@@ -94,10 +94,13 @@ expand gr cb@(CombBase (Term { eType = tp }) (Just []) ti v) =
   let tp' = runIdentity $ evalStateT (applySub tp) ti
       logTerm = log (1 - exp (grApp gr))
       cs = filter (\(e, _) -> canUnifyFast tp' (eType e)) $ Map.toList $ grExprDistr gr
-      cbs = map (\(e, ll) -> CombBase e Nothing (ti' e) (v+ll+logTerm)) cs
+      z = logSumExpList $ map snd cs
+      cbs = map (\(e, ll) -> CombBase e Nothing (ti' e) (v+ll+logTerm-z)) cs
       ti' e = execState (instantiateType (eType e) >>= unify tp) ti
       cbApp = expandToApp gr cb
-  in if null cs then [] else cbApp : cbs -- Do things break horribly if we don't have this conditional?
+  in cbApp : cbs -- This code used to abort if there were no available terminals
+                 -- I do not see the justification for this,
+                 -- and the performance does not degrade significantly
 expand gr (CombBase expr@(App { eLeft = left }) (Just (L:rest)) ti v) = do
   (CombBase left' rest' ti' v') <- expand gr $ CombBase left (Just rest) ti v
   let path' =

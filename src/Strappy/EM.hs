@@ -48,35 +48,33 @@ doEMIter tasks lambda pseudocounts frontierSize grammar = do
                     $ nub $ map snd tasks
   -- For each task, weight the corresponding frontier by likelihood
   let weightedFrontiers = Prelude.flip map tasks $ \(tsk, tp) ->
-        Map.mapWithKey (\expr cnt -> cnt + log (tsk expr)) $ fromJust $ lookup tp frontiers
+        Map.mapWithKey (\expr cnt -> {-cnt +-} log (tsk expr)) $ fromJust $ lookup tp frontiers
   -- Normalize frontiers
   let logZs = map (Map.fold logSumExp (log 0.0)) weightedFrontiers
-  let weightedFrontiers' = zipWith (\logZ -> filter ((>0) . snd) . Map.toList .
-                                             Map.map (\x-> if isNaN x || isInfinite x then 0.0 else exp (x-logZ)))
+  let weightedFrontiers' = zipWith (\logZ -> filter (\(_,x) -> not (isNaN x) && not (isInfinite x)) . Map.toList .
+                                             Map.map (\x-> x-logZ))
                                    logZs weightedFrontiers
   let numHit = length $ filter (not . null) weightedFrontiers'
   putStrLn $ "Hit " ++ show numHit ++ "/" ++ show (length tasks) ++ " tasks."
-  let obs = foldl (\acc (logZ, frontier) ->
-                    if not (isNaN logZ) && not (isInfinite logZ) && not (null frontier)
-                    then Map.unionWith logSumExp acc $ Map.map (\x -> x-logZ) $ Map.fromList frontier
-                    else acc) Map.empty $ zip logZs weightedFrontiers'
+  let obs = foldl (\acc frontier ->
+                    Map.unionWith logSumExp acc $ Map.fromList frontier) Map.empty weightedFrontiers'
   -- Exponentiate log likelihoods to get final weights
   let obs' = map (\(e,logW) -> (e, exp logW)) $
              filter (\(_,w) -> not (isNaN w) && not (isInfinite w)) $
              Map.toList obs
-  putStrLn $ "Total mass: " ++ show (sum $ map snd obs')
   if length obs' == 0
     then do putStrLn "Hit no tasks."
             return grammar -- Didn't hit any tasks
     else do let subtrees = foldl1 (Map.unionWith (+)) $ map (countSubtrees Map.empty) obs'
             let terminals = filter isTerm $ Map.keys $ grExprDistr grammar
-            let productions = compressLP lambda subtrees ++ terminals
+            let newProductions = compressLP lambda subtrees
+            let productions = newProductions ++ terminals
             let uniformLogProb = -log (genericLength productions)
-            let grammar'  = Grammar (log 0.45) $ Map.fromList [ (prod, uniformLogProb) | prod <- productions ]
+            let grammar'  = Grammar (log 0.5) $ Map.fromList [ (prod, uniformLogProb) | prod <- productions ]
             let grammar'' = inoutEstimateGrammar grammar' pseudocounts obs'
-            putStrLn $ "Got " ++ show (length $ lines $ showGrammar $ removeSubProductions grammar') ++ " new productions."
-            putStrLn $ showGrammar $ removeSubProductions grammar'
-            return grammar'
+            putStrLn $ "Got " ++ show ((length $ lines $ showGrammar $ removeSubProductions grammar') - length terminals - 1) ++ " new productions."
+            putStrLn $ showGrammar $ removeSubProductions grammar''
+            return grammar''
          
 -- Library for testing EM+polynomial regressionx
 polyExprs :: [Expr]
@@ -87,7 +85,7 @@ polyExprs = [cI,
               cK, 
               cPlus,
               cTimes
-              ] ++ cInts
+              ] ++ [ cInt2Expr 0, cInt2Expr 1 ]
 
 
 -- Polynomial regression test for EM
@@ -96,17 +94,6 @@ polyEM = do
   -- Seed grammar
   let seed = Grammar { grApp = log 0.35,
                        grExprDistr = Map.fromList [ (annotateRequested e, 1.0) | e <- polyExprs ] }
-  -- Make nth order polynomial task with random coefficients
-{-  let mkNthOrder :: Int -> IO (Expr -> Double, Type)
-      mkNthOrder n = replicateM (n+1) $ randomRIO (0,9::Int) >>= \coeffs ->
-        let poly :: Int -> Int
-            poly x = sum $ zipWith (*) coeffs $ map (x^) [0..]
-            score proc =
-              if map (eval proc) [0..3] == map poly [0..3]
-              then 1.0
-              else 0.0
-        in return (score, tInt ->- tInt)
--}
   -- Make nth order polynomial task with fixed coefficients
   let mkNthDet :: [Int] -> (Expr -> Double, Type)
       mkNthDet coeffs = let poly :: Int -> Int
@@ -117,10 +104,10 @@ polyEM = do
                         in (score, tInt ->- tInt)
   let const = [ mkNthDet [x] | x <- [1..9] ]
   let lin = [ mkNthDet [x,y] | x <- [1..9], y <- [1..9] ]
-  let quad = [ mkNthDet [x,y,z] | x <- [1..9], y <- [1..9], z <- [1..3] ]
+  let quad = [ mkNthDet [x,y,z] | x <- [1..9], y <- [0..9], z <- [0..3] ]
   loopM seed [1..20] $ \grammar step -> do
     putStrLn $ "EM Iteration: " ++ show step
-    grammar' <- doEMIter (const++lin) 6000 1.0 5000 grammar
+    grammar' <- doEMIter (const++lin++quad) 1.1 5.0 10000 grammar
     return grammar'
   return ()
                     
