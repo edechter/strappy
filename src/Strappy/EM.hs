@@ -74,7 +74,7 @@ doEMIter tasks lambda pseudocounts frontierSize grammar = do
             let uniformLogProb = -log (genericLength productions)
             let grammar'  = Grammar (log 0.45) $ Map.fromList [ (prod, uniformLogProb) | prod <- productions ]
             let grammar'' = inoutEstimateGrammar grammar' pseudocounts obs'
-            putStrLn $ showGrammar $ removeSubProductions grammar''
+            putStrLn $ showGrammar $ removeSubProductions grammar'
             return grammar''
          
 -- Library for testing EM+polynomial regressionx
