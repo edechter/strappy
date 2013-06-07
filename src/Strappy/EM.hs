@@ -70,12 +70,12 @@ doEMIter tasks lambda pseudocounts frontierSize grammar = do
     else do let subtrees = foldl1 (Map.unionWith (+)) $ map (countSubtrees Map.empty) obs'
             let terminals = filter isTerm $ Map.keys $ grExprDistr grammar
             let productions = compressLP lambda subtrees ++ terminals
-            putStrLn $ unlines $ map show productions
             let uniformLogProb = -log (genericLength productions)
             let grammar'  = Grammar (log 0.45) $ Map.fromList [ (prod, uniformLogProb) | prod <- productions ]
             let grammar'' = inoutEstimateGrammar grammar' pseudocounts obs'
+            putStrLn $ "Got " ++ show (length $ lines $ showGrammar $ removeSubProductions grammar') ++ " new productions."
             putStrLn $ showGrammar $ removeSubProductions grammar'
-            return grammar''
+            return grammar'
          
 -- Library for testing EM+polynomial regressionx
 polyExprs :: [Expr]
@@ -117,9 +117,9 @@ polyEM = do
   let const = [ mkNthDet [x] | x <- [1..9] ]
   let lin = [ mkNthDet [x,y] | x <- [1..9], y <- [1..9] ]
   let quad = [ mkNthDet [x,y,z] | x <- [1..9], y <- [1..9], z <- [1..3] ]
-  loopM seed [1..4] $ \grammar step -> do
+  loopM seed [1..100] $ \grammar step -> do
     putStrLn $ "EM Iteration: " ++ show step
-    grammar' <- doEMIter (const++lin++quad) 2 0.3 10000 grammar
+    grammar' <- doEMIter (const++lin) 6000 1.0 5000 grammar
     return grammar'
   return ()
                     

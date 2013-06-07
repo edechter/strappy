@@ -144,25 +144,19 @@ inoutEstimateGrammar gr@Grammar{grExprDistr=distr, grApp = app} pseudocounts obs
   where es = Map.toList distr -- [(Expr, Double)]
         expectedCounts :: Double -> Counts -> Expr -> Counts
         expectedCounts weight counts expr@(Term { }) =
-          let uc' = Map.adjust (+weight) (findLibExpr expr) (useCounts counts)
-              otherTerms = map fst es
-              pc' = List.foldl' (Prelude.flip $ Map.adjust (+ weight)) (possibleUseCounts counts) otherTerms
+          let uc' = Map.insertWith (+) expr weight $ useCounts counts
           in counts { termCounts = termCounts counts + weight,
-                      useCounts = uc',
-                      possibleUseCounts = pc' }
+                      useCounts = uc' }
         expectedCounts weight counts expr@(App { eLeft = left,
                                                  eRight = right }) | Map.member expr distr =
-          let otherTerms = map fst es
-              logProbLib = distr Map.! expr + log (1 - exp app)
+          let logProbLib = distr Map.! expr + log (1 - exp app)
               logProbApp = app + exprLogLikelihood gr left + exprLogLikelihood gr right
               probUsedApp = exp $ logProbApp - logSumExp logProbApp logProbLib
-              probUsedLib = 1 - probUsedApp
-              uc' = Map.adjust (+(weight*probUsedLib)) (findLibExpr expr) (useCounts counts)
-              pc' = List.foldl' (Prelude.flip $ Map.adjust (+ (weight*probUsedLib))) (possibleUseCounts counts) otherTerms
+              probUsedLib = trace ("pApp: " ++ show (1 - probUsedApp)) $ 1 - probUsedApp
+              uc' = Map.insertWith (+) expr (weight*probUsedLib) $ useCounts counts
               counts' = counts { appCounts = appCounts counts + weight * probUsedApp,
                                  termCounts = termCounts counts + weight * probUsedLib, 
-                                 useCounts = uc',
-                                 possibleUseCounts = pc' }
+                                 useCounts = uc' }
               counts'' = expectedCounts (weight * probUsedApp) counts' left
               counts''' = expectedCounts (weight * probUsedApp) counts'' right
           in counts'''
@@ -172,11 +166,13 @@ inoutEstimateGrammar gr@Grammar{grExprDistr=distr, grApp = app} pseudocounts obs
                counts''  = expectedCounts weight counts' left
                counts''' = expectedCounts weight counts'' right
           in counts'''
-        empty = Map.map (const pseudocounts) distr
-        counts = List.foldl' (\cts (e, w) -> expectedCounts w cts e) (Counts pseudocounts pseudocounts empty empty) obs
+        counts = List.foldl' (\cts (e, w) -> expectedCounts w cts e) (Counts pseudocounts pseudocounts Map.empty Map.empty) obs
+        uses' = List.foldl' (\cts e -> Map.insertWith (+) e pseudocounts cts) (useCounts counts) $ Map.keys distr
+        logTotalUses = log $ Map.fold (+) 0.0 uses'
         appLogProb = log (appCounts counts) - log (termCounts counts + appCounts counts)
-        distr' = Map.unionWith (\a a' -> log a - log a') (useCounts counts) (possibleUseCounts counts)
-        findLibExpr expr = fst $ fromJust $ List.find (\(e,_) -> e==expr) es
+        distr' = trace ("Num apps: " ++ show (appCounts counts) ++ ", num terms: " ++ show (termCounts counts)) $
+                 Map.map (\uses -> log uses - logTotalUses) uses'
+
 
 
 ---------------------------------------------------------------------      
