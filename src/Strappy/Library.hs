@@ -40,91 +40,21 @@ data Grammar = Grammar {grApp :: Double, -- ^ log probability of application
 showGrammar (Grammar p exprDistr) = printf "%7s:%7.2f\n" "p" (exp p) ++ showExprDistr exprDistr
 
 normalizeGrammar :: Grammar -> Grammar 
-normalizeGrammar Grammar{grApp=p, grExprDistr=distr}
-    = let logTotalMass = logSumExpList $ p : Map.elems distr
-          distr' = Map.map (\x -> x - logTotalMass) distr
-          p' = p - logTotalMass
-      in Grammar  p' distr'
+normalizeGrammar gr@Grammar{grApp=p, grExprDistr=distr} =
+  let logTotalMass = logSumExpList $ Map.elems distr
+      distr' = Map.map (\x -> x - logTotalMass) distr
+  in gr { grExprDistr = distr' }
 
 -- | Methods for calculating the loglikelihood of an expression draw from grammar
--- This is very slow, because all of the alternatives have to be annotated
 exprLogLikelihood :: Grammar -> Expr -> Double
 -- | Returns the log probability of producing the given expr tree
-exprLogLikelihood gr = fromJust . eLogLikelihood . annotateLogLikelihoods gr . annotateAlternatives gr
-
--- | Given a library, finds all of the alternative productions we could have used
--- Assumes that the eReqType fields have already been filled in
-annotateAlternatives :: Grammar -> Expr -> Expr
-annotateAlternatives gr@(Grammar{grExprDistr = distr}) e@Term{ eReqType = Just tp } =
-  e { eAlternatives = Just $
-                      map fst $
-                      filter (\(e, _) -> canUnifyFast (eType e) tp) $
-                      Map.toList distr }
-annotateAlternatives gr@(Grammar{grExprDistr = distr}) e@App{ eLeft = left, eRight = right, eReqType = Just tp } =
-  e { eLeft = annotateAlternatives gr left,
-      eRight = annotateAlternatives gr right,
-      eAlternatives =
-        if Map.member e distr
-        then Just $
-             map fst $
-             filter (\(e, _) -> canUnifyFast (eType e) tp) $
-             Map.toList distr 
-        else Nothing }
-annotateAlternatives _ _ = error "Annotating alternatives on expression w/o eReqType annotated"
-
--- | Updates the alternative productions when the library changes a small amount
-updateAlternatives :: [Expr] -> -- ^ added to library
-                      [Expr] -> -- ^ removed from library
-                      Grammar -> -- ^ new library
-                      Expr -> -- ^ expression annotated w/ old library
-                      Expr -- ^ expression annotated w/ new library
-updateAlternatives add del _ e@Term{ eReqType = Just tp, eAlternatives = Just alts } =
-  e { eAlternatives = Just $ (alts \\ del) ++ filter (canUnifyFast tp . eType) add }
-updateAlternatives add del gr e@App{ eReqType = Just tp,
-                                     eAlternatives = Just alts,
-                                     eLeft = left,
-                                     eRight = right } =
-  if e `elem` del -- Did we remove e from the library?
-  then e { eAlternatives = Nothing,
-           eLeft  = updateAlternatives add del gr left,
-           eRight = updateAlternatives add del gr right }
-  else e { eAlternatives = Just $ (alts \\ del) ++ filter (canUnifyFast tp . eType) add,
-           eLeft  = updateAlternatives add del gr left,
-           eRight = updateAlternatives add del gr right }
-updateAlternatives add del gr@(Grammar{ grExprDistr = distr}) e@App{ eReqType = Just tp,
-                                                                     eAlternatives = Nothing,
-                                                                     eLeft = left,
-                                                                     eRight = right } =
-  if e `elem` add -- Did we add e to the library?
-  then let newProductions = (add ++ map fst (Map.toList distr)) \\ del
-       in e { eAlternatives = Just $ filter (canUnifyFast tp . eType) newProductions,
-              eLeft  = updateAlternatives add del gr left,
-              eRight = updateAlternatives add del gr right }
-  else e { eLeft  = updateAlternatives add del gr left,
-           eRight = updateAlternatives add del gr right }
-                  
-
-
--- | Fills in the eLogLikelihood fields of the tree
--- Assumes that the eAlternatives fields have already been filled in
-annotateLogLikelihoods :: Grammar -> Expr -> Expr
-annotateLogLikelihoods gr expr@App{ eLeft = l, eRight = r, eAlternatives = alts } =
-  let l' = annotateLogLikelihoods gr l
-      r' = annotateLogLikelihoods gr r
-      l'LL = fromJust $ eLogLikelihood l'
-      r'LL = fromJust $ eLogLikelihood r'
-      appLL = grApp gr + l'LL + r'LL
-      ll = if isJust alts -- alts is Nothing if there were no alts, eg, no production used
-           then logSumExp appLL
-                (calcLogProb gr expr + log (1 - exp (grApp gr)))
-           else appLL
-  in expr { eLogLikelihood = Just ll,
-            eLeft = l',
-            eRight = r' }
-annotateLogLikelihoods gr expr@Term{ } =
-  let grLL = calcLogProb gr expr 
-      ll = grLL + log (1 - exp (grApp gr))
-  in expr { eLogLikelihood = Just ll }
+exprLogLikelihood (Grammar { grExprDistr = distr }) e@(Term { }) = distr Map.! e
+exprLogLikelihood gr@(Grammar { grExprDistr = distr, grApp = app }) e@(App { eLeft = l, eRight = r }) =
+  logSumExp (app + exprLogLikelihood gr l + exprLogLikelihood gr r)
+            (case Map.lookup e distr of
+                Nothing -> log 0.0
+                Just p -> p)
+  
 
 -- | Annotates the requested types
 -- Takes as input the top-level type request
@@ -161,13 +91,13 @@ annotateRequested' tp expr = runIdentity $ runTI $ do
 
 -- | Returns the log probability of using a given expression from the library of
 -- terminals.
--- Assumes that eAlternatives has been filled in.
 calcLogProb :: Grammar -> Expr -> Double
-calcLogProb gr@(Grammar { grExprDistr = distr}) expr | isJust (eAlternatives expr) =
-  let logp_e = distr Map.! expr
-      logp_e_tot = logSumExpList (map (distr Map.!) $ fromJust $ eAlternatives expr) 
+calcLogProb gr@(Grammar { grExprDistr = distr}) expr =
+  let tp = safeFromJust "calcLogProb on expr w/o req types" $ eReqType expr
+      alts = map snd $ filter (\(e, _) -> canUnifyFast (eType e) tp) $ Map.toList distr
+      logp_e = distr Map.! expr
+      logp_e_tot = logSumExpList alts
     in logp_e - logp_e_tot
-calcLogProb _ _ = error "Attempt to calcLogProb of an expression w/o eAlternatives filled in."
 
 data Counts = Counts {appCounts :: Double,
                         termCounts :: Double,
@@ -202,36 +132,33 @@ estimateGrammar Grammar{grExprDistr=distr} pseudocounts obs
 
 
 -- | Iteratively performs the inside-out algorithm to a corpus, restimating the gramar
--- This assumes that the corpus has already had its alternate productions annotated.
+-- This assumes we're sampling from P(program | typed)
 iterateInOut :: Int -> Grammar -> Double -> [(Expr, Double)] -> Grammar
 iterateInOut k g prior obs =
   foldl (\g' _ -> inoutEstimateGrammar g' prior obs) g [1..k]
 
 -- | Uses the inside-out algorithm to find the production probabilities
--- TODO: I don't think that findLibExpr is needed here.
--- Either way, it eventually won't be, once we transition to a data structure that allows us to query keys.
 inoutEstimateGrammar :: Grammar -> Double -> [(Expr, Double)] -> Grammar
 inoutEstimateGrammar gr@Grammar{grExprDistr=distr, grApp = app} pseudocounts obs =
   Grammar{grApp = appLogProb, grExprDistr = distr'}
   where es = Map.toList distr -- [(Expr, Double)]
         expectedCounts :: Double -> Counts -> Expr -> Counts
-        expectedCounts weight counts expr@(Term { eAlternatives = Just otherTerms }) =
+        expectedCounts weight counts expr@(Term { }) =
           let uc' = Map.adjust (+weight) (findLibExpr expr) (useCounts counts)
-              otherTerms' = map findLibExpr otherTerms
-              pc' = List.foldl' (Prelude.flip $ Map.adjust (+ weight)) (possibleUseCounts counts) otherTerms'
+              otherTerms = map fst es
+              pc' = List.foldl' (Prelude.flip $ Map.adjust (+ weight)) (possibleUseCounts counts) otherTerms
           in counts { termCounts = termCounts counts + weight,
                       useCounts = uc',
                       possibleUseCounts = pc' }
         expectedCounts weight counts expr@(App { eLeft = left,
-                                                 eRight = right,
-                                                 eAlternatives = Just otherTerms }) =
-          let logProbLib = calcLogProb gr expr + log (1 - exp app)
-              logProbApp = app + fromJust (eLogLikelihood left) + fromJust (eLogLikelihood right)
+                                                 eRight = right }) | Map.member expr distr =
+          let otherTerms = map fst es
+              logProbLib = distr Map.! expr + log (1 - exp app)
+              logProbApp = app + exprLogLikelihood gr left + exprLogLikelihood gr right
               probUsedApp = exp $ logProbApp - logSumExp logProbApp logProbLib
               probUsedLib = 1 - probUsedApp
               uc' = Map.adjust (+(weight*probUsedLib)) (findLibExpr expr) (useCounts counts)
-              otherTerms' = map findLibExpr otherTerms
-              pc' = List.foldl' (Prelude.flip $ Map.adjust (+ (weight*probUsedLib))) (possibleUseCounts counts) otherTerms'
+              pc' = List.foldl' (Prelude.flip $ Map.adjust (+ (weight*probUsedLib))) (possibleUseCounts counts) otherTerms
               counts' = counts { appCounts = appCounts counts + weight * probUsedApp,
                                  termCounts = termCounts counts + weight * probUsedLib, 
                                  useCounts = uc',
@@ -240,15 +167,13 @@ inoutEstimateGrammar gr@Grammar{grExprDistr=distr, grApp = app} pseudocounts obs
               counts''' = expectedCounts (weight * probUsedApp) counts'' right
           in counts'''
         expectedCounts weight counts expr@(App { eLeft = left,
-                                                 eRight = right,
-                                                 eAlternatives = Nothing }) =
-          let counts'   = counts { appCounts = appCounts counts + weight }
-              counts''  = expectedCounts weight counts' left
-              counts''' = expectedCounts weight counts'' right
+                                                 eRight = right }) =
+           let counts'   = counts { appCounts = appCounts counts + weight }
+               counts''  = expectedCounts weight counts' left
+               counts''' = expectedCounts weight counts'' right
           in counts'''
         empty = Map.map (const pseudocounts) distr
-        obs' = map (\(e,w) -> (annotateLogLikelihoods gr e, w)) obs
-        counts = List.foldl' (\cts (e, w) -> expectedCounts w cts e) (Counts pseudocounts pseudocounts empty empty) obs'
+        counts = List.foldl' (\cts (e, w) -> expectedCounts w cts e) (Counts pseudocounts pseudocounts empty empty) obs
         appLogProb = log (appCounts counts) - log (termCounts counts + appCounts counts)
         distr' = Map.unionWith (\a a' -> log a - log a') (useCounts counts) (possibleUseCounts counts)
         findLibExpr expr = fst $ fromJust $ List.find (\(e,_) -> e==expr) es
@@ -352,6 +277,17 @@ clearGrammarProbs Grammar { grExprDistr = distr } =
   Grammar { grExprDistr = Map.map (const $ log 0.5) distr,
             grApp = log 0.5 }
 
+-- | Grammars are in CNF, so each production is the product of two other production
+-- Strips out all productions that are subproductions of some other production
+-- This is purely for the purpose of making it easier for humans to read grammars
+removeSubProductions :: Grammar -> Grammar
+removeSubProductions gr@Grammar{grExprDistr = distr} =
+  let keys = Map.keys distr
+      prods = filter (not . isTerm) keys
+      subProductions = map eLeft prods ++ map eRight prods
+      prods' = List.nub $ filter (not . Prelude.flip elem subProductions) prods
+      prods'' = prods' ++ filter isTerm keys
+  in gr { grExprDistr = Map.filterWithKey (\k v -> k `elem` prods'') distr }
 
 -- | Initializing a TypeInference monad with a Library. We need to
 -- grab all type variables in the library and make sure that the type
@@ -363,3 +299,27 @@ initializeTI exprDistr = modify $ \(_, s) -> (i+1, s)
               concatMap (getTVars . eType . fst) $
               Map.toList exprDistr
 
+
+
+
+
+countSubtrees :: ExprMap Double -- <cnt>: Map of rules and associated counts.  
+                 -> (Expr, Double) -- <expr>: the expression
+                 -> ExprMap Double
+countSubtrees cnt (expr@(App{eLeft=l, eRight=r}),wt) =
+  let cnt'   = incCount cnt (expr,wt)
+      cnt''  = countSubtrees cnt' (l,wt)
+      cnt''' = countSubtrees cnt'' (r,wt)
+  in
+   cnt'''
+countSubtrees cnt _ = cnt
+
+incCount :: ExprMap Double -> (Expr, Double) 
+            -> ExprMap Double
+incCount cnt (expr@App{},wt) =
+  Map.insertWith (+) expr wt cnt
+incCount cnt _ = cnt
+
+exprSize :: Expr -> Double
+exprSize App{eLeft=l, eRight=r} = 1.0 + exprSize l + exprSize r
+exprSize _ = 1.0

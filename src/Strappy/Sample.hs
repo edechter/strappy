@@ -42,9 +42,7 @@ sampleExpr gr@Grammar{grApp=p, grExprDistr=exprDistr} tp
                            App { eReqType = Just tp,
                                  eType = tp',
                                  eLeft = e_left,
-                                 eRight = e_right, 
-                                 eLogLikelihood = Nothing, 
-                                 eAlternatives = Nothing }
+                                 eRight = e_right }
               False -> do let cs = filter (\(e, _) -> canUnifyFast tp (eType e)) $
                                    Map.toList exprDistr
                           lift $ guard (not . null $ cs)
@@ -75,14 +73,5 @@ sampleExprs n library tp =
 -- Each program keys its log likelihood
 sampleBF :: Int -> Grammar -> Type -> ExprMap Double
 sampleBF n gr tp =
-  Map.fromList $ map (\c -> (c, safeFromJust "BF expr has no LL" $ eLogLikelihood c)) $ enumBF gr n tp
+  Map.fromList $ enumBF gr n tp
 
-{-putSampleExprs n library tp  
-    = sequence 
-      $ do x <- sampleExprs n library tp
-           let x' = do z <- x
-                       return $ show  z
-           let x'' = catch x' (const (return "error") :: IOException -> IO String)
-           return x''-}
-
-                                          

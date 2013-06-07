@@ -52,15 +52,15 @@ isClosed _ = False
 -- | Inner nodes are represented by Terminals with ?'s for names
 -- This is done so that we can use the existing Expr gadt without defining our own new structure
 cInnerNode tp = Term { eName = "?", eType = tp, eThing = undefined,
-                       eReqType = Nothing, eLogLikelihood = Nothing, eAlternatives = Nothing }
+                       eReqType = Nothing }
 
 enumBF :: Grammar 
        -> Int -- max num combinators
        -> Type
-       -> [Expr]
+       -> [(Expr, Double)]
 -- | Breadth-first AO enumeration of combinators with highest scores
 -- under the grammar.
-enumBF gr i tp = map comb $ PQ.take i $ closed $ enumBF' gr' i initBFState
+enumBF gr i tp = map (\cb -> (comb cb, value cb)) $ PQ.take i $ closed $ enumBF' gr' i initBFState
     where root = CombBase (cInnerNode tp) (Just []) tiState 0.0
           tiState = execState (initializeTI $ grExprDistr gr) (0, Map.empty)
           initBFState = BFState (PQ.singleton root) PQ.empty Set.empty
@@ -78,13 +78,9 @@ enumBF' gr i bfState@(BFState openPQ closedPQ hist) =
         in if isClosed cb
            then if Set.member (comb cb) hist
                 then enumBF' gr i $ BFState openPQ' closedPQ hist
-                else let expr = annotateLogLikelihoods gr $
-                                annotateAlternatives gr $
-                                annotateRequested' (eType $ comb cb) $
-                                comb cb
+                else let expr = annotateRequested' (eType $ comb cb) $ comb cb
                          closedPQ' = PQ.insert (cb { comb = expr,
-                                                     value = safeFromJust "No eLL for closed" $
-                                                             eLogLikelihood expr }) closedPQ
+                                                     value = exprLogLikelihood gr expr }) closedPQ
                          hist' = Set.insert expr hist
                      in enumBF' gr i $ BFState openPQ' closedPQ' hist'
            else let cbs = expand gr cb
@@ -96,13 +92,12 @@ expand :: Grammar
        -> [CombBase]
 expand gr cb@(CombBase (Term { eType = tp }) (Just []) ti v) =
   let tp' = runIdentity $ evalStateT (applySub tp) ti
+      logTerm = log (1 - exp (grApp gr))
       cs = filter (\(e, _) -> canUnifyFast tp' (eType e)) $ Map.toList $ grExprDistr gr
-      totalLL = logSumExpList $ map snd cs
-      cs' = map (\(e, w) -> (e, w - totalLL)) cs
-      cbs = map (\(e, ll) -> CombBase e Nothing (ti' e) (v+ll)) cs'
+      cbs = map (\(e, ll) -> CombBase e Nothing (ti' e) (v+ll+logTerm)) cs
       ti' e = execState (instantiateType (eType e) >>= unify tp) ti
       cbApp = expandToApp gr cb
-  in if null cs then [] else cbApp : cbs
+  in if null cs then [] else cbApp : cbs -- Do things break horribly if we don't have this conditional?
 expand gr (CombBase expr@(App { eLeft = left }) (Just (L:rest)) ti v) = do
   (CombBase left' rest' ti' v') <- expand gr $ CombBase left (Just rest) ti v
   let path' =
@@ -129,9 +124,7 @@ expandToApp gr (CombBase (Term { eType = tp }) (Just []) ti v) =
       expr = App { eLeft = cInnerNode lTp,
                    eRight = cInnerNode rTp,
                    eType = tp,
-                   eReqType = Nothing,
-                   eLogLikelihood = Nothing, 
-                   eAlternatives = Nothing }
+                   eReqType = Nothing }
   in CombBase expr (Just [L]) ti' (v + grApp gr)
 
 

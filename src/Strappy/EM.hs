@@ -9,6 +9,7 @@ import Strappy.Type
 import Strappy.Task
 import Strappy.Utils
 import Strappy.Library 
+import Strappy.LPCompress
 
 import Data.Maybe
 import Data.List
@@ -22,116 +23,24 @@ import Debug.Trace
 
 import System.CPUTime
 
--- Negative Log Prior
-grammarNLP :: Grammar -> Double
-grammarNLP gr@(Grammar{grExprDistr = lib}) =
-  let corpus  = filter (not . isTerm) $ Map.keys lib
-      destructureAndWeight (App{eLeft = l, eRight = r}) =
-        -- If this ends up being slow according to the profiler, then these quantities can be precomputed.
-        -- But, premature optimization should be avoided.
-        [(annotateLogLikelihoods gr (annotateAlternatives gr l), 1.0),
-         (annotateLogLikelihoods gr (annotateAlternatives gr r), 1.0)]
-      corpus' = concatMap destructureAndWeight corpus
-      gr' = iterateInOut 10 (clearGrammarProbs gr) 0.0 corpus'
-  in - grammarLogLikelihood gr' corpus'
-
-
--- Likelihood term in EM
-grammarLogLikelihood :: Grammar -> [(Expr, Double)] -> Double
-grammarLogLikelihood gr exprs_and_score =
-  sum $ map (\(e, w) -> fromJust (eLogLikelihood $ annotateLogLikelihoods gr e) * w) exprs_and_score
-
-
--- Performs hill climbing upon the given grammar
-optimizeGrammar :: Double -> -- ^ Lambda
-                   Double -> -- ^ pseudocounts
-                   Grammar -> [(Expr, Double)] -> Grammar
-optimizeGrammar lambda pseudocounts gr exprs_and_scores=
-  let gr' = iterateInOut 10 (clearGrammarProbs gr) pseudocounts exprs_and_scores
-      initial_score = lambda * (grammarNLP gr') - grammarLogLikelihood gr' exprs_and_scores
-      -- This procedure performs hill climbing
-      climb :: Grammar -> [(Expr, Double)] -> Double -> Grammar
-      climb g corpus g_score =
-        let gsAndCorpi = grammarNeighbors g lambda pseudocounts corpus
-            gsScore = [ ((g, corpus'), lambda * grammarNLP g - grammarLogLikelihood g corpus') |
-                        (g, corpus') <- gsAndCorpi ]
-            ((best_g', best_corpus), best_g'_score) =
-              minimumBy (compare `on` snd) gsScore
-        in
-         if best_g'_score < g_score
-         then trace ("Improved grammar to: " ++ showGrammar best_g' ++ "\n") $ climb best_g' best_corpus best_g'_score
-         else g
-  in
-   climb gr' exprs_and_scores initial_score
-
--- | The neighbors of a grammar are those reachable by one addition/removal of a production
--- This procedure tries adding/removing one production,
--- modulo the restriction that the primitives are never removed from the grammar.
--- Returns new grammars and freshly annotated corpuses.
-grammarNeighbors :: Grammar ->
-                    Double -> -- ^ regularization coefficient
-                    Double -> -- ^ pseudocounts 
-                    [(Expr, Double)] ->
-                    [(Grammar, [(Expr, Double)])]
-grammarNeighbors (Grammar appProb lib) lambda pseudocounts obs = neighbors
-  where -- A "grammar delta" is a tuple of ([added], [removed])
-    removeDeltas = map (\e -> ([], [e])) $ filter (not . isTerm) $ Map.keys lib
-    -- Heuristic: Find large, duplicated subtrees not in grammar
-    duplicatedSubtrees =
-      foldl (\cnt expr_wt -> countSubtreesNotInGrammar lib cnt expr_wt) Map.empty obs 
-    subtreeSizes = Map.mapWithKey (\expr cnt -> (cnt - lambda) * exprSize lib expr) duplicatedSubtrees
-    maximumAdded = 10 -- Consider at most 10 subtrees. Cuts down search.
-    compressiveTrees = take maximumAdded $
-                       sortBy (\a a' -> flipOrdering $ (compare `on` snd) a a') $
-                       Map.toList subtreeSizes
-    bestSubtrees = trace ("Compressions: " ++ unlines (map show compressiveTrees)) $ map annotateRequested $
-                   map fst $
-                   compressiveTrees
-    addDeltas = map (\e -> ([e], [])) bestSubtrees
-    deltas = trace ("Best subtrees:" ++ show bestSubtrees) $ addDeltas ++ removeDeltas
-    -- Now that we have the grammar deltas, construct each alternative grammar + corpus
-    neighbors = map (\(add,del) ->
-                      let lib'   = Map.difference lib $ Map.fromList $ map (,0.0) del
-                          lib''  = Map.union lib' $ Map.fromList $ map (, log 0.5) add
-                          gr'    = Grammar appProb lib''
-                          obs'   = map (\(e, w) -> (updateAlternatives add del gr' e, w)) obs
-                          gr''   = iterateInOut 10 gr' pseudocounts obs'
-                      in (gr'', obs'))
-                    deltas
-
-
-countSubtreesNotInGrammar :: ExprDistr -- <lib>: Distribution over expressions. 
-                            -> ExprMap Double -- <cnt>: Map of rules and associated counts.  
-                            -> (Expr, Double) -- <expr>: the expression
-                            -> ExprMap Double
-countSubtreesNotInGrammar lib cnt (expr@(App{eLeft=l, eRight=r}),wt) =
-  let cnt'   = incCountIfNotInGrammar lib cnt (expr,wt)
-      cnt''  = countSubtreesNotInGrammar lib cnt' (l,wt)
-      cnt''' = countSubtreesNotInGrammar lib cnt'' (r,wt)
-  in
-   cnt'''
-countSubtreesNotInGrammar _ cnt _ = cnt
-
-incCountIfNotInGrammar :: ExprDistr -> ExprMap Double -> (Expr, Double) 
-                          -> ExprMap Double
-incCountIfNotInGrammar lib cnt (expr,wt) | not (Map.member expr lib) =
-  Map.insertWith (+) expr wt cnt
-incCountIfNotInGrammar _ cnt _ = cnt
-
-exprSize :: ExprDistr -> Expr -> Double
-exprSize distr e | Map.member e distr = 1.0
-exprSize distr App{eLeft=l, eRight=r} = 1.0 + exprSize distr l + exprSize distr r
-exprSize _ _ = 1.0
+{--- | Greedily chooses those productions that, with one step of lookahead, lead to compression
+greedyGrammar :: Double -> -- ^ lambda
+                 Double -> -- ^ pseudocounts
+                 [(Expr, Double)] -> -- ^ weighted observations
+                 Grammar -- ^ Grammar
+greedyGrammar lambda pseudocounts grammar obs =
+  let subtreeCounts = Map.unionWith (+) $ map (Map.empty) obs -- Find common subtrees, and how often they occur
+-}
 
 
 -- | Performs one iterations of EM on multitask learning
-doEMIter :: 
-            [(Expr -> Double, Type)] -- ^ Tasks
+-- Does greedy grammar construction rather than hill-climbing
+doEMIter :: [(Expr -> Double, Type)] -- ^ Tasks
             -> Double -- ^ Lambda
             -> Double -- ^ pseudocounts
             -> Int -- ^ frontier size
             -> Grammar -- ^ Initial grammar
-            -> IO Grammar -- ^ Improved grammar-}
+            -> IO Grammar -- ^ Improved grammar
 doEMIter tasks lambda pseudocounts frontierSize grammar = do
   -- For each type, sample a frontier
   frontiers <- mapM (\tp -> do sample <- return $ sampleBF frontierSize grammar tp
@@ -158,9 +67,15 @@ doEMIter tasks lambda pseudocounts frontierSize grammar = do
   if length obs' == 0
     then do putStrLn "Hit no tasks."
             return grammar -- Didn't hit any tasks
-    else do let grammar' = optimizeGrammar lambda pseudocounts grammar obs'
-            putStrLn $ showGrammar grammar'
-            return grammar'
+    else do let subtrees = foldl1 (Map.unionWith (+)) $ map (countSubtrees Map.empty) obs'
+            let terminals = filter isTerm $ Map.keys $ grExprDistr grammar
+            let productions = compressLP lambda subtrees ++ terminals
+            putStrLn $ unlines $ map show productions
+            let uniformLogProb = -log (genericLength productions)
+            let grammar'  = Grammar (log 0.45) $ Map.fromList [ (prod, uniformLogProb) | prod <- productions ]
+            let grammar'' = inoutEstimateGrammar grammar' pseudocounts obs'
+            putStrLn $ showGrammar $ removeSubProductions grammar''
+            return grammar''
          
 -- Library for testing EM+polynomial regressionx
 polyExprs :: [Expr]
@@ -202,52 +117,10 @@ polyEM = do
   let const = [ mkNthDet [x] | x <- [1..9] ]
   let lin = [ mkNthDet [x,y] | x <- [1..9], y <- [1..9] ]
   let quad = [ mkNthDet [x,y,z] | x <- [1..9], y <- [1..9], z <- [1..3] ]
---  quad <- replicateM 100 (mkNthOrder 2)
   loopM seed [1..4] $ \grammar step -> do
     putStrLn $ "EM Iteration: " ++ show step
-    grammar' <- doEMIter (const) 0.9 0.3 1000 grammar
+    grammar' <- doEMIter (const++lin++quad) 2 0.3 10000 grammar
     return grammar'
   return ()
                     
 main = polyEM
-
-----------------------------------------------------------------------
--- Solve a single task
-
--- solveTask :: (MonadPlus m, MonadRandom m) => 
---         -> Int -- ^ <n> plan length
---         -> Int -- ^ <m> branching factor 
---         -> m ( [(UExpr, Double)], -- all expressions tried and associated rewards
---                [UExpr], -- plan of expressions
---                Double) -- score of plan
-{-solveTask gr Task{task=tsk, taskType=tp} n m = go [] [] 0 n 
-       where  go exprs_and_scores plan cum_score 0 = return (exprs_and_scores, plan, cum_score)
-              go exprs_and_scores plan cum_score steps = 
-                 let tp' = if steps == n then tp else tp ->- tp 
-                 in do exprs <- sequence $ sampleExprs m gr tp' 
-                       -- for each expr, append that expression to the plan, 
-                       -- score it on the task, and compare the new score to the
-                       -- score of the current plan. 
-                       
-                       let exprs_and_scores'  
-                             = do expr <- exprs 
-                                  let score = if steps == n then tsk (toUExpr expr) 
-                                                else (tsk (compose (toUExpr expr : plan))) / cum_score
-                                  return (toUExpr expr, score) 
-                           plan' = best_expr : plan                                     
-                                   where best_expr = fst $ maximumBy (compare `on` snd) exprs_and_scores' 
-                           cum_score' = tsk $ compose plan'            
-                       go (exprs_and_scores' ++ exprs_and_scores) plan' cum_score' (steps - 1)
-
-solveTasks
-  :: (MonadPlus m, MonadRandom m) =>
-     Grammar
-     -> [Task]
-     -> Int
-     -> Int
-     -> m ([[(UExpr, Double)]], [[UExpr]], [Double])
-solveTasks gr tasks n m = liftM unzip3 $ mapM (\t -> solveTask gr t n m) tasks
-
-
-
--}
