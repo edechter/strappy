@@ -32,7 +32,7 @@ infixr 6 ->-
 t1 ->- t2 = TCon "->" [t1,t2]
 
 instance Show Type where 
-    show (TVar i) = "t" ++ show i
+    show (TVar i) = 't' : show i
     show (TCon con ts) | con == "->" && length ts == 2  = "(" ++ show t1 ++ " -> " ++ show t2 ++ ")" 
                        | otherwise   = "(" ++ show con ++ " " ++ show' ts  ++ ")" 
                 where show' (t:ts) = show t ++ " " ++ show' ts
