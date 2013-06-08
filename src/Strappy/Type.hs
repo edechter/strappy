@@ -43,13 +43,21 @@ instance Show Type where
 -- | type inference monad
 type TypeInference = StateT (Int, -- ^ next type var
                              M.Map Int Type) -- ^ Union-Find substitution
-runTI :: Monad m => TypeInference m a -> m a
+
+runTI :: Monad m => TypeInference m a -> m (a, (Int, M.Map Int Type))
 runTI = runTIVar 0
 
-runTIVar :: Monad m => Int -> TypeInference m a -> m a
+runTIVar :: Monad m => Int -> TypeInference m a -> m (a, (Int, M.Map Int Type))
 runTIVar nextTVar m =
-  evalStateT m (nextTVar, M.empty)
+  runStateT m (nextTVar, M.empty)
 
+
+evalTI :: Monad m => TypeInference m a -> m a
+evalTI = liftM fst . runTI
+
+
+evalTIVar :: Monad m => Int -> TypeInference m a -> m a
+evalTIVar nextTVar = liftM fst . runTIVar nextTVar
 
 -- Create an unbound type variable
 mkTVar :: Monad m => TypeInference m Type
@@ -120,7 +128,7 @@ canUnify t1 t2 =
       t1Max = largestTVar t1'
       t2Max = largestTVar t2'
       t2'' = applyTVarSub (map (\v->(v,TVar (v+t1Max+10))) [0..t2Max]) t2'
-  in case runTIVar (t1Max+t2Max+10) (canUnifyM t1' t2'') of
+  in case evalTIVar (t1Max+t2Max+10) (canUnifyM t1' t2'') of
     Nothing -> False
     Just x -> x
 

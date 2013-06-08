@@ -21,15 +21,25 @@ import Debug.Trace
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
 -- Main functions. 
-sampleExpr ::
-  (MonadPlus m, MonadRandom m) => Grammar -> Type -> m Expr
+
+sampleExpr
+  :: (MonadPlus m, MonadRandom m) => Grammar -> Type -> m Expr
+sampleExpr gr  = evalTI . sampleExprM gr 
+
+sampleExprWithContext
+  :: (MonadPlus m, MonadRandom m) =>
+     Grammar -> Type -> m (Expr, (Int, Map.Map Int Type))
+sampleExprWithContext gr = runTI . sampleExprM gr
+
+sampleExprM ::
+  (MonadPlus m, MonadRandom m) => Grammar -> Type -> TypeInference m Expr
 -- | Samples a combinator of type t from a stochastic grammar G. 
-sampleExpr gr@Grammar{grApp=p, grExprDistr=exprDistr} tp 
-    = runTI $ do initializeTI exprDistr
-                 tp' <- instantiateType tp
-                 expr <- sample tp'
-                 return expr
+sampleExprM gr@Grammar{grApp=p, grExprDistr=exprDistr} tp 
+    = do initializeTI exprDistr
+         tp' <- instantiateType tp
+         sample tp'
     where 
+      sample :: (MonadPlus m, MonadRandom m) => Type -> TypeInference m Expr
       sample tp = do
             shouldExpand <- lift $ flip (exp p)
             case shouldExpand of

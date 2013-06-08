@@ -41,7 +41,7 @@ a <> b = App { eLeft = a,
                eType = tp, 
                eReqType = Nothing, 
                eLogLikelihood = Nothing }
-         where tp = runIdentity . runTI $ typeOfApp a b
+         where tp = runIdentity . evalTI $ typeOfApp a b
 
 instance Show Expr where
     show Term{eName=s} = s

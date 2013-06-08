@@ -97,7 +97,7 @@ annotateRequestedM tp e@(Term { eType = eTp }) = do
 -- | Non-monadic wrapper
 -- Presumes no constraint on top-level type
 annotateRequested :: Expr -> Expr
-annotateRequested expr = runIdentity $ runTI $ do
+annotateRequested expr = runIdentity $ evalTI $ do
   tp <- mkTVar
   annotateRequestedM tp expr
 
