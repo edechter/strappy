@@ -63,10 +63,14 @@ safeSample gr tp = do
 sampleExprs :: (MonadPlus m, MonadRandom m) =>
                Int -> Grammar -> Type -> m (ExprMap Double)
 sampleExprs n library tp =
-  liftM (Map.map fromIntegral) $ foldM accSample Map.empty [1..n]
+  liftM (Map.mapWithKey reweight) $ foldM accSample Map.empty [1..n]
   where accSample acc _ = do
           expr <- safeSample library tp
           return $ Map.insertWith (+) expr 1 acc
+        reweight expr cnt =
+          fromIntegral cnt * if usePCFGWeighting
+                             then pcfgLogLikelihood library expr / ijcaiLogLikelihood library expr
+                             else 1.0
 
 -- | Uses breadth-first enumeration to "sample" a grammar
 -- This allows us to get many more programs
