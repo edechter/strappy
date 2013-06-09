@@ -103,7 +103,7 @@ expand gr bestLeaf cb@(CombBase (Term { eType = tp }) (Just []) unexpanded ti v)
   let tp' = runIdentity $ evalStateT (applySub tp) ti
       logTerm = log (1 - exp (grApp gr))
       cs = filter (\(e, _) -> canUnifyFast tp' (eType e)) $ Map.toList $ grExprDistr gr
-      z = if usePCFGWeighting then 0.0 else logSumExpList $ map snd cs
+      z = {-if usePCFGWeighting then 0.0 else-} logSumExpList $ map snd cs
       cbs = map (\(e, ll) -> CombBase e Nothing (unexpanded-1) (ti' e) (v+ll+logTerm-z-bestLeaf)) cs
       ti' e = execState (instantiateType (eType e) >>= unify tp) ti
       cbApp = expandToApp gr bestLeaf cb

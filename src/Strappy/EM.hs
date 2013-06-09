@@ -98,9 +98,9 @@ polyEM = do
   let const = [ mkNthDet [x] | x <- [1..9] ]
   let lin = [ mkNthDet [x,y] | x <- [1..9], y <- [0..9] ]
   let quad = [ mkNthDet [x,y,z] | x <- [1..9], y <- [0..9], z <- [0..9] ]
-  loopM seed [0..20] $ \grammar step -> do
+  loopM seed [0..14] $ \grammar step -> do
     putStrLn $ "EM Iteration: " ++ show step
-    grammar' <- doEMIter (const++lin++quad) 2.0 1.0 5000 grammar
+    grammar' <- doEMIter (const++lin++quad) 2.0 1.0 10000 grammar
     return grammar'
   return ()
                     
