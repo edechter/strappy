@@ -9,13 +9,15 @@ import Control.Monad.Random
 import Control.Exception 
 import Control.Arrow (second)
 import qualified Data.Map as Map
+import Debug.Trace
 
 import Strappy.Type
 import Strappy.EnumBF
 import Strappy.Expr
 import Strappy.Library
 import Strappy.Utils 
-import Debug.Trace
+import Strappy.Config
+
 
 
 ----------------------------------------------------------------------
