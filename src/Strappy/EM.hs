@@ -23,18 +23,9 @@ import Debug.Trace
 
 import System.CPUTime
 
-{--- | Greedily chooses those productions that, with one step of lookahead, lead to compression
-greedyGrammar :: Double -> -- ^ lambda
-                 Double -> -- ^ pseudocounts
-                 [(Expr, Double)] -> -- ^ weighted observations
-                 Grammar -- ^ Grammar
-greedyGrammar lambda pseudocounts grammar obs =
-  let subtreeCounts = Map.unionWith (+) $ map (Map.empty) obs -- Find common subtrees, and how often they occur
--}
-
 
 -- | Performs one iterations of EM on multitask learning
--- Does greedy grammar construction rather than hill-climbing
+-- Does LP construction rather than hill-climbing
 doEMIter :: [(Expr -> Double, Type)] -- ^ Tasks
             -> Double -- ^ Lambda
             -> Double -- ^ pseudocounts
@@ -43,12 +34,11 @@ doEMIter :: [(Expr -> Double, Type)] -- ^ Tasks
             -> IO Grammar -- ^ Improved grammar
 doEMIter tasks lambda pseudocounts frontierSize grammar = do
   -- For each type, sample a frontier
-  frontiers <- mapM (\tp -> do sample <- return $ sampleBF frontierSize grammar tp
-                               return (tp, sample))
-                    $ nub $ map snd tasks
+  let frontiers = map (\tp -> (tp, sampleBF frontierSize grammar tp))
+                  $ nub $ map snd tasks
   -- For each task, weight the corresponding frontier by likelihood
   let weightedFrontiers = Prelude.flip map tasks $ \(tsk, tp) ->
-        Map.mapWithKey (\expr cnt -> {-cnt +-} log (tsk expr)) $ fromJust $ lookup tp frontiers
+        Map.mapWithKey (\expr cnt -> cnt + log (tsk expr)) $ fromJust $ lookup tp frontiers
   -- Normalize frontiers
   let logZs = map (Map.fold logSumExp (log 0.0)) weightedFrontiers
   let weightedFrontiers' = zipWith (\logZ -> filter (\(_,x) -> not (isNaN x) && not (isInfinite x)) . Map.toList .
@@ -73,16 +63,18 @@ doEMIter tasks lambda pseudocounts frontierSize grammar = do
             let grammar'  = Grammar (log 0.5) $ Map.fromList [ (prod, uniformLogProb) | prod <- productions ]
             let grammar'' = inoutEstimateGrammar grammar' pseudocounts obs'
             putStrLn $ "Got " ++ show ((length $ lines $ showGrammar $ removeSubProductions grammar') - length terminals - 1) ++ " new productions."
+            putStrLn $ "Grammar entropy: " ++ show (entropyLogDist $ Map.elems $ grExprDistr grammar'')
             putStrLn $ showGrammar $ removeSubProductions grammar''
             return grammar''
          
--- Library for testing EM+polynomial regressionx
+-- Library for testing EM+polynomial regression
+-- This is what was used in the IJCAI paper
 polyExprs :: [Expr]
 polyExprs = [cI, 
               cS, 
               cB, 
               cC, 
-              cK, 
+--              cK, 
               cPlus,
               cTimes
               ] ++ [ cInt2Expr 0, cInt2Expr 1 ]
@@ -96,18 +88,19 @@ polyEM = do
                        grExprDistr = Map.fromList [ (annotateRequested e, 1.0) | e <- polyExprs ] }
   -- Make nth order polynomial task with fixed coefficients
   let mkNthDet :: [Int] -> (Expr -> Double, Type)
-      mkNthDet coeffs = let poly :: Int -> Int
-                            poly x = sum $ zipWith (*) coeffs $ map (x^) [0..]
-                            score proc = if map (eval proc) [0..3] == map poly [0..3]
+      mkNthDet coeffs = let coeffs' = reverse coeffs
+                            poly :: Int -> Int
+                            poly x = sum $ zipWith (*) coeffs' $ map (x^) [0..]
+                            score proc = if map (eval proc) [0..9] == map poly [0..9]
                                          then 1.0
                                          else 0.0
                         in (score, tInt ->- tInt)
   let const = [ mkNthDet [x] | x <- [1..9] ]
-  let lin = [ mkNthDet [x,y] | x <- [1..9], y <- [1..9] ]
-  let quad = [ mkNthDet [x,y,z] | x <- [1..9], y <- [0..9], z <- [0..3] ]
-  loopM seed [1..20] $ \grammar step -> do
+  let lin = [ mkNthDet [x,y] | x <- [1..9], y <- [0..9] ]
+  let quad = [ mkNthDet [x,y,z] | x <- [1..9], y <- [0..9], z <- [0..9] ]
+  loopM seed [0..20] $ \grammar step -> do
     putStrLn $ "EM Iteration: " ++ show step
-    grammar' <- doEMIter (const++lin++quad) 1.1 5.0 10000 grammar
+    grammar' <- doEMIter (const++lin++quad) 2.0 1.0 5000 grammar
     return grammar'
   return ()
                     

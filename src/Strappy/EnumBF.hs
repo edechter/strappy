@@ -19,6 +19,7 @@ import Strappy.Utils
 import Strappy.Type
 import Strappy.Expr
 import Strappy.Library
+import Strappy.Config
 
 
 data Turn = L | R deriving (Show, Eq)
@@ -94,13 +95,11 @@ expand gr cb@(CombBase (Term { eType = tp }) (Just []) ti v) =
   let tp' = runIdentity $ evalStateT (applySub tp) ti
       logTerm = log (1 - exp (grApp gr))
       cs = filter (\(e, _) -> canUnifyFast tp' (eType e)) $ Map.toList $ grExprDistr gr
-      z = logSumExpList $ map snd cs
+      z = if usePCFGWeighting then 0.0 else logSumExpList $ map snd cs
       cbs = map (\(e, ll) -> CombBase e Nothing (ti' e) (v+ll+logTerm-z)) cs
       ti' e = execState (instantiateType (eType e) >>= unify tp) ti
       cbApp = expandToApp gr cb
-  in cbApp : cbs -- This code used to abort if there were no available terminals
-                 -- I do not see the justification for this,
-                 -- and the performance does not degrade significantly
+  in if null cs then [] else cbApp : cbs
 expand gr (CombBase expr@(App { eLeft = left }) (Just (L:rest)) ti v) = do
   (CombBase left' rest' ti' v') <- expand gr $ CombBase left (Just rest) ti v
   let path' =

@@ -1,4 +1,4 @@
-
+{-# LANGUAGE TupleSections  #-}
 module Strappy.Utils where
 
 import Prelude hiding (flip)
@@ -29,10 +29,17 @@ logSumExp x y | isNaN y = x
 logSumExp x y | x > y = x + log (1 + exp (y-x))
 logSumExp x y = y + log (1 + exp (x-y))
 
+-- Calculates the entropy of a discrete distribution, given log probabilities
+entropyLogDist :: [Double] -> Double
+entropyLogDist ls =
+  let ls' = map snd $ normalizeDist $ map (undefined,) ls
+  in - (sum $ zipWith (*) ls' $ map exp ls')
+
 -- | Just foldM with its arguments switched about
 loopM :: Monad m => a -> [b] -> (a -> b -> m a) -> m a
 loopM start xs step = foldM step start xs
 
+normalizeDist :: [(a, Double)] -> [(a, Double)]
 normalizeDist dist
     = let logTotalMass = logSumExpList (map snd dist)
       in [(c, v - logTotalMass) | (c, v) <- dist]
