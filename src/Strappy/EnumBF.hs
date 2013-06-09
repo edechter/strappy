@@ -31,9 +31,15 @@ data CombBase = CombBase {comb :: Expr,
                           path :: Maybe Path, -- ^ a path to the
                                               -- current node of
                                               -- interest
+                          numUnexpanded :: Int, -- ^ number of non-expanded terminals
                           inferState :: (Int, Map.Map Int Type),
                           value :: Double
                          }
+-- | The search now uses an admissible heuristic:
+-- any unexpanded leaf is assumed to have the LL of the most probable production,
+-- plus the cost of choosing a production
+-- This way, we penalize search nodes with many unexpanded leaves,
+-- while still finding the top N most probable nodes.
 
 -- Existential type prevents us from deriving instances
 instance Eq CombBase where
@@ -61,64 +67,66 @@ enumBF :: Grammar
        -> [(Expr, Double)]
 -- | Breadth-first AO enumeration of combinators with highest scores
 -- under the grammar.
-enumBF gr i tp = map (\cb -> (comb cb, value cb)) $ PQ.take i $ closed $ enumBF' gr' i initBFState
-    where root = CombBase (cInnerNode tp) (Just []) tiState 0.0
+enumBF gr i tp = map (\cb -> (comb cb, value cb)) $ PQ.take i $ closed $ enumBF' gr' bestLeaf i initBFState
+    where root = CombBase (cInnerNode tp) (Just []) 1 tiState bestLeaf
           tiState = execState (initializeTI $ grExprDistr gr) (0, Map.empty)
           initBFState = BFState (PQ.singleton root) PQ.empty Set.empty
           gr' = normalizeGrammar gr
+          bestLeaf = log (1 - exp (grApp gr)) + (maximum $ Map.elems $ grExprDistr gr)
 
-enumBF' :: Grammar -> Int -> BFState -> BFState
+enumBF' :: Grammar -> Double -> Int -> BFState -> BFState
 -- | Removes and expands the maximal entry in the OPEN list. The
 -- resulting elements are added either to the open list or to the
 -- closed list. This process is repeated until there are at least i
 -- elements in closed list. 
-enumBF' _  _ bfState@(BFState { open = openPQ }) | PQ.size openPQ == 0 = bfState
-enumBF' gr i bfState@(BFState openPQ closedPQ hist) = 
+enumBF' _ _ _ bfState@(BFState { open = openPQ }) | PQ.size openPQ == 0 = bfState
+enumBF' gr bestLeaf i bfState@(BFState openPQ closedPQ hist) = 
     if PQ.size closedPQ >= i then bfState else
         let (cb, openPQ') = PQ.deleteFindMax openPQ -- get best open solution
         in if isClosed cb
            then if Set.member (comb cb) hist
-                then enumBF' gr i $ BFState openPQ' closedPQ hist
+                then enumBF' gr bestLeaf i $ BFState openPQ' closedPQ hist
                 else let expr = annotateRequested' (eType $ comb cb) $ comb cb
                          closedPQ' = PQ.insert (cb { comb = expr,
                                                      value = exprLogLikelihood gr expr }) closedPQ
                          hist' = Set.insert expr hist
-                     in enumBF' gr i $ BFState openPQ' closedPQ' hist'
-           else let cbs = expand gr cb
+                     in enumBF' gr bestLeaf i $ BFState openPQ' closedPQ' hist'
+           else let cbs = expand gr bestLeaf cb
                     openPQ'' = PQ.fromList cbs `PQ.union` openPQ'
-                in enumBF' gr i $ BFState openPQ'' closedPQ hist
+                in enumBF' gr bestLeaf i $ BFState openPQ'' closedPQ hist
 
-expand :: Grammar 
+expand :: Grammar
+       -> Double
        -> CombBase 
        -> [CombBase]
-expand gr cb@(CombBase (Term { eType = tp }) (Just []) ti v) =
+expand gr bestLeaf cb@(CombBase (Term { eType = tp }) (Just []) unexpanded ti v) =
   let tp' = runIdentity $ evalStateT (applySub tp) ti
       logTerm = log (1 - exp (grApp gr))
       cs = filter (\(e, _) -> canUnifyFast tp' (eType e)) $ Map.toList $ grExprDistr gr
       z = if usePCFGWeighting then 0.0 else logSumExpList $ map snd cs
-      cbs = map (\(e, ll) -> CombBase e Nothing (ti' e) (v+ll+logTerm-z)) cs
+      cbs = map (\(e, ll) -> CombBase e Nothing (unexpanded-1) (ti' e) (v+ll+logTerm-z-bestLeaf)) cs
       ti' e = execState (instantiateType (eType e) >>= unify tp) ti
-      cbApp = expandToApp gr cb
+      cbApp = expandToApp gr bestLeaf cb
   in if null cs then [] else cbApp : cbs
-expand gr (CombBase expr@(App { eLeft = left }) (Just (L:rest)) ti v) = do
-  (CombBase left' rest' ti' v') <- expand gr $ CombBase left (Just rest) ti v
+expand gr bestLeaf (CombBase expr@(App { eLeft = left }) (Just (L:rest)) unexpanded ti v) = do
+  (CombBase left' rest' unexpanded' ti' v') <- expand gr bestLeaf $ CombBase left (Just rest) unexpanded ti v
   let path' =
         case rest' of
           Nothing -> Just [R]
           Just ys -> Just (L:ys)
   let expr' = expr { eLeft = left' }
-  return $ CombBase expr' path' ti' v'
-expand gr (CombBase expr@(App { eRight = right }) (Just (R:rest)) ti v) = do
-  (CombBase right' rest' ti' v') <- expand gr $ CombBase right (Just rest) ti v
+  return $ CombBase expr' path' unexpanded' ti' v'
+expand gr bestLeaf (CombBase expr@(App { eRight = right }) (Just (R:rest)) unexpanded ti v) = do
+  (CombBase right' rest' unexpanded' ti' v') <- expand gr bestLeaf $ CombBase right (Just rest) unexpanded ti v
   let path' =
         case rest' of
           Nothing -> Nothing
           Just ys -> Just (R:ys)
   let expr' = expr { eRight = right' }
-  return $ CombBase expr' path' ti' v'
+  return $ CombBase expr' path' unexpanded' ti' v'
 
-expandToApp :: Grammar -> CombBase -> CombBase
-expandToApp gr (CombBase (Term { eType = tp }) (Just []) ti v) =
+expandToApp :: Grammar -> Double -> CombBase -> CombBase
+expandToApp gr bestLeaf (CombBase (Term { eType = tp }) (Just []) unexpanded ti v) =
   let ((lTp, rTp), ti') = runIdentity $ Prelude.flip runStateT ti $ do
         rightType <- mkTVar
         leftType <- applySub $ rightType ->- tp
@@ -127,6 +135,6 @@ expandToApp gr (CombBase (Term { eType = tp }) (Just []) ti v) =
                    eRight = cInnerNode rTp,
                    eType = tp,
                    eReqType = Nothing }
-  in CombBase expr (Just [L]) ti' (v + grApp gr)
+  in CombBase expr (Just [L]) (unexpanded+1) ti' (v + grApp gr + bestLeaf)
 
 
