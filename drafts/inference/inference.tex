@@ -77,4 +77,27 @@ where each $z_k$ is the $k$th production probability.
 So, we could do gradient descent on  $\{\alpha_k\}\cup\{\beta_k\}$.
 For computing description length, we could say that there is a Bernoulli RV for each production controlling whether it is even in the grammar, with a Beta prior.
 Then, we can easily find the expected description length of a grammar drawn from $q(G)$.
+\section{Grammar induction via linear programming}
+In EM, we need to find the grammar that most compresses our corpus.
+We can approximate our likelihood and prior by saying that the negative log likelihood is equal to (up to an additive normalizing constant) the number of symbols in the corpus plus the number of symbols in the grammar.
+
+Taking this approximation as the true likelihood and prior, let $\lambda$ be the regularization coefficient for the grammar (eg, how much the negative log likelihood increases for each symbol in the grammar).
+For the sake of simplicity, assume that, if a tree is put in to the grammar, then all of its subtrees are also in the grammar.
+This condition also follows from the requirement that the grammar be in Chomsky Normal Form.
+Then, we want to find the grammar $G$ minimizing
+$$
+\lambda \times \left( \mbox{\# symbols in $G$}\right)+\sum_i w_i \mbox{\# symbols in $e_i$ when encoded using $G$}
+$$
+$\lambda$ should be in $(1,2)$, because adding a tree to the grammar should cost at least as much as having the tree in the corpus (otherwise we'll throw everything in the grammar) and should be $< 2$ so that repeated subtrees are taken up in to the grammar.
+
+Now I'll write down a linear program that corresponds to this minimization problem.
+Define the variable $T_j\in \{0,1\}$, which is 1 iff the $j$th subtree of the corpus is in the grammar.
+\begin{eqnarray*}
+&\min& \lambda \sum_j T_j - \sum_i w_i \sum_{j\in e_i} T_j\\
+&\mbox{subject to}& T_j - T_k \geq 0\mbox{, whenever $j$ is a subtree of $k$}
+\end{eqnarray*}
+The constraint matrix for this linear program is totally unimodular, meaning that every non-singular submatrix has determinant $\pm 1$.
+When this condition holds, the integer linear program has the same solution as the relaxed linear program.
+So, we can solve this using Simplex (or any other linear programming algorithm), subject to the constraint $T_j\in [0,1]$.
+
 \end{document}
