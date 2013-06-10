@@ -57,7 +57,7 @@ doEMIter tasks lambda pseudocounts frontierSize grammar = do
             return grammar -- Didn't hit any tasks
     else do let subtrees = foldl1 (Map.unionWith (+)) $ map (countSubtrees Map.empty) obs'
             let terminals = filter isTerm $ Map.keys $ grExprDistr grammar
-            let newProductions = compressLP lambda subtrees
+            let newProductions = compressLP_corpus lambda subtrees
             let productions = newProductions ++ terminals
             let uniformLogProb = -log (genericLength productions)
             let grammar'  = Grammar (log 0.5) $ Map.fromList [ (prod, uniformLogProb) | prod <- productions ]
