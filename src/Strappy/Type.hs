@@ -41,6 +41,7 @@ instance Show Type where
                       t2 = ts !! 1
 
 -- | type inference monad
+type Sub = Sub
 type TypeInference = StateT (Int, -- ^ next type var
                              M.Map Int Type) -- ^ Union-Find substitution
 

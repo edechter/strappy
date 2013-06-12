@@ -64,8 +64,8 @@ sampleExprM gr@Grammar{grApp=p, grExprDistr=exprDistr} tp
                           annotateRequestedM tp e
 
 -- | Wrapper over sampleExpr that keeps trying to sample when it fails
-safeSample :: MonadRandom m => Grammar -> Type -> m Expr
-safeSample gr tp = do
+safeSampleWithContext :: MonadRandom m => Grammar -> Type -> m (Expr, (Int, M.Map Int 
+safeSampleWithContext gr tp = do
   maybeSample <- runMaybeT $ sampleExpr gr tp
   case maybeSample of
     Nothing -> safeSample gr tp
@@ -78,6 +78,13 @@ sampleExprs n library tp =
   where accSample acc _ = do
           expr <- safeSample library tp
           return $ Map.insertWith (+) expr 1 acc
+{-
+sampleExprsWithContext n library tp =
+  liftM (Map.map fromIntegral) $ foldM accSample Map.empty [1..n]
+  where accSample acc _ = do
+          expr <- safeSample library tp
+          return $ Map.insertWith (+) expr 1 acc
+-}
 
 -- | Uses breadth-first enumeration to "sample" a grammar
 -- This allows us to get many more programs
