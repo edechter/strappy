@@ -1,0 +1,112 @@
+\documentclass[12pt]{article}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+
+\begin{document}
+\section{EM Inference}
+E Step: Compute $q(\{e_i\})=P(\{e_i\} | \{t_i\},G^{old})\propto P(\{t_i\}|\{e_i\})P(\{e_i\}|G^{old})$.
+Observe that $q(\{e_1,e_2,\cdots\})=q(\{e_1\})q(\{e_2\})\cdots$
+
+M Step: Find $G$ by
+\begin{eqnarray*}
+&\max_G& \mathbb{E}_q \left[ \log P(\{t_i|e_i\}) P(\{e_i\}|G)P(G|\theta) \right]\\
+&\max_G& \log P(G|\theta) + \mathbb{E}_q \left[ \log P(\{e_i\}|G)\right] \\ 
+&\max_G& \log P(G|\theta) + \sum_i \mathbb{E}_q \left[ \log P(e_i | G) \right]
+\end{eqnarray*}
+Consider each term in the sum on the r.h.s.:
+\begin{eqnarray*}
+\mathbb{E}_q \left[ \log P(e_i | G) \right] &=& \sum_{e_1}\cdots\sum_{e_i}\cdots \sum_{e_n} q(\{e_1,\cdots\})\log P(e_i|G)\\
+&=& \sum_{\{e_{j\not=i}\}} q(\{e_{j\not= i}\})\sum_{e_i}q(e_i)\log P(e_i|G)\\
+&=& \sum_{\{e_{j\not=i}\}} P(\{e_{j\not= i}\}|G^{old}, \{t_{j\not= i}\})\sum_{e_i}q(e_i)\log P(e_i|G)\\
+&=& \sum_{e_i}  P(t_i|e_i)P(e_i|G^{old})/P(t_i|G^{old}) \log P(e_i|G)\\
+&=& \mathbb{E}_{q_i} \left[ \log P(e_i|G) \right]
+\end{eqnarray*}
+Back to what we're maxing,
+\begin{eqnarray*}
+&\max_G& \log P(G|\theta) + \sum_i \mathbb{E}_{q_i} \left[ \log P(e_i|G) \right]
+\end{eqnarray*}
+Draw from $q_i$ using importance sampling: draw from $P(\cdot | G^{old})$, and then weight by $P(t_i | \cdot)$.
+Let the draws be $e_i^k$ and the corresponding weights be $w_i^k$.
+Approximate the expectation by using this sample; now the maximized quantity is
+\begin{eqnarray*}
+&\max_G& \log P(G|\theta) + \sum_i \sum_k w_i^k \log P(e_i|G)\\
+&\max_G& P(G|\theta) \prod_{i,k}  \left( P(e_i|G) \right)^{w_i^k}
+\end{eqnarray*}
+This is a nice form: what we're maximizing is the probability of generating a set of parse trees, each of which is observed in proportion to $w_i^k$, which is proportional to $P(t_i|e_i)$.
+We can perform this max using hill climbing or some sort of stochastic search, completing the ``M'' step of EM.
+
+\section{Variational Inference}
+It would be nice to represent a distribution over grammars.
+This would, for example, allow generalization from a single task, permitting one-shot program induction.
+It also would make our inference algorithm closer to the actual generative model.
+
+As a first attempt, I'll approximation the posterior $P(\{e_i\},G | \{t_i\})$ using a factorized distribution (mean-field approximation):
+$$
+Q(\{e_i\},G) = q(G) \times \prod_i q(e_i) 
+$$
+where $Q$ is our approximation to the posterior.
+Following the standard derivation of variational Bayes, we want to solve the equations
+\begin{eqnarray*}
+\log q(e_i) &\stackrel{+}{=}& \sum_G q(G)\sum_{e_{j\not= i}} q(\{e_j\}) \log P(e_i, t_i, \{e_{j\not= i}\}, \{t_{j\not= i}\}, G) \\
+\log q(G) &\stackrel{+}{=}& \sum_{\{e_i\}} q(\{e_i\}) \log P(\{e_i\}, \{t_i\}, G )
+\end{eqnarray*}
+The second equation, of course, gives the same distribution over $G$ as EM:
+\begin{eqnarray*}
+\log q(G) &\stackrel{+}{=}& \sum_{\{e_i\}} q(\{e_i\}) \log P(\{e_i\}, \{t_i\}, G )\\
+ &\stackrel{+}{=}& \sum_{\{e_i\}} q(\{e_i\}) \log P(\{e_i\} | G )P(G|\theta)\\
+ &=& \log P(G|\theta) + \sum_{e_1} q(e_1)\log P(e_1 | G) + \sum_{e_2} q(e_2)\log P(e_2 | G)+...
+\end{eqnarray*}
+The first gives a \emph{different} distribution over $\{e_i\}$ than EM:
+\begin{eqnarray*}
+\log q(e_i) &\stackrel{+}{=}& \sum_G q(G)\sum_{e_{j\not= i}} q(\{e_j\}) \log P(e_i, t_i, \{e_{j\not= i}\}, \{t_{j\not= i}\}, G) \\
+&\stackrel{+}{=}& \sum_G q(G) q(e_i) \log P(e_i, t_i, G) \\
+&\stackrel{+}{=}& \log P(t_i | e_i) + \sum_G q(G) \log P(e_i | G) \\
+q(e_i) &\propto& P(t_i | e_i) \prod_G \left[ P(e_i | G)\right]^{q(G)}
+\end{eqnarray*}
+This can be approximated by weighting samples from the proposal distribution
+$$
+r(e_i) = \sum_G P(e_i | G) q(G)
+$$
+A reasonable form for $q(G)$ is (yet another) factored distribution:
+\begin{eqnarray*}
+q(G) &=& \prod_k q(z_k)\\
+q(z_k) &=& \mbox{Beta}(\alpha_k, \beta_k)
+\end{eqnarray*}
+where each $z_k$ is the $k$th production probability.
+So, we could do gradient descent on  $\{\alpha_k\}\cup\{\beta_k\}$.
+For computing description length, we could say that there is a Bernoulli RV for each production controlling whether it is even in the grammar, with a Beta prior.
+Then, we can find the expected description length of a grammar drawn from $q(G)$.
+\section{Grammar induction via linear programming}
+In EM, we need to find the grammar that most compresses our corpus.
+We can approximate our likelihood and prior by saying that the negative log likelihood is equal to (up to an additive normalizing constant) the number of symbols in the corpus plus the number of symbols in the grammar.
+
+Taking this approximation as the true likelihood and prior, let $\lambda$ be the regularization coefficient for the grammar (how much the negative log likelihood increases for each symbol in the grammar).
+For the sake of simplicity, assume that, if a tree is put in to the grammar, then all of its subtrees are also in the grammar.
+This condition also follows from the requirement that the grammar be in Chomsky Normal Form.
+Then, we want to find the grammar $G$ minimizing
+$$
+\lambda \times \left( \mbox{\# symbols in $G$}\right)+\sum_i w_i \mbox{\# symbols in $e_i$ when encoded using $G$}
+$$
+$\lambda$ should be in $(1,2)$, because adding a tree to the grammar should cost at least as much as having the tree in the corpus (otherwise we'll throw everything in the grammar) and should be $< 2$ so that repeated subtrees are taken up in to the grammar.
+
+Now I'll write down a linear program that corresponds to this minimization problem.
+Define the variable $T_j\in \{0,1\}$, which is 1 iff the $j$th subtree of the corpus is in the grammar.
+\begin{eqnarray*}
+&\min& \lambda \sum_j T_j - \sum_i w_i \sum_{j\in e_i} T_j\\
+&\mbox{subject to}& T_j - T_k \geq 0\mbox{, whenever $j$ is a subtree of $k$}
+\end{eqnarray*}
+The constraint matrix for this linear program is totally unimodular, meaning that every non-singular submatrix has determinant $\pm 1$.
+When this condition holds, the integer linear program has the same solution as the relaxed linear program.
+So, we can solve this using Simplex (or any other linear programming algorithm), subject to the constraint $T_j\in [0,1]$.
+\section{Drawing samples from a grammar}
+Our current sampling procedure, as described in the IJCAI paper, is a reasonable and natural way of sampling typed programs from a stochastic grammar.
+However, we don't know how to efficiently find ML estimates of the parameters of the grammar (solving it would require iteratively finding the zeros of very high-degree polynomials).
+If we instead sample from the PCFG, given that the program is typed, we can use the inside-out algorithm to estimate the parameters.
+
+We can efficiently sample from the distribution
+$$P(e | e\mbox{ is typed}, G)\propto \mathbb{I}[e\mbox{ is typed}] P(e | G)$$
+by sampling (or enumerating) using the distribution described in the IJCAI paper, and then reweighting the samples appropriately.
+We don't currently know how to sample directly from $P(e | e\mbox{ is typed}, G)$.
+Empirically, this proposal for importance sampling seems to work well on polynomial regression.
+\end{document}
