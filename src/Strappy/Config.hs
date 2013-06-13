@@ -7,3 +7,11 @@ module Strappy.Config where
 -- False = ijcai-style sampling
 usePCFGWeighting :: Bool
 usePCFGWeighting = False
+
+-- | Include debugging output? (grammars, etc)
+verbose :: Bool
+verbose = False
+
+-- | Size of the frontier enumerated during the "E" step
+frontierSize :: Int
+frontierSize = 5000
