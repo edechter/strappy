@@ -101,7 +101,7 @@ polyEM = do
   let const = [ mkNthDet (\_ -> x) | x <- [0..9] ]
   let lin = [ mkNthDet (\a -> x * a + y) | x <- [1..9], y <- [0..9] ]
   let quad = [ mkNthDet (\a -> x * a * a + y * a + z) | x <- [1..9], y <- [0..9], z <- [0..9] ]
-  loopM seed [0..14] $ \grammar step -> do
+  loopM seed [0..6] $ \grammar step -> do
     putStrLn $ "EM Iteration: " ++ show step
     grammar' <- doEMIter (const++lin++quad) 2.0 1.0 frontierSize grammar
     return grammar'

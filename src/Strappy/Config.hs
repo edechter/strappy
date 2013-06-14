@@ -14,4 +14,4 @@ verbose = False
 
 -- | Size of the frontier enumerated during the "E" step
 frontierSize :: Int
-frontierSize = 5000
+frontierSize = 3000
