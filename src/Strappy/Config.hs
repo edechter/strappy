@@ -6,7 +6,7 @@ module Strappy.Config where
 -- True = sample from P(expr | typed)
 -- False = ijcai-style sampling
 usePCFGWeighting :: Bool
-usePCFGWeighting = False
+usePCFGWeighting = True
 
 -- | Include debugging output? (grammars, etc)
 verbose :: Bool

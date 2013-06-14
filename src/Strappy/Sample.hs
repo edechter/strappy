@@ -10,6 +10,7 @@ import Control.Exception
 import Control.Arrow (second)
 import qualified Data.Map as Map
 import Debug.Trace
+import Data.Maybe
 
 import Strappy.Type
 import Strappy.EnumBF
@@ -42,6 +43,7 @@ sampleExpr gr@Grammar{grApp=p, grExprDistr=exprDistr} tp
                          tp' <- applySub tp
                          return $
                            App { eReqType = Just tp,
+                                 eLogLikelihood = Nothing,
                                  eType = tp',
                                  eLeft = e_left,
                                  eRight = e_right }
@@ -71,7 +73,9 @@ sampleExprs n library tp =
           return $ Map.insertWith (+) expr 1 acc
         reweight expr cnt =
           fromIntegral cnt * if usePCFGWeighting
-                             then pcfgLogLikelihood library expr / ijcaiLogLikelihood library expr
+                             then let pcfg = fromJust $ eLogLikelihood $ pcfgLogLikelihood library expr
+                                      ijcai = fromJust $ eLogLikelihood $ ijcaiLogLikelihood library expr
+                                  in pcfg / ijcai
                              else 1.0
 
 -- | Uses breadth-first enumeration to "sample" a grammar

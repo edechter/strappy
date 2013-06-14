@@ -59,7 +59,7 @@ isClosed _ = False
 -- | Inner nodes are represented by Terminals with ?'s for names
 -- This is done so that we can use the existing Expr gadt without defining our own new structure
 cInnerNode tp = Term { eName = "?", eType = tp, eThing = undefined,
-                       eReqType = Nothing }
+                       eReqType = Nothing, eLogLikelihood = Nothing }
 
 enumBF :: Grammar 
        -> Int -- max num combinators
@@ -86,9 +86,9 @@ enumBF' gr bestLeaf i bfState@(BFState openPQ closedPQ hist) =
         in if isClosed cb
            then if Set.member (comb cb) hist
                 then enumBF' gr bestLeaf i $ BFState openPQ' closedPQ hist
-                else let expr = annotateRequested' (eType $ comb cb) $ comb cb
+                else let expr = exprLogLikelihood gr $ annotateRequested' (eType $ comb cb) $ comb cb
                          closedPQ' = PQ.insert (cb { comb = expr,
-                                                     value = exprLogLikelihood gr expr }) closedPQ
+                                                     value = fromJust $ eLogLikelihood expr }) closedPQ
                          hist' = Set.insert expr hist
                      in enumBF' gr bestLeaf i $ BFState openPQ' closedPQ' hist'
            else let cbs = expand gr bestLeaf cb
@@ -134,7 +134,7 @@ expandToApp gr bestLeaf (CombBase (Term { eType = tp }) (Just []) unexpanded ti 
       expr = App { eLeft = cInnerNode lTp,
                    eRight = cInnerNode rTp,
                    eType = tp,
-                   eReqType = Nothing }
+                   eReqType = Nothing, eLogLikelihood = Nothing }
   in CombBase expr (Just [L]) (unexpanded+1) ti' (v + grApp gr + bestLeaf)
 
 

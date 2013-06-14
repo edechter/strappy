@@ -19,23 +19,27 @@ import Strappy.Type
 data Expr = forall a.
             Term {eName  :: String, 
                   eType  :: Type, 
-                  eReqType :: Maybe Type, 
+                  eReqType :: Maybe Type,
+                  eLogLikelihood :: Maybe Double,
                   eThing :: a }
           | App {eLeft  :: Expr,
                  eRight :: Expr,
                  eType  :: Type,
-                 eReqType :: Maybe Type }
+                 eReqType :: Maybe Type, 
+                 eLogLikelihood :: Maybe Double }
              
 -- | smart constructor for terms
 mkTerm name tp thing = Term { eName = name,
                               eType = tp, 
                               eReqType = Nothing,
+                              eLogLikelihood = Nothing,
                               eThing = thing }
 
 -- | smart constructor for applications
 a <> b = App { eLeft = a, 
                eRight = b, 
                eType = tp, 
+               eLogLikelihood = Nothing,
                eReqType = Nothing }
          where tp = runIdentity . runTI $ typeOfApp a b
 
