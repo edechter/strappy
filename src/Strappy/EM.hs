@@ -94,16 +94,13 @@ polyEM = do
   let seed = Grammar { grApp = log 0.35,
                        grExprDistr = Map.fromList [ (annotateRequested e, 1.0) | e <- polyExprs ] }
   -- Make nth order polynomial task with fixed coefficients
-  let mkNthDet :: [Int] -> (Expr -> Double, Type)
-      mkNthDet coeffs = let coeffs' = reverse coeffs
-                            poly :: Int -> Int
-                            poly x = sum $ zipWith (*) coeffs' $ map (x^) [0..]
-                            loss proc = sum $ zipWith (\a b -> (a-b)*(a-b)) (map (fromIntegral . eval proc) [0..9]) (map (fromIntegral . poly) [0..9])
-                            score proc = exp $ - loss proc
-                        in (score, tInt ->- tInt)
-  let const = [ mkNthDet [x] | x <- [1..9] ]
-  let lin = [ mkNthDet [x,y] | x <- [1..9], y <- [0..9] ]
-  let quad = [ mkNthDet [x,y,z] | x <- [1..9], y <- [0..9], z <- [0..9] ]
+  let mkNthDet :: (Int -> Int) -> (Expr -> Double, Type)
+      mkNthDet poly = let loss proc = sum $ zipWith (\a b -> (a-b)*(a-b)) (map (fromIntegral . eval proc) [0..9]) (map (fromIntegral . poly) [0..9])
+                          score proc = exp $ - loss proc
+                      in (score, tInt ->- tInt)
+  let const = [ mkNthDet (\_ -> x) | x <- [0..9] ]
+  let lin = [ mkNthDet (\a -> x * a + y) | x <- [1..9], y <- [0..9] ]
+  let quad = [ mkNthDet (\a -> x * a * a + y * a + z) | x <- [1..9], y <- [0..9], z <- [0..9] ]
   loopM seed [0..14] $ \grammar step -> do
     putStrLn $ "EM Iteration: " ++ show step
     grammar' <- doEMIter (const++lin++quad) 2.0 1.0 frontierSize grammar

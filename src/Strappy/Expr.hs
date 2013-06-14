@@ -53,7 +53,13 @@ instance Eq Expr where
     e1 == e2 = show e1 == show e2
 
 instance Ord Expr where
-    compare e1 e2 = compare (show e1) (show e2) 
+    compare (Term {eName = n}) (Term {eName = n'}) = compare n n' 
+    compare (App {}) (Term {}) = LT
+    compare (Term {}) (App {}) = GT
+    compare (App { eLeft = l, eRight = r }) (App { eLeft = l', eRight = r' }) =
+      case compare l l' of
+        EQ -> compare r r'
+        cmp -> cmp
 
 showableToExpr :: (Show a) => a -> Type -> Expr
 -- | Convert any Showable Haskell object into an Expr.
