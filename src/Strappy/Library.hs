@@ -40,6 +40,9 @@ data Grammar = Grammar {grApp :: Double, -- ^ log probability of application
 
 showGrammar (Grammar p exprDistr) = printf "%7s:%7.2f\n" "p" (exp p) ++ showExprDistr exprDistr
 
+instance Show Grammar where
+  show = showGrammar
+
 normalizeGrammar :: Grammar -> Grammar 
 normalizeGrammar gr@Grammar{grApp=p, grExprDistr=distr} =
   let logTotalMass = logSumExpList $ Map.elems distr
