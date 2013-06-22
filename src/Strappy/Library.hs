@@ -4,6 +4,7 @@ module Strappy.Library where
 
 import Data.Maybe 
 import qualified Data.Map as Map hiding ((\\))
+import qualified Data.Set as Set
 import Data.Hashable
 import GHC.Prim
 import Unsafe.Coerce (unsafeCoerce)
@@ -337,7 +338,18 @@ initializeTI exprDistr = modify $ \(_, s) -> (i+1, s)
               concatMap (getTVars . eType . fst) $
               Map.toList exprDistr
 
-
+-- | Removes productions that aren't used in the P(app)->0 regime
+-- Using the old method of calculating production probabilities, these productions wouldn't exist
+removeUnusedProductions :: Grammar -> [Expr] -> Grammar
+removeUnusedProductions (Grammar { grApp = pApp, grExprDistr = distr }) corpus =
+  let used = foldl (\acc -> Set.union acc . grUses) Set.empty corpus
+      distr' = Map.filterWithKey (\expr _ -> isTerm expr || expr `Set.member` used) distr
+  in Grammar pApp distr'
+  where grUses :: Expr -> Set.Set Expr
+        grUses expr | Map.member expr distr = Set.singleton expr
+        grUses (App { eLeft = l, eRight = r }) =
+          Set.union (grUses l) (grUses r)
+        grUses expr = error $ "grUses: terminal " ++ show expr ++ " not in library."
 
 
 

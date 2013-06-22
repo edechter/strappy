@@ -35,8 +35,13 @@ doEMIter :: [(Expr -> Double, Type)] -- ^ Tasks
             -> IO Grammar -- ^ Improved grammar
 doEMIter tasks lambda pseudocounts frontierSize grammar = do
   -- For each type, sample a frontier
-  let frontiers = map (\tp -> (tp, sampleBF frontierSize grammar tp))
-                  $ nub $ map snd tasks
+  frontiers <- mapM (\tp -> (if sampleByEnumeration then sampleBFM else sampleExprs) frontierSize grammar tp
+                            >>= return . (tp,))
+               $ nub $ map snd tasks
+  -- If we're sampling, the number of unique expressions is not given;
+  -- display them.
+  unless sampleByEnumeration $
+    putStrLn $ "Frontier sizes: " ++ (unwords $ map (show . Map.size . snd) frontiers)
   -- For each task, compute the P(t|e) terms
   let rewardedFrontiers = Prelude.flip map tasks $ \ (tsk, tp) ->
         Map.mapWithKey (\expr cnt -> (cnt, log (tsk expr))) $ fromJust $ lookup tp frontiers
@@ -64,13 +69,16 @@ doEMIter tasks lambda pseudocounts frontierSize grammar = do
             let newProductions = compressLP_corpus lambda subtrees
             let productions = newProductions ++ terminals
             let uniformLogProb = -log (genericLength productions)
-            let grammar'  = Grammar (log 0.5) $ Map.fromList [ (prod, uniformLogProb) | prod <- productions ]
-            let grammar'' = inoutEstimateGrammar grammar' pseudocounts obs'
+            let grammar'   = Grammar (log 0.5) $ Map.fromList [ (prod, uniformLogProb) | prod <- productions ]
+            let grammar''  = if pruneGrammar
+                             then removeUnusedProductions grammar' $ map fst obs'
+                             else grammar'
+            let grammar''' = inoutEstimateGrammar grammar'' pseudocounts obs'
             putStrLn $ "Got " ++ show ((length $ lines $ showGrammar $ removeSubProductions grammar') - length terminals - 1) ++ " new productions."
-            putStrLn $ "Grammar entropy: " ++ show (entropyLogDist $ Map.elems $ grExprDistr grammar'')
-            when verbose $ putStrLn $ showGrammar $ removeSubProductions grammar''
+            putStrLn $ "Grammar entropy: " ++ show (entropyLogDist $ Map.elems $ grExprDistr grammar''')
+            when verbose $ putStrLn $ showGrammar $ removeSubProductions grammar'''
             putStrLn "" -- newline
-            return grammar''
+            return grammar'''
          
 -- Library for testing EM+polynomial regression
 -- This is what was used in the IJCAI paper
@@ -101,9 +109,9 @@ polyEM = do
   let const = [ mkNthDet (\_ -> x) | x <- [0..9] ]
   let lin = [ mkNthDet (\a -> x * a + y) | x <- [1..9], y <- [0..9] ]
   let quad = [ mkNthDet (\a -> x * a * a + y * a + z) | x <- [1..9], y <- [0..9], z <- [0..9] ]
-  loopM seed [0..6] $ \grammar step -> do
+  loopM seed [0..14] $ \grammar step -> do
     putStrLn $ "EM Iteration: " ++ show step
-    grammar' <- doEMIter (const++lin++quad) 2.0 1.0 frontierSize grammar
+    grammar' <- doEMIter (const++lin++quad) 0.9 1.0 frontierSize grammar
     return grammar'
   return ()
                     

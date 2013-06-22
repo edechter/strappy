@@ -49,7 +49,7 @@ sampleExpr gr@Grammar{grApp=p, grExprDistr=exprDistr} tp
                                  eRight = e_right }
               False -> do let cs = filter (\(e, _) -> canUnifyFast tp (eType e)) $
                                    Map.toList exprDistr
-                          lift $ guard (not . null $ cs)
+                          when (null cs) $ lift $ fail "Unable to find matching type"
                           e <- lift $ sampleMultinomial $ map (second exp) $   
                                normalizeDist cs
                           eTp <- instantiateType (eType e)
@@ -72,11 +72,11 @@ sampleExprs n library tp =
           expr <- safeSample library tp
           return $ Map.insertWith (+) expr 1 acc
         reweight expr cnt =
-          fromIntegral cnt * if usePCFGWeighting
+          fromIntegral cnt {-* if usePCFGWeighting
                              then let pcfg = fromJust $ eLogLikelihood $ pcfgLogLikelihood library expr
                                       ijcai = fromJust $ eLogLikelihood $ ijcaiLogLikelihood library expr
                                   in pcfg / ijcai
-                             else 1.0
+                             else 1.0-}
 
 -- | Uses breadth-first enumeration to "sample" a grammar
 -- This allows us to get many more programs
@@ -85,3 +85,7 @@ sampleBF :: Int -> Grammar -> Type -> ExprMap Double
 sampleBF n gr tp =
   Map.fromList $ enumBF gr n tp
 
+
+-- | Monadic wrapper
+sampleBFM :: Monad m => Int -> Grammar -> Type -> m (ExprMap Double)
+sampleBFM n gr tp = return $ sampleBF n gr tp

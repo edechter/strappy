@@ -12,6 +12,15 @@ usePCFGWeighting = True
 verbose :: Bool
 verbose = False
 
--- | Size of the frontier enumerated during the "E" step
+-- | Prune the grammar?
+-- Slightly degrades accuracy, but allows us to explore a slightly larger frontier
+pruneGrammar :: Bool
+pruneGrammar = False
+
+-- | Sample by enumeration?
+sampleByEnumeration :: Bool
+sampleByEnumeration = False
+
+-- | Size of the frontier enumerated, or sampled, during the "E" step
 frontierSize :: Int
-frontierSize = 3000
+frontierSize = 40000
