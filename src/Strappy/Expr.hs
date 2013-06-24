@@ -36,12 +36,13 @@ mkTerm name tp thing = Term { eName = name,
                               eThing = thing }
 
 -- | smart constructor for applications
-a <> b = App { eLeft = a, 
-               eRight = b, 
+a <> b = case runIdentity . evalTI $ typeOfApp a b of 
+  Right tp -> App { eLeft = a, 
+                     eRight = b, 
                eType = tp, 
                eReqType = Nothing, 
                eLogLikelihood = Nothing }
-         where tp = runIdentity . evalTI $ typeOfApp a b
+  Left _ -> error "Application failed."
 
 instance Show Expr where
     show Term{eName=s} = s
@@ -74,6 +75,10 @@ typeOfApp e_left e_right
     = do t <- mkTVar
          unify (eType e_left) (eType e_right ->- t)
          applySub t
+
+typeCheck :: Monad m => Expr -> TypeInference m Type
+typeCheck e@Term{eType=tp} = return tp
+typeCheck e@App{eLeft=l, eRight=r} = typeOfApp l r 
 
 eval :: Expr -> a
 -- | Evaluates an Expression of type a into a Haskell object of that

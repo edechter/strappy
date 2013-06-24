@@ -97,9 +97,12 @@ annotateRequestedM tp e@(Term { eType = eTp }) = do
 -- | Non-monadic wrapper
 -- Presumes no constraint on top-level type
 annotateRequested :: Expr -> Expr
-annotateRequested expr = runIdentity $ evalTI $ do
-  tp <- mkTVar
-  annotateRequestedM tp expr
+annotateRequested expr = let out = runIdentity $ evalTI $ do tp <- mkTVar
+                                                             annotateRequestedM tp expr
+                        in case out of
+                            Right e -> e
+                            Left _ -> error "annotateRequested: unable to anotate type" 
+
 
 
 
@@ -272,8 +275,6 @@ basicExprDistr :: ExprDistr
 basicExprDistr = Map.adjust (const (-5)) cBottom
                  $ Map.fromList [(e, 1) | e <- basicExprs] 
                  
-
-
 basicGrammar :: Grammar
 basicGrammar = normalizeGrammar $ Grammar 3 basicExprDistr
 
@@ -292,9 +293,9 @@ clearGrammarProbs Grammar { grExprDistr = distr } =
 -- grab all type variables in the library and make sure that the type
 -- variable counter in the state of the TypeInference monad is greater
 -- that that counter.
-initializeTI :: Monad m => ExprDistr -> TypeInference m ()
-initializeTI exprDistr = modify $ \(_, s) -> (i+1, s)
+initializeTI :: Monad m => ExprMap a -> TypeInference m ()
+initializeTI exprMap = modify $ \(_, s) -> (i+1, s)
     where i = maximum $
               concatMap (getTVars . eType . fst) $
-              Map.toList exprDistr
+              Map.toList exprMap
 

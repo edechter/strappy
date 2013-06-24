@@ -63,7 +63,7 @@ enumBF :: Grammar
 -- under the grammar.
 enumBF gr i tp = map comb $ PQ.take i $ closed $ enumBF' gr' i initBFState
     where root = CombBase (cInnerNode tp) (Just []) tiState 0.0
-          tiState = execState (initializeTI $ grExprDistr gr) (0, Map.empty)
+          tiState = snd $ unsafeRunTI (initializeTI $ grExprDistr gr)
           initBFState = BFState (PQ.singleton root) PQ.empty Set.empty
           gr' = normalizeGrammar gr
 
@@ -92,11 +92,11 @@ enumBF' gr i bfState@(BFState openPQ closedPQ hist) =
 expand :: Grammar 
        -> CombBase 
        -> [CombBase]
-expand gr cb@(CombBase (Term { eType = tp }) (Just []) ti v) =
-  let tp' = runIdentity $ evalStateT (applySub tp) ti
+expand gr cb@(CombBase (Term { eType = tp }) (Just []) (nextTVar, sub) v) =
+  let (tp', (nextTVar', sub')) = unsafeRunTIWithNextVarAndSub nextTVar sub (applySub tp) 
       cs = filter (\(e, _) -> canUnifyFast tp' (eType e)) $ Map.toList $ grExprDistr gr
       cbs = map (\(e, ll) -> CombBase e Nothing (ti' e) (v+ll)) cs
-      ti' e = execState (instantiateType (eType e) >>= unify tp) ti
+      ti' e = snd $ unsafeRunTIWithNextVarAndSub nextTVar' sub' (instantiateType (eType e) >>= unify tp) 
       cbApp = expandToApp gr cb
   in if null cs then [] else cbApp : cbs
 expand gr (CombBase expr@(App { eLeft = left }) (Just (L:rest)) ti v) = do
@@ -117,8 +117,8 @@ expand gr (CombBase expr@(App { eRight = right }) (Just (R:rest)) ti v) = do
   return $ CombBase expr' path' ti' v'
 
 expandToApp :: Grammar -> CombBase -> CombBase
-expandToApp gr (CombBase (Term { eType = tp }) (Just []) ti v) =
-  let ((lTp, rTp), ti') = runIdentity $ Prelude.flip runStateT ti $ do
+expandToApp gr (CombBase (Term { eType = tp }) (Just []) (nextTVar, sub) v) =
+  let ((lTp, rTp), ti') = unsafeRunTIWithNextVarAndSub nextTVar sub $ do
         rightType <- mkTVar
         leftType <- applySub $ rightType ->- tp
         return (leftType, rightType)

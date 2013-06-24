@@ -41,24 +41,45 @@ instance Show Type where
                       t2 = ts !! 1
 
 -- | type inference monad
-type Sub = Sub
-type TypeInference = StateT (Int, -- ^ next type var
-                             M.Map Int Type) -- ^ Union-Find substitution
+type NextTypeVar = Int
+type Sub = M.Map Int Type
+data TypeError = UnificationError String
+instance Error TypeError where
+  strMsg s = UnificationError s
+instance Show TypeError  where
+  show (UnificationError s) = "UnificationError: " ++ s
+newtype TypeInference m a =  TypeInference {unTypeInference :: ErrorT TypeError (StateT (NextTypeVar, Sub) m) a}
+      deriving (Monad ,
+        MonadState (NextTypeVar, Sub),
+        MonadError TypeError)
 
-runTI :: Monad m => TypeInference m a -> m (a, (Int, M.Map Int Type))
-runTI = runTIVar 0
-
-runTIVar :: Monad m => Int -> TypeInference m a -> m (a, (Int, M.Map Int Type))
-runTIVar nextTVar m =
-  runStateT m (nextTVar, M.empty)
+instance  MonadTrans TypeInference where
+  lift = TypeInference . lift . lift
 
 
-evalTI :: Monad m => TypeInference m a -> m a
+
+runTI :: Monad m => TypeInference m a -> m (Either TypeError a, (Int, Sub))
+runTI = runTIWithNextVarAndSub 0 M.empty
+
+runTIWithNextVarAndSub :: Monad m => NextTypeVar -> Sub -> TypeInference m a 
+                          -> m (Either TypeError a, (Int, Sub))
+runTIWithNextVarAndSub nextTVar sub m =
+  runStateT (runErrorT (unTypeInference m)) (nextTVar, sub)
+
+
+evalTI :: Monad m => TypeInference m a -> m (Either TypeError a)
 evalTI = liftM fst . runTI
 
 
-evalTIVar :: Monad m => Int -> TypeInference m a -> m a
-evalTIVar nextTVar = liftM fst . runTIVar nextTVar
+evalTIVar :: Monad m => NextTypeVar -> Sub -> TypeInference m a -> m (Either TypeError a)
+evalTIVar nextTVar sub = liftM fst . runTIWithNextVarAndSub nextTVar sub
+
+unsafeRunTIWithNextVarAndSub nextTVar sub m = 
+  case runIdentity $ runTIWithNextVarAndSub nextTVar sub m of 
+    (Right x, state ) -> (x, state)
+    (Left _, _) -> error "unsafeRunTIWithNextVarAndSub: exception encountered; told you this was unsafe"
+
+unsafeRunTI = unsafeRunTIWithNextVarAndSub 0 M.empty
 
 -- Create an unbound type variable
 mkTVar :: Monad m => TypeInference m Type
@@ -97,14 +118,14 @@ unify t1 t2 = do
   t2' <- applySub t2
   unify' t1' t2'
 unify' (TVar v) (TVar v') | v == v' = return ()
-unify' (TVar v) t | occurs v t = lift $ fail "Occurs check"
+unify' (TVar v) t | occurs v t = throwError $ UnificationError "occurs check"
 unify' (TVar v) t = bindTVar v t
-unify' t (TVar v) | occurs v t = lift $ fail "Occurs check"
+unify' t (TVar v) | occurs v t = throwError $ UnificationError "occurs check"
 unify' t (TVar v) = bindTVar v t
 unify' (TCon k []) (TCon k' []) | k == k' = return ()
 unify' (TCon k ts) (TCon k' ts') | k == k' = do
   zipWithM_ unify ts ts'
-unify' _ _ = lift $ fail "Could not unify"
+unify' _ _ = throwError $ UnificationError "could not unify"
 
 -- Occurs check: does the variable occur in the type?
 occurs :: Int -> Type -> Bool
@@ -112,26 +133,23 @@ occurs v (TVar v') = v == v'
 occurs v (TCon _ ts) = any (occurs v) ts
 
 
--- Checks to see if two types can unify, using current substitution
+-- Checks to see if two types can unify, usinging current substitution
 canUnifyM :: Monad m => Type -> Type -> TypeInference m Bool
-canUnifyM t1 t2 = do
-  state <- get
-  case evalStateT (unify t1 t2) state of
-    Nothing -> return False
-    Just () -> return True
+canUnifyM t1 t2 = (unify t1 t2 >> return True) `catchError` (\_ -> return False)
+
   
 -- Non-monadic wrapper
-canUnify :: Type -> Type -> Bool
-canUnify t1 t2 =
-  -- Ensure no clashes between type variables
-  let t1' = normalizeTVars t1
-      t2' = normalizeTVars t2
-      t1Max = largestTVar t1'
-      t2Max = largestTVar t2'
-      t2'' = applyTVarSub (map (\v->(v,TVar (v+t1Max+10))) [0..t2Max]) t2'
-  in case evalTIVar (t1Max+t2Max+10) (canUnifyM t1' t2'') of
-    Nothing -> False
-    Just x -> x
+--canUnify :: Type -> Type -> Bool
+--canUnify t1 t2 =
+--  -- Ensure no clashes between type variables
+--  let t1' = normalizeTVars t1
+--      t2' = normalizeTVars t2
+--      t1Max = largestTVar t1'
+--      t2Max = largestTVar t2'
+--      t2'' = applyTVarSub (map (\v->(v,TVar (v+t1Max+10))) [0..t2Max]) t2'
+--  in case evalTIVar (t1Max+t2Max+10) M.empty (canUnifyM t1' t2'') of
+--    Nothing -> False
+--    Just x -> x
 
 -- | Fast types that hold an implicit substitution
 -- Using IORef's is dirty, and I should be using STRef's,
@@ -204,7 +222,7 @@ instantiateType ty = do
 getTVars :: Type -> [Int]
 getTVars (TVar v) = [v]
 getTVars (TCon k ts) = concatMap getTVars ts
-
+  
 applyTVarSub :: [(Int,Type)] -> Type -> Type
 applyTVarSub sub (TVar v) =
   case lookup v sub of
@@ -231,7 +249,7 @@ normalizeTVars = snd . norm []
 largestTVar :: Type -> Int
 largestTVar (TVar v) = v
 largestTVar (TCon _ ts) = maximum $ (-1) : map largestTVar ts
-
+  
 fromType :: Type -> Type
 -- | Get the source type of a function type (if it is not a function
 -- type then error).
