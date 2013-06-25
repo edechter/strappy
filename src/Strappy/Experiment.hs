@@ -22,7 +22,7 @@ data Experiment = Experiment {expName :: String, -- ^ name of experiment
                 deriving Show
 
 ----- Squared Integers -------
-rlimit = 100
+{-rlimit = 100
 
 taskSet :: TaskSet
 taskSet = map (mkSingleEqualityTask rlimit) xs
@@ -41,7 +41,7 @@ expSquaredInts
         expDepthBound = 3,
         expNumBound = 100,
         expReps = 20}
-
+-}
 ------------------------------
 
 ---- Integer Sequences ----

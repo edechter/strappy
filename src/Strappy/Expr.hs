@@ -19,9 +19,9 @@ import Strappy.Type
 data Expr = forall a.
             Term {eName  :: String, 
                   eType  :: Type, 
-                  eReqType :: Maybe Type, 
-                  eThing :: a,
-                  eLogLikelihood :: Maybe Double }
+                  eReqType :: Maybe Type,
+                  eLogLikelihood :: Maybe Double,
+                  eThing :: a }
           | App {eLeft  :: Expr,
                  eRight :: Expr,
                  eType  :: Type,
@@ -44,6 +44,7 @@ a <> b = case runIdentity . evalTI $ typeOfApp a b of
                eLogLikelihood = Nothing }
   Left _ -> error "Application failed."
 
+
 instance Show Expr where
     show Term{eName=s} = s
     show App{eLeft=el, eRight=er} = "(" ++ show el ++ " " ++  show er ++ ")"
@@ -58,7 +59,13 @@ instance Eq Expr where
     e1 == e2 = show e1 == show e2
 
 instance Ord Expr where
-    compare e1 e2 = compare (show e1) (show e2) 
+    compare (Term {eName = n}) (Term {eName = n'}) = compare n n' 
+    compare (App {}) (Term {}) = LT
+    compare (Term {}) (App {}) = GT
+    compare (App { eLeft = l, eRight = r }) (App { eLeft = l', eRight = r' }) =
+      case compare l l' of
+        EQ -> compare r r'
+        cmp -> cmp
 
 showableToExpr :: (Show a) => a -> Type -> Expr
 -- | Convert any Showable Haskell object into an Expr.

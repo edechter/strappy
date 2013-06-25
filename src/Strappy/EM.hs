@@ -1,4 +1,4 @@
-
+{-# LANGUAGE TupleSections  #-}
 module Main where
 --module Strappy.EM where
 
@@ -9,6 +9,8 @@ import Strappy.Type
 import Strappy.Task
 import Strappy.Utils
 import Strappy.Library 
+import Strappy.LPCompress
+import Strappy.Config
 
 import Data.Maybe
 import Data.List
@@ -22,135 +24,75 @@ import Debug.Trace
 
 import System.CPUTime
 
--- Negative Log Prior
-grammarNLP :: Grammar -> Double
-grammarNLP gr@(Grammar{grExprDistr = lib}) =
-  let corpus  = filter (not . isTerm) $ Map.keys lib
-      destructureAndWeight (App{eLeft = l, eRight = r}) =
-        [(l,1.0), (r,1.0)]
-      corpus' = concatMap destructureAndWeight corpus
-      gr' = iterateInOut 5 (clearGrammarProbs gr) 0.0 corpus'
-  in - grammarLogLikelihood gr' corpus'
 
-
--- Likelihood term in EM
-grammarLogLikelihood :: Grammar -> [(Expr, Double)] -> Double
-grammarLogLikelihood gr exprs_and_score =
-  sum $ map (\(e, w) -> exprLogLikelihood gr e * w) exprs_and_score
-
-
--- Performs hill climbing upon the given grammar
-optimizeGrammar :: Double -> -- ^ Lambda
-                   Double -> -- ^ pseudocounts
-                   Grammar -> [(Expr, Double)] -> Grammar
-optimizeGrammar lambda pseudocounts gr exprs_and_scores=
-  let gr' = iterateInOut 5 (clearGrammarProbs gr) 0.3 exprs_and_scores
-      initial_score = lambda * (grammarNLP gr') - grammarLogLikelihood gr' exprs_and_scores
-      -- This procedure performs hill climbing
-      climb :: Grammar -> Double -> Grammar
-      climb g g_score =
-        let gs = grammarNeighbors g pseudocounts exprs_and_scores
-            gsScore = [ (g, lambda * grammarNLP g - grammarLogLikelihood g exprs_and_scores) |
-                        g <- gs ]
-            (best_g', best_g'_score) = minimumBy (compare `on` snd) gsScore
-        in
-         if best_g'_score < g_score
-         then climb best_g' best_g'_score
-         else g
-  in
-   climb gr' initial_score
-
--- | The neighbors of a grammar are those reachable by one addition/removal of a production
--- This procedure tries adding/removing one production,
--- modulo the restriction that the primitives are never removed from the grammar
-grammarNeighbors :: Grammar -> Double -- ^ pseudocounts 
-                -> [(Expr, Double)] 
-                -> [Grammar]
-grammarNeighbors (Grammar appProb lib) pseudocounts obs = oneRemoved ++ oneAdded
-  where oneRemoved = map (\expr -> Grammar appProb (Map.delete expr lib)) 
-                         $ filter (not . isTerm) $ Map.keys lib 
-        oneAdded =
-          let duplicatedSubtrees =
-                foldl (\cnt expr_wt -> countSubtreesNotInGrammar lib cnt expr_wt) Map.empty obs 
-              subtreeSizes = Map.mapWithKey (\expr cnt -> cnt * exprSize lib expr) duplicatedSubtrees
-              maximumAdded = 5 -- Consider at most 5 subtrees. Cuts down search.
-              bestSubtrees = map annotateRequested $
-                             take maximumAdded $
-                             map fst $
-                             sortBy (\a a' -> flipOrdering $ (compare `on` snd) a a') $
-                             Map.toList subtreeSizes
-          in
-           [ iterateInOut 5 (clearGrammarProbs (Grammar appProb (Map.insert subtree 0.0 lib))) pseudocounts obs |
-             subtree <- bestSubtrees ]
-
-countSubtreesNotInGrammar :: ExprDistr -- <lib>: Distribution over expressions. 
-                            -> ExprMap Double -- <cnt>: Map of rules and associated counts.  
-                            -> (Expr, Double) -- <expr>: the expression
-                            -> ExprMap Double
-countSubtreesNotInGrammar lib cnt (expr@(App{eLeft=l, eRight=r}),wt) =
-  let cnt'   = incCountIfNotInGrammar lib cnt (expr,wt)
-      cnt''  = countSubtreesNotInGrammar lib cnt' (l,wt)
-      cnt''' = countSubtreesNotInGrammar lib cnt'' (r,wt)
-  in
-   cnt'''
-countSubtreesNotInGrammar _ cnt _ = cnt
-
-incCountIfNotInGrammar :: ExprDistr -> ExprMap Double -> (Expr, Double) 
-                          -> ExprMap Double
-incCountIfNotInGrammar lib cnt (expr,wt) | not (Map.member expr lib) =
-  Map.insertWith (+) expr wt cnt
-incCountIfNotInGrammar _ cnt _ = cnt
-
-exprSize :: ExprDistr -> Expr -> Double
-exprSize distr e | Map.member e distr = 1.0
-exprSize distr App{eLeft=l, eRight=r} = 1.0 + exprSize distr l + exprSize distr r
-exprSize _ _ = 1.0
-
-
--- | Performs one iterations of EM on multitask learning
-doEMIter :: 
-            [(Expr -> Double, Type)] -- ^ Tasks
+-- | Performs one iteration of EM on multitask learning
+-- Does LP construction rather than hill-climbing
+doEMIter :: [(Expr -> Double, Type)] -- ^ Tasks
             -> Double -- ^ Lambda
             -> Double -- ^ pseudocounts
             -> Int -- ^ frontier size
             -> Grammar -- ^ Initial grammar
-            -> IO Grammar -- ^ Improved grammar-}
+            -> IO Grammar -- ^ Improved grammar
 doEMIter tasks lambda pseudocounts frontierSize grammar = do
   -- For each type, sample a frontier
-  frontiers <- mapM (\tp -> do sample <- return $ sampleBF frontierSize grammar tp
-                               return (tp, sample))
-                    $ nub $ map snd tasks
-  -- For each task, weight the corresponding frontier by likelihood
-  let weightedFrontiers = Prelude.flip map tasks $ \(tsk, tp) ->
-        Map.mapWithKey (\expr cnt -> cnt + log (tsk expr)) $ fromJust $ lookup tp frontiers
+  frontiers <- mapM (\tp -> (if sampleByEnumeration then sampleBFM else sampleExprs) frontierSize grammar tp
+                            >>= return . (tp,))
+               $ nub $ map snd tasks
+  -- If we're sampling, the number of unique expressions is not given;
+  -- display them.
+  unless sampleByEnumeration $
+    putStrLn $ "Frontier sizes: " ++ (unwords $ map (show . Map.size . snd) frontiers)
+  -- For each task, compute the P(t|e) terms
+  let rewardedFrontiers = Prelude.flip map tasks $ \ (tsk, tp) ->
+        Map.mapWithKey (\expr cnt -> (cnt, log (tsk expr))) $ fromJust $ lookup tp frontiers
+  -- For each task, weight the corresponding frontier by P(e|g)
+  let weightedFrontiers = Prelude.flip map rewardedFrontiers $ Map.map (\(cnt, logLikelihood) -> cnt + logLikelihood)
   -- Normalize frontiers
   let logZs = map (Map.fold logSumExp (log 0.0)) weightedFrontiers
-  let numHit = length $ filter (\z -> not (isNaN z) && not (isInfinite z)) logZs
-  putStrLn $ "Hit " ++ show numHit ++ "/" ++ show (length tasks) ++ " tasks."
-  let obs = foldl (\acc (logZ, frontier) ->
-                    if not (isNaN logZ) && not (isInfinite logZ)
-                    then Map.unionWith logSumExp acc $ Map.map (\x -> x-logZ) frontier
-                    else acc) Map.empty $ zip logZs weightedFrontiers
+  let weightedFrontiers' = zipWith (\logZ -> filter (\(_,x) -> not (isNaN x) && not (isInfinite x)) . Map.toList .
+                                             Map.map (\x-> x-logZ))
+                                   logZs weightedFrontiers
+  let numHit = length $ filter id $ Prelude.flip map rewardedFrontiers $
+        Map.fold (\(_, ll) acc -> acc || ll >= -0.0001) False
+  putStrLn $ "Completely solved " ++ show numHit ++ "/" ++ show (length tasks) ++ " tasks."
+  let obs = foldl (\acc frontier ->
+                    Map.unionWith logSumExp acc $ Map.fromList frontier) Map.empty weightedFrontiers'
   -- Exponentiate log likelihoods to get final weights
-  let obs' = filter (\(_,w) -> not (isNaN w) && not (isInfinite w)) $
-             map (\(e,logW) -> (e, exp logW)) $ Map.toList obs
+  let obs' = map (\(e,logW) -> (e, exp logW)) $
+             filter (\(_,w) -> not (isNaN w) && not (isInfinite w)) $
+             Map.toList obs
   if length obs' == 0
     then do putStrLn "Hit no tasks."
             return grammar -- Didn't hit any tasks
-    else do let grammar' = optimizeGrammar lambda pseudocounts grammar obs'
-            putStrLn $ showGrammar grammar'
-            return grammar'
+    else do let subtrees = foldl1 (Map.unionWith (+)) $ map (countSubtrees Map.empty) obs'
+            let terminals = filter isTerm $ Map.keys $ grExprDistr grammar
+            let newProductions = compressLP_corpus lambda subtrees
+            let productions = newProductions ++ terminals
+            let uniformLogProb = -log (genericLength productions)
+            let grammar'   = Grammar (log 0.5) $ Map.fromList [ (prod, uniformLogProb) | prod <- productions ]
+            let grammar''  = if pruneGrammar
+                             then removeUnusedProductions grammar' $ map fst obs'
+                             else grammar'
+            let grammar''' = inoutEstimateGrammar grammar'' pseudocounts obs'
+            putStrLn $ "Got " ++ show ((length $ lines $ showGrammar $ removeSubProductions grammar') - length terminals - 1) ++ " new productions."
+            putStrLn $ "Grammar entropy: " ++ show (entropyLogDist $ Map.elems $ grExprDistr grammar''')
+            when verbose $ putStrLn $ showGrammar $ removeSubProductions grammar'''
+            putStrLn "" -- newline
+            return grammar'''
          
--- Library for testing EM+polynomial regressionx
+-- Library for testing EM+polynomial regression
+-- This is what was used in the IJCAI paper
 polyExprs :: [Expr]
 polyExprs = [cI, 
               cS, 
               cB, 
               cC, 
-              cK, 
+--              cK, 
               cPlus,
               cTimes
-              ] ++ cInts
+              ] ++ [ cInt2Expr 0, cInt2Expr 1 ]
+
+
 
 
 -- Polynomial regression test for EM
@@ -159,74 +101,18 @@ polyEM = do
   -- Seed grammar
   let seed = Grammar { grApp = log 0.35,
                        grExprDistr = Map.fromList [ (annotateRequested e, 1.0) | e <- polyExprs ] }
-  -- Make nth order polynomial task with random coefficients
-{-  let mkNthOrder :: Int -> IO (Expr -> Double, Type)
-      mkNthOrder n = replicateM (n+1) $ randomRIO (0,9::Int) >>= \coeffs ->
-        let poly :: Int -> Int
-            poly x = sum $ zipWith (*) coeffs $ map (x^) [0..]
-            score proc =
-              if map (eval proc) [0..3] == map poly [0..3]
-              then 1.0
-              else 0.0
-        in return (score, tInt ->- tInt)
--}
   -- Make nth order polynomial task with fixed coefficients
-  let mkNthDet :: [Int] -> (Expr -> Double, Type)
-      mkNthDet coeffs = let poly :: Int -> Int
-                            poly x = sum $ zipWith (*) coeffs $ map (x^) [0..]
-                            score proc = if map (eval proc) [0..3] == map poly [0..3]
-                                         then 1.0
-                                         else 0.0
-                        in (score, tInt ->- tInt)
-  let const = [ mkNthDet [x] | x <- [1..9] ]
-  let lin = [ mkNthDet [x,y] | x <- [1..9], y <- [1..9] ]
-  let quad = [ mkNthDet [x,y,z] | x <- [1..9], y <- [1..9], z <- [1..3] ]
---  quad <- replicateM 100 (mkNthOrder 2)
-  loopM seed [1..4] $ \grammar step -> do
+  let mkNthDet :: (Int -> Int) -> (Expr -> Double, Type)
+      mkNthDet poly = let loss proc = sum $ zipWith (\a b -> (a-b)*(a-b)) (map (fromIntegral . eval proc) [0..9]) (map (fromIntegral . poly) [0..9])
+                          score proc = exp $ - loss proc
+                      in (score, tInt ->- tInt)
+  let const = [ mkNthDet (\_ -> x) | x <- [0..9] ]
+  let lin = [ mkNthDet (\a -> x * a + y) | x <- [1..9], y <- [0..9] ]
+  let quad = [ mkNthDet (\a -> x * a * a + y * a + z) | x <- [1..9], y <- [0..9], z <- [0..9] ]
+  loopM seed [0..14] $ \grammar step -> do
     putStrLn $ "EM Iteration: " ++ show step
-    grammar' <- doEMIter (const++lin++quad) 0.1 1.0 1000 grammar
+    grammar' <- doEMIter (const++lin++quad) 0.9 1.0 frontierSize grammar
     return grammar'
   return ()
                     
 main = polyEM
-
-----------------------------------------------------------------------
--- Solve a single task
-
--- solveTask :: (MonadPlus m, MonadRandom m) => 
---         -> Int -- ^ <n> plan length
---         -> Int -- ^ <m> branching factor 
---         -> m ( [(UExpr, Double)], -- all expressions tried and associated rewards
---                [UExpr], -- plan of expressions
---                Double) -- score of plan
-{-solveTask gr Task{task=tsk, taskType=tp} n m = go [] [] 0 n 
-       where  go exprs_and_scores plan cum_score 0 = return (exprs_and_scores, plan, cum_score)
-              go exprs_and_scores plan cum_score steps = 
-                 let tp' = if steps == n then tp else tp ->- tp 
-                 in do exprs <- sequence $ sampleExprs m gr tp' 
-                       -- for each expr, append that expression to the plan, 
-                       -- score it on the task, and compare the new score to the
-                       -- score of the current plan. 
-                       
-                       let exprs_and_scores'  
-                             = do expr <- exprs 
-                                  let score = if steps == n then tsk (toUExpr expr) 
-                                                else (tsk (compose (toUExpr expr : plan))) / cum_score
-                                  return (toUExpr expr, score) 
-                           plan' = best_expr : plan                                     
-                                   where best_expr = fst $ maximumBy (compare `on` snd) exprs_and_scores' 
-                           cum_score' = tsk $ compose plan'            
-                       go (exprs_and_scores' ++ exprs_and_scores) plan' cum_score' (steps - 1)
-
-solveTasks
-  :: (MonadPlus m, MonadRandom m) =>
-     Grammar
-     -> [Task]
-     -> Int
-     -> Int
-     -> m ([[(UExpr, Double)]], [[UExpr]], [Double])
-solveTasks gr tasks n m = liftM unzip3 $ mapM (\t -> solveTask gr t n m) tasks
-
-
-
--}

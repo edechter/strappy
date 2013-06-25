@@ -8,13 +8,16 @@ import Control.Monad.Random
 import Control.Exception 
 import Control.Arrow (first, second)
 import qualified Data.Map as Map
+import Debug.Trace
+import Data.Maybe
 
 import Strappy.Type
 import Strappy.EnumBF
 import Strappy.Expr
 import Strappy.Library
 import Strappy.Utils 
-import Debug.Trace
+import Strappy.Config
+
 
 
 ----------------------------------------------------------------------
@@ -50,13 +53,13 @@ sampleExprM gr@Grammar{grApp=p, grExprDistr=exprDistr} tp
                          tp' <- applySub tp
                          return $
                            App { eReqType = Just tp,
+                                 eLogLikelihood = Nothing,
                                  eType = tp',
                                  eLeft = e_left,
-                                 eRight = e_right, 
-                                 eLogLikelihood = Nothing }
+                                 eRight = e_right }
               False -> do let cs = filter (\(e, _) -> canUnifyFast tp (eType e)) $
                                    Map.toList exprDistr
-                          lift $ guard (not . null $ cs)
+                          when (null cs) $ lift $ fail "Unable to find matching type"
                           e <- lift $ sampleMultinomial $ map (second exp) $   
                                normalizeDist cs
                           eTp <- instantiateType (eType e)
@@ -71,34 +74,52 @@ safeSampleWithContext gr tp = do
     Nothing -> safeSampleWithContext gr tp
     Just s -> return s
 
+-- <<<<<<< HEAD
 safeSample :: MonadRandom m => Grammar -> Type -> m (Either TypeError Expr)
 safeSample gr tp = liftM fst $ safeSampleWithContext gr tp
 
 sampleExprsWithContexts :: (MonadPlus m, MonadRandom m) =>
                     NextTypeVar -> Grammar -> Type -> m (ExprMap (Double, Sub))
 sampleExprsWithContexts n library tp =
-  liftM (Map.map (first fromIntegral)) $ foldM accSample Map.empty [1..n]
+  liftM (Map.mapWithKey reweight) $ foldM accSample Map.empty [1..n]
   where accSample acc _ = do
           out <- safeSampleWithContext library tp
           case out of 
           -- Insert expr into map. If expr is already a key,  increment count but keep substitution 
             (Right expr, (i, sub)) -> return $ Map.insertWith (\(a,b) (c,d) -> (a+c, b)) expr (1, sub) acc
-            _ -> mzero          
+            _ -> mzero      
+        reweight expr (cnt, sub) =
+          first fromIntegral (cnt, sub) {-* if usePCFGWeighting
+                             then let pcfg = fromJust $ eLogLikelihood $ pcfgLogLikelihood library expr
+                                      ijcai = fromJust $ eLogLikelihood $ ijcaiLogLikelihood library expr
+                                  in pcfg / ijcai
+                             else 1.0-}    
 
-
+sampleExprs n library tp = fmap (Map.map fst) $ sampleExprsWithContexts n library tp
+--  =======
+--sampleExprs :: (MonadPlus m, MonadRandom m) =>
+--               Int -> Grammar -> Type -> m (ExprMap Double)
+--sampleExprs n library tp =
+--  liftM (Map.mapWithKey reweight) $ foldM accSample Map.empty [1..n]
+--  where accSample acc _ = do
+--          expr <- safeSample library tp
+--          return $ Map.insertWith (+) expr 1 acc
+--        reweight expr cnt =
+--          fromIntegral cnt {-* if usePCFGWeighting
+--                             then let pcfg = fromJust $ eLogLikelihood $ pcfgLogLikelihood library expr
+--                                      ijcai = fromJust $ eLogLikelihood $ ijcaiLogLikelihood library expr
+--                                  in pcfg / ijcai
+--                             else 1.0-}
+-- >>>>>>> develop
 
 -- | Uses breadth-first enumeration to "sample" a grammar
 -- This allows us to get many more programs
+-- Each program keys its log likelihood
 sampleBF :: Int -> Grammar -> Type -> ExprMap Double
 sampleBF n gr tp =
-  Map.fromList $ map (\c -> (c, safeFromJust "BF expr has no LL" $ eLogLikelihood c)) $ enumBF gr n tp
+  Map.fromList $ enumBF gr n tp
 
-{-putSampleExprs n library tp  
-    = sequence 
-      $ do x <- sampleExprs n library tp
-           let x' = do z <- x
-                       return $ show  z
-           let x'' = catch x' (const (return "error") :: IOException -> IO String)
-           return x''-}
 
-                                          
+-- | Monadic wrapper
+sampleBFM :: Monad m => Int -> Grammar -> Type -> m (ExprMap Double)
+sampleBFM n gr tp = return $ sampleBF n gr tp

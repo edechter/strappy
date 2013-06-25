@@ -1,0 +1,369 @@
+EM, ijcai grammar, frontier size 1000, polynomial regression:
+============================================================
+EM Iteration: 0
+Completely solved 10/999 tasks.
+Solved LP in 0.316019 seconds.
+Got 11 new productions.
+Grammar entropy: 3.1260678069438668
+
+EM Iteration: 1
+Completely solved 69/999 tasks.
+Solved LP in 0.276017 seconds.
+Got 62 new productions.
+Grammar entropy: 3.8450236818104546
+
+EM Iteration: 2
+Completely solved 174/999 tasks.
+Solved LP in 0.16001 seconds.
+Got 106 new productions.
+Grammar entropy: 3.9647608693056218
+
+EM Iteration: 3
+Completely solved 337/999 tasks.
+Solved LP in 0.380024 seconds.
+Got 125 new productions.
+Grammar entropy: 3.9424664710433808
+
+EM Iteration: 4
+Completely solved 473/999 tasks.
+Solved LP in 0.528033 seconds.
+Got 129 new productions.
+Grammar entropy: 3.9815907741887306
+
+EM Iteration: 5
+Completely solved 571/999 tasks.
+Solved LP in 0.680043 seconds.
+Got 127 new productions.
+Grammar entropy: 3.9842560832518283
+
+EM Iteration: 6
+Completely solved 628/999 tasks.
+Solved LP in 0.696044 seconds.
+Got 123 new productions.
+Grammar entropy: 3.9895954672926415
+
+EM Iteration: 7
+Completely solved 659/999 tasks.
+Solved LP in 0.728046 seconds.
+Got 123 new productions.
+Grammar entropy: 3.982937136855388
+
+EM Iteration: 8
+Completely solved 677/999 tasks.
+Solved LP in 0.760048 seconds.
+Got 121 new productions.
+Grammar entropy: 3.9581324933153033
+
+EM Iteration: 9
+Completely solved 688/999 tasks.
+Solved LP in 0.752047 seconds.
+Got 124 new productions.
+Grammar entropy: 3.947671571158522
+
+EM Iteration: 10
+Completely solved 696/999 tasks.
+Solved LP in 0.756048 seconds.
+Got 123 new productions.
+Grammar entropy: 3.9316583239810172
+
+EM Iteration: 11
+Completely solved 703/999 tasks.
+Solved LP in 0.756046 seconds.
+Got 122 new productions.
+Grammar entropy: 3.9503613671203763
+
+EM Iteration: 12
+Completely solved 703/999 tasks.
+Solved LP in 0.832052 seconds.
+Got 120 new productions.
+Grammar entropy: 3.9222158490780807
+
+EM Iteration: 13
+Completely solved 706/999 tasks.
+Solved LP in 0.788049 seconds.
+Got 121 new productions.
+Grammar entropy: 3.927112445339778
+
+EM Iteration: 14
+Completely solved 706/999 tasks.
+Solved LP in 0.784049 seconds.
+Got 121 new productions.
+
+EM, ijcai grammar, frontier size 5000, polynomial regression:
+============================================================
+
+EM, PCFG, frontier size 1000, polynomial regression:
+=============================================================
+EM Iteration: 0
+Completely solved 10/999 tasks.
+Solved LP in 0.308019 seconds.
+Got 9 new productions.
+Grammar entropy: 3.0596381148471075
+
+EM Iteration: 1
+Completely solved 67/999 tasks.
+Solved LP in 0.220014 seconds.
+Got 60 new productions.
+Grammar entropy: 4.338479082263451
+
+EM Iteration: 2
+Completely solved 183/999 tasks.
+Solved LP in 0.196013 seconds.
+Got 107 new productions.
+Grammar entropy: 5.017245329860369
+
+EM Iteration: 3
+Completely solved 322/999 tasks.
+Solved LP in 0.348022 seconds.
+Got 122 new productions.
+Grammar entropy: 5.179859029069581
+
+EM Iteration: 4
+Completely solved 426/999 tasks.
+Solved LP in 0.528033 seconds.
+Got 129 new productions.
+Grammar entropy: 5.17914855814618
+
+EM Iteration: 5
+Completely solved 495/999 tasks.
+Solved LP in 0.684044 seconds.
+Got 133 new productions.
+Grammar entropy: 5.197526190351734
+
+EM Iteration: 6
+Completely solved 539/999 tasks.
+Solved LP in 0.776048 seconds.
+Got 129 new productions.
+Grammar entropy: 5.15619968690683
+
+EM Iteration: 7
+Completely solved 553/999 tasks.
+Solved LP in 0.788049 seconds.
+Got 125 new productions.
+Grammar entropy: 5.137422357171575
+
+EM Iteration: 8
+Completely solved 559/999 tasks.
+Solved LP in 0.768048 seconds.
+Got 125 new productions.
+Grammar entropy: 5.149220521902681
+
+EM Iteration: 9
+Completely solved 567/999 tasks.
+Solved LP in 0.772048 seconds.
+Got 126 new productions.
+Grammar entropy: 5.146495027648603
+
+EM Iteration: 10
+Completely solved 579/999 tasks.
+Solved LP in 0.80005 seconds.
+Got 127 new productions.
+Grammar entropy: 5.136880796200024
+
+EM Iteration: 11
+Completely solved 585/999 tasks.
+Solved LP in 0.800051 seconds.
+Got 127 new productions.
+Grammar entropy: 5.144897215648396
+
+EM Iteration: 12
+Completely solved 589/999 tasks.
+Solved LP in 0.816051 seconds.
+Got 127 new productions.
+Grammar entropy: 5.131786957663932
+
+EM Iteration: 13
+Completely solved 591/999 tasks.
+Solved LP in 0.844053 seconds.
+Got 127 new productions.
+Grammar entropy: 5.133553242825513
+
+EM Iteration: 14
+Completely solved 592/999 tasks.
+Solved LP in 0.848053 seconds.
+Got 126 new productions.
+Grammar entropy: 5.127538202197013
+
+EM, PCFG, frontier size 1000, polynomial regression:
+=============================================================
+EM Iteration: 0
+Completely solved 10/999 tasks.
+Solved LP in 0.304019 seconds.
+Got 9 new productions.
+Grammar entropy: 3.0596381148471075
+
+EM Iteration: 1
+Completely solved 67/999 tasks.
+Solved LP in 0.220013 seconds.
+Got 60 new productions.
+Grammar entropy: 4.338479082263451
+
+EM Iteration: 2
+Completely solved 183/999 tasks.
+Solved LP in 0.196012 seconds.
+Got 107 new productions.
+Grammar entropy: 5.017245329860369
+
+EM Iteration: 3
+Completely solved 322/999 tasks.
+Solved LP in 0.388025 seconds.
+Got 122 new productions.
+Grammar entropy: 5.179859029069581
+
+EM Iteration: 4
+Completely solved 426/999 tasks.
+Solved LP in 0.552035 seconds.
+Got 129 new productions.
+Grammar entropy: 5.17914855814618
+
+EM Iteration: 5
+Completely solved 495/999 tasks.
+Solved LP in 0.668042 seconds.
+Got 133 new productions.
+Grammar entropy: 5.197526190351734
+
+EM Iteration: 6
+Completely solved 539/999 tasks.
+Solved LP in 0.764047 seconds.
+Got 129 new productions.
+Grammar entropy: 5.15619968690683
+
+EM Iteration: 7
+Completely solved 553/999 tasks.
+Solved LP in 0.736046 seconds.
+Got 125 new productions.
+Grammar entropy: 5.137422357171575
+
+EM Iteration: 8
+Completely solved 559/999 tasks.
+Solved LP in 0.764047 seconds.
+Got 125 new productions.
+Grammar entropy: 5.149220521902681
+
+EM Iteration: 9
+Completely solved 567/999 tasks.
+Solved LP in 0.776048 seconds.
+Got 126 new productions.
+Grammar entropy: 5.146495027648603
+
+EM Iteration: 10
+Completely solved 579/999 tasks.
+Solved LP in 0.788049 seconds.
+Got 127 new productions.
+Grammar entropy: 5.136880796200024
+
+EM Iteration: 11
+Completely solved 585/999 tasks.
+Solved LP in 0.80405 seconds.
+Got 127 new productions.
+Grammar entropy: 5.144897215648396
+
+EM Iteration: 12
+Completely solved 589/999 tasks.
+Solved LP in 0.908058 seconds.
+Got 127 new productions.
+Grammar entropy: 5.131786957663932
+
+EM Iteration: 13
+Completely solved 591/999 tasks.
+Solved LP in 0.836052 seconds.
+Got 127 new productions.
+Grammar entropy: 5.133553242825513
+
+EM Iteration: 14
+Completely solved 592/999 tasks.
+Solved LP in 0.848053 seconds.
+Got 126 new productions.
+Grammar entropy: 5.127538202197013
+
+EM, PCFG, frontier size 5000, polynomial regression:
+=============================================================
+EM Iteration: 0
+Completely solved 16/999 tasks.
+Solved LP in 7.468467 seconds.
+Got 13 new productions.
+Grammar entropy: 3.3437623872425952
+
+EM Iteration: 1
+Completely solved 132/999 tasks.
+Solved LP in 4.148259 seconds.
+Got 83 new productions.
+Grammar entropy: 4.826945144010951
+
+EM Iteration: 2
+Completely solved 379/999 tasks.
+Solved LP in 2.984187 seconds.
+Got 133 new productions.
+Grammar entropy: 5.030464014374499
+
+EM Iteration: 3
+Completely solved 538/999 tasks.
+Solved LP in 5.080318 seconds.
+Got 144 new productions.
+Grammar entropy: 4.8343124453479795
+
+EM Iteration: 4
+Completely solved 637/999 tasks.
+Solved LP in 8.244514 seconds.
+Got 155 new productions.
+Grammar entropy: 4.720516510605519
+
+EM Iteration: 5
+Completely solved 715/999 tasks.
+Solved LP in 11.68073 seconds.
+Got 174 new productions.
+Grammar entropy: 4.694296808070749
+
+EM Iteration: 6
+Completely solved 777/999 tasks.
+Solved LP in 18.029128 seconds.
+Got 168 new productions.
+Grammar entropy: 4.580414610252358
+
+EM Iteration: 7
+Completely solved 793/999 tasks.
+Solved LP in 18.23314 seconds.
+Got 171 new productions.
+Grammar entropy: 4.5458789713714784
+
+EM Iteration: 8
+Completely solved 796/999 tasks.
+Solved LP in 18.453153 seconds.
+Got 169 new productions.
+Grammar entropy: 4.534308994576132
+
+EM Iteration: 9
+Completely solved 804/999 tasks.
+Solved LP in 19.141197 seconds.
+Got 168 new productions.
+Grammar entropy: 4.502003362181894
+
+EM Iteration: 10
+Completely solved 804/999 tasks.
+Solved LP in 19.36121 seconds.
+Got 168 new productions.
+Grammar entropy: 4.490816246726587
+
+EM Iteration: 11
+Completely solved 804/999 tasks.
+Solved LP in 19.393212 seconds.
+Got 167 new productions.
+Grammar entropy: 4.480379714650197
+
+EM Iteration: 12
+Completely solved 803/999 tasks.
+Solved LP in 19.389212 seconds.
+Got 168 new productions.
+Grammar entropy: 4.491458172882587
+
+EM Iteration: 13
+Completely solved 805/999 tasks.
+Solved LP in 19.885243 seconds.
+Got 168 new productions.
+Grammar entropy: 4.494533696289442
+
+EM Iteration: 14
+Completely solved 806/999 tasks.
+Solved LP in 20.009251 seconds.
+Got 168 new productions.
+Grammar entropy: 4.495762060328775

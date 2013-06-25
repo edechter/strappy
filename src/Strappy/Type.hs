@@ -74,12 +74,12 @@ evalTI = liftM fst . runTI
 evalTIVar :: Monad m => NextTypeVar -> Sub -> TypeInference m a -> m (Either TypeError a)
 evalTIVar nextTVar sub = liftM fst . runTIWithNextVarAndSub nextTVar sub
 
-unsafeRunTIWithNextVarAndSub nextTVar sub m = 
+runTIWithNextVarAndSubInIdentity nextTVar sub m = 
   case runIdentity $ runTIWithNextVarAndSub nextTVar sub m of 
     (Right x, state ) -> (x, state)
-    (Left _, _) -> error "unsafeRunTIWithNextVarAndSub: exception encountered; told you this was unsafe"
+    (Left _, _) -> error "runTIWithNextVarAndSubInIdentity: exception encountered; told you this was unsafe"
 
-unsafeRunTI = unsafeRunTIWithNextVarAndSub 0 M.empty
+runTiInIdentity = runTIWithNextVarAndSubInIdentity 0 M.empty
 
 -- Create an unbound type variable
 mkTVar :: Monad m => TypeInference m Type
@@ -315,4 +315,6 @@ instance (Typeable a) => Typeable [a] where
 	typeOf v = tList (typeOf $ (undefined :: a))
 instance (Typeable a, Typeable b) => Typeable (a, b) where
 	typeOf v = tPair (typeOf (undefined :: a)) (typeOf (undefined :: b))
+
+
 
