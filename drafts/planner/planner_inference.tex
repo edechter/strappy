@@ -96,7 +96,9 @@ $$
 w_j=\sum_{m\geq j} \frac{1}{P(t|e_1)P(t|e_1e_2)\cdots P(t|e_1\cdots e_{j-1})}
 $$
 The $w_j$'s factor in a nice way that allows them to be computed in linear time using a dynamic program.
-The following procedure samples a plan and returns the weights upon each program in that plan:
+\footnote{The sums for $w_j$ end up being the partition function if $j=1$ and is a sort of ``truncated partition function'' for $j>1$.
+For the $j>1$ case, the weights $w_j$ are what the partition function \emph{would have been} if the plan had started with programs $e_{k<j}$ for free.}
+The following procedure samples a plan and returns the weights upon each program in that plan, along with the partition function:
 \begin{codebox}
 \Procname{$\proc{Sample-Plan}(\rho)$}
 \li \Comment{Draw the next program in the plan}
