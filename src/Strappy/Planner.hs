@@ -1,4 +1,5 @@
 {-# LANGUAGE TupleSections  #-}
+
 module Planner where
 
 import Strappy.Sample
@@ -20,8 +21,7 @@ import Data.Maybe
 
 
 -- | TODO: I don't use log probabilities anywhere here; probably should, in order to avoid floating-point issues.
--- |       There aren't any status updates printed out.
--- |       The code for compressing a corpus is copied from EM.hs; it should be turned in to its own procedure.
+-- |       Also, I use (log) probabilities inconsistently. There are bugs in this code due to this fact.
 
 mcmcPlan :: MonadRandom m =>
             Expr -> -- ^ Initial plan, such as the empty list, or the identity function

@@ -72,11 +72,11 @@ sampleExprs n library tp =
           expr <- safeSample library tp
           return $ Map.insertWith (+) expr 1 acc
         reweight expr cnt =
-          fromIntegral cnt {-* if usePCFGWeighting
-                             then let pcfg = fromJust $ eLogLikelihood $ pcfgLogLikelihood library expr
-                                      ijcai = fromJust $ eLogLikelihood $ ijcaiLogLikelihood library expr
-                                  in pcfg / ijcai
-                             else 1.0-}
+          log (fromIntegral cnt) + (if usePCFGWeighting
+                                    then let pcfg = fromJust $ eLogLikelihood $ pcfgLogLikelihood library expr
+                                             ijcai = fromJust $ eLogLikelihood $ ijcaiLogLikelihood library expr
+                                         in pcfg - ijcai
+                                    else 0.0)
 
 -- | Uses breadth-first enumeration to "sample" a grammar
 -- This allows us to get many more programs
