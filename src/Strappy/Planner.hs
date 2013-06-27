@@ -18,6 +18,7 @@ import Control.Monad.Random
 import qualified Data.Map as Map
 import Data.List
 import Data.Maybe
+import Data.IORef
 
 
 data PlanTask = PlanTask { ptName :: String,
@@ -37,8 +38,8 @@ mcmcPlan e0 dist likelihood len =
   where mcmc prefix prefixRecipLike lenSoFar =
           -- Reweight by the likelihood
           let reweighted = map (\(e, w) ->
-                                 let like = likelihood $ e <> prefix
-                                 in ((e, like), like + w)) dist
+                                 let like = planningBeta * (likelihood $ e <> prefix)
+                                 in ((e, like), like + w*planningBeta)) dist
           in do (e, eLike) <- sampleMultinomialLogProb reweighted
                 -- (possibly) recurse
                 (suffixLogPartition, suffixRewards, suffixHit) <-
@@ -65,6 +66,7 @@ doEMPlan tasks lambda pseudocounts frontierSize numPlans planLen grammar = do
                             frontierSize grammar (tp ->- tp)
                             >>= return . (tp,) . Map.toList)
                $ nub $ map ptType tasks
+  numHitRef <- newIORef 0
   -- For each task, do greedy stochastic search to get candidate plans
   -- Each task records all of the programs used in successful plans, as well as the associated rewards
   -- These are normalized to get a distribution over plans, which gives weights for the MDL's of the programs
@@ -74,9 +76,14 @@ doEMPlan tasks lambda pseudocounts frontierSize numPlans planLen grammar = do
       foldM (\ (logZ, rewards, hit) _ -> mcmcPlan seed frontier likelihood planLen >>=
                                  \(logZ', rewards', hit') -> return (logSumExp logZ logZ', rewards++rewards', hit||hit'))
             (log 0.0, [], False) [1..numPlans]
-    when anyHit $ putStrLn $ "Hit " ++ nm
+    when anyHit $ do
+      when verbose $ putStrLn $ "Hit " ++ nm
+      modifyIORef numHitRef (+1)
+    when (verbose && (not anyHit)) $ putStrLn $ "Missed " ++ nm
     -- normalize rewards
     return $ map (\(e, r) -> (e, exp (r - logPartitionFunction))) programLogRewards
+  numHit <- readIORef numHitRef
+  putStrLn $ "Hit " ++ show numHit ++ "/" ++ show (length tasks) ++ " tasks."
   -- Compress the corpus
   let normalizedRewards' = Map.toList $ Map.fromListWith (+) $ concat normalizedRewards
   let grammar' = compressWeightedCorpus lambda pseudocounts grammar normalizedRewards'

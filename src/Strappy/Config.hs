@@ -23,12 +23,17 @@ sampleByEnumeration = False
 
 -- | Size of the frontier enumerated, or sampled, during the "E" step
 frontierSize :: Int
-frontierSize = 10000
+frontierSize = 1000
 
 -- | Number of plans sampled for each task
 numberOfPlansPerTask :: Int
-numberOfPlansPerTask = 100
+numberOfPlansPerTask = 10
 
 -- | Length of each plan sampled
 maximumPlanLength :: Int
-maximumPlanLength = 5
+maximumPlanLength = 3
+
+-- | How much stochasticity should there be in the planning?
+--   beta = 1/T
+planningBeta :: Double
+planningBeta = 1

@@ -34,4 +34,31 @@ numberPlan = do
     return grammar'
   return ()
 
-main = numberPlan
+makePolyTask :: Int -> Int -> Int -> PlanTask
+makePolyTask a b c = PlanTask { ptName = show a ++ "x^2 + " ++ show b ++ "x + " ++ show c,
+                                   ptLogLikelihood =
+                                     (\poly -> - (sse poly (\x -> a * x * x + b * x + c))),
+                                   ptType = tInt ->- tInt,
+                                   ptSeed = cI }
+
+sse :: Expr -> (Int -> Int) -> Double
+sse poly correct =
+  let square z = z*z
+      polyVals    = map (\x -> eval (poly <> cInt2Expr x)) [1..9]
+      correctVals = map correct [1..9]
+  in fromIntegral $ sum $ zipWith (\w v -> square (w-v)) polyVals correctVals
+
+polyPlan :: IO ()
+polyPlan = do
+  -- Seed grammar
+  let seed = Grammar { grApp = log 0.35,
+                       grExprDistr = Map.fromList [ (annotateRequested e, 1.0) | e <- polyExprs ] }
+  let tasks = [ makePolyTask a b c | a <- [0..5], b <- [0..5], c <- [0..5] ]
+  loopM seed [0..14] $ \grammar step -> do
+    putStrLn $ "EM Planning Iteration: " ++ show step
+    grammar' <- doEMPlan tasks 1.5 1.0 frontierSize numberOfPlansPerTask maximumPlanLength grammar
+    return grammar'
+  return ()
+
+
+main = polyPlan
