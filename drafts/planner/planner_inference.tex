@@ -100,19 +100,19 @@ The $w_j$'s factor in a nice way that allows them to be computed in linear time 
 For the $j>1$ case, the weights $w_j$ are what the partition function \emph{would have been} if the plan had started with programs $e_{k<j}$ for free.}
 The following procedure samples a plan and returns the weights upon each program in that plan, along with the partition function:
 \begin{codebox}
-\Procname{$\proc{Sample-Plan}(\rho)$}
+\Procname{$\proc{MCMC-Plan}(\rho, \mbox{\id{reciprocalLikelihoods}})$}
 \li \Comment{Draw the next program in the plan}
 \li \id{e} $\sim$ $P(\rho\cdot | t, G)$
 \li \Comment{If the plan should be extended, recurse, creating the suffix of the plan}
 \li \If $|\rho e|<\ell$ \Then
-\li \id{suffixWeight}, \id{suffixRewards} = \func{Sample-Plan}$(\rho e)$
+\li \id{suffixZ}, \id{suffixWeights} = \func{MCMC-Plan}$(\rho e, \mbox{\id{reciprocalLikelihoods}}/P(t|\rho e))$
 \li \Else
-\li \id{suffixWeight}, \id{suffixRewards} = $0$, $\emptyset$
+\li \id{suffixZ}, \id{suffixWeights} = $0$, $\emptyset$
 \li \End
-\li \Comment{To satisfy the boundary conditions of the recurrence, $P(t|\emptyset)$ is defined to be 1.}
-\li \id{eReward} = $\frac{1+\mbox{\id{suffixRewards}}}{P(t|\rho)}$
-\li \Return \id{eReward}, $\{(e, \mbox{\id{eReward}})\}\cup \mbox{\id{suffixRewards}}$
+\li \id{Z} = \id{suffixZ} + \id{reciprocalLikelihoods}
+\li \Return \id{Z}, $\{(e, \mbox{\id{Z}})\}\cup \mbox{\id{suffixWeights}}$
 \end{codebox}
+where \emph{reciprocalLikelihoods} is set to $1$ initially.
 
 It may seem strange that, in the generative model, we produce plans by doing a random walk without any bias towards the target.
 However, this is actually to be expected, because the target has not yet been generated.
@@ -125,7 +125,7 @@ Note that their dependence upon likelihood at each point in the plan is non-triv
 The likelihood isn't the only heuristic that could be used in the stochastic greedy search.
 If we had some other heuristic, $\hat{\mbox{H}}$, one reasonable proposal for the MCMC walk would be the Boltzman distribution:
 $$
-h(\rho e | \rho) \propto \exp\left(-\hat{\mbox{H}}(\rho e)\right + \log P(e|G))
+h(\rho e | \rho) \propto \exp\left(-\hat{\mbox{H}}(\rho e) + \log P(e|G)\right)
 $$
 
 \end{document}
