@@ -20,29 +20,26 @@ import Data.List
 import Data.Maybe
 
 
--- | TODO: I don't use log probabilities anywhere here; probably should, in order to avoid floating-point issues.
--- |       Also, I use (log) probabilities inconsistently. There are bugs in this code due to this fact.
-
 mcmcPlan :: MonadRandom m =>
             Expr -> -- ^ Initial plan, such as the empty list, or the identity function
             [(Expr, Double)] -> -- ^ Distribution over expressions drawn from the grammar
-            (Expr -> Double) -> -- ^ Likelihood function
+            (Expr -> Double) -> -- ^ Log Likelihood function
             Int -> -- ^ length of the plan
-            m (Double, [(Expr, Double)]) -- ^ partition function, expressions and rewards
+            m (Double, [(Expr, Double)]) -- ^ log partition function, expressions and log rewards
 mcmcPlan e0 dist likelihood len =
   mcmc e0 1 0
   where mcmc prefix prefixRecipLike lenSoFar =
           -- Reweight by the likelihood
           let reweighted = map (\(e, w) ->
                                  let like = likelihood $ e <> prefix
-                                 in ((e, like), like*w)) dist
-          in do (e, eLike) <- sampleMultinomial $ normalizeDist reweighted
+                                 in ((e, like), like + w)) dist
+          in do (e, eLike) <- sampleMultinomialLogProb reweighted
                 -- (possibly) recurse
-                (suffixPartition, suffixRewards) <-
+                (suffixLogPartition, suffixRewards) <-
                   if lenSoFar < len - 1
-                  then mcmc (e <> prefix) (prefixRecipLike/eLike) (len+1)
+                  then mcmc (e <> prefix) (prefixRecipLike - eLike) (len+1)
                   else return (0, [])
-                let partitionFunction = suffixPartition + prefixRecipLike
+                let partitionFunction = logSumExp suffixLogPartition prefixRecipLike
                 return (partitionFunction, (e, partitionFunction):suffixRewards)
 
 
@@ -65,16 +62,17 @@ doEMPlan tasks lambda pseudocounts frontierSize numPlans planLen grammar = do
   -- These are normalized to get a distribution over plans, which gives weights for the MDL's of the programs
   normalizedRewards <- forM tasks $ \(likelihood, seed, tp) -> do
     let frontier = snd $ fromJust $ find ((==tp) . fst) frontiers
-    (partitionFunction, programRewards) <-
-      foldM (\ (z, rewards) _ -> mcmcPlan seed frontier likelihood planLen >>=
-                                 \(z', rewards') -> return (z+z', rewards++rewards'))
-            (0.0, []) [1..numPlans]
+    (logPartitionFunction, programLogRewards) <-
+      foldM (\ (logZ, rewards) _ -> mcmcPlan seed frontier likelihood planLen >>=
+                                 \(logZ', rewards') -> return (logSumExp logZ logZ', rewards++rewards'))
+            (log 0.0, []) [1..numPlans]
     -- normalize rewards
-    return $ map (\(e, r) -> (e, r/partitionFunction)) programRewards
+    return $ map (\(e, r) -> (e, exp (r - logPartitionFunction))) programLogRewards
   -- Compress the corpus
   let normalizedRewards' = Map.toList $ Map.fromListWith (+) $ concat normalizedRewards
   let grammar' = compressWeightedCorpus lambda pseudocounts grammar normalizedRewards'
-  putStrLn $ "Got " ++ show ((length $ lines $ showGrammar $ removeSubProductions grammar') - length terminals - 1) ++ " new productions."
+  let terminalLen = length $ filter isTerm $ Map.keys $ grExprDistr grammar
+  putStrLn $ "Got " ++ show ((length $ lines $ showGrammar $ removeSubProductions grammar') - terminalLen - 1) ++ " new productions."
   putStrLn $ "Grammar entropy: " ++ show (entropyLogDist $ Map.elems $ grExprDistr grammar')
   when verbose $ putStrLn $ showGrammar $ removeSubProductions grammar'
   putStrLn "" -- newline

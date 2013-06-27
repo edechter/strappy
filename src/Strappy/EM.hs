@@ -64,8 +64,9 @@ doEMIter tasks lambda pseudocounts frontierSize grammar = do
   if length obs' == 0
     then do putStrLn "Hit no tasks."
             return grammar -- Didn't hit any tasks
-    else do let grammar' = compressWeightedCorpus lambda pseudocounts grammar normalizedRewards'
-            putStrLn $ "Got " ++ show ((length $ lines $ showGrammar $ removeSubProductions grammar') - length terminals - 1) ++ " new productions."
+    else do let grammar' = compressWeightedCorpus lambda pseudocounts grammar obs'
+            let terminalLen = length $ filter isTerm $ Map.keys $ grExprDistr grammar
+            putStrLn $ "Got " ++ show ((length $ lines $ showGrammar $ removeSubProductions grammar') - terminalLen - 1) ++ " new productions."
             putStrLn $ "Grammar entropy: " ++ show (entropyLogDist $ Map.elems $ grExprDistr grammar')
             when verbose $ putStrLn $ showGrammar $ removeSubProductions grammar'
             putStrLn "" -- newline
@@ -102,7 +103,7 @@ polyEM = do
   let quad = [ mkNthDet (\a -> x * a * a + y * a + z) | x <- [1..9], y <- [0..9], z <- [0..9] ]
   loopM seed [0..14] $ \grammar step -> do
     putStrLn $ "EM Iteration: " ++ show step
-    grammar' <- doEMIter (const++lin++quad) 0.9 1.0 frontierSize grammar
+    grammar' <- doEMIter (const++lin++quad) 1.5 1.0 frontierSize grammar
     return grammar'
   return ()
                     

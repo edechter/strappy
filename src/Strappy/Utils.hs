@@ -17,6 +17,14 @@ sampleMultinomial dist = do r <- getRandomR (0, 1)
                             return $ sample r dist
     where sample r ((a, p):rest) = if r <= p then a 
                                              else sample (r - p) rest
+
+-- | As in sampleMultinomial, but takes in unnormalized log probabilities
+sampleMultinomialLogProb :: MonadRandom m => [(b, Double)] -> m b
+sampleMultinomialLogProb dist =
+  -- Normalize
+  let logZ = logSumExpList $ map snd dist
+      dist' = map (\(thing, ll) -> (thing, exp (ll - logZ))) dist
+  in sampleMultinomial dist'
           
 logSumExpList :: [Double] -> Double
 logSumExpList xs = a + (log . sum . map (exp . (\x -> x - a)) $ xs)

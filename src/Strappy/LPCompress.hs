@@ -1,10 +1,11 @@
 -- | This module compresses a set of combinators by solving the corresponding linear program.
 
-module Strappy.LPCompress (compressLP_corpus, compressLP_EC) where
+module Strappy.LPCompress (compressLP_corpus, compressLP_EC, compressWeightedCorpus) where
 
 import Strappy.Expr
 import Strappy.Library
 import Strappy.Utils
+import Strappy.Config
 
 import Data.LinearProgram
 import Data.List
