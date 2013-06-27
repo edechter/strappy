@@ -1,6 +1,6 @@
 {-# LANGUAGE TupleSections  #-}
 
-module Planner where
+module Strappy.Planner where
 
 import Strappy.Sample
 import Strappy.Expr
@@ -20,12 +20,18 @@ import Data.List
 import Data.Maybe
 
 
+data PlanTask = PlanTask { ptName :: String,
+                           ptLogLikelihood :: Expr -> Double,
+                           ptType :: Type, -- ^ Type of plan objects, such as lists of actions
+                           ptSeed :: Expr  -- ^ Initial plan, such as an empty list, or the identity function
+                         }
+
 mcmcPlan :: MonadRandom m =>
             Expr -> -- ^ Initial plan, such as the empty list, or the identity function
             [(Expr, Double)] -> -- ^ Distribution over expressions drawn from the grammar
             (Expr -> Double) -> -- ^ Log Likelihood function
             Int -> -- ^ length of the plan
-            m (Double, [(Expr, Double)]) -- ^ log partition function, expressions and log rewards
+            m (Double, [(Expr, Double)], Bool) -- ^ log partition function, expressions and log rewards, hit task
 mcmcPlan e0 dist likelihood len =
   mcmc e0 1 0
   where mcmc prefix prefixRecipLike lenSoFar =
@@ -35,15 +41,17 @@ mcmcPlan e0 dist likelihood len =
                                  in ((e, like), like + w)) dist
           in do (e, eLike) <- sampleMultinomialLogProb reweighted
                 -- (possibly) recurse
-                (suffixLogPartition, suffixRewards) <-
+                (suffixLogPartition, suffixRewards, suffixHit) <-
                   if lenSoFar < len - 1
                   then mcmc (e <> prefix) (prefixRecipLike - eLike) (len+1)
-                  else return (0, [])
+                  else return (0, [], False)
                 let partitionFunction = logSumExp suffixLogPartition prefixRecipLike
-                return (partitionFunction, (e, partitionFunction):suffixRewards)
+                let epsilon = 0.01 -- tolerance for deciding if a plan has hit a task
+                let hit = suffixHit || eLike >= 0.0-epsilon
+                return (partitionFunction, (e, partitionFunction):suffixRewards, hit)
 
 
-doEMPlan :: [(Expr -> Double, Expr, Type)] -- ^ Tasks
+doEMPlan :: [PlanTask] -- ^ Tasks
             -> Double -- ^ Lambda
             -> Double -- ^ pseudocounts
             -> Int -- ^ frontier size
@@ -56,16 +64,17 @@ doEMPlan tasks lambda pseudocounts frontierSize numPlans planLen grammar = do
   frontiers <- mapM (\tp -> (if sampleByEnumeration then sampleBFM else sampleExprs)
                             frontierSize grammar (tp ->- tp)
                             >>= return . (tp,) . Map.toList)
-               $ nub $ map (\(_,_,tp)->tp) tasks
+               $ nub $ map ptType tasks
   -- For each task, do greedy stochastic search to get candidate plans
   -- Each task records all of the programs used in successful plans, as well as the associated rewards
   -- These are normalized to get a distribution over plans, which gives weights for the MDL's of the programs
-  normalizedRewards <- forM tasks $ \(likelihood, seed, tp) -> do
+  normalizedRewards <- forM tasks $ \PlanTask {ptLogLikelihood = likelihood, ptSeed = seed, ptType = tp, ptName = nm} -> do
     let frontier = snd $ fromJust $ find ((==tp) . fst) frontiers
-    (logPartitionFunction, programLogRewards) <-
-      foldM (\ (logZ, rewards) _ -> mcmcPlan seed frontier likelihood planLen >>=
-                                 \(logZ', rewards') -> return (logSumExp logZ logZ', rewards++rewards'))
-            (log 0.0, []) [1..numPlans]
+    (logPartitionFunction, programLogRewards, anyHit) <-
+      foldM (\ (logZ, rewards, hit) _ -> mcmcPlan seed frontier likelihood planLen >>=
+                                 \(logZ', rewards', hit') -> return (logSumExp logZ logZ', rewards++rewards', hit||hit'))
+            (log 0.0, [], False) [1..numPlans]
+    when anyHit $ putStrLn $ "Hit " ++ nm
     -- normalize rewards
     return $ map (\(e, r) -> (e, exp (r - logPartitionFunction))) programLogRewards
   -- Compress the corpus

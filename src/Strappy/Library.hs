@@ -290,6 +290,18 @@ basicExprs = [cI,
               cSingle,
               cRep
              ] ++ cInts
+             
+-- Library for testing EM+polynomial regression
+-- This is what was used in the IJCAI paper
+polyExprs :: [Expr]
+polyExprs = [cI, 
+              cS, 
+              cB, 
+              cC, 
+--              cK, 
+              cPlus,
+              cTimes
+              ] ++ [ cInt2Expr 0, cInt2Expr 1 ]
 
 mkExprDistr :: [Expr] -> ExprDistr
 mkExprDistr exprs = Map.adjust (const (-5)) cBottom

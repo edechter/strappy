@@ -71,20 +71,6 @@ doEMIter tasks lambda pseudocounts frontierSize grammar = do
             when verbose $ putStrLn $ showGrammar $ removeSubProductions grammar'
             putStrLn "" -- newline
             return grammar'
-         
--- Library for testing EM+polynomial regression
--- This is what was used in the IJCAI paper
-polyExprs :: [Expr]
-polyExprs = [cI, 
-              cS, 
-              cB, 
-              cC, 
---              cK, 
-              cPlus,
-              cTimes
-              ] ++ [ cInt2Expr 0, cInt2Expr 1 ]
-
-
 
 
 -- Polynomial regression test for EM

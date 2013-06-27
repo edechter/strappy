@@ -10,7 +10,7 @@ usePCFGWeighting = False
 
 -- | Include debugging output? (grammars, etc)
 verbose :: Bool
-verbose = False
+verbose = True
 
 -- | Prune the grammar?
 -- Slightly degrades accuracy, but allows us to explore a slightly larger frontier
@@ -24,3 +24,11 @@ sampleByEnumeration = False
 -- | Size of the frontier enumerated, or sampled, during the "E" step
 frontierSize :: Int
 frontierSize = 10000
+
+-- | Number of plans sampled for each task
+numberOfPlansPerTask :: Int
+numberOfPlansPerTask = 100
+
+-- | Length of each plan sampled
+maximumPlanLength :: Int
+maximumPlanLength = 5
