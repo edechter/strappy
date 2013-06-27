@@ -73,18 +73,9 @@ doEMPlan tasks lambda pseudocounts frontierSize numPlans planLen grammar = do
     return $ map (\(e, r) -> (e, r/partitionFunction)) programRewards
   -- Compress the corpus
   let normalizedRewards' = Map.toList $ Map.fromListWith (+) $ concat normalizedRewards
-  let subtrees = foldl1 (Map.unionWith (+)) $ map (countSubtrees Map.empty) normalizedRewards'
-  let terminals = filter isTerm $ Map.keys $ grExprDistr grammar
-  let newProductions = compressLP_corpus lambda subtrees
-  let productions = newProductions ++ terminals
-  let uniformLogProb = -log (genericLength productions)
-  let grammar'   = Grammar (log 0.5) $ Map.fromList [ (prod, uniformLogProb) | prod <- productions ]
-  let grammar''  = if pruneGrammar
-                   then removeUnusedProductions grammar' $ map fst normalizedRewards'
-                   else grammar'
-  let grammar''' = inoutEstimateGrammar grammar'' pseudocounts normalizedRewards'
+  let grammar' = compressWeightedCorpus lambda pseudocounts grammar normalizedRewards'
   putStrLn $ "Got " ++ show ((length $ lines $ showGrammar $ removeSubProductions grammar') - length terminals - 1) ++ " new productions."
-  putStrLn $ "Grammar entropy: " ++ show (entropyLogDist $ Map.elems $ grExprDistr grammar''')
-  when verbose $ putStrLn $ showGrammar $ removeSubProductions grammar'''
+  putStrLn $ "Grammar entropy: " ++ show (entropyLogDist $ Map.elems $ grExprDistr grammar')
+  when verbose $ putStrLn $ showGrammar $ removeSubProductions grammar'
   putStrLn "" -- newline
-  return grammar'''
+  return grammar'

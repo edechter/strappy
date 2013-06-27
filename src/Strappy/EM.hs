@@ -64,21 +64,12 @@ doEMIter tasks lambda pseudocounts frontierSize grammar = do
   if length obs' == 0
     then do putStrLn "Hit no tasks."
             return grammar -- Didn't hit any tasks
-    else do let subtrees = foldl1 (Map.unionWith (+)) $ map (countSubtrees Map.empty) obs'
-            let terminals = filter isTerm $ Map.keys $ grExprDistr grammar
-            let newProductions = compressLP_corpus lambda subtrees
-            let productions = newProductions ++ terminals
-            let uniformLogProb = -log (genericLength productions)
-            let grammar'   = Grammar (log 0.5) $ Map.fromList [ (prod, uniformLogProb) | prod <- productions ]
-            let grammar''  = if pruneGrammar
-                             then removeUnusedProductions grammar' $ map fst obs'
-                             else grammar'
-            let grammar''' = inoutEstimateGrammar grammar'' pseudocounts obs'
+    else do let grammar' = compressWeightedCorpus lambda pseudocounts grammar normalizedRewards'
             putStrLn $ "Got " ++ show ((length $ lines $ showGrammar $ removeSubProductions grammar') - length terminals - 1) ++ " new productions."
-            putStrLn $ "Grammar entropy: " ++ show (entropyLogDist $ Map.elems $ grExprDistr grammar''')
-            when verbose $ putStrLn $ showGrammar $ removeSubProductions grammar'''
+            putStrLn $ "Grammar entropy: " ++ show (entropyLogDist $ Map.elems $ grExprDistr grammar')
+            when verbose $ putStrLn $ showGrammar $ removeSubProductions grammar'
             putStrLn "" -- newline
-            return grammar'''
+            return grammar'
          
 -- Library for testing EM+polynomial regression
 -- This is what was used in the IJCAI paper

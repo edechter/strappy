@@ -110,6 +110,10 @@ ijcaiLogLikelihood gr@(Grammar { grApp = logApp }) e@(App { eLeft = l, eRight = 
 
 -- | Annotates the requested types
 -- Takes as input the top-level type request
+-- We need to do this after sampling, because, when we pull a tree out of the library,
+-- all of its types (and requested types) could be more specific than what they are in the library.
+-- If we were to decide to remove this production from the library, then we would need to know
+-- the requested type information of all of the subtrees in order to re-estimate the production probabilities.
 annotateRequestedM :: Monad m =>
                      Type -> -- ^ Requested type of the expression
                      Expr -> -- ^ The expression

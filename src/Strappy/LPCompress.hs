@@ -89,8 +89,25 @@ buildLP_EC hits = do
                              boundSubtrees subs eik l
                              boundSubtrees subs eik r
     
-                 
 
+-- | Wrapper over compressLP_corpus that builds the grammar for you
+compressWeightedCorpus :: Double -> -- ^ lambda
+                          Double -> -- ^ pseudocounts
+                          Grammar -> -- ^ initial grammar
+                          [(Expr, Double)] -> -- ^ weighted corpus
+                          Grammar
+compressWeightedCorpus lambda pseudocounts grammar corpus =
+  let subtrees = foldl1 (Map.unionWith (+)) $ map (countSubtrees Map.empty) corpus
+      terminals = filter isTerm $ Map.keys $ grExprDistr grammar
+      newProductions = compressLP_corpus lambda subtrees
+      productions = newProductions ++ terminals
+      uniformLogProb = -log (genericLength productions)
+      grammar'   = Grammar (log 0.5) $ Map.fromList [ (prod, uniformLogProb) | prod <- productions ]
+      grammar''  = if pruneGrammar
+                   then removeUnusedProductions grammar' $ map fst corpus
+                   else grammar'
+      grammar''' = inoutEstimateGrammar grammar'' pseudocounts corpus
+  in grammar'''
 
 -- | Compresses a corpus
 compressLP_corpus :: Double -> -- ^ lambda
