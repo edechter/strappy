@@ -100,7 +100,8 @@ compressWeightedCorpus :: Double -> -- ^ lambda
 compressWeightedCorpus lambda pseudocounts grammar corpus =
   let subtrees = foldl1 (Map.unionWith (+)) $ map (countSubtrees Map.empty) corpus
       terminals = filter isTerm $ Map.keys $ grExprDistr grammar
-      newProductions = compressLP_corpus lambda subtrees
+      newProductions = map (\e -> e { eType = doTypeInference e })
+                       $ compressLP_corpus lambda subtrees
       productions = newProductions ++ terminals
       uniformLogProb = -log (genericLength productions)
       grammar'   = Grammar (log 0.5) $ Map.fromList [ (prod, uniformLogProb) | prod <- productions ]

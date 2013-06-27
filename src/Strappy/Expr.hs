@@ -101,6 +101,19 @@ safeEval App{eLeft = el, eRight = er} = do l <- safeEval el
                                            r <- safeEval er    
                                            return (l r) 
 
+-- | Runs type inference on the given program, returning its type
+doTypeInference :: Expr -> Type
+doTypeInference expr = runIdentity $ runTI $ infer expr
+  where infer (Term { eType = tp }) = instantiateType tp
+        infer (App { eLeft = l, eRight = r }) = do
+          alpha <- mkTVar
+          beta <- mkTVar
+          lTp <- infer l
+          unify lTp (alpha ->- beta)
+          rTp <- infer r
+          unify rTp alpha
+          applySub beta
+
 ----------------------------------------
 -- Conversion functions ----------------
 ----------------------------------------

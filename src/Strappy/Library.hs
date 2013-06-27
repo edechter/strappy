@@ -76,9 +76,9 @@ pcfgLogLikelihood gr@(Grammar { grExprDistr = distr, grApp = app }) e@(App { eLe
 ijcaiLogLikelihood :: Grammar -> Expr -> Expr
 ijcaiLogLikelihood (Grammar { grApp = logApp, grExprDistr = distr }) e@(Term { eReqType = Just tp}) =
   let alts = filter (\(e', _) -> canUnifyFast tp (eType e')) $ Map.toList distr
-      z = logSumExpList $ map snd alts
+      zT = logSumExpList $ map snd alts
       logTerm = log (1 - exp logApp)
-      ll = (distr Map.! e) + logTerm - z
+      ll = (distr Map.! e) + logTerm - zT
   in e { eLogLikelihood = Just ll }
 ijcaiLogLikelihood gr (Term { eReqType = Nothing }) =
   error "ijcaiLogLikelihood called on Term without requested types annotated"
@@ -87,13 +87,13 @@ ijcaiLogLikelihood gr@(Grammar { grApp = logApp, grExprDistr = distr }) e@(App {
                                                                                 eReqType = Just tp})
   | Map.member e distr =
     let alts = filter (\(e, _) -> canUnifyFast tp (eType e)) $ Map.toList distr
-        z = logSumExpList $ map snd alts
+        zA = logSumExpList $ map snd alts
         logTerm = log (1 - exp logApp)
         l' = ijcaiLogLikelihood gr l
         r' = ijcaiLogLikelihood gr r
         lLL = fromJust $ eLogLikelihood l'
         rLL = fromJust $ eLogLikelihood r'
-        eLL = logSumExp ((distr Map.! e) + logTerm - z)
+        eLL = logSumExp ((distr Map.! e) + logTerm - zA)
                         (lLL + rLL + logApp)
     in e { eLeft = l', eRight = r', eLogLikelihood = Just eLL }
 ijcaiLogLikelihood _ (App { eReqType = Nothing }) =
@@ -373,7 +373,3 @@ incCount :: ExprMap Double -> (Expr, Double)
 incCount cnt (expr@App{},wt) =
   Map.insertWith (+) expr wt cnt
 incCount cnt _ = cnt
-
-exprSize :: Expr -> Double
-exprSize App{eLeft=l, eRight=r} = 1.0 + exprSize l + exprSize r
-exprSize _ = 1.0
