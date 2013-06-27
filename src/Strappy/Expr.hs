@@ -36,15 +36,18 @@ mkTerm name tp thing = Term { eName = name,
                               eThing = thing }
 
 -- | smart constructor for applications
-a <> b = case runIdentity . evalTI $ typeOfApp a b of 
-  Right tp -> App { eLeft = a, 
-                     eRight = b, 
-               eType = tp, 
-               eReqType = Nothing, 
-               eLogLikelihood = Nothing }
-  Left _ -> error "Application failed."
+a <> b = fst . runTiInIdentity $ 
+           do a' <- instantiateExprTypes a
+              b' <- instantiateExprTypes b
+              tp <- typeOfApp a' b'
+              return App{eLeft = a', 
+                            eRight = b',
+                            eType = tp,
+                            eReqType = Nothing,
+                            eLogLikelihood = Nothing}
 
 
+ 
 instance Show Expr where
     show Term{eName=s} = s
     show App{eLeft=el, eRight=er} = "(" ++ show el ++ " " ++  show er ++ ")"
@@ -86,6 +89,16 @@ typeOfApp e_left e_right
 typeCheck :: Monad m => Expr -> TypeInference m Type
 typeCheck e@Term{eType=tp} = return tp
 typeCheck e@App{eLeft=l, eRight=r} = typeOfApp l r 
+
+instantiateExprTypes :: Monad m => Expr -> TypeInference m Expr
+-- | Returns an expr whose top level type and all sub types are
+-- | instantiated with fresh types variables
+instantiateExprTypes expr@Term{eType=tp} = do tp' <- instantiateType tp
+                                              return expr{eType=tp'}
+instantiateExprTypes expr@App{eLeft=l, eRight=r} = do l' <- instantiateExprTypes l
+                                                      r' <- instantiateExprTypes r
+                                                      tp <- typeOfApp l' r'
+                                                      return expr{eType=tp}
 
 eval :: Expr -> a
 -- | Evaluates an Expression of type a into a Haskell object of that

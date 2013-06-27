@@ -74,7 +74,6 @@ safeSampleWithContext gr tp = do
     Nothing -> safeSampleWithContext gr tp
     Just s -> return s
 
--- <<<<<<< HEAD
 safeSample :: MonadRandom m => Grammar -> Type -> m (Either TypeError Expr)
 safeSample gr tp = liftM fst $ safeSampleWithContext gr tp
 
@@ -96,21 +95,7 @@ sampleExprsWithContexts n library tp =
                              else 1.0-}    
 
 sampleExprs n library tp = fmap (Map.map fst) $ sampleExprsWithContexts n library tp
---  =======
---sampleExprs :: (MonadPlus m, MonadRandom m) =>
---               Int -> Grammar -> Type -> m (ExprMap Double)
---sampleExprs n library tp =
---  liftM (Map.mapWithKey reweight) $ foldM accSample Map.empty [1..n]
---  where accSample acc _ = do
---          expr <- safeSample library tp
---          return $ Map.insertWith (+) expr 1 acc
---        reweight expr cnt =
---          fromIntegral cnt {-* if usePCFGWeighting
---                             then let pcfg = fromJust $ eLogLikelihood $ pcfgLogLikelihood library expr
---                                      ijcai = fromJust $ eLogLikelihood $ ijcaiLogLikelihood library expr
---                                  in pcfg / ijcai
---                             else 1.0-}
--- >>>>>>> develop
+
 
 -- | Uses breadth-first enumeration to "sample" a grammar
 -- This allows us to get many more programs
