@@ -89,7 +89,7 @@ doEMPlan tasks lambda pseudocounts frontierSize numPlans planLen grammar = do
   let grammar' = compressWeightedCorpus lambda pseudocounts grammar normalizedRewards'
   let terminalLen = length $ filter isTerm $ Map.keys $ grExprDistr grammar
   putStrLn $ "Got " ++ show ((length $ lines $ showGrammar $ removeSubProductions grammar') - terminalLen - 1) ++ " new productions."
-  putStrLn $ "Grammar entropy: " ++ show (entropyLogDist $ Map.elems $ grExprDistr grammar')
+  putStrLn $ "Grammar entropy: " ++ show (entropyLogDist $ Map.elems $ grExprDistr grammar') ++ " nats."
   when verbose $ putStrLn $ showGrammar $ removeSubProductions grammar'
   putStrLn "" -- newline
   return grammar'

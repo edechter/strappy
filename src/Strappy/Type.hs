@@ -13,8 +13,6 @@ module Strappy.Type where
 --  standard library imports
 import qualified Data.Map as M
 import Data.List (nub)
-import Data.Hashable (Hashable, hash, hashWithSalt) 
-import Data.Maybe
 
 import Control.Monad (foldM)
 import Control.Monad.Identity
@@ -27,7 +25,7 @@ import System.IO.Unsafe
 type Id = Int
 data Type = TVar Int
           | TCon String [Type]
-            deriving(Ord, Eq, Show)
+            deriving(Ord, Eq)
 infixr 6 ->-
 t1 ->- t2 = TCon "->" [t1,t2]
 
@@ -62,7 +60,7 @@ bindTVar var ty = do
 -- The smaller-into-larger optimization does not apply.
 applySub :: Monad m => Type -> TypeInference m Type
 applySub t@(TVar v) = do
-  (n, s) <- get
+  (_, s) <- get
   case M.lookup v s of
     Just t' -> do t'' <- applySub t'
                   (n', s') <- get
@@ -171,7 +169,7 @@ canUnifyFast t1 t2 = unsafePerformIO $ do
                            return tp''
         traceVars (FTCon k xs) = mapM traceVars xs >>= return . FTCon k
         fOccurs ref (FTVar ref') = ref == ref'
-        fOccurs ref (FTCon _ []) = False
+        fOccurs _ (FTCon _ []) = False
         fOccurs ref (FTCon _ xs) = any (fOccurs ref) xs
 
 
@@ -185,7 +183,7 @@ instantiateType ty = do
   
 getTVars :: Type -> [Int]
 getTVars (TVar v) = [v]
-getTVars (TCon k ts) = concatMap getTVars ts
+getTVars (TCon _ ts) = concatMap getTVars ts
 
 applyTVarSub :: [(Int,Type)] -> Type -> Type
 applyTVarSub sub (TVar v) =
@@ -257,7 +255,13 @@ tQuint a b c d e = TCon "(,,,,)" [a,b,c,d,e]
 t = TVar 0                  
 t1 = TVar 1               
 t2 = TVar 2                  
-t3 = TVar 3                  
+t3 = TVar 3
+
+instance Show Type where
+  show (TVar id) = show id
+  show (TCon "->" [l, r]) = "(" ++ show l ++ " -> " ++ show r ++ ")"
+  show (TCon k []) = k
+  show (TCon k ts) = "(" ++ k ++ " " ++ unwords (map show ts) ++ ")"
 
 ----------------------------------------                    
 -- Typeable ----------------------------
@@ -266,19 +270,19 @@ class Typeable a where
 	typeOf :: a ->  Type
 
 instance Typeable Int where
-	typeOf v = tInt 
+	typeOf _ = tInt 
 instance Typeable Char where
-	typeOf v = tChar
+	typeOf _ = tChar
 instance Typeable Double where
-	typeOf v = tDouble
+	typeOf _ = tDouble
 instance Typeable Bool where
-	typeOf v = tBool
+	typeOf _ = tBool
 instance (Typeable a, Typeable b) =>  Typeable (a -> b)  where
-	typeOf v = (typeOf (undefined :: a)) ->- (typeOf (undefined :: b)) 
+	typeOf _ = (typeOf (undefined :: a)) ->- (typeOf (undefined :: b)) 
 instance (Typeable a) => Typeable [a] where
-	typeOf v = tList (typeOf $ (undefined :: a))
+	typeOf _ = tList (typeOf $ (undefined :: a))
 instance (Typeable a, Typeable b) => Typeable (a, b) where
-	typeOf v = tPair (typeOf (undefined :: a)) (typeOf (undefined :: b))
+	typeOf _ = tPair (typeOf (undefined :: a)) (typeOf (undefined :: b))
 
 
 

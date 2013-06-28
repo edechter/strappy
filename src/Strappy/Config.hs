@@ -6,7 +6,7 @@ module Strappy.Config where
 -- True = sample from P(expr | typed)
 -- False = ijcai-style sampling
 usePCFGWeighting :: Bool
-usePCFGWeighting = False
+usePCFGWeighting = True
 
 -- | Include debugging output? (grammars, etc)
 verbose :: Bool
@@ -19,7 +19,7 @@ pruneGrammar = False
 
 -- | Sample by enumeration?
 sampleByEnumeration :: Bool
-sampleByEnumeration = False
+sampleByEnumeration = True
 
 -- | Size of the frontier enumerated, or sampled, during the "E" step
 frontierSize :: Int
@@ -37,3 +37,7 @@ maximumPlanLength = 3
 --   beta = 1/T
 planningBeta :: Double
 planningBeta = 1
+
+-- | Maximum number of reduction steps allowed when running a program
+maxEvalSteps :: Int
+maxEvalSteps = 1000000

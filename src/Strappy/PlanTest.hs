@@ -13,6 +13,7 @@ import Strappy.Config
 
 import Unsafe.Coerce (unsafeCoerce)
 import qualified Data.Map as Map
+import Debug.Trace
 
 makeNumberTask :: Int -> PlanTask
 makeNumberTask target = PlanTask { ptName = show target,
@@ -46,7 +47,7 @@ sse poly correct =
   let square z = z*z
       polyVals    = map (\x -> eval (poly <> cInt2Expr x)) [1..9]
       correctVals = map correct [1..9]
-  in fromIntegral $ sum $ zipWith (\w v -> square (w-v)) polyVals correctVals
+  in trace (show $ doTypeInference poly) $ fromIntegral $ sum $ zipWith (\w v -> square (w-v)) polyVals correctVals
 
 polyPlan :: IO ()
 polyPlan = do

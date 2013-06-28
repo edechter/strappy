@@ -6,7 +6,6 @@ import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Random
 import Control.Monad.Maybe
-import Data.List (null)
 
 flip :: (Num a, Ord a, Random a, MonadRandom m) => a -> m Bool
 flip p = do r <- getRandomR (0, 1)

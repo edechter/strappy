@@ -16,6 +16,10 @@ import Control.Monad.Identity
 import Control.Monad.State
 import Control.Arrow (first)
 import Debug.Trace
+import Data.IORef
+import System.IO.Error
+import System.IO.Unsafe
+import Control.Exception.Base
 
 import Strappy.Type
 import Strappy.Expr
@@ -229,16 +233,27 @@ inoutEstimateGrammar gr@Grammar{grExprDistr=distr, grApp = app} pseudocounts obs
 mkAny :: a -> Any
 mkAny = unsafeCoerce  
 
+-- | Wrapper for combinators that increments the reduction count
+wrapWithReductionIncrement :: a -> a
+wrapWithReductionIncrement returnValue =
+  unsafePerformIO $ do
+    modifyIORef evalStepCounter (+1)
+    cnt <- readIORef evalStepCounter
+    if cnt > maxEvalSteps
+      then throw NonTermination
+      else return returnValue
+        
+
 -- | Basic combinators
-cI = mkTerm "I" (t ->- t)   id
+cI = mkTerm "I" (t ->- t) $ \x -> wrapWithReductionIncrement x
 
-cS = mkTerm "S" ((t2 ->- t1 ->- t) ->- (t2 ->- t1) ->- t2 ->- t)    $ \f g x -> f x (g x)
+cS = mkTerm "S" ((t2 ->- t1 ->- t) ->- (t2 ->- t1) ->- t2 ->- t) $ \f g x -> wrapWithReductionIncrement (f x (g x))
 
-cB = mkTerm "B" ((t1 ->- t) ->- (t2 ->- t1) ->- t2 ->- t)   $ \f g x -> f (g x)
+cB = mkTerm "B" ((t1 ->- t) ->- (t2 ->- t1) ->- t2 ->- t) $ \f g x -> wrapWithReductionIncrement (f (g x))
 
-cC = mkTerm "C" ((t1 ->- t2 ->- t) ->- t2 ->- t1 ->- t)   $ \f g x -> f x g 
+cC = mkTerm "C" ((t1 ->- t2 ->- t) ->- t2 ->- t1 ->- t)   $ \f g x -> wrapWithReductionIncrement (f x g)
 
-cK = mkTerm "K" (t1 ->- t2 ->- t1)   $ \x y -> x
+cK = mkTerm "K" (t1 ->- t2 ->- t1)   $ \x y -> wrapWithReductionIncrement x
 
 
 
@@ -385,3 +400,8 @@ incCount :: ExprMap Double -> (Expr, Double)
 incCount cnt (expr@App{},wt) =
   Map.insertWith (+) expr wt cnt
 incCount cnt _ = cnt
+
+
+-- | Bad combinators that diverge
+bad = ((cB <> (cS <> cB)) <> (cS <> cB)) <> cI
+megabad = bad <> bad <> bad <> cI

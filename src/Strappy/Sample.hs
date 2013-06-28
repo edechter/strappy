@@ -27,9 +27,9 @@ import Strappy.Config
 sampleExpr ::
   (MonadPlus m, MonadRandom m) => Grammar -> Type -> m Expr
 -- | Samples a combinator of type t from a stochastic grammar G. 
-sampleExpr gr@Grammar{grApp=p, grExprDistr=exprDistr} tp 
+sampleExpr Grammar{grApp=p, grExprDistr=exprDistr} requestedType 
     = runTI $ do initializeTI exprDistr
-                 tp' <- instantiateType tp
+                 tp' <- instantiateType requestedType
                  expr <- sample tp'
                  return expr
     where 
@@ -61,8 +61,9 @@ safeSample :: MonadRandom m => Grammar -> Type -> m Expr
 safeSample gr tp = do
   maybeSample <- runMaybeT $ sampleExpr gr tp
   case maybeSample of
-    Nothing -> safeSample gr tp
-    Just s -> return s
+    Nothing -> trace ("Sample failure " ++ show tp) $ safeSample gr tp
+    Just s -> return $ trace ("Sampled " ++ show (canUnify ((tInt ->- tInt) ->- (tInt ->- tInt)) (doTypeInference s))
+                                         ++ "  " ++ show (doTypeInference s)) s
 
 sampleExprs :: (MonadPlus m, MonadRandom m) =>
                Int -> Grammar -> Type -> m (ExprMap Double)
@@ -89,3 +90,4 @@ sampleBF n gr tp =
 -- | Monadic wrapper
 sampleBFM :: Monad m => Int -> Grammar -> Type -> m (ExprMap Double)
 sampleBFM n gr tp = return $ sampleBF n gr tp
+

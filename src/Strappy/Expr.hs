@@ -12,6 +12,11 @@ import Control.Monad.Trans
 import Control.Monad.Identity
 import Data.Hashable
 import Text.Printf
+import Control.Exception
+import Data.IORef
+import System.IO.Error
+import System.IO.Unsafe
+
 import Strappy.Type
 
 -- | Main data type. Holds primitive functions (Term), their
@@ -100,6 +105,20 @@ safeEval term@Term{eThing=f} = if term == cBottom
 safeEval App{eLeft = el, eRight = er} = do l <- safeEval el
                                            r <- safeEval er    
                                            return (l r) 
+
+
+evalStepCounter :: IORef Int
+{-# NOINLINE evalStepCounter #-}
+evalStepCounter = unsafePerformIO (newIORef 0)
+
+stepLimitedEval :: Expr -> Maybe a
+stepLimitedEval expr =
+  unsafePerformIO $
+  flip Control.Exception.catch (\ (s :: NonTermination) -> return Nothing) $ do
+    writeIORef evalStepCounter 0
+    returnValue <- evaluate $ eval expr
+    return $ Just returnValue
+
 
 -- | Runs type inference on the given program, returning its type
 doTypeInference :: Expr -> Type
