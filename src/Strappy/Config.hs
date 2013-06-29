@@ -2,11 +2,13 @@
 
 module Strappy.Config where
 
+import Data.Timeout
+
 -- | Should we sample from P(expr | typed) or should we use sampling as described in the IJCAI paper?
 -- True = sample from P(expr | typed)
 -- False = ijcai-style sampling
 usePCFGWeighting :: Bool
-usePCFGWeighting = True
+usePCFGWeighting = False
 
 -- | Include debugging output? (grammars, etc)
 verbose :: Bool
@@ -19,11 +21,11 @@ pruneGrammar = False
 
 -- | Sample by enumeration?
 sampleByEnumeration :: Bool
-sampleByEnumeration = True
+sampleByEnumeration = False
 
 -- | Size of the frontier enumerated, or sampled, during the "E" step
 frontierSize :: Int
-frontierSize = 1000
+frontierSize = 20000
 
 -- | Number of plans sampled for each task
 numberOfPlansPerTask :: Int
@@ -38,6 +40,7 @@ maximumPlanLength = 3
 planningBeta :: Double
 planningBeta = 1
 
--- | Maximum number of reduction steps allowed when running a program
-maxEvalSteps :: Int
-maxEvalSteps = 1000000
+-- | Timeout for evaluations
+--   Measured in nanoseconds
+maxEvalTime :: Timeout
+maxEvalTime = fromIntegral 10000

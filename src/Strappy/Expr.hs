@@ -16,8 +16,11 @@ import Control.Exception
 import Data.IORef
 import System.IO.Error
 import System.IO.Unsafe
+--import Control.DeepSeq
+import Control.Concurrent.Timeout
 
 import Strappy.Type
+import Strappy.Config
 
 -- | Main data type. Holds primitive functions (Term), their
 -- application (App) and annotations.
@@ -107,17 +110,25 @@ safeEval App{eLeft = el, eRight = er} = do l <- safeEval el
                                            return (l r) 
 
 
-evalStepCounter :: IORef Int
-{-# NOINLINE evalStepCounter #-}
-evalStepCounter = unsafePerformIO (newIORef 0)
-
-stepLimitedEval :: Expr -> Maybe a
-stepLimitedEval expr =
-  unsafePerformIO $
-  flip Control.Exception.catch (\ (s :: NonTermination) -> return Nothing) $ do
-    writeIORef evalStepCounter 0
-    returnValue <- evaluate $ eval expr
-    return $ Just returnValue
+timeLimitedEval :: Show a => Expr -> Maybe a
+timeLimitedEval expr = unsafePerformIO $ do
+                       res <- timeout maxEvalTime $ do
+                         -- Hack to force Haskell to evaluate the expression:
+                         -- Convert the (eval expr) in to a string,
+                         -- then force each character of the string.
+                         let val = eval expr
+                         let strVal = show val
+                         case strVal of
+                           [] -> error "eval'd to nothing"
+                           (_:_) -> return $ seqList strVal val
+                       -- Helpful debugging code. Lets you see how many of the programs are timing out.
+                       {-case res of
+                         Nothing -> putStrLn "Timeout."
+                         Just _ -> return ()-}
+                       return res
+  where seqList [] x = x
+        seqList (z:zs) x = z `seq` (seqList zs x)
+  
 
 
 -- | Runs type inference on the given program, returning its type
@@ -163,4 +174,3 @@ class Expressable a where
 
 instance (Show a, Typeable a) => Expressable a where
        toExpr v = mkTerm (show v) (typeOf v) v 
-

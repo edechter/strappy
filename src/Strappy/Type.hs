@@ -70,6 +70,20 @@ applySub t@(TVar v) = do
 applySub (TCon k ts) =
   mapM applySub ts >>= return . TCon k
 
+
+-- | Debugging: ensure that the current substitution is not circular,
+-- that is, it does not fail the occurs check.
+checkSubForCycles :: Monad m => TypeInference m Bool
+checkSubForCycles =
+  let notCyclic sub hist (TVar var) =
+        if var `elem` hist then False
+        else case M.lookup var sub of
+          Just t -> notCyclic sub (var:hist) t
+          Nothing -> True
+      notCyclic sub hist (TCon _ ts) = all (notCyclic sub hist) ts
+  in do (_, s) <- get
+        return $ all (notCyclic s [] . TVar) $ M.keys s
+
 -- Unification
 -- Primed unify is for types that have already had the substitution applied
 unify t1 t2 = do

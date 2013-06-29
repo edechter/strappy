@@ -61,9 +61,8 @@ safeSample :: MonadRandom m => Grammar -> Type -> m Expr
 safeSample gr tp = do
   maybeSample <- runMaybeT $ sampleExpr gr tp
   case maybeSample of
-    Nothing -> trace ("Sample failure " ++ show tp) $ safeSample gr tp
-    Just s -> return $ trace ("Sampled " ++ show (canUnify ((tInt ->- tInt) ->- (tInt ->- tInt)) (doTypeInference s))
-                                         ++ "  " ++ show (doTypeInference s)) s
+    Nothing -> safeSample gr tp
+    Just s -> return s
 
 sampleExprs :: (MonadPlus m, MonadRandom m) =>
                Int -> Grammar -> Type -> m (ExprMap Double)

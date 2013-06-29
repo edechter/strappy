@@ -16,10 +16,8 @@ import Control.Monad.Identity
 import Control.Monad.State
 import Control.Arrow (first)
 import Debug.Trace
-import Data.IORef
-import System.IO.Error
-import System.IO.Unsafe
-import Control.Exception.Base
+import qualified Text.ParserCombinators.Parsec as Parsec
+import qualified Text.ParserCombinators.Parsec.Lisp as LispParse
 
 import Strappy.Type
 import Strappy.Expr
@@ -41,7 +39,7 @@ showExprDistrLong exprDistr = unlines $ map (\(e, i) -> printf "%60s, %7.2f" (sh
 -- | Type for stochastic grammar over programs.
 data Grammar = Grammar {grApp :: Double, -- ^ log probability of application
                         grExprDistr :: ExprDistr -- ^ distribution over functions
-                       } 
+                       }
 
 showGrammar (Grammar p exprDistr) = printf "%7s:%7.2f\n" "p" (exp p) ++ showExprDistr exprDistr
 
@@ -232,59 +230,58 @@ inoutEstimateGrammar gr@Grammar{grExprDistr=distr, grApp = app} pseudocounts obs
 -- | Helper for turning a Haskell type to Any. 
 mkAny :: a -> Any
 mkAny = unsafeCoerce  
-
--- | Wrapper for combinators that increments the reduction count
-wrapWithReductionIncrement :: a -> a
-wrapWithReductionIncrement returnValue =
-  unsafePerformIO $ do
-    modifyIORef evalStepCounter (+1)
-    cnt <- readIORef evalStepCounter
-    if cnt > maxEvalSteps
-      then throw NonTermination
-      else return returnValue
         
 
 -- | Basic combinators
-cI = mkTerm "I" (t ->- t) $ \x -> wrapWithReductionIncrement x
+cI = mkTerm "I" (t ->- t) $ id
 
-cS = mkTerm "S" ((t2 ->- t1 ->- t) ->- (t2 ->- t1) ->- t2 ->- t) $ \f g x -> wrapWithReductionIncrement (f x (g x))
+cS = mkTerm "S" ((t2 ->- t1 ->- t) ->- (t2 ->- t1) ->- t2 ->- t) $
+     \f g x -> f x (g x)
 
-cB = mkTerm "B" ((t1 ->- t) ->- (t2 ->- t1) ->- t2 ->- t) $ \f g x -> wrapWithReductionIncrement (f (g x))
+cB = mkTerm "B" ((t1 ->- t) ->- (t2 ->- t1) ->- t2 ->- t) $
+     \f g x -> f (g x)
 
-cC = mkTerm "C" ((t1 ->- t2 ->- t) ->- t2 ->- t1 ->- t)   $ \f g x -> wrapWithReductionIncrement (f x g)
+cC = mkTerm "C" ((t1 ->- t2 ->- t) ->- t2 ->- t1 ->- t) $ 
+     \f g x -> f x g
 
-cK = mkTerm "K" (t1 ->- t2 ->- t1)   $ \x y -> wrapWithReductionIncrement x
-
-
-
+cK = mkTerm "K" (t1 ->- t2 ->- t1) $ 
+     \x y -> x
 
 -- | Integer arithmetic
 cPlus :: Expr
-cPlus = mkTerm "+" (tInt ->- tInt ->- tInt)   (+)
+cPlus = mkTerm "+" (tInt ->- tInt ->- tInt) $
+        (+)
 
 cTimes :: Expr
-cTimes = mkTerm "*" (tInt ->- tInt ->- tInt)   (*)
+cTimes = mkTerm "*" (tInt ->- tInt ->- tInt) $
+         (*)
 
 cMinus :: Expr
-cMinus = mkTerm "-" (tInt ->- tInt ->- tInt)   (-)
-
--- What is this supposed to be?
-cMod :: Expr
-cMod = mkTerm "-" (tInt ->- tInt ->- tInt)    (-)
+cMinus = mkTerm "-" (tInt ->- tInt ->- tInt) $
+         (-)
 
 cRem :: Expr
-cRem = mkTerm "rem" (tInt ->- tInt ->- tInt)   mod
+cRem = mkTerm "rem" (tInt ->- tInt ->- tInt) $
+       mod
+
 -- | Lists
-cCons = mkTerm ":"  (t ->- tList t ->- tList t)    (:)
-cAppend = mkTerm "++" (tList t ->- tList t ->- tList t)   (++)
-cHead = mkTerm "head" (tList t ->- t)   head
-cMap = mkTerm "map" ((t ->- t1) ->- tList t ->- tList t1)   map
-cEmpty = mkTerm "[]" (tList t)   []
-cSingle = mkTerm "single" (t ->- tList t)   $ replicate 1 
-cRep = mkTerm "rep" (tInt ->- t ->- tList t)   replicate 
-cFoldl = mkTerm "foldl" ((t ->- t1 ->- t) ->- t ->- tList t1 ->- t)    List.foldl'
-cInts =  [cInt2Expr i | i <- [1..10]]
-cDoubles =  [cDouble2Expr i | i <- [1..10]]
+cCons = mkTerm ":"  (t ->- tList t ->- tList t) $
+        (:)
+cAppend = mkTerm "++" (tList t ->- tList t ->- tList t) $
+          (++)
+cHead = mkTerm "head" (tList t ->- t) $ 
+        head
+cMap = mkTerm "map" ((t ->- t1) ->- tList t ->- tList t1) $
+       map
+cEmpty = mkTerm "[]" (tList t) $ []
+cSingle = mkTerm "single" (t ->- tList t) $ 
+          \x -> [x]
+cRep = mkTerm "rep" (tInt ->- t ->- tList t) $
+       replicate
+cFoldl = mkTerm "foldl" ((t ->- t1 ->- t) ->- t ->- tList t1 ->- t) $ 
+         List.foldl'
+cInts =  [ cInt2Expr i | i <- [1..10]]
+cDoubles =  [ cDouble2Expr i | i <- [1..10]]
 
 -- | A basic collection of expressions
 basicExprs :: [Expr]
@@ -402,6 +399,42 @@ incCount cnt (expr@App{},wt) =
 incCount cnt _ = cnt
 
 
--- | Bad combinators that diverge
-bad = ((cB <> (cS <> cB)) <> (cS <> cB)) <> cI
-megabad = bad <> bad <> bad <> cI
+-- | Saves a grammar to a file
+saveGrammar :: String -> Grammar -> IO ()
+saveGrammar fname (Grammar papp distr) =
+  writeFile fname $ show papp ++ "\n" ++ prods
+  where prods = unlines $ map (\(c, p) -> show p ++ " " ++ show c) $ Map.toList distr
+
+-- | Loads a grammar from a file
+loadGrammar :: String -> IO Grammar
+loadGrammar fname = do
+  fcontents <- readFile fname
+  let (papp : prods) = lines fcontents
+  let prods' = map (\ln ->
+                     let p = read $ takeWhile (/=' ') ln
+                         c = parseComb $ drop 1 $ dropWhile (/=' ') ln
+                         c' = c { eType = doTypeInference c }
+                     in (c', p)) prods
+  return $ Grammar { grApp = read papp,
+                     grExprDistr = Map.fromList prods' }
+  
+    
+  
+  
+
+-- | Reads a combinator from a string
+--   Defined in Library.hs because we need to reference various library combinators
+parseComb :: String -> Expr
+parseComb str = either (const $ error $ "Could not parse " ++ str) unlisp $ Parsec.parse LispParse.parseExpr "" str
+  where unlisp (LispParse.Number c) = cInt2Expr $ fromIntegral $ c
+        unlisp (LispParse.Atom s) =
+          case List.find (\c -> show c == s) basicExprs of
+            Nothing -> error $ "Could not unlisp " ++ show s
+            Just e -> e
+        unlisp (LispParse.List [l, r]) = App { eLeft = unlisp l, 
+                                               eRight = unlisp r,
+                                               eType = undefined,
+                                               eReqType = Nothing,
+                                               eLogLikelihood = Nothing }
+        unlisp err = error $ "Could not unlisp " ++ show err
+

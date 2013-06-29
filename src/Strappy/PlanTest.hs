@@ -14,6 +14,7 @@ import Strappy.Config
 import Unsafe.Coerce (unsafeCoerce)
 import qualified Data.Map as Map
 import Debug.Trace
+import Data.Maybe
 
 makeNumberTask :: Int -> PlanTask
 makeNumberTask target = PlanTask { ptName = show target,
@@ -45,9 +46,12 @@ makePolyTask a b c = PlanTask { ptName = show a ++ "x^2 + " ++ show b ++ "x + " 
 sse :: Expr -> (Int -> Int) -> Double
 sse poly correct =
   let square z = z*z
-      polyVals    = map (\x -> eval (poly <> cInt2Expr x)) [1..9]
+      polyVals    = map (\x -> timeLimitedEval (poly <> cInt2Expr x)) [1..9]
+      polyVals'   = map fromJust polyVals
       correctVals = map correct [1..9]
-  in trace (show $ doTypeInference poly) $ fromIntegral $ sum $ zipWith (\w v -> square (w-v)) polyVals correctVals
+  in if all isJust polyVals
+     then fromIntegral $ sum $ zipWith (\w v -> square (w-v)) polyVals' correctVals
+     else 1/0
 
 polyPlan :: IO ()
 polyPlan = do
@@ -55,9 +59,9 @@ polyPlan = do
   let seed = Grammar { grApp = log 0.35,
                        grExprDistr = Map.fromList [ (annotateRequested e, 1.0) | e <- polyExprs ] }
   let tasks = [ makePolyTask a b c | a <- [0..5], b <- [0..5], c <- [0..5] ]
-  loopM seed [0..14] $ \grammar step -> do
+  loopM seed [0..2] $ \grammar step -> do
     putStrLn $ "EM Planning Iteration: " ++ show step
-    grammar' <- doEMPlan tasks 1.5 1.0 frontierSize numberOfPlansPerTask maximumPlanLength grammar
+    grammar' <- doEMPlan tasks 2.0 2.0 frontierSize numberOfPlansPerTask maximumPlanLength grammar
     return grammar'
   return ()
 

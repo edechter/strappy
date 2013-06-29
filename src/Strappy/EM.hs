@@ -81,7 +81,10 @@ polyEM = do
                        grExprDistr = Map.fromList [ (annotateRequested e, 1.0) | e <- polyExprs ] }
   -- Make nth order polynomial task with fixed coefficients
   let mkNthDet :: (Int -> Int) -> (Expr -> Double, Type)
-      mkNthDet poly = let loss proc = sum $ zipWith (\a b -> (a-b)*(a-b)) (map (fromIntegral . eval proc) [0..9]) (map (fromIntegral . poly) [0..9])
+      mkNthDet poly = let points proc = map (\x -> timeLimitedEval $ proc <> cInt2Expr x) [0..9]
+                          loss proc = (let pts = points proc in
+                                       if all isJust pts then sum $ zipWith (\a b -> (a-b)*(a-b)) (map (fromIntegral . fromJust) pts) (map (fromIntegral . poly) [0..9])
+                                                         else 1/0)
                           score proc = exp $ - loss proc
                       in (score, tInt ->- tInt)
   let const = [ mkNthDet (\_ -> x) | x <- [0..9] ]
