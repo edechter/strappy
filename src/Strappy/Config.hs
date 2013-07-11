@@ -44,3 +44,6 @@ planningBeta = 1
 --   Measured in nanoseconds
 maxEvalTime :: Timeout
 maxEvalTime = fromIntegral 10000
+
+-- | Truncated stick for variational inference
+truncatedStickLen = 20

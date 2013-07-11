@@ -1,6 +1,6 @@
 -- | This module compresses a set of combinators by solving the corresponding linear program.
 
-module Strappy.LPCompress (compressLP_corpus, compressLP_EC, compressWeightedCorpus) where
+module Strappy.LPCompress (compressLP_corpus, compressWeightedCorpus) where
 
 import Strappy.Expr
 import Strappy.Library
@@ -9,6 +9,7 @@ import Strappy.Config
 
 import Data.LinearProgram
 import Data.List
+import qualified Data.Set as Set
 import qualified Data.Map as Map
 import Control.Monad
 import Control.Monad.Trans
@@ -16,82 +17,8 @@ import Debug.Trace
 import System.IO.Unsafe
 import System.CPUTime
 
--- | Finds most compressive grammar and program assignments for EC
-compressLP_EC :: [[Expr]] -> -- ^ List of programs hitting each task
-                 ([Expr], -- ^ Expressions in the grammar
-                  [Expr]) -- ^ solution set
-compressLP_EC hits = unsafePerformIO $ evalLPT $ do
-  let numProgs = maximum $ map length hits
-  start <- lift getCPUTime
-  labeledSubtrees <- buildLP_EC hits
-  (retval, result) <- quickSolveLP
-  end <- lift getCPUTime
-  lift $ putStrLn $ "Solved LP in " ++ show ((fromIntegral $ end-start)/(10^12::Double)) ++ " seconds."
-  let minLabel = minimum $ map snd labeledSubtrees
-  let maxLabel = maximum $ map snd labeledSubtrees
-  let productions = case result of
-        Nothing -> []
-        Just (_, solution) ->
-          map fst $ filter (\(tree, label) ->
-                             case Map.lookup label solution of
-                               Nothing -> error "LP bug"
-                               Just x | x < 0.01 -> False
-                                      | x > 0.99 -> True
-                                      -- Should never occur if LP relaxation is valid
-                                      -- If this ever happens, then the math is probably bad
-                                      | otherwise -> error $ "LP has coordinate = " ++ show x)
-                           labeledSubtrees
-  let solutionSet = case result of
-        Nothing -> []
-        Just (_, solution) ->
-          Prelude.flip map [0 .. (length hits - 1)] $ \i ->
-          let kMax = length $ hits!!i
-              eiks = map (safeFromJust "e_i^k not in LP solution") $ map (Prelude.flip Map.lookup solution) $
-                                                                     [ k + i * numProgs | k <- [0..kMax-1] ]
-              chosenK = snd $ maximum $ zip eiks [0..]
-          in trace (show eiks) $ (hits!!i)!!chosenK
-  return (productions, solutionSet)
 
-
-buildLP_EC hits = do
-  let numTasks = length hits
-  let numProgs = maximum $ map length hits
-  -- For each task, declare a variable for each possible program.
-  -- Demand that at most one program is selected per task.
-  forM_ [0..numTasks-1] $ \i -> do
-    let numSolutions = length $ hits !! i
-    forM_ [0..numSolutions-1] $ \k -> varBds (k + i*numProgs) 0 1
-    forM_ [0..numSolutions-1] $ \k -> forM [0 .. numSolutions-1] $ \k' -> when (k /= k') $
-      leqTo (Map.fromList [(k + i * numProgs, 1), (k' + i*numProgs, 1)]) 1
-  -- Find all subtrees and introduce LP variables for them.
-  let subtrees = Map.keys $ foldl (\acc expr -> countSubtrees acc (expr, 1.0)) Map.empty $ concat hits
-  let labeledSubtrees = zipWith (\subtree j -> (subtree, j + numTasks * numProgs)) subtrees [0..]
-  forM_ labeledSubtrees $ \(_, label) -> varBds label 0 1
-  forM_ [0..numTasks-1] $ \i -> do
-    let numSolutions = length $ hits !! i
-    forM_ [0..numSolutions-1] $ \k -> do
-      let eik = k + i * numProgs
-      let prog = (hits!!i)!!k
-      boundSubtrees labeledSubtrees eik prog
-  setDirection Min -- minimize number of unique subtrees
-  -- In order to prevent us from selecting none of the programs for a task,
-  -- we add a large incentive to selecting any program.
-  -- This allows us to preserve total unimodularity while still solving the right ILP via relaxation.
-  let useProgramReward = 2 * length subtrees -- At worst, a program costs us every subtree
-  setObjective $ Map.fromList $ [(label, 1::Int) | (_, label) <- labeledSubtrees ] ++
-                                [ (k + i * numProgs, -useProgramReward) |
-                                  i <- [0..numTasks-1], k <- [0.. ((length $ hits!!i)-1) ] ]
-  return labeledSubtrees
-  where boundSubtrees subs eik (Term {}) = return ()
-        boundSubtrees subs eik e@(App { eLeft = l, eRight = r}) = do
-          case lookup e subs of
-            Nothing -> error "Could not find subtree in LP"
-            Just label -> do geqTo (Map.fromList [(label, 1), (eik, -1)]) 0
-                             boundSubtrees subs eik l
-                             boundSubtrees subs eik r
-    
-
--- | Wrapper over compressLP_corpus that builds the grammar for you
+-- | Wrapper over compressLP_corpus that builds the grammar
 compressWeightedCorpus :: Double -> -- ^ lambda
                           Double -> -- ^ pseudocounts
                           Grammar -> -- ^ initial grammar
@@ -102,6 +29,7 @@ compressWeightedCorpus lambda pseudocounts grammar corpus =
       terminals = filter isTerm $ Map.keys $ grExprDistr grammar
       newProductions = map (\e -> e { eType = doTypeInference e })
                        $ compressLP_corpus lambda subtrees
+--      newProductions' = compressCorpus lambda subtrees
       productions = newProductions ++ terminals
       uniformLogProb = -log (genericLength productions)
       grammar'   = Grammar (log 0.5) $ Map.fromList [ (prod, uniformLogProb) | prod <- productions ]
@@ -109,7 +37,12 @@ compressWeightedCorpus lambda pseudocounts grammar corpus =
                    then removeUnusedProductions grammar' $ map fst corpus
                    else grammar'
       grammar''' = inoutEstimateGrammar grammar'' pseudocounts corpus
-  in grammar'''
+  in {-trace (show $ (Set.fromList newProductions) == (Set.fromList newProductions'))-} grammar'''
+
+-- Weighted Nevill-Manning
+compressCorpus :: Double -> ExprMap Double -> [Expr]
+compressCorpus lambda counts =
+  map fst $ filter (\(_, c) -> c >= lambda) $ Map.toList counts
 
 -- | Compresses a corpus
 compressLP_corpus :: Double -> -- ^ lambda

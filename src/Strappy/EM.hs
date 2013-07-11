@@ -1,6 +1,7 @@
 {-# LANGUAGE TupleSections  #-}
-module Main where
+
 --module Strappy.EM where
+module Main where
 
 import Strappy.Sample
 import Strappy.Expr
