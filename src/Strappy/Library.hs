@@ -16,8 +16,7 @@ import Control.Monad.Identity
 import Control.Monad.State
 import Control.Arrow (first)
 import Debug.Trace
-import qualified Text.ParserCombinators.Parsec as Parsec
-import qualified Text.ParserCombinators.Parsec.Lisp as LispParse
+import Text.ParserCombinators.Parsec hiding (spaces)
 
 import Strappy.Type
 import Strappy.Expr
@@ -247,6 +246,16 @@ cC = mkTerm "C" ((t1 ->- t2 ->- t) ->- t2 ->- t1 ->- t) $
 cK = mkTerm "K" (t1 ->- t2 ->- t1) $ 
      \x y -> x
 
+-- | Tuples
+cPair :: Expr
+cPair = mkTerm "pair" (t1 ->- t2 ->- tPair t1 t2) (,)
+
+cFst :: Expr
+cFst = mkTerm "fst" (tPair t1 t2 ->- t1) fst
+
+cSnd :: Expr
+cSnd = mkTerm "snd" (tPair t1 t2 ->- t2) snd
+
 -- | Integer arithmetic
 cPlus :: Expr
 cPlus = mkTerm "+" (tInt ->- tInt ->- tInt) $
@@ -288,15 +297,15 @@ cTail = mkTerm "tail" (tList t ->- t) $
         tail
 cMap = mkTerm "map" ((t ->- t1) ->- tList t ->- tList t1) $
        map
-cEmpty = mkTerm "[]" (tList t) $ []
+cEmpty = mkTerm "nil" (tList t) $ []
 cSingle = mkTerm "single" (t ->- tList t) $ 
           \x -> [x]
 cRep = mkTerm "rep" (tInt ->- t ->- tList t) $
        replicate
 cFoldl = mkTerm "foldl" ((t ->- t1 ->- t) ->- t ->- tList t1 ->- t) $ 
          List.foldl'
-cInts =  [ cInt2Expr i | i <- [1..10]]
-cDoubles =  [ cDouble2Expr i | i <- [1..10]]
+cInts =  [ cInt2Expr i | i <- [-10..10]]
+cDoubles =  [ cDouble2Expr i | i <- [-10..10]]
 
 -- | A basic collection of expressions
 basicExprs :: [Expr]
@@ -308,15 +317,23 @@ basicExprs = [cI,
 --              cBottom, -- Why would we put cBottom in to the library?
               cPlus,
               cTimes, 
+              cFPlus,
+              cFMinus,
+              cFTimes,
+              cFDiv,
               cCons, 
               cEmpty,
               cAppend,
-              --         cHead,
+              cHead,
               cMap,
               cFoldl,
               cSingle,
-              cRep
-             ] ++ cInts
+              cRep,
+              cTail,
+              cPair,
+              cFst,
+              cSnd
+             ] ++ cInts ++ cDoubles
              
 -- Library for testing EM+polynomial regression
 -- This is what was used in the IJCAI paper
@@ -349,7 +366,8 @@ towerExprs = [cI,
               cSingle,
               cRep,
               cHead,
-              cTail
+              cTail,
+              cPair, cFst, cSnd
               ] ++ [ cDouble2Expr 0, cDouble2Expr 1, cDouble2Expr (-1) ]
 
 mkExprDistr :: [Expr] -> ExprDistr
@@ -449,29 +467,41 @@ loadGrammar fname = do
   let (papp : prods) = lines fcontents
   let prods' = map (\ln ->
                      let p = read $ takeWhile (/=' ') ln
-                         c = parseComb $ drop 1 $ dropWhile (/=' ') ln
+                         c = readExpr $ drop 1 $ dropWhile (/=' ') ln
                          c' = c { eType = doTypeInference c }
                      in (c', p)) prods
   return $ Grammar { grApp = read papp,
                      grExprDistr = Map.fromList prods' }
   
-    
+
   
   
 
 -- | Reads a combinator from a string
 --   Defined in Library.hs because we need to reference various library combinators
-parseComb :: String -> Expr
-parseComb str = either (const $ error $ "Could not parse " ++ str) unlisp $ Parsec.parse LispParse.parseExpr "" str
-  where unlisp (LispParse.Number c) = cInt2Expr $ fromIntegral $ c
-        unlisp (LispParse.Atom s) =
-          case List.find (\c -> show c == s) basicExprs of
-            Nothing -> error $ "Could not unlisp " ++ show s
-            Just e -> e
-        unlisp (LispParse.List [l, r]) = App { eLeft = unlisp l, 
-                                               eRight = unlisp r,
-                                               eType = undefined,
-                                               eReqType = Nothing,
-                                               eLogLikelihood = Nothing }
-        unlisp err = error $ "Could not unlisp " ++ show err
+readExpr :: String -> Expr
+readExpr input = case parse parseComb "CL" input of
+     Left err -> error $ "No match: " ++ show err
+     Right val -> val
+     where symbol :: Parser Char
+           symbol = oneOf "!#$%&|*+-/:<=>?@^_~."
+           parseAtom :: Parser Expr
+           parseAtom = do 
+             hd <- letter <|> digit <|> symbol
+             tl <- many (letter <|> digit <|> symbol)
+             let atom = hd:tl
+             return $ case List.find (\c -> show c == atom) basicExprs of
+               Nothing -> error $ "Could not find in library: " ++ show atom
+               Just e -> e
+           parseApp :: Parser Expr
+           parseApp = do
+             char '('
+             f <- parseComb
+             char ' '
+             a <- parseComb
+             char ')'
+             return $ f <> a
+           parseComb :: Parser Expr
+           parseComb = parseAtom <|> parseApp
+  
 

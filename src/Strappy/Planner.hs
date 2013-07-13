@@ -72,7 +72,7 @@ doEMPlan tasks lambda pseudocounts frontierSize numPlans planLen grammar = do
                             >>= return . (tp,) . Map.toList)
                $ nub $ map ptType tasks
   when (not sampleByEnumeration) $ do
-    putStrLn $ "Frontier sizes: " ++ (unwords $ map (show . length . snd) frontiers)
+    putStrLn $ "Frontier size: " ++ (unwords $ map (show . length . snd) frontiers)
   numHitRef <- newIORef 0
   -- For each task, do greedy stochastic search to get candidate plans
   -- Each task records all of the programs used in successful plans, as well as the associated rewards

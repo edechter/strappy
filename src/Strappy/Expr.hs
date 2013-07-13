@@ -157,6 +157,9 @@ cDouble2Expr :: Double -> Expr
 -- | Convert doubles to expressions. 
 cDouble2Expr i = mkTerm (show i) tDouble i 
 
+cBool2Expr :: Bool -> Expr
+cBool2Expr b = mkTerm (show b) tBool b
+
 ----------------------------------------
 -- Hashable instance ------------------- 
 ----------------------------------------

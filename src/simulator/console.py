@@ -35,5 +35,4 @@ def handle(request):
    print str(reply)
 
 random.seed()
-
 handle(sys.argv[1])

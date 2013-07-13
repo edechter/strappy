@@ -1,6 +1,6 @@
 -- | Uses the planner to build tall, stable towers
 
-module Strappy.Tower where
+module Main where
 
 import Strappy.Planner
 import Strappy.Type
@@ -19,13 +19,17 @@ import System.IO.Unsafe
 makeTowerTask :: SharedCache -> Double -> Double -> PlanTask
 makeTowerTask cache height stability =
   PlanTask { ptName = "Height: " ++ show height ++ ", " ++ " Stability " ++ show stability,
-             ptType = tList (tPair tBool tDouble),
-             ptSeed = mkTerm "[]" (tList (tPair tBool tDouble)) [],
+             ptType = tList (tPair tDouble tBool),
+             ptSeed = mkTerm "[]" (tList (tPair tDouble tBool)) [],
              ptLogLikelihood =
-               \plan -> let plan' = eval plan in
-                        if unsafePerformIO (cachedPerturb cache stability height plan')
-                        then -0.3 * (genericLength plan')
-                        else log 0
+               \plan -> unsafePerformIO $ do
+                        putStrLn $ show plan
+                        case timeLimitedEval plan of
+                          Nothing -> return (log 0)
+                          Just plan' ->
+                            if unsafePerformIO (cachedPerturb cache stability height plan')
+                            then return (-0.3 * (genericLength plan'))
+                            else return (log 0)
            }
 
 main = do
