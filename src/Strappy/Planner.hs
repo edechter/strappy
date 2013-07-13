@@ -42,7 +42,7 @@ mcmcPlan e0 dist likelihood len =
                                  in ((e, like), like + w*planningBeta)) dist
           in
            -- Failure: all of the likelihoods are zero
-           if all isNaN (map snd reweighted)
+           if all (\x -> isNaN x || isInfinite x) (map snd reweighted)
            then return (0, [], False)
            else
              do (e, eLike) <- sampleMultinomialLogProb reweighted
