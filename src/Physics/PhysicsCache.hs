@@ -1,17 +1,19 @@
 -- Kevin Ellis, 2013. 6.868 Final Project
 
-module PhysicsCache where
+module Physics.PhysicsCache where
+
+import Physics.BlockClient
 
 import Control.Concurrent.MVar
 import Control.Monad
 import qualified Data.Map as M
 
-import Pack
-import BuilderClient
-
+type Plan = [(Double, Bool)]
+type WorldState = [(Double, Double, Double)]
 
 data PhysicsCache = PhysicsCache { physStable :: M.Map (Plan, Double, Double) Bool,
-                                      physWState  :: M.Map Plan (WorldState, Double) }
+                                   physWState :: M.Map Plan (WorldState, Double) }
+                  deriving(Read, Show)
 
 type SharedCache = MVar PhysicsCache
 
@@ -38,3 +40,13 @@ cachedPerturb cache strength goalHeight plan = do
                   modifyMVar_ cache $
                     \c -> return $ c { physStable = M.insert (plan, strength, goalHeight) didWeWin (physStable c) }
                   return didWeWin
+
+savePhysicsCache :: SharedCache -> String -> IO ()
+savePhysicsCache cache fname = do
+  cache' <- readMVar cache
+  writeFile fname $ show cache'
+
+loadPhysicsCache :: String -> IO SharedCache
+loadPhysicsCache fname = do
+  contents <- readFile fname
+  newMVar $ read contents

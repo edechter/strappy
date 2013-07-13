@@ -260,9 +260,22 @@ cMinus :: Expr
 cMinus = mkTerm "-" (tInt ->- tInt ->- tInt) $
          (-)
 
-cRem :: Expr
-cRem = mkTerm "rem" (tInt ->- tInt ->- tInt) $
-       mod
+-- | Floating-point arithmetic
+cFPlus :: Expr
+cFPlus = mkTerm "+." (tDouble ->- tDouble ->- tDouble) $
+        ((+) :: Double -> Double -> Double)
+
+cFDiv :: Expr
+cFDiv = mkTerm "/." (tDouble ->- tDouble ->- tDouble) $
+        ((/) :: Double -> Double -> Double)
+
+cFTimes :: Expr
+cFTimes = mkTerm "*." (tDouble ->- tDouble ->- tDouble) $
+         ((*) :: Double -> Double -> Double)
+
+cFMinus :: Expr
+cFMinus = mkTerm "-." (tDouble ->- tDouble ->- tDouble) $
+         ((-) :: Double -> Double -> Double)
 
 -- | Lists
 cCons = mkTerm ":"  (t ->- tList t ->- tList t) $
@@ -271,6 +284,8 @@ cAppend = mkTerm "++" (tList t ->- tList t ->- tList t) $
           (++)
 cHead = mkTerm "head" (tList t ->- t) $ 
         head
+cTail = mkTerm "tail" (tList t ->- t) $ 
+        tail
 cMap = mkTerm "map" ((t ->- t1) ->- tList t ->- tList t1) $
        map
 cEmpty = mkTerm "[]" (tList t) $ []
@@ -314,6 +329,28 @@ polyExprs = [cI,
               cPlus,
               cTimes
               ] ++ [ cInt2Expr 0, cInt2Expr 1 ]
+
+-- Library for tower building
+towerExprs :: [Expr]
+towerExprs = [cI, 
+              cS, 
+              cB, 
+              cC, 
+              cK, 
+              cFPlus,
+              cFMinus,
+              cFTimes,
+              cFDiv,
+              cCons,
+              cEmpty,
+              cAppend,
+              cMap,
+              cFoldl,
+              cSingle,
+              cRep,
+              cHead,
+              cTail
+              ] ++ [ cDouble2Expr 0, cDouble2Expr 1, cDouble2Expr (-1) ]
 
 mkExprDistr :: [Expr] -> ExprDistr
 mkExprDistr exprs = Map.adjust (const (-5)) cBottom

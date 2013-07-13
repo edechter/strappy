@@ -111,7 +111,7 @@ safeEval App{eLeft = el, eRight = er} = do l <- safeEval el
 
 
 timeLimitedEval :: Show a => Expr -> Maybe a
-timeLimitedEval expr = unsafePerformIO $ do
+timeLimitedEval expr = unsafePerformIO $ flip Control.Exception.catch (\e -> return $ const Nothing (e :: SomeException)) $ do
                        res <- timeout maxEvalTime $ do
                          -- Hack to force Haskell to evaluate the expression:
                          -- Convert the (eval expr) in to a string,
