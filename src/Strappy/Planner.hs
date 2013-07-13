@@ -40,7 +40,12 @@ mcmcPlan e0 dist likelihood len =
           let reweighted = map (\(e, w) ->
                                  let like = planningBeta * (likelihood $ e <> prefix)
                                  in ((e, like), like + w*planningBeta)) dist
-          in do (e, eLike) <- sampleMultinomialLogProb reweighted
+          in
+           -- Failure: all of the likelihoods are zero
+           if all isNaN (map snd reweighted)
+           then return (0, [], False)
+           else
+             do (e, eLike) <- sampleMultinomialLogProb reweighted
                 -- (possibly) recurse
                 (suffixLogPartition, suffixRewards, suffixHit) <-
                   if lenSoFar < len - 1
