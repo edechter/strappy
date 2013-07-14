@@ -15,6 +15,7 @@ import Strappy.Config
 
 import Control.Monad
 import Control.Monad.Random
+import qualified Control.Monad.Parallel as Parallel
 import qualified Data.Map as Map
 import Data.List
 import Data.Maybe
@@ -83,10 +84,11 @@ doEMPlan tasks lambda pseudocounts frontierSize numPlans planLen grammar = do
   -- These are normalized to get a distribution over plans, which gives weights for the MDL's of the programs
   normalizedRewards <- forM tasks $ \PlanTask {ptLogLikelihood = likelihood, ptSeed = seed, ptType = tp, ptName = nm} -> do
     let frontier = snd $ fromJust $ find ((==tp) . fst) frontiers
-    (logPartitionFunction, programLogRewards, anyHit, anyPartial) <-
-      foldM (\ (logZ, rewards, hit, part) _ -> mcmcPlan seed frontier likelihood planLen >>=
-                                 \(logZ', rewards', hit') -> return (logSumExp logZ logZ', rewards++rewards', hit||hit', part||(not (null rewards'))))
-            (log 0.0, [], False, False) [1..numPlans]
+    (logPartitionFunction, programLogRewards, anyHit, anyPartial) <- do
+      planResults <- Parallel.replicateM numPlans $ mcmcPlan seed frontier likelihood planLen
+      return $ foldl (\ (logZ, rewards, hit, part) (logZ', rewards', hit') ->
+                       (logSumExp logZ logZ', rewards++rewards', hit||hit', part||(not (null rewards'))))
+                     (log 0.0, [], False, False) planResults
     when anyHit $ do
       when verbose $ putStrLn $ "Hit " ++ nm
       modifyIORef numHitRef (+1)
