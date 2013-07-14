@@ -11,11 +11,12 @@ flipCoin :: (Num a, Ord a, Random a, MonadRandom m) => a -> m Bool
 flipCoin p = do r <- getRandomR (0, 1)
                 return $ r < p
 
-sampleMultinomial :: (Num a, Ord a, Random a, MonadRandom m) => [(b, a)] -> m b
+sampleMultinomial :: (Show a, Num a, Ord a, Random a, MonadRandom m) => [(b, a)] -> m b
 sampleMultinomial dist = do r <- getRandomR (0, 1)
                             return $ sample r dist
     where sample r ((a, p):rest) = if r <= p then a 
                                              else sample (r - p) rest
+          sample _ _ = error $ "Error when sampling from distribution: " ++ show (map snd dist)
 
 -- | As in sampleMultinomial, but takes in unnormalized log probabilities
 sampleMultinomialLogProb :: MonadRandom m => [(b, Double)] -> m b
@@ -26,9 +27,7 @@ sampleMultinomialLogProb dist =
   in sampleMultinomial dist'
           
 logSumExpList :: [Double] -> Double
-logSumExpList xs = a + (log . sum . map (exp . (\x -> x - a)) $ xs)
-    where a = if null xs then error $ "logSumExpList: list argument must have length greater than zero, but got [].\n\n"
-                         else maximum xs
+logSumExpList = foldl1 logSumExp
 
 logSumExp :: Double -> Double -> Double
 logSumExp x y | isNaN x = y
