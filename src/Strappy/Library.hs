@@ -246,6 +246,10 @@ cC = mkTerm "C" ((t1 ->- t2 ->- t) ->- t2 ->- t1 ->- t) $
 cK = mkTerm "K" (t1 ->- t2 ->- t1) $ 
      \x y -> x
 
+-- | Holes
+cHole :: Expr
+cHole = mkTerm "HOLE" tDouble $ error "Attempt to evaluate a hole"
+
 -- | Tuples
 cPair :: Expr
 cPair = mkTerm "pair" (t1 ->- t2 ->- tPair t1 t2) (,)
@@ -293,11 +297,11 @@ cAppend = mkTerm "++" (tList t ->- tList t ->- tList t) $
           (++)
 cHead = mkTerm "head" (tList t ->- t) $ 
         head
-cTail = mkTerm "tail" (tList t ->- t) $ 
+cTail = mkTerm "tail" (tList t ->- tList t) $ 
         tail
 cMap = mkTerm "map" ((t ->- t1) ->- tList t ->- tList t1) $
        map
-cEmpty = mkTerm "nil" (tList t) $ []
+cEmpty = mkTerm "[]" (tList t) $ []
 cSingle = mkTerm "single" (t ->- tList t) $ 
           \x -> [x]
 cRep = mkTerm "rep" (tInt ->- t ->- tList t) $
@@ -353,22 +357,20 @@ towerExprs = [cI,
               cS, 
               cB, 
               cC, 
-              cK, 
               cFPlus,
               cFMinus,
               cFTimes,
               cFDiv,
               cCons,
-              cEmpty,
               cAppend,
               cMap,
               cFoldl,
               cSingle,
               cRep,
-              cHead,
-              cTail,
-              cPair, cFst, cSnd
+              cPair, cFst, cSnd,
+              cHole
               ] ++ [ cDouble2Expr 0, cDouble2Expr 1, cDouble2Expr (-1) ]
+                ++ [ cBool2Expr True, cBool2Expr False ]
 
 mkExprDistr :: [Expr] -> ExprDistr
 mkExprDistr exprs = Map.adjust (const (-5)) cBottom
@@ -407,7 +409,7 @@ removeSubProductions gr@Grammar{grExprDistr = distr} =
   let keys = Map.keys distr
       prods = filter (not . isTerm) keys
       subProductions = map eLeft prods ++ map eRight prods
-      prods' = List.nub $ filter (not . Prelude.flip elem subProductions) prods
+      prods' = List.nub $ filter (not . flip elem subProductions) prods
       prods'' = prods' ++ filter isTerm keys
   in gr { grExprDistr = Map.filterWithKey (\k v -> k `elem` prods'') distr }
 
@@ -484,7 +486,7 @@ readExpr input = case parse parseComb "CL" input of
      Left err -> error $ "No match: " ++ show err
      Right val -> val
      where symbol :: Parser Char
-           symbol = oneOf "!#$%&|*+-/:<=>?@^_~."
+           symbol = oneOf "!#$%&|*+-/:<=>?@^_~.[]"
            parseAtom :: Parser Expr
            parseAtom = do 
              hd <- letter <|> digit <|> symbol

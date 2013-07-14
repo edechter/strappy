@@ -1,7 +1,6 @@
 
 module Strappy.Sample where
 
-import Prelude hiding (flip)
 import Control.Monad.Identity
 import Control.Monad.State
 import Control.Monad.Maybe
@@ -34,7 +33,7 @@ sampleExpr Grammar{grApp=p, grExprDistr=exprDistr} requestedType
                  return expr
     where 
       sample tp = do
-            shouldExpand <- lift $ flip (exp p)
+            shouldExpand <- lift $ flipCoin (exp p)
             case shouldExpand of
               True -> do t <- mkTVar
                          e_left  <- sample (t ->- tp)

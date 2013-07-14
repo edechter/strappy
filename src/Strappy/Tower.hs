@@ -15,6 +15,7 @@ import Physics.BlockClient
 import Data.List
 import qualified Data.Map as Map
 import System.IO.Unsafe
+import Data.Maybe
 
 makeTowerTask :: SharedCache -> Double -> Double -> PlanTask
 makeTowerTask cache height stability =
@@ -23,9 +24,9 @@ makeTowerTask cache height stability =
              ptSeed = mkTerm "[]" (tList (tPair tDouble tBool)) [],
              ptLogLikelihood =
                \plan -> unsafePerformIO $ do
-                        putStrLn $ show plan
                         case timeLimitedEval plan of
                           Nothing -> return (log 0)
+                          Just [] -> return (log 0)
                           Just plan' ->
                             if unsafePerformIO (cachedPerturb cache stability height plan')
                             then return (-0.3 * (genericLength plan'))
@@ -33,7 +34,7 @@ makeTowerTask cache height stability =
            }
 
 main = do
-  cache <- newPhysicsCache
+  cache <- loadPhysicsCache "physics_cache"
   let tasks = [ makeTowerTask cache height stability | height <- [-3+0.1,
                                                                   0.1,
                                                                   3,

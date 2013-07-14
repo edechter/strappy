@@ -35,16 +35,19 @@ mcmcPlan :: MonadRandom m =>
             m (Double, [(Expr, Double)], Bool) -- ^ log partition function, expressions and log rewards, hit task
 mcmcPlan e0 dist likelihood len =
   mcmc e0 1 0
-  where mcmc prefix prefixRecipLike lenSoFar =
+  where mcmc prefix prefixRecipLike lenSoFar = do
           -- Reweight by the likelihood
-          let reweighted = map (\(e, w) ->
-                                 let like = planningBeta * (likelihood $ e <> prefix)
-                                 in ((e, like), like + w*planningBeta)) dist
-          in
-           -- Failure: all of the likelihoods are zero
-           if all (\x -> isNaN x || isInfinite x) (map snd reweighted)
-           then return (0, [], False)
-           else
+          let prefixHasHoles = countHoles prefix > 0
+          reweighted <- mapM (\(e, w) -> do
+                                 let e' = e <> prefix
+                                 like <- if prefixHasHoles || countHoles e > 0
+                                         then sampleHoles likelihood 10 e'
+                                         else return (likelihood e')
+                                 return ((e, like), like + w)) dist
+          -- Failure: all of the likelihoods are zero
+          if all (\x -> isNaN x || isInfinite x) (map snd reweighted)
+          then return (0, [], False)
+          else
              do (e, eLike) <- sampleMultinomialLogProb reweighted
                 -- (possibly) recurse
                 (suffixLogPartition, suffixRewards, suffixHit) <-
@@ -74,19 +77,23 @@ doEMPlan tasks lambda pseudocounts frontierSize numPlans planLen grammar = do
   when (not sampleByEnumeration) $ do
     putStrLn $ "Frontier size: " ++ (unwords $ map (show . length . snd) frontiers)
   numHitRef <- newIORef 0
+  numPartialRef <- newIORef 0
   -- For each task, do greedy stochastic search to get candidate plans
   -- Each task records all of the programs used in successful plans, as well as the associated rewards
   -- These are normalized to get a distribution over plans, which gives weights for the MDL's of the programs
   normalizedRewards <- forM tasks $ \PlanTask {ptLogLikelihood = likelihood, ptSeed = seed, ptType = tp, ptName = nm} -> do
     let frontier = snd $ fromJust $ find ((==tp) . fst) frontiers
-    (logPartitionFunction, programLogRewards, anyHit) <-
-      foldM (\ (logZ, rewards, hit) _ -> mcmcPlan seed frontier likelihood planLen >>=
-                                 \(logZ', rewards', hit') -> return (logSumExp logZ logZ', rewards++rewards', hit||hit'))
-            (log 0.0, [], False) [1..numPlans]
+    (logPartitionFunction, programLogRewards, anyHit, anyPartial) <-
+      foldM (\ (logZ, rewards, hit, part) _ -> mcmcPlan seed frontier likelihood planLen >>=
+                                 \(logZ', rewards', hit') -> return (logSumExp logZ logZ', rewards++rewards', hit||hit', part||(not (null rewards'))))
+            (log 0.0, [], False, False) [1..numPlans]
     when anyHit $ do
       when verbose $ putStrLn $ "Hit " ++ nm
       modifyIORef numHitRef (+1)
-    when (verbose && (not anyHit)) $ putStrLn $ "Missed " ++ nm
+    when (verbose && (not anyHit) && (not anyPartial)) $ putStrLn $ "Missed " ++ nm
+    when ((not anyHit) && anyPartial) $ do
+      when verbose $ putStrLn $ "Got partial credit for " ++ nm
+      modifyIORef numPartialRef (+1)
     -- normalize rewards
     return $ map (\(e, r) -> (e, exp (r - logPartitionFunction))) programLogRewards
   numHit <- readIORef numHitRef

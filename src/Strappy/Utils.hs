@@ -7,9 +7,9 @@ import Control.Monad.Trans
 import Control.Monad.Random
 import Control.Monad.Maybe
 
-flip :: (Num a, Ord a, Random a, MonadRandom m) => a -> m Bool
-flip p = do r <- getRandomR (0, 1)
-            return $ r < p
+flipCoin :: (Num a, Ord a, Random a, MonadRandom m) => a -> m Bool
+flipCoin p = do r <- getRandomR (0, 1)
+                return $ r < p
 
 sampleMultinomial :: (Num a, Ord a, Random a, MonadRandom m) => [(b, a)] -> m b
 sampleMultinomial dist = do r <- getRandomR (0, 1)
