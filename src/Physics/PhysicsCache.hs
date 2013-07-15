@@ -19,6 +19,10 @@ type SharedCache = MVar PhysicsCache
 
 newPhysicsCache = newMVar $ PhysicsCache { physStable = M.empty, physWState = M.empty }
 
+canonicalizePlan :: Plan -> Plan
+canonicalizePlan xs =
+  let leftmost = minimum $ map fst xs in
+  map (\(x,o) -> (x-leftmost, o)) xs
 
 cachedPlan :: SharedCache -> [(Double,Bool)] -> IO ([(Double, Double, Double)], Double)
 cachedPlan cache plan = do
@@ -32,13 +36,14 @@ cachedPlan cache plan = do
 cachedPerturb :: SharedCache -> Double -> Double -> [(Double,Bool)] -> IO Bool
 cachedPerturb cache strength goalHeight plan = do
   cache' <- readMVar cache
-  case M.lookup (plan, strength, goalHeight) (physStable cache') of
+  let plan' = canonicalizePlan plan
+  case M.lookup (plan', strength, goalHeight) (physStable cache') of
     Just x -> return x
     Nothing -> do (heights,_) <- runPlan plan strength
                   let score = length $ filter (>goalHeight) $ map (\(h,_,_) -> h) heights
                   let didWeWin = score >= 240  -- have to get at least 80% right
                   modifyMVar_ cache $
-                    \c -> return $ c { physStable = M.insert (plan, strength, goalHeight) didWeWin (physStable c) }
+                    \c -> return $ c { physStable = M.insert (plan', strength, goalHeight) didWeWin (physStable c) }
                   return didWeWin
 
 savePhysicsCache :: SharedCache -> String -> IO ()

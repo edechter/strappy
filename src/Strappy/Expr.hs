@@ -137,7 +137,7 @@ doTypeInference expr = runIdentity $ runTI $ infer expr
 -- | Returns the number of holes in an expression
 countHoles :: Expr -> Int
 countHoles (App { eLeft = l, eRight = r }) = countHoles l + countHoles r
-countHoles (Term { eName = "HOLE" }) = 1
+countHoles (Term { eName = "H" }) = 1
 countHoles (Term {}) = 0
 
 -- | Samples values for the holes, and computes the log expected likelihood
@@ -145,8 +145,9 @@ sampleHoles :: MonadRandom m =>
                (Expr -> Double) -> Int -> Expr -> m Double
 sampleHoles ll samples e = do
   lls <- replicateM samples (sample' e >>= \s -> return (ll s))
-  return $ logSumExpList lls - log (fromIntegral samples)
-  where sample' (Term { eName = "HOLE" }) = do
+  let retval = logSumExpList lls - log (fromIntegral samples)
+  return retval
+  where sample' (Term { eName = "H" }) = do
           h <- sampleMultinomial [(0.0, 0.1::Double), (0.1, 0.1), (0.2, 0.1),
                                   (0.3, 0.1), (0.4, 0.1), (0.5, 0.1),
                                   (0.6, 0.1), (0.7, 0.1), (0.8, 0.1),

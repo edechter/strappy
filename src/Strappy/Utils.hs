@@ -32,6 +32,8 @@ logSumExpList = foldl1 logSumExp
 logSumExp :: Double -> Double -> Double
 logSumExp x y | isNaN x = y
 logSumExp x y | isNaN y = x
+logSumExp x y | isInfinite y = x
+logSumExp x y | isInfinite x = y
 logSumExp x y | x > y = x + log (1 + exp (y-x))
 logSumExp x y = y + log (1 + exp (x-y))
 

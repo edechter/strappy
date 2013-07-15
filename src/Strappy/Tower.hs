@@ -34,7 +34,7 @@ makeTowerTask cache height stability =
            }
 
 main = do
-  cache <- loadPhysicsCache "physics_cache"
+  cache <- newPhysicsCache --loadPhysicsCache "physics_cache"
   let tasks = [ makeTowerTask cache height stability | height <- [-3+0.1,
                                                                   0.1,
                                                                   3,

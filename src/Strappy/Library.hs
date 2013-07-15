@@ -248,7 +248,7 @@ cK = mkTerm "K" (t1 ->- t2 ->- t1) $
 
 -- | Holes
 cHole :: Expr
-cHole = mkTerm "HOLE" tDouble $ error "Attempt to evaluate a hole"
+cHole = mkTerm "H" tDouble $ error "Attempt to evaluate a hole"
 
 -- | Tuples
 cPair :: Expr
