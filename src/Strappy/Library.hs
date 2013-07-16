@@ -17,6 +17,7 @@ import Control.Monad.State
 import Control.Arrow (first)
 import Debug.Trace
 import Text.ParserCombinators.Parsec hiding (spaces)
+import System.Directory
 
 import Strappy.Type
 import Strappy.Expr
@@ -336,7 +337,10 @@ basicExprs = [cI,
               cTail,
               cPair,
               cFst,
-              cSnd
+              cSnd,
+              cBool2Expr True,
+              cBool2Expr False,
+              cHole
              ] ++ cInts ++ cDoubles
              
 -- Library for testing EM+polynomial regression
@@ -506,4 +510,12 @@ readExpr input = case parse parseComb "CL" input of
            parseComb :: Parser Expr
            parseComb = parseAtom <|> parseApp
   
-
+-- | Looks for the largest file of the form grammar_#, and returns the grammar and the number
+loadNextGrammar :: IO (Grammar, Int)
+loadNextGrammar = do
+  contents <- getDirectoryContents "."
+  let contents' = filter (\c -> take 8 c == "grammar_") contents
+  let latest = List.maximumBy (\c c' -> compare (read (drop 8 c)) ((read (drop 8 c)) :: Int)) contents'
+  let num = read $ drop 8 latest
+  gr <- loadGrammar latest
+  return (gr, num)

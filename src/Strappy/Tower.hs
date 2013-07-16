@@ -48,9 +48,10 @@ main = do
                                                                      0.7,
                                                                      0.9,
                                                                      1.2] ]
-  let seed = Grammar { grApp = log 0.45,
-                       grExprDistr = Map.fromList [ (annotateRequested e, 1.0) | e <- towerExprs ] }
-  loopM seed [0..20] $ \grammar step -> do
+  {-let seed = Grammar { grApp = log 0.45,
+                       grExprDistr = Map.fromList [ (annotateRequested e, 1.0) | e <- towerExprs ] }-}
+  (seed, num) <- loadNextGrammar -- Replace with above commented out code to start fresh
+  loopM seed [num+1..num+21] $ \grammar step -> do
     putStrLn $ "EM Planning Iteration: " ++ show step
     grammar' <- doEMPlan tasks 2.0 2.0 frontierSize numberOfPlansPerTask maximumPlanLength grammar
     saveGrammar ("grammar_"++show step) grammar'
