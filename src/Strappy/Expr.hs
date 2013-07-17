@@ -144,6 +144,15 @@ doTypeInference expr = runIdentity $ runTI $ infer expr
           unify rTp alpha
           applySub beta
 
+-- | Folds a monadic procedure over each subtree of a given expression
+exprFoldM :: Monad m => (a -> Expr -> m a) -> a -> Expr -> m a
+exprFoldM f a e@(Term {}) = f a e
+exprFoldM f a e@(App { eLeft = l, eRight = r}) = do
+  a'   <- f a e
+  a''  <- exprFoldM f a' l
+  a''' <- exprFoldM f a'' r
+  return a'''
+
 ----------------------------------------
 -- Conversion functions ----------------
 ----------------------------------------

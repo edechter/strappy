@@ -25,7 +25,7 @@ sampleByEnumeration = False
 
 -- | Size of the frontier enumerated, or sampled, during the "E" step
 frontierSize :: Int
-frontierSize = 20000
+frontierSize = 2500
 
 -- | Number of plans sampled for each task
 numberOfPlansPerTask :: Int

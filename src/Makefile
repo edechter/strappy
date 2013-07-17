@@ -2,6 +2,8 @@ em:
 	ghc -O3 -rtsopts --make Strappy/EM.hs
 plan:
 	ghc -O3 -rtsopts --make Strappy/PlanTest.hs
+kpca:
+	ghc -O3 -rtsopts --make Strappy/KPCA.hs
 profem:
 	ghc -O3 -prof -auto-all -caf-all -fforce-recomp -rtsopts --make Strappy/EM.hs
 profplan:

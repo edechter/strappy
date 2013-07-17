@@ -94,6 +94,7 @@ polyEM = do
   loopM seed [0..14] $ \grammar step -> do
     putStrLn $ "EM Iteration: " ++ show step
     grammar' <- doEMIter (const++lin++quad) 1.5 1.0 frontierSize grammar
+    saveGrammar ("poly_grammar_" ++ show step) grammar'
     return grammar'
   return ()
                     
