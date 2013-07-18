@@ -141,10 +141,9 @@ countHoles (Term { eName = "H" }) = 1
 countHoles (Term {}) = 0
 
 -- | Samples values for the holes, and computes the log expected likelihood
-sampleHoles :: MonadRandom m =>
-               (Expr -> Double) -> Int -> Expr -> m Double
+sampleHoles :: (Expr -> IO Double) -> Int -> Expr -> IO Double
 sampleHoles ll samples e = do
-  lls <- replicateM samples (sample' e >>= \s -> return (ll s))
+  lls <- replicateM samples (sample' e >>= ll)
   let retval = logSumExpList lls - log (fromIntegral samples)
   return retval
   where sample' (Term { eName = "H" }) = do

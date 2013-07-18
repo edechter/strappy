@@ -23,37 +23,46 @@ makeTowerTask cache height stability =
              ptType = tList (tPair tDouble tBool),
              ptSeed = mkTerm "[]" (tList (tPair tDouble tBool)) [],
              ptLogLikelihood =
-               \plan -> unsafePerformIO $ do
-                        case timeLimitedEval plan of
-                          Nothing -> return (log 0)
-                          Just [] -> return (log 0)
-                          Just plan' ->
-                            if unsafePerformIO (cachedPerturb cache stability height plan')
-                            then return (-0.3 * (genericLength plan'))
-                            else return (log 0)
+               \plan -> do
+                 case timeLimitedEval plan of
+                   Nothing -> return (log 0)
+                   Just [] -> return (log 0)
+                   Just plan' -> do
+                     stayedup <- cachedPerturb cache stability height plan'
+                     if stayedup
+                       then return (-0.3 * (genericLength plan'))
+                       else return (log 0)
            }
+
+isTowerHarderThan :: PlanTask -> PlanTask -> Bool
+-- | Is t1 harder than t2?
+isTowerHarderThan t1 t2 =
+  let n1 = ptName t1
+      h1 = (read $ takeWhile (/=',') $ drop 8 n1) :: Double
+      s1 = (read $ drop 13 $ dropWhile (/=',') $ drop 8 n1) :: Double
+      n2 = ptName t2
+      h2 = (read $ takeWhile (/=',') $ drop 8 n2) :: Double
+      s2 = (read $ drop 13 $ dropWhile (/=',') $ drop 8 n2) :: Double
+  in h1 >= h2 && s1 >= s2
 
 main = do
   cache <- loadPhysicsCache "physics_cache"
-  let tasks = [ makeTowerTask cache height stability | height <- [-3+0.1,
-                                                                  0.1,
+  let tasks = [makeTowerTask cache (-3+0.1) 0.1 ] ++
+              [ makeTowerTask cache height stability | height <- [0.1,
                                                                   3,
                                                                   6,
-                                                                  9,
-                                                                  12],
+                                                                  9],
                                                        stability <- [0.05,
                                                                      0.1,
                                                                      0.3,
-                                                                     0.5,
-                                                                     0.7,
-                                                                     0.9,
-                                                                     1.2] ]
-  {-let seed = Grammar { grApp = log 0.45,
-                       grExprDistr = Map.fromList [ (annotateRequested e, 1.0) | e <- towerExprs ] }-}
-  (seed, num) <- loadNextGrammar -- Replace with above commented out code to start fresh
+                                                                     0.5 ] ]
+  let seed = Grammar { grApp = log 0.45,
+                       grExprDistr = Map.fromList [ (annotateRequested e, 1.0) | e <- towerExprs ] }
+  let num = 0
+--  (seed, num) <- loadNextGrammar -- Replace with above commented out code to start fresh
   loopM seed [num+1..num+21] $ \grammar step -> do
     putStrLn $ "EM Planning Iteration: " ++ show step
-    grammar' <- doEMPlan tasks 2.0 2.0 frontierSize numberOfPlansPerTask maximumPlanLength grammar
+    grammar' <- doEMPlan tasks isTowerHarderThan 1.1 5.0 frontierSize numberOfPlansPerTask maximumPlanLength grammar
     saveGrammar ("grammar_"++show step) grammar'
     savePhysicsCache cache "physics_cache"
     return grammar'
