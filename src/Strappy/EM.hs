@@ -1,7 +1,7 @@
 {-# LANGUAGE TupleSections  #-}
 
---module Strappy.EM where
-module Main where
+module Strappy.EM where
+--module Main where
 
 import Strappy.Sample
 import Strappy.Expr
@@ -88,14 +88,15 @@ polyEM = do
                                                          else 1/0)
                           score proc = exp $ - loss proc
                       in (score, tInt ->- tInt)
-  let const = [ mkNthDet (\_ -> x) | x <- [0..9] ]
+{-  let const = [ mkNthDet (\_ -> x) | x <- [0..4] ]
   let lin = [ mkNthDet (\a -> x * a + y) | x <- [1..9], y <- [0..9] ]
-  let quad = [ mkNthDet (\a -> x * a * a + y * a + z) | x <- [1..9], y <- [0..9], z <- [0..9] ]
+  let quad = [ mkNthDet (\a -> x * a * a + y * a + z) | x <- [1..9], y <- [0..9], z <- [0..9] ]-}
+  let dets = [ mkNthDet (\a -> x * a * a + y * a + z) | x <- [0..3], y <- [0..3], z <- [0..3] ]
   loopM seed [0..14] $ \grammar step -> do
     putStrLn $ "EM Iteration: " ++ show step
-    grammar' <- doEMIter (const++lin++quad) 1.5 1.0 frontierSize grammar
+    grammar' <- doEMIter dets 2.0 5.0 frontierSize grammar
     saveGrammar ("poly_grammar_" ++ show step) grammar'
     return grammar'
   return ()
                     
-main = polyEM
+--main = polyEM

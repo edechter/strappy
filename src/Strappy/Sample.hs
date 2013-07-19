@@ -67,8 +67,9 @@ safeSample gr tp = do
 sampleExprs :: (MonadPlus m, MonadRandom m) =>
                Int -> Grammar -> Type -> m (ExprMap Double)
 sampleExprs n library tp =
-  liftM (Map.mapWithKey reweight) $ foldM accSample Map.empty [1..n]
-  where accSample acc _ = do
+  liftM (Map.mapWithKey reweight) $ foldM accSample Map.empty [1..frontierSamples]
+  where accSample acc _ | Map.size acc >= n = return acc
+        accSample acc _ = do
           expr <- safeSample library tp
           return $ Map.insertWith (+) expr 1 acc
         reweight expr cnt =
@@ -89,4 +90,3 @@ sampleBF n gr tp =
 -- | Monadic wrapper
 sampleBFM :: Monad m => Int -> Grammar -> Type -> m (ExprMap Double)
 sampleBFM n gr tp = return $ sampleBF n gr tp
-
