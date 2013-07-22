@@ -27,17 +27,15 @@ compressWeightedCorpus :: Double -> -- ^ lambda
 compressWeightedCorpus lambda pseudocounts grammar corpus =
   let subtrees = foldl1 (Map.unionWith (+)) $ map (countSubtrees Map.empty) corpus
       terminals = filter isTerm $ Map.keys $ grExprDistr grammar
-      newProductions = map (\e -> e { eType = doTypeInference e })
-                       $ compressLP_corpus lambda subtrees
---      newProductions' = compressCorpus lambda subtrees
-      productions = newProductions ++ terminals
+      newProductions = compressCorpus lambda subtrees
+      productions = map annotateRequested $ newProductions ++ terminals
       uniformLogProb = -log (genericLength productions)
       grammar'   = Grammar (log 0.5) $ Map.fromList [ (prod, uniformLogProb) | prod <- productions ]
       grammar''  = if pruneGrammar
                    then removeUnusedProductions grammar' $ map fst corpus
                    else grammar'
       grammar''' = inoutEstimateGrammar grammar'' pseudocounts corpus
-  in {-trace (show $ (Set.fromList newProductions) == (Set.fromList newProductions'))-} grammar'''
+  in grammar'''
 
 -- Weighted Nevill-Manning
 compressCorpus :: Double -> ExprMap Double -> [Expr]

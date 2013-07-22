@@ -69,6 +69,10 @@ safeFromJust str Nothing = error str
 safeFromJust _ (Just x) = x
 
 
+unwordsBy :: String -> [String] -> String
+unwordsBy sep [x] = x
+unwordsBy sep (x:xs) = x ++ sep ++ unwordsBy sep xs
+
 instance (MonadRandom m) => MonadRandom (MaybeT m) where
   getRandom = lift getRandom
   getRandoms = lift getRandoms

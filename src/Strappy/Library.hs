@@ -309,10 +309,10 @@ polyExprs = [cI,
               cS, 
               cB, 
               cC, 
-              cK, 
+--              cK, 
               cPlus,
               cTimes
-              ] ++ [ cInt2Expr 0, cInt2Expr 1, cInt2Expr 2, cInt2Expr 3 ]
+              ] ++ [ cInt2Expr 0, cInt2Expr 1 ]
 
 mkExprDistr :: [Expr] -> ExprDistr
 mkExprDistr exprs = Map.adjust (const (-5)) cBottom
