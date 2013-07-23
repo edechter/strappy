@@ -45,7 +45,7 @@ main = do
 --  (seed, num) <- loadNextGrammar -- Replace with above commented out code to start fresh
   loopM seed [num+1..num+21] $ \grammar step -> do
     putStrLn $ "EM Planning Iteration: " ++ show step
-    grammar' <- doEMPlan [task] (\x y -> False) 0.03 5.0 frontierSize numberOfPlansPerTask maximumPlanLength grammar
+    grammar' <- doEMPlan [task] (\x y -> False) 0.03 0.06 frontierSize numberOfPlansPerTask maximumPlanLength grammar
     saveGrammar ("grammar_"++show step) grammar'
     savePhysicsCache cache "physics_cache"
     return grammar'
