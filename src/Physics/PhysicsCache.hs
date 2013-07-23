@@ -7,6 +7,7 @@ import Physics.BlockClient
 import Control.Concurrent.MVar
 import Control.Monad
 import qualified Data.Map as M
+import System.Directory
 
 type Plan = [(Double, Bool)]
 type WorldState = [(Double, Double, Double)]
@@ -27,6 +28,8 @@ cachedPerturb :: SharedCache -> -- ^ Physics cache
                  [Double] -> -- ^ Perturbation strengths
                  [(Double,Bool)] -> -- ^ Plan
                  IO (Double, [Double]) -- ^ Height, fraction-stable-for-each-perturbation
+cachedPerturb _ perturbs plan | any (\(x,_) -> isNaN x || isInfinite x) plan =
+  return (log 0, replicate (length perturbs) 0)
 cachedPerturb cache perturbs plan = do
   cache' <- readMVar cache
   let plan' = canonicalizePlan plan
@@ -44,5 +47,9 @@ savePhysicsCache cache fname = do
 
 loadPhysicsCache :: String -> IO SharedCache
 loadPhysicsCache fname = do
-  contents <- readFile fname
-  newMVar $ read contents
+  exists <- doesFileExist fname
+  if exists
+    then do contents <- readFile fname
+            newMVar $ read contents
+    else do putStrLn $ "Warning: Could not find " ++ fname ++ ", creating new physics cache."
+            newPhysicsCache

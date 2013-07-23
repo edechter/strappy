@@ -21,11 +21,11 @@ pruneGrammar = False
 
 -- | Sample by enumeration?
 sampleByEnumeration :: Bool
-sampleByEnumeration = False
+sampleByEnumeration = True
 
 -- | Size of the frontier enumerated, or sampled, during the "E" step
 frontierSize :: Int
-frontierSize = 60000
+frontierSize = 500
 
 -- | Number of plans sampled for each task
 numberOfPlansPerTask :: Int
