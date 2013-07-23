@@ -306,13 +306,12 @@ basicExprs = [cI,
 -- Library for testing EM+polynomial regression
 polyExprs :: [Expr]
 polyExprs = [cI, 
-              cS, 
-              cB, 
-              cC, 
+             cS, 
+             cB, 
+             cC, 
 --              cK, 
-              cPlus,
-              cTimes
-              ] ++ [ cInt2Expr 0, cInt2Expr 1 ]
+             cPlus,
+             cTimes] ++ [ cInt2Expr 0, cInt2Expr 1 ]
 
 mkExprDistr :: [Expr] -> ExprDistr
 mkExprDistr exprs = Map.adjust (const (-5)) cBottom

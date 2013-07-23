@@ -153,6 +153,12 @@ exprFoldM f a e@(App { eLeft = l, eRight = r}) = do
   a''' <- exprFoldM f a'' r
   return a'''
 
+-- | Returns number of characters in an expression
+-- | Does not count both opening and closing parens (these are redundant; see, for example, Unlambda)
+exprSize :: Expr -> Int
+exprSize Term {} = 1
+exprSize App { eLeft = l, eRight = r } = 1 + exprSize l + exprSize r
+
 ----------------------------------------
 -- Conversion functions ----------------
 ----------------------------------------

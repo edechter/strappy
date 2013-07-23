@@ -25,7 +25,7 @@ sampleByEnumeration = False
 
 -- | Max size of the frontier enumerated, or sampled, during the "E" step
 frontierSize :: Int
-frontierSize = 3000
+frontierSize = 7500
 
 -- | Maximum number of samples drawn from the grammar
 frontierSamples :: Int
