@@ -256,30 +256,24 @@ def run_plan(world, plan, render=None):
             return None
     return boxes
 
-def sample_stability(strength, world, boxes):
-    # Save box positions/orientations
-    saved = []
-    for box in boxes:
-        p = box.getPos()
-        h = box.getHpr()
-        saved.append((p,h,box))
-    
-    retval = []
-    
-    numSamples = 300
+def sample_stability(strength, world, boxes, saved, ht):
+    timesStable = 0
+    numSamples = 10
     
     for i in range(0,numSamples):
         impart_random_impulses(world, boxes, strength)
         if run_until_stationary(world) == None:
-            retval.append(floor_height)
+            pass
         else:
             h = get_construction_height(boxes)
-            retval.append(h)
+            if h >= ht - 0.05:
+                timesStable += 1
         
         for (p,h,box) in saved:
             box.setPos(p)
             box.setHpr(h)
     
-    return retval
+    # Return percentage success rate
+    return int(100.0*float(timesStable)/10.0)
 
 

@@ -8,7 +8,7 @@ import Strappy.Library
 import Strappy.Type
 import Strappy.Task
 import Strappy.Utils
-import Strappy.Library 
+import Strappy.Library
 import Strappy.LPCompress
 import Strappy.Config
 

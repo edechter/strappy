@@ -29,7 +29,7 @@ frontierSize = 60000
 
 -- | Number of plans sampled for each task
 numberOfPlansPerTask :: Int
-numberOfPlansPerTask = 20
+numberOfPlansPerTask = 40
 
 -- | Length of each plan sampled
 maximumPlanLength :: Int
