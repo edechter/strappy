@@ -140,23 +140,26 @@ countHoles (App { eLeft = l, eRight = r }) = countHoles l + countHoles r
 countHoles (Term { eName = "H" }) = 1
 countHoles (Term {}) = 0
 
--- | Samples values for the holes, and computes the log expected likelihood
-sampleHoles :: (Expr -> IO Double) -> Int -> Expr -> IO Double
-sampleHoles ll samples e = do
-  lls <- replicateM samples (sample' e >>= ll)
+-- | Samples values for the holes
+sampleHoles :: Expr -> IO Expr
+sampleHoles (Term { eName = "H" }) = do
+  h <- sampleMultinomial [(0.0, 0.1::Double), (0.1, 0.1), (0.2, 0.1),
+                          (0.3, 0.1), (0.4, 0.1), (0.5, 0.1),
+                          (0.6, 0.1), (0.7, 0.1), (0.8, 0.1),
+                          (0.9, 0.1)]
+  return $ cDouble2Expr h
+sampleHoles e@(App { eLeft = l, eRight = r}) = do
+  l' <- sampleHoles l
+  r' <- sampleHoles r
+  return $ e { eLeft = l', eRight = r' }
+sampleHoles e = return e
+
+-- | Does a monte carlo estimate of the expected likelihood of a probabilistic program
+expectedLikelihood :: (Expr -> IO Double) -> Int -> Expr -> IO Double
+expectedLikelihood ll samples e = do
+  lls <- replicateM samples (sampleHoles e >>= ll)
   let retval = logSumExpList lls - log (fromIntegral samples)
   return retval
-  where sample' (Term { eName = "H" }) = do
-          h <- sampleMultinomial [(0.0, 0.1::Double), (0.1, 0.1), (0.2, 0.1),
-                                  (0.3, 0.1), (0.4, 0.1), (0.5, 0.1),
-                                  (0.6, 0.1), (0.7, 0.1), (0.8, 0.1),
-                                  (0.9, 0.1)]
-          return $ cDouble2Expr h
-        sample' e@(App { eLeft = l, eRight = r}) = do
-          l' <- sample' l
-          r' <- sample' r
-          return $ e { eLeft = l', eRight = r' }
-        sample' e = return e
 
 ----------------------------------------
 -- Conversion functions ----------------

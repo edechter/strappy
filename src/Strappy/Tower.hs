@@ -17,23 +17,20 @@ import qualified Data.Map as Map
 import System.IO.Unsafe
 import Data.Maybe
 
-makeTowerTask :: SharedCache -> PlanTask
+makeTowerTask :: SharedCache -> PlanTask [(Double, Bool)]
 makeTowerTask cache =
   PlanTask { ptName = "TowerTask",
              ptType = tList (tPair tDouble tBool),
-             ptSeed = mkTerm "[]" (tList (tPair tDouble tBool)) [],
+             ptSeed = [],
              ptLogLikelihood =
-               \plan -> do
-                 case timeLimitedEval plan of
-                   Nothing -> return (log 0)
-                   Just [] -> return (log 0)
-                   Just p | length p > 6 -> return (log 0)
-                   Just plan' -> do
-                     (ht, stabilities) <- cachedPerturb cache [0.8, 1.3, 1.7, 2.1] plan'
-                     if isNaN ht || isInfinite ht
-                       then return (log 0)
-                       else return $ -- Magic formula for the log likelihood of a tower:
-                            (ht - gnd_height) * (sum stabilities) - 0.2 * log (genericLength plan')
+               \plan -> if length plan > 6
+                        then return (log 0)
+                        else do
+                          (ht, stabilities) <- cachedPerturb cache [0.8, 1.3, 1.7, 2.1] plan
+                          if isNaN ht || isInfinite ht
+                            then return (log 0)
+                            else return $ -- Magic formula for the log likelihood of a tower:
+                            (ht - gnd_height) * (sum stabilities) - 0.2 * log (genericLength plan)
            }
 
 main = do
@@ -45,7 +42,7 @@ main = do
 --  (seed, num) <- loadNextGrammar -- Replace with above commented out code to start fresh
   loopM seed [num+1..num+21] $ \grammar step -> do
     putStrLn $ "EM Planning Iteration: " ++ show step
-    grammar' <- doEMPlan [task] (\x y -> False) 0.03 0.06 frontierSize numberOfPlansPerTask maximumPlanLength grammar
+    grammar' <- doEMPlan [task] (\x y -> False) 0.015 0.03 frontierSize numberOfPlansPerTask maximumPlanLength grammar
     saveGrammar ("grammar_"++show step) grammar'
     savePhysicsCache cache "physics_cache"
     return grammar'

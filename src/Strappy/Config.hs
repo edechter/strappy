@@ -25,11 +25,11 @@ sampleByEnumeration = True
 
 -- | Size of the frontier enumerated, or sampled, during the "E" step
 frontierSize :: Int
-frontierSize = 500
+frontierSize = 1500
 
 -- | Number of plans sampled for each task
 numberOfPlansPerTask :: Int
-numberOfPlansPerTask = 40
+numberOfPlansPerTask = 50
 
 -- | Length of each plan sampled
 maximumPlanLength :: Int
