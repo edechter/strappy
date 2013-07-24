@@ -202,7 +202,7 @@ def impart_random_impulses(world, dynamic_objects,
         np.node().setLinearVelocity(Vec3(vx,0,vy))
 
 def lowest_allowed_z(world, x, z, dx, dz):
-    epsilon_z = 0.1
+    epsilon_z = 0.01
     
     while is_legal_action(world, x, z, dx, dz):
         z = z - epsilon_z
@@ -229,7 +229,6 @@ def is_legal_action(world, x, z, dx, dz):
     np.setPos(x, 0, z)
     return world.contactTest(np.node()).getNumContacts() == 0
 
-
 def run_plan(world, plan, render=None):
     boxes = []
     max_z = floor_height + 0.1
@@ -238,7 +237,7 @@ def run_plan(world, plan, render=None):
             (x, z, dx, dz) = plan_atom
         else:
             (x, dx, dz) = plan_atom
-            z = lowest_allowed_z(world, x, max_z, dx, dz)+1.2
+            z = lowest_allowed_z(world, x, max_z, dx, dz)
             if z == None:
                 clear_boxes(world, boxes)
                 return None
@@ -251,9 +250,27 @@ def run_plan(world, plan, render=None):
         else:
             new_box = make_box(world, None, x, z, dx, dz, 'planNode')
         boxes.append(new_box)
+        # Save positions/orientations of all of the boxes; if they change sufficiently, then the plan isn't stable
+        positions = []
+        for b in boxes:
+            positions.append(b.getPos())
+        # Simulate physics
         if run_until_stationary(world) == None:
             clear_boxes(world, boxes)
             return None
+        print "OLD:"
+        print positions
+        # Check to see if anything moved too much
+        for j in range(0,len(boxes)):
+            b = boxes[j]
+            p = positions[j]
+            p_ = b.getPos()
+            d = (p-p_).lengthSquared()
+            if d > 1:
+                print p, p_
+                print j
+                clear_boxes(world, boxes)
+                return None
     return boxes
 
 def sample_stability(strength, world, boxes, saved, ht):
@@ -274,6 +291,6 @@ def sample_stability(strength, world, boxes, saved, ht):
             box.setHpr(h)
     
     # Return percentage success rate
-    return int(100.0*float(timesStable)/10.0)
+    return int(100.0*float(timesStable)/float(numSamples))
 
 

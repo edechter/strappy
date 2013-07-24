@@ -136,7 +136,8 @@ class BuildBase(ShowBase):
             if z == None:
                 pdb()
             else:
-                z += 1.2
+                #z += 1.2
+                pass
             self.plan = self.plan[1:]
             np = make_box(self.world,
                           self.render,

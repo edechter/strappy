@@ -29,11 +29,11 @@ makeTowerTask cache =
                    Just [] -> return (log 0)
                    Just p | length p > 6 -> return (log 0)
                    Just plan' -> do
-                     (ht, stabilities) <- cachedPerturb cache [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9] plan'
+                     (ht, stabilities) <- cachedPerturb cache [0.8, 1.3, 1.7, 2.1] plan'
                      if isNaN ht || isInfinite ht
                        then return (log 0)
                        else return $ -- Magic formula for the log likelihood of a tower:
-                            0.5 * sum stabilities + (1.7 * ht) - 0.3 * log (genericLength plan')
+                            (ht - gnd_height) * (sum stabilities) - 0.2 * log (genericLength plan')
            }
 
 main = do
