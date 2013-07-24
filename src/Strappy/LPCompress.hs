@@ -1,4 +1,5 @@
--- | This module compresses a set of combinators by solving the corresponding linear program.
+-- | This module compresses a set of combinators using a weighted version of Neville-Manning
+-- | It finds the same solution as the corresponding linear program.
 
 module Strappy.LPCompress (compressWeightedCorpus) where
 
@@ -18,13 +19,13 @@ import System.IO.Unsafe
 import System.CPUTime
 
 
--- | Wrapper over compressLP_corpus that builds the grammar
-compressWeightedCorpus :: Double -> -- ^ lambda
+compressWeightedCorpus :: Type -> -- ^ Toplevel type of the tasks
+                          Double -> -- ^ lambda
                           Double -> -- ^ pseudocounts
                           Grammar -> -- ^ initial grammar
                           [(Expr, Double)] -> -- ^ weighted corpus
                           Grammar
-compressWeightedCorpus lambda pseudocounts grammar corpus =
+compressWeightedCorpus tp lambda pseudocounts grammar corpus =
   let subtrees = foldl1 (Map.unionWith (+)) $ map (countSubtrees Map.empty) corpus
       terminals = filter isTerm $ Map.keys $ grExprDistr grammar
       newProductions = compressCorpus lambda subtrees
@@ -37,10 +38,7 @@ compressWeightedCorpus lambda pseudocounts grammar corpus =
       (grammar''', corpus') = if compressLibrary
                               then let (compProds, subseq) = simplifyLibrary productions
                                        compCorpus = map (\(e,w) -> (foldl (\ce (old,new) -> subExpr old new ce) e subseq, w)) corpus
-                                       -- VERY VERY VERY BAD
-                                       -- THE TYPE SHOULD NOT BE HARD CODED
-                                       -- FIXME TODO FIXME
-                                       compCorpus' = map (\(e, w) -> (annotateRequested' (tInt ->- tInt) e, w)) compCorpus
+                                       compCorpus' = map (\(e, w) -> (annotateRequested' tp e, w)) compCorpus
                                        uniLogProb = - log (genericLength compProds)
                                    in (Grammar (log 0.5) $ Map.fromList [ (prod, uniLogProb) | prod <- compProds ], compCorpus')
                               else (grammar'', corpus)

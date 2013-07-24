@@ -21,7 +21,7 @@ pruneGrammar = False
 
 -- | Sample by enumeration?
 sampleByEnumeration :: Bool
-sampleByEnumeration = True
+sampleByEnumeration = False
 
 -- | Max size of the frontier enumerated, or sampled, during the "E" step
 frontierSize :: Int
@@ -54,4 +54,4 @@ truncatedStickLen = 20
 
 -- | Should we coalesce identical productions when it reduces description length?
 compressLibrary :: Bool
-compressLibrary = True
+compressLibrary = False

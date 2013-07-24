@@ -205,6 +205,7 @@ cDouble2Expr i = mkTerm (show i) tDouble i
 -- ? matches any expression
 -- ?t matches terminals
 -- ?a matches applications
+-- ?d matches deterministic computations (no holes)
 matchExpr :: Expr -> -- ^ Pattern
              ([Expr] -> Expr) -> -- ^ Callback 
              (Expr -> Expr) -- ^ Performs matching
@@ -213,6 +214,8 @@ matchExpr pat proc e =
   where match (Term { eName = "?" }) t = return [t]
         match (Term { eName = "?t" }) t@(Term {}) = return [t]
         match (Term { eName = "?a" }) a@(App {}) = return [a]
+        match (Term { eName = "?d" }) d =
+          if countHoles d > 0 then Nothing else return [d]
         match (App { eLeft = l, eRight = r }) (App { eLeft = l', eRight = r' }) = do
           ls <- match l l'
           rs <- match r r'
