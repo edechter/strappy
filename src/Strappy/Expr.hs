@@ -16,11 +16,14 @@ import Control.Exception
 import Data.IORef
 import System.IO.Error
 import System.IO.Unsafe
---import Control.DeepSeq
+import Data.Array.MArray
+import Data.Array.IO
 import Control.Concurrent.Timeout
+import Control.Monad.Random
 
 import Strappy.Type
 import Strappy.Config
+import Strappy.Utils
 
 -- | Main data type. Holds primitive functions (Term), their
 -- application (App) and annotations.
@@ -102,33 +105,18 @@ isTerm _ = False
 
 cBottom = mkTerm "_|_" (TVar 0) (error "cBottom: this should never be called!") 
 
-safeEval :: Expr -> Maybe a
-safeEval term@Term{eThing=f} = if term == cBottom
-                                then Nothing else Just $ unsafeCoerce f
-safeEval App{eLeft = el, eRight = er} = do l <- safeEval el
-                                           r <- safeEval er    
-                                           return (l r) 
-
-
 timeLimitedEval :: Show a => Expr -> Maybe a
-timeLimitedEval expr = unsafePerformIO $ do
+timeLimitedEval expr = unsafePerformIO $
+                       flip Control.Exception.catch (\e -> return $ const Nothing (e :: SomeException)) $ do
                        res <- timeout maxEvalTime $ do
                          -- Hack to force Haskell to evaluate the expression:
                          -- Convert the (eval expr) in to a string,
-                         -- then force each character of the string.
+                         -- then force each character of the string by putting it in to an unboxed array
                          let val = eval expr
                          let strVal = show val
-                         case strVal of
-                           [] -> error "eval'd to nothing"
-                           (_:_) -> return $ seqList strVal val
-                       -- Helpful debugging code. Lets you see how many of the programs are timing out.
-                       {-case res of
-                         Nothing -> putStrLn "Timeout."
-                         Just _ -> return ()-}
+                         a <- ((newListArray (1::Int,length strVal) strVal) :: IO (IOUArray Int Char))
+                         return val
                        return res
-  where seqList [] x = x
-        seqList (z:zs) x = z `seq` (seqList zs x)
-  
 
 
 -- | Runs type inference on the given program, returning its type
@@ -170,6 +158,34 @@ subExpr old new e@(App { eLeft = l, eRight = r }) =
   e { eLeft = subExpr old new l,
       eRight = subExpr old new r }
 
+-- | Procedures for managing holes:
+-- | Returns the number of holes in an expression
+countHoles :: Expr -> Int
+countHoles (App { eLeft = l, eRight = r }) = countHoles l + countHoles r
+countHoles (Term { eName = "H" }) = 1
+countHoles (Term {}) = 0
+
+-- | Samples values for the holes
+sampleHoles :: Expr -> IO Expr
+sampleHoles (Term { eName = "H" }) = do
+  h <- sampleMultinomial [(0.0, 0.1::Double), (0.1, 0.1), (0.2, 0.1),
+                          (0.3, 0.1), (0.4, 0.1), (0.5, 0.1),
+                          (0.6, 0.1), (0.7, 0.1), (0.8, 0.1),
+                          (0.9, 0.1)]
+  return $ cDouble2Expr h
+sampleHoles e@(App { eLeft = l, eRight = r}) = do
+  l' <- sampleHoles l
+  r' <- sampleHoles r
+  return $ e { eLeft = l', eRight = r' }
+sampleHoles e = return e
+
+-- | Does a monte carlo estimate of the expected likelihood of a probabilistic program
+expectedLikelihood :: (Expr -> IO Double) -> Int -> Expr -> IO Double
+expectedLikelihood ll samples e = do
+  lls <- replicateM samples (sampleHoles e >>= ll)
+  let retval = logSumExpList lls - log (fromIntegral samples)
+  return retval
+
 ----------------------------------------
 -- Conversion functions ----------------
 ----------------------------------------
@@ -203,6 +219,10 @@ matchExpr pat proc e =
           return $ ls ++ rs
         match (Term { eName = n }) (Term { eName = n' }) | n == n' = return []
         match _ _ = Nothing
+
+cBool2Expr :: Bool -> Expr
+cBool2Expr b = mkTerm (show b) tBool b
+
 
 ----------------------------------------
 -- Hashable instance ------------------- 

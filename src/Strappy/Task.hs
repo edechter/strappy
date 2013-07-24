@@ -19,7 +19,7 @@ instance Show Task where
 	
 mkIntTask :: Int -> Task
 mkIntTask i = Task (show i) tsk tInt
-        where tsk expr = case safeEval expr of
+        where tsk expr = case timeLimitedEval expr of
                                 Nothing -> 0
                                 Just r -> exp $ negate $ fromIntegral $ abs $ r - i
 

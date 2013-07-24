@@ -44,16 +44,16 @@ doEMIter tasks lambda pseudocounts frontierSize grammar = do
   unless sampleByEnumeration $
     putStrLn $ "Frontier sizes: " ++ (unwords $ map (show . Map.size . snd) frontiers)
   -- For each task, compute the P(t|e) terms
-  let rewardedFrontiers = Prelude.flip map tasks $ \ (tsk, tp) ->
+  let rewardedFrontiers = flip map tasks $ \ (tsk, tp) ->
         Map.mapWithKey (\expr cnt -> (cnt, log (tsk expr))) $ fromJust $ lookup tp frontiers
   -- For each task, weight the corresponding frontier by P(e|g)
-  let weightedFrontiers = Prelude.flip map rewardedFrontiers $ Map.map (\(cnt, logLikelihood) -> cnt + logLikelihood)
+  let weightedFrontiers = flip map rewardedFrontiers $ Map.map (\(cnt, logLikelihood) -> cnt + logLikelihood)
   -- Normalize frontiers
   let logZs = map (Map.fold logSumExp (log 0.0)) weightedFrontiers
   let weightedFrontiers' = zipWith (\logZ -> filter (\(_,x) -> not (isNaN x) && not (isInfinite x)) . Map.toList .
                                              Map.map (\x-> x-logZ))
                                    logZs weightedFrontiers
-  let numHit = length $ filter id $ Prelude.flip map rewardedFrontiers $
+  let numHit = length $ filter id $ flip map rewardedFrontiers $
         Map.fold (\(_, ll) acc -> acc || ll >= -0.0001) False
   putStrLn $ "Completely solved " ++ show numHit ++ "/" ++ show (length tasks) ++ " tasks."
   let obs = foldl (\acc frontier ->
