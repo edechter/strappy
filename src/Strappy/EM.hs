@@ -94,7 +94,7 @@ polyEM = do
   let dets = [ mkNthDet (\a -> x * a * a + y * a + z) | x <- [0..9], y <- [0..9], z <- [0..9] ]
   loopM seed [0..20] $ \grammar step -> do
     putStrLn $ "EM Iteration: " ++ show step
-    grammar' <- doEMIter dets 3.0 5.0 frontierSize grammar
+    grammar' <- doEMIter dets 2.0 1.0 frontierSize grammar
     saveGrammar ("poly_grammar_" ++ show step) grammar'
     return grammar'
   return ()
