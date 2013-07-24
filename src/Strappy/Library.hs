@@ -490,7 +490,7 @@ readExpr input = case parse parseComb "CL" input of
      Left err -> error $ "No match: " ++ show err
      Right val -> val
      where symbol :: Parser Char
-           symbol = oneOf "!#$%&|*+-/:<=>?@^_~.[]"
+           symbol = oneOf "!#$%&|*+-/:<=>?@^_~.[]?"
            parseAtom :: Parser Expr
            parseAtom = do 
              hd <- letter <|> digit <|> symbol
