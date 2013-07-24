@@ -76,6 +76,8 @@ pcfgLogLikelihood gr@(Grammar { grExprDistr = distr, grApp = app }) e@(App { eLe
 
 -- | Annotates log likelihood as done in IJCAI paper
 ijcaiLogLikelihood :: Grammar -> Expr -> Expr
+ijcaiLogLikelihood (Grammar { grApp = logApp, grExprDistr = distr }) e@(Term { eReqType = Just tp}) | not (Map.member e distr) =
+  error "ijcaiLogLikelihood: Terminal not in library"
 ijcaiLogLikelihood (Grammar { grApp = logApp, grExprDistr = distr }) e@(Term { eReqType = Just tp}) =
   let alts = filter (\(e', _) -> canUnifyFast tp (eType e')) $ Map.toList distr
       zT = logSumExpList $ map snd alts
@@ -396,6 +398,49 @@ incCount cnt (expr@App{},wt) =
   Map.insertWith (+) expr wt cnt
 incCount cnt _ = cnt
 
+-- | Accumulates all of the subtrees in an expression in to a set
+collectSubtrees :: Set.Set Expr -> Expr -> Set.Set Expr
+collectSubtrees s e@(App { eLeft = l, eRight = r }) =
+  collectSubtrees (collectSubtrees (e `Set.insert` s) l) r
+collectSubtrees s e = e `Set.insert` s
+
+-- | Simplifies an expression
+simplifyExpr :: Expr -> Expr
+simplifyExpr e@(App { eLeft = l, eRight = r }) =
+  let l' = simplifyExpr l
+      r' = simplifyExpr r
+      e' = l' <> r'
+      e'' = foldl (Prelude.flip ($)) e' patterns
+  in
+   if e' /= e''
+   then simplifyExpr e''
+   else e''
+  where
+    patterns = map (\(str, proc) -> matchExpr (parseComb str) proc)
+                   [ ( "(I ?)", \ [x] -> x) ]
+{-
+                     
+    
+    
+   case l' of
+     Term { } | l' == cI -> r'
+     App { eLeft = k, eRight = v } | k == cK -> v
+     App { eLeft = App { eLeft = b, eRight = f }, eRight = g } | b == cB -> simplifyExpr (f <> (g <> r'))
+     App { eLeft = App { eLeft = c, eRight = f }, eRight = g } | c == cC -> simplifyExpr ((f <> r') <> g)
+     -- For S, we may or may not reduce the size of the expression
+     -- TODO FIXME: We also need to check that the branches don't have holes in them.
+     App { eLeft = App { eLeft = s, eRight = f }, eRight = g } | s == cS ->
+       let e' = simplifyExpr ((f <> r') <> (g <> r')) in
+       if exprSize e' < exprSize e then e' else e
+     -- Simplify arithmetic expressions
+     App { eLeft = p, eRight = v1@(Term { eType = tInt, eThing = t1 }) } | eType r' == tInt && isTerm r' && p == cPlus ->
+       case r' of
+         Term { eThing = t2 } -> cInt2Expr (unsafeCoerce t1 + unsafeCoerce t2)
+         _ -> error "Right has isTerm true, but is not terminal"
+     App { eLeft = p, eRight = (Term { eName = "0" })
+     _ -> l' <> r'-}
+simplifyExpr e = e
+
 
 -- | Saves a grammar to a file
 saveGrammar :: String -> Grammar -> IO ()
@@ -436,3 +481,25 @@ parseComb str = either (const $ error $ "Could not parse " ++ str) unlisp $ Pars
                                                eLogLikelihood = Nothing }
         unlisp err = error $ "Could not unlisp " ++ show err
 
+-- | Simplifies terms in the grammar, subject to the constraint that it reduces description length
+-- Does a greedy, best-first search
+simplifyLibrary :: [Expr] -> -- ^ library productions
+                   ([Expr], -- ^ new library productions
+                    [(Expr, Expr)]) -- ^ substitutions made
+simplifyLibrary prods =
+  let (newprods, subs) = simplify prods $ score prods
+      newprods' = Set.toList $ foldl (\acc prod -> collectSubtrees acc prod) Set.empty newprods
+  in (map (\prod -> prod { eType = doTypeInference prod}) newprods', subs)
+  where -- Score counts # unique subtrees
+        score = Set.size . foldl (\acc prod -> collectSubtrees acc prod) Set.empty
+        -- Takes as input a library and its score
+        simplify lib libScore =
+          let simplifiedLib = filter (\ (x, y) -> x /= y) $ map (\prod -> (prod, simplifyExpr prod)) lib
+              newLibs = map (\(prod, simpProd) -> let lib' = List.nub $ map (subExpr prod simpProd) lib
+                                                  in ((lib', (prod, simpProd)), score lib')) simplifiedLib
+              ((newLib, newSub), newScore) = List.minimumBy (compare `on` snd) newLibs
+          in
+           if newScore < libScore
+           then trace ("Improved score from " ++ show libScore ++ " to " ++ show newScore)
+                      (let (bestLib, bestSubs) = simplify newLib newScore in (bestLib, newSub:bestSubs))
+           else (lib, [])

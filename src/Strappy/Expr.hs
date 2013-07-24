@@ -159,6 +159,17 @@ exprSize :: Expr -> Int
 exprSize Term {} = 1
 exprSize App { eLeft = l, eRight = r } = 1 + exprSize l + exprSize r
 
+-- | Substitutes instances of Old for New in Target
+subExpr :: Expr -> -- ^ Old
+           Expr -> -- ^ New
+           Expr -> -- ^ Target
+           Expr    -- ^ Updated target
+subExpr _ _ e@(Term { }) = e
+subExpr old new target | target == old = new
+subExpr old new e@(App { eLeft = l, eRight = r }) =
+  e { eLeft = subExpr old new l,
+      eRight = subExpr old new r }
+
 ----------------------------------------
 -- Conversion functions ----------------
 ----------------------------------------
@@ -171,6 +182,27 @@ cInt2Expr i = mkTerm (show i) tInt i
 cDouble2Expr :: Double -> Expr
 -- | Convert doubles to expressions. 
 cDouble2Expr i = mkTerm (show i) tDouble i 
+
+-------------------------------------------
+-- Pattern matching for combinators -------
+-------------------------------------------
+-- ? matches any expression
+-- ?t matches terminals
+-- ?a matches applications
+matchExpr :: Expr -> -- ^ Pattern
+             ([Expr] -> Expr) -> -- ^ Callback 
+             (Expr -> Expr) -- ^ Performs matching
+matchExpr pat proc e =
+  maybe e proc $ match pat e
+  where match (Term { eName = "?" }) t = return [t]
+        match (Term { eName = "?t" }) t@(Term {}) = return [t]
+        match (Term { eName = "?a" }) a@(App {}) = return [a]
+        match (App { eLeft = l, eRight = r }) (App { eLeft = l', eRight = r' }) = do
+          ls <- match l l'
+          rs <- match r r'
+          return $ ls ++ rs
+        match (Term { eName = n }) (Term { eName = n' }) | n == n' = return []
+        match _ _ = Nothing
 
 ----------------------------------------
 -- Hashable instance ------------------- 

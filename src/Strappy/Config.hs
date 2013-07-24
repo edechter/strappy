@@ -25,7 +25,7 @@ sampleByEnumeration = False
 
 -- | Max size of the frontier enumerated, or sampled, during the "E" step
 frontierSize :: Int
-frontierSize = 7500
+frontierSize = 3000
 
 -- | Maximum number of samples drawn from the grammar
 frontierSamples :: Int
@@ -51,3 +51,7 @@ maxEvalTime = fromIntegral 10000
 
 -- | Truncated stick for variational inference
 truncatedStickLen = 20
+
+-- | Should we coalesce identical productions when it reduces description length?
+compressLibrary :: Bool
+compressLibrary = True
