@@ -27,52 +27,46 @@ import System.CPUTime
 
 
 -- | Performs one iteration of EM on multitask learning
--- Does LP construction rather than hill-climbing
-doEMIter :: [(Expr -> Double, Type)] -- ^ Tasks
+doEMIter :: Type -- ^ Type of the tasks
+            -> (Expr -> a) -- ^ Procedure for compiling expressions
+            -> [a -> Double] -- ^ Tasks (functions from compiled expressions to log likelihoods)
             -> Double -- ^ Lambda
             -> Double -- ^ pseudocounts
             -> Int -- ^ frontier size
             -> Grammar -- ^ Initial grammar
             -> IO Grammar -- ^ Improved grammar
-doEMIter tasks lambda pseudocounts frontierSize grammar = do
-  -- For each type, sample a frontier
-  frontiers <- mapM (\tp -> (if sampleByEnumeration then sampleBFM else sampleExprs) frontierSize grammar tp
-                            >>= return . (tp,))
-               $ nub $ map snd tasks
+doEMIter reqTp compile tasks lambda pseudocounts frontierSize grammar = do
+  frontier <- (if sampleByEnumeration then sampleBFM else sampleExprs) frontierSize grammar reqTp
   -- If we're sampling, the number of unique expressions is not given;
   -- display them.
   unless sampleByEnumeration $
-    putStrLn $ "Frontier sizes: " ++ (unwords $ map (show . Map.size . snd) frontiers)
-  putStrLn $ "Frontier entropies: " ++ (unwords $ map (show . entropyLogDist . Map.elems . snd) frontiers)
+    putStrLn $ "Frontier size: " ++ (show $ Map.size frontier)
+  putStrLn $ "Frontier entropy: " ++ (show $ entropyLogDist $ Map.elems frontier)
+  -- Compile all of the sampled programs
+  let frontier' = map (\(e, w) -> (e, w, compile e)) $ Map.toList frontier
   -- For each task, compute the P(t|e) terms
-  let rewardedFrontiers = flip map tasks $ \ (tsk, tp) ->
-        Map.mapWithKey (\expr cnt -> (cnt, log (tsk expr))) $ fromJust $ lookup tp frontiers
-  -- For each task, weight the corresponding frontier by P(e|g)
-  let weightedFrontiers = flip map rewardedFrontiers $ Map.map (\(cnt, logLikelihood) -> cnt + logLikelihood)
-  -- Normalize frontiers
-  let logZs = map (Map.fold logSumExp (log 0.0)) weightedFrontiers
-  let weightedFrontiers' = zipWith (\logZ -> filter (\(_,x) -> not (isNaN x) && not (isInfinite x)) . Map.toList .
-                                             Map.map (\x-> x-logZ))
-                                   logZs weightedFrontiers
-  let numHit = length $ filter id $ flip map rewardedFrontiers $
-        Map.fold (\(_, ll) acc -> acc || ll >= -0.0001) False
-  putStrLn $ "Completely solved " ++ show numHit ++ "/" ++ show (length tasks) ++ " tasks."
-  let obs = foldl (\acc frontier ->
-                    Map.unionWith logSumExp acc $ Map.fromList frontier) Map.empty weightedFrontiers'
+  let taskFrontiers = map (\tsk -> map (\(e, w, cE) -> (e, w, cE, tsk cE)) frontier') tasks
+  -- Compute the distribution over programs for each task
+  let taskDistrs = map (\taskFront -> normalizeDist $ map (\(e, w, _, ll) -> (e, w+ll)) taskFront)
+                       taskFrontiers
+  -- Display the number of tasks hit
+  let numHit = length $ filter (any (\(_, _, _, ll) ->
+                                      not (isNaN ll) && not (isInfinite ll) && ll > -0.001)) taskFrontiers
+  putStrLn $ "Completely solved " ++ show numHit ++ "/" ++ show (length tasks) ++ " tasks."  
   -- Exponentiate log likelihoods to get final weights
+  let obs = foldl (\acc frontier ->
+                    Map.unionWith logSumExp acc $ Map.fromList frontier) Map.empty taskDistrs
   let obs' = map (\(e,logW) -> (e, exp logW)) $
              filter (\(_,w) -> not (isNaN w) && not (isInfinite w)) $
              Map.toList obs
-  if length obs' == 0
-    then do putStrLn "Hit no tasks."
-            return grammar -- Didn't hit any tasks
-    else do let grammar' = compressWeightedCorpus (snd $ tasks!!0) lambda pseudocounts grammar obs'
-            let terminalLen = length $ filter isTerm $ Map.keys $ grExprDistr grammar
-            putStrLn $ "Got " ++ show ((length $ lines $ showGrammar $ removeSubProductions grammar') - terminalLen - 1) ++ " new productions."
-            putStrLn $ "Grammar entropy: " ++ show (entropyLogDist $ Map.elems $ grExprDistr grammar')
-            when verbose $ putStrLn $ showGrammar $ removeSubProductions grammar'
-            putStrLn "" -- newline
-            return grammar'
+  -- Finally, we build the new grammar from the observations (obs')
+  let grammar' = compressWeightedCorpus reqTp lambda pseudocounts grammar obs'
+  let terminalLen = length $ filter isTerm $ Map.keys $ grExprDistr grammar
+  putStrLn $ "Got " ++ show ((length $ lines $ showGrammar $ removeSubProductions grammar') - terminalLen - 1) ++ " new productions."
+  putStrLn $ "Grammar entropy: " ++ show (entropyLogDist $ Map.elems $ grExprDistr grammar')
+  when verbose $ putStrLn $ showGrammar $ removeSubProductions grammar'
+  putStrLn "" -- newline
+  return grammar'
 
 
 -- Polynomial regression test for EM
@@ -81,23 +75,19 @@ polyEM = do
   -- Seed grammar
   let seed = Grammar { grApp = log 0.35,
                        grExprDistr = Map.fromList [ (annotateRequested e, 1.0) | e <- polyExprs ] }
+  let compilePoly :: Expr -> Maybe [Int]
+      compilePoly e = let points = map (\x -> timeLimitedEval $ e <> cInt2Expr x) [0..9] in
+                      if all isJust points then Just (map fromJust points) else Nothing
   -- Make nth order polynomial task with fixed coefficients
-  let mkNthDet :: (Int -> Int) -> (Expr -> Double, Type)
-      mkNthDet poly = let points proc = map (\x -> timeLimitedEval $ proc <> cInt2Expr x) [0..9]
-                          loss proc = (let pts = points proc in
-                                       if all isJust pts then sum $ zipWith (\a b -> (a-b)*(a-b)) (map (fromIntegral . fromJust) pts) (map (fromIntegral . poly) [0..9])
-                                                         else 1/0)
-                          score proc = exp $ - loss proc
-                      in (score, tInt ->- tInt)
-  let const = [ mkNthDet (\_ -> x) | x <- [0..4] ]
-  let lin = [ mkNthDet (\a -> x * a + y) | x <- [1..9], y <- [0..9] ]
-  let quad = [ mkNthDet (\a -> x * a * a + y * a + z) | x <- [1..9], y <- [0..9], z <- [0..9] ]
+  let mkNthDet :: (Int -> Int) -> (Maybe [Int] -> Double)
+      mkNthDet poly = let points = map poly [0..9] in
+                      maybe (log 0) (fromIntegral . negate . sum . map (\x->x*x) . zipWith (-) points)
   let dets = [ mkNthDet (\a -> x * a * a + y * a + z) | x <- [0..9], y <- [0..9], z <- [0..9] ]
   loopM seed [0..20] $ \grammar step -> do
     putStrLn $ "EM Iteration: " ++ show step
-    grammar' <- doEMIter dets 2.0 1.0 frontierSize grammar
+    grammar' <- doEMIter (tInt ->- tInt) compilePoly dets 2.0 1.0 frontierSize grammar
     saveGrammar ("poly_grammar_" ++ show step) grammar'
     return grammar'
   return ()
-                    
+
 main = polyEM
