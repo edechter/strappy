@@ -43,6 +43,7 @@ doEMIter tasks lambda pseudocounts frontierSize grammar = do
   -- display them.
   unless sampleByEnumeration $
     putStrLn $ "Frontier sizes: " ++ (unwords $ map (show . Map.size . snd) frontiers)
+  putStrLn $ "Frontier entropies: " ++ (unwords $ map (show . entropyLogDist . Map.elems . snd) frontiers)
   -- For each task, compute the P(t|e) terms
   let rewardedFrontiers = flip map tasks $ \ (tsk, tp) ->
         Map.mapWithKey (\expr cnt -> (cnt, log (tsk expr))) $ fromJust $ lookup tp frontiers

@@ -23,7 +23,7 @@ floor_height = -3
 stage_width = 10
 
 # Timestep size
-dt = 0.01
+dt = 0.0001
 
 perturb_strength = 5.0
 perturb_duration = 0.6
@@ -160,8 +160,10 @@ def scene_stationary(world):
             return False
     return True
 
-def run_until_stationary(world):
-    for i in range(0,10):
+def run_until_stationary(world, nps=[]):
+    for i in range(0,1000):
+        if len(nps) > 0:
+            print map(lambda np: np.getPos(), nps)
         world.doPhysics(dt)
     
     t_total = 0.0
@@ -172,7 +174,7 @@ def run_until_stationary(world):
         if stat == True: return True
         world.doPhysics(dt)
         t_total += dt
-        if t_total > 30.0: return None
+        if t_total > 20.0: return None
 
 def perturb_floor(world, gnd,
                   strength=perturb_strength):
@@ -255,11 +257,14 @@ def run_plan(world, plan, render=None):
         for b in boxes:
             positions.append(b.getPos())
         # Simulate physics
-        if run_until_stationary(world) == None:
+        if run_until_stationary(world, boxes) == None:
             clear_boxes(world, boxes)
             return None
-        print "OLD:"
         print positions
+        newpos = []
+        for b in boxes:
+            newpos.append(b.getPos())
+        print positions, "=>", newpos
         # Check to see if anything moved too much
         for j in range(0,len(boxes)):
             b = boxes[j]
@@ -267,7 +272,7 @@ def run_plan(world, plan, render=None):
             p_ = b.getPos()
             d = (p-p_).lengthSquared()
             if d > 1:
-                print p, p_
+                print p, 'XXX=>', p_
                 print j
                 clear_boxes(world, boxes)
                 return None
