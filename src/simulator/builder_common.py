@@ -160,10 +160,8 @@ def scene_stationary(world):
             return False
     return True
 
-def run_until_stationary(world, nps=[]):
+def run_until_stationary(world):
     for i in range(0,1000):
-        if len(nps) > 0:
-            print map(lambda np: np.getPos(), nps)
         world.doPhysics(dt)
     
     t_total = 0.0
@@ -233,17 +231,16 @@ def is_legal_action(world, x, z, dx, dz):
 
 def run_plan(world, plan, render=None):
     boxes = []
-    max_z = floor_height + 0.1
     for plan_atom in plan:
         if len(plan_atom) == 4:
             (x, z, dx, dz) = plan_atom
         else:
             (x, dx, dz) = plan_atom
-            z = lowest_allowed_z(world, x, max_z, dx, dz)
+            # Hack: it's impossible to have a tower taller than 20.0
+            z = lowest_allowed_z(world, x, 20.0, dx, dz)
             if z == None:
                 clear_boxes(world, boxes)
                 return None
-        if z+dz > max_z: max_z = z+dz
         if render:
             new_box = make_box(world, render, x, z, dx, dz, 'planNode',
                                r=random.random(),
@@ -257,14 +254,12 @@ def run_plan(world, plan, render=None):
         for b in boxes:
             positions.append(b.getPos())
         # Simulate physics
-        if run_until_stationary(world, boxes) == None:
+        if run_until_stationary(world) == None:
             clear_boxes(world, boxes)
             return None
-        print positions
         newpos = []
         for b in boxes:
             newpos.append(b.getPos())
-        print positions, "=>", newpos
         # Check to see if anything moved too much
         for j in range(0,len(boxes)):
             b = boxes[j]
@@ -272,8 +267,6 @@ def run_plan(world, plan, render=None):
             p_ = b.getPos()
             d = (p-p_).lengthSquared()
             if d > 1:
-                print p, 'XXX=>', p_
-                print j
                 clear_boxes(world, boxes)
                 return None
     return boxes
