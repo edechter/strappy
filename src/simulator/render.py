@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 # This allows one to visualize the construction of towers
 # Kevin Ellis 2013, 6.868 Final Project
 
