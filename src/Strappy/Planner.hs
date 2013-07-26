@@ -8,9 +8,9 @@ import Strappy.Library
 import Strappy.Type
 import Strappy.Task
 import Strappy.Utils
-import Strappy.Library 
 import Strappy.LPCompress
 import Strappy.Config
+
 
 
 import Control.Monad
@@ -19,13 +19,15 @@ import qualified Data.Map as Map
 import Data.List
 import Data.Maybe
 import Data.IORef
-
+import Control.Concurrent.ParallelIO.Global (parallel)
 
 data PlanTask = PlanTask { ptName :: String,
                            ptLogLikelihood :: Expr -> Double,
                            ptType :: Type, -- ^ Type of plan objects, such as lists of actions
                            ptSeed :: Expr  -- ^ Initial plan, such as an empty list, or the identity function
                          }
+
+
 
 mcmcPlan :: MonadRandom m =>
             Expr -> -- ^ Initial plan, such as the empty list, or the identity function
@@ -47,7 +49,7 @@ mcmcPlan e0 dist likelihood len =
                   then mcmc (e <> prefix) (prefixRecipLike - eLike) (len+1)
                   else return (0, [], False)
                 let partitionFunction = logSumExp suffixLogPartition prefixRecipLike
-                let epsilon = 0.01 -- tolerance for deciding if a plan has hit a task
+                let epsilon = 0.1 -- tolerance for deciding if a plan has hit a task
                 let hit = suffixHit || eLike >= 0.0-epsilon
                 return (partitionFunction, (e, partitionFunction):suffixRewards, hit)
 
@@ -72,7 +74,7 @@ doEMPlan tasks lambda pseudocounts frontierSize numPlans planLen grammar = do
   -- For each task, do greedy stochastic search to get candidate plans
   -- Each task records all of the programs used in successful plans, as well as the associated rewards
   -- These are normalized to get a distribution over plans, which gives weights for the MDL's of the programs
-  normalizedRewards <- forM tasks $ \PlanTask {ptLogLikelihood = likelihood, ptSeed = seed, ptType = tp, ptName = nm} -> do
+  normalizedRewards <- parallel $ (Prelude.flip map) tasks $ \PlanTask {ptLogLikelihood = likelihood, ptSeed = seed, ptType = tp, ptName = nm} -> do
     let frontier = snd $ fromJust $ find ((==tp) . fst) frontiers
     (logPartitionFunction, programLogRewards, anyHit) <-
       foldM (\ (logZ, rewards, hit) _ -> mcmcPlan seed frontier likelihood planLen >>=
@@ -84,6 +86,7 @@ doEMPlan tasks lambda pseudocounts frontierSize numPlans planLen grammar = do
     when (verbose && (not anyHit)) $ putStrLn $ "Missed " ++ nm
     -- normalize rewards
     return $ map (\(e, r) -> (e, exp (r - logPartitionFunction))) programLogRewards
+  -- when verbose $ putStrLn $ "Normalized Rewards: " ++ show normalizedRewards
   numHit <- readIORef numHitRef
   putStrLn $ "Hit " ++ show numHit ++ "/" ++ show (length tasks) ++ " tasks."
   -- Compress the corpus
