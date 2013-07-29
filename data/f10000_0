@@ -1,0 +1,1000 @@
+(* 0)	-0.77448280798817311.0
+((B (+ 1)) (* 0))	-1.27428279904440341.0
+((B (+ 1)) (* 0))	-1.2527629685401664.5399929762484854e-5
+((B (+ 1)) (* 0))	-1.2527629684953684.248354255291589e-18
+I	-0.243219482684196461.2160992992528256e-37
+I	-0.301183289656094641.2160992992528256e-37
+(+ 1)	-0.76573478730514921.2160992992528256e-37
+(+ ((+ 1) 1))	-2.3877429664499061.2160992992528256e-37
+(+ ((I (I ((((B B) +) 1) (+ 1)))) 1))	-2.19722459794770941.2160992992528256e-37
+((C (C +)) ((((I (((C B) I) (((I (B B)) B) (+ 1)))) +) (((B (I I)) I) ((* ((+ 1) (I (I 1)))) (I 1)))) 1))	-1.6489238419126195e-81.2160992992528256e-37
+I	-0.243221282471836281.0
+(+ 1)	-0.73783215401334171.0
+(+ ((+ 1) 1))	-2.30414915789606981.0
+(+ ((I (I ((((B B) +) 1) (+ 1)))) 1))	-2.07995783257979831.0
+((C (C +)) ((((I (((C B) I) (((I (B B)) B) (+ 1)))) +) (((B (I I)) I) ((* ((+ 1) (I (I 1)))) (I 1)))) 1))	-3.6313349715023967e-41.0
+((C (C +)) ((((I (((C B) I) (((I (B B)) B) (+ 1)))) +) (((B (I I)) I) ((* ((+ 1) (I (I 1)))) (I 1)))) 1))	-7.496225862269057e-134.5399929762484854e-5
+((C (C +)) ((((I (((C B) I) (((I (B B)) B) (+ 1)))) +) (((B (I I)) I) ((* ((+ 1) (I (I 1)))) (I 1)))) 1))	0.04.248354255291589e-18
+((S +) (((S ((B (B +)) +)) I) 1))	-1.61078461770406991.2160992992528256e-37
+((S +) (((S ((B (B +)) +)) I) 1))	-1.60943791243410322.506567475899953e-46
+((S +) (((S ((B (B +)) +)) I) 1))	-1.60943791243411741.0648786602415064e-63
+((S +) I)	-1.0501985082791451.0
+((S +) (+ 1))	-1.192763211157721.0
+((S +) (((S ((B (B +)) +)) I) 1))	-1.60994626241569081.0
+((S +) (((S ((B (B +)) +)) I) 1))	-1.60943791243513354.5399929762484854e-5
+((S +) (((S ((B (B +)) +)) I) 1))	-1.60943791243410324.248354255291589e-18
+((S (C (S +))) +)	-2.2530633723897181.2160992992528256e-37
+(((C S) ((S +) (I ((B (I (+ 1))) (I I))))) +)	-3.71007757848929e-81.2160992992528256e-37
+(((C S) ((S +) (I ((B (I (+ 1))) (I I))))) +)	0.02.506567475899953e-46
+(((C S) ((S +) (I ((B (I (+ 1))) (I I))))) +)	0.01.0648786602415064e-63
+(((C S) ((S +) (I ((B (I (+ 1))) (I I))))) +)	0.09.324621449370601e-90
+((S (C (S +))) +)	-2.19722709955135761.0
+(((C S) ((S +) (I ((B (I (+ 1))) (I I))))) +)	-8.168650106388999e-41.0
+(((C S) ((S +) (I ((B (I (+ 1))) (I I))))) +)	-1.6857626405908377e-124.5399929762484854e-5
+(((C S) ((S +) (I ((B (I (+ 1))) (I I))))) +)	0.04.248354255291589e-18
+((I ((((C S) ((I S) B)) B) I)) ((S +) (+ (I ((I I) 0)))))	-0.69651049178207811.2160992992528256e-37
+((I ((((C S) ((I S) B)) B) I)) ((S +) (+ (I ((I I) 0)))))	-0.69314718055994721.2160992992528256e-37
+((I ((((C S) ((I S) B)) B) I)) ((S +) (+ (I ((I I) 0)))))	-0.69314718055994722.506567475899953e-46
+((I ((((C S) ((I S) B)) B) I)) ((S +) (+ (I ((I I) 0)))))	-0.69314718055994721.0648786602415064e-63
+((I ((((C S) ((I S) B)) B) I)) ((S +) (+ (I ((I I) 0)))))	-0.69314718055994729.324621449370601e-90
+((I ((((C S) ((I S) B)) B) I)) ((S +) (+ (I ((I I) 0)))))	-0.69314718055994721.6829555964029658e-124
+((I ((((C S) ((I S) B)) B) I)) ((S +) (+ (I ((I I) 0)))))	-0.69314718055994531.0
+((I ((((C S) ((I S) B)) B) I)) ((S +) (+ (I ((I I) 0)))))	-0.69314718055994544.5399929762484854e-5
+((I ((((C S) ((I S) B)) B) I)) ((S +) (+ (I ((I I) 0)))))	-0.69314718055994724.248354255291589e-18
+((I ((((C S) ((I S) B)) B) I)) ((S +) (+ (I ((I I) 0)))))	-0.69314733351109238.194012623990515e-40
+((S +) ((I I) ((I *) (I (((S (C +)) I) ((((B +) I) (I (I (((S *) I) (I 1))))) 1))))))	0.01.2160992992528256e-37
+((S +) ((I I) ((I *) (I (((S (C +)) I) ((((B +) I) (I (I (((S *) I) (I 1))))) 1))))))	0.01.2160992992528256e-37
+((S +) ((I I) ((I *) (I (((S (C +)) I) ((((B +) I) (I (I (((S *) I) (I 1))))) 1))))))	0.02.506567475899953e-46
+((S +) ((I I) ((I *) (I (((S (C +)) I) ((((B +) I) (I (I (((S *) I) (I 1))))) 1))))))	0.01.0648786602415064e-63
+((S +) ((I I) ((I *) (I (((S (C +)) I) ((((B +) I) (I (I (((S *) I) (I 1))))) 1))))))	0.09.324621449370601e-90
+((S +) ((I I) ((I *) (I (((S (C +)) I) ((((B +) I) (I (I (((S *) I) (I 1))))) 1))))))	0.01.6829555964029658e-124
+((S +) ((I I) ((I *) (I (((S (C +)) I) ((((B +) I) (I (I (((S *) I) (I 1))))) 1))))))	0.01.0
+((S +) ((I I) ((I *) (I (((S (C +)) I) ((((B +) I) (I (I (((S *) I) (I 1))))) 1))))))	0.04.5399929762484854e-5
+((S +) ((I I) ((I *) (I (((S (C +)) I) ((((B +) I) (I (I (((S *) I) (I 1))))) 1))))))	0.04.248354255291589e-18
+((S +) ((I I) ((I *) (I (((S (C +)) I) ((((B +) I) (I (I (((S *) I) (I 1))))) 1))))))	0.08.194012623990515e-40
+((S +) ((I I) ((I *) (I (((S (C +)) I) ((((B +) I) (I (I (((S *) I) (I 1))))) 1))))))	0.03.257488532207521e-70
+((S +) ((I I) ((I *) (I (((S (C +)) I) ((((B +) I) (I (I (((S *) I) (I 1))))) 1))))))	0.02.6691902155412764e-109
+((S +) ((I I) ((I *) (I (((S (C +)) I) ((((B +) I) (I (I (((S *) I) (I 1))))) 1))))))	0.04.508027065606742e-157
+((S +) ((I I) ((I *) (I (((S (C +)) I) ((((B +) I) (I (I (((S *) I) (I 1))))) 1))))))	0.01.5692923852557387e-213
+((S +) ((I I) ((I *) (I (((S (C +)) I) ((((B +) I) (I (I (((S *) I) (I 1))))) 1))))))	0.01.1259823474166023e-278
+Miss
+((S +) ((I I) ((I *) (I (((S (C +)) I) ((((B +) I) (I (I (((S *) I) (I 1))))) 1))))))	0.01.6829555964029658e-124
+((S +) ((I I) ((I *) (I (((S (C +)) I) ((((B +) I) (I (I (((S *) I) (I 1))))) 1))))))	0.06.260722682888491e-168
+((S +) ((I I) ((I *) (I (((S (C +)) I) ((((B +) I) (I (I (((S *) I) (I 1))))) 1))))))	0.04.800501821955756e-220
+((S +) ((I I) ((I *) (I (((S (C +)) I) ((((B +) I) (I (I (((S *) I) (I 1))))) 1))))))	0.07.586809378798905e-281
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+((B I) ((C *) (((I (S *)) I) (I ((+ 1) ((I ((C +) 1)) 1))))))	0.02.171738281389827e-300
+((B I) ((C *) (((I (S *)) I) (I ((+ 1) ((I ((C +) 1)) 1))))))	0.01.285880161551771e-252
+((B I) ((C *) (((I (S *)) I) (I ((+ 1) ((I ((C +) 1)) 1))))))	0.01.5692923852557387e-213
+((B I) ((C *) (((I (S *)) I) (I ((+ 1) ((I ((C +) 1)) 1))))))	0.03.9474587518512645e-183
+((B I) ((C *) (((I (S *)) I) (I ((+ 1) ((I ((C +) 1)) 1))))))	0.02.0466411214592676e-161
+((B I) ((C *) (((I (S *)) I) (I ((+ 1) ((I ((C +) 1)) 1))))))	0.02.1871378321977182e-148
+((B I) ((C *) (((I (S *)) I) (I ((+ 1) ((I ((C +) 1)) 1))))))	0.04.8174916649430757e-144
+((B I) ((C *) (((I (S *)) I) (I ((+ 1) ((I ((C +) 1)) 1))))))	0.01.6829555964029658e-124
+((B I) ((C *) (((I (S *)) I) (I ((+ 1) ((I ((C +) 1)) 1))))))	0.09.324621449370601e-90
+((B I) ((C *) (((I (S *)) I) (I ((+ 1) ((I ((C +) 1)) 1))))))	0.01.0648786602415064e-63
+((B I) ((C *) (((I (S *)) I) (I ((+ 1) ((I ((C +) 1)) 1))))))	0.02.506567475899953e-46
+((B I) ((C *) (((I (S *)) I) (I ((+ 1) ((I ((C +) 1)) 1))))))	0.01.2160992992528256e-37
+((B I) ((C *) (((I (S *)) I) (I ((+ 1) ((I ((C +) 1)) 1))))))	0.01.2160992992528256e-37
+((B I) ((C *) (((I (S *)) I) (I ((+ 1) ((I ((C +) 1)) 1))))))	0.02.506567475899953e-46
+((B I) ((C *) (((I (S *)) I) (I ((+ 1) ((I ((C +) 1)) 1))))))	0.01.0648786602415064e-63
+((B I) ((C *) (((I (S *)) I) (I ((+ 1) ((I ((C +) 1)) 1))))))	0.09.324621449370601e-90
+((B I) ((C *) (((I (S *)) I) (I ((+ 1) ((I ((C +) 1)) 1))))))	0.01.6829555964029658e-124
+((B I) ((C *) (((I (S *)) I) (I ((+ 1) ((I ((C +) 1)) 1))))))	0.01.0
+((B I) ((C *) (((I (S *)) I) (I ((+ 1) ((I ((C +) 1)) 1))))))	0.04.5399929762484854e-5
+((B I) ((C *) (((I (S *)) I) (I ((+ 1) ((I ((C +) 1)) 1))))))	0.04.248354255291589e-18
+((B I) ((C *) (((I (S *)) I) (I ((+ 1) ((I ((C +) 1)) 1))))))	0.08.194012623990515e-40
+((B I) ((C *) (((I (S *)) I) (I ((+ 1) ((I ((C +) 1)) 1))))))	0.03.257488532207521e-70
+((B I) ((C *) (((I (S *)) I) (I ((+ 1) ((I ((C +) 1)) 1))))))	0.02.6691902155412764e-109
+((B I) ((C *) (((I (S *)) I) (I ((+ 1) ((I ((C +) 1)) 1))))))	0.04.508027065606742e-157
+((B I) ((C *) (((I (S *)) I) (I ((+ 1) ((I ((C +) 1)) 1))))))	0.01.5692923852557387e-213
+((B I) ((C *) (((I (S *)) I) (I ((+ 1) ((I ((C +) 1)) 1))))))	0.01.1259823474166023e-278
+Miss
+((S *) I)	-0.85878637882675871.0
+((S ((((B B) (I C)) (C (B (+ 1)))) *)) (I (* 1)))	-0.7076153869158691.0
+((S ((((B B) (I C)) (C (B (+ 1)))) *)) (I (* 1)))	-0.69314718058999964.5399929762484854e-5
+((S ((((B B) (I C)) (C (B (+ 1)))) *)) (I (* 1)))	-0.69314718055994724.248354255291589e-18
+((S *) (+ 1))	-2.2826573661107971.2160992992528256e-37
+((S *) (+ 1))	-2.2823823856765131.2160992992528256e-37
+((S *) (+ 1))	-2.2823823856765132.506567475899953e-46
+((S *) (+ 1))	-2.2823823856765841.0648786602415064e-63
+((S *) (+ 1))	-2.2823823856765849.324621449370601e-90
+((S *) (+ 1))	-2.2823823856764991.6829555964029658e-124
+((S *) (+ 1))	-2.28238238567652641.0
+((S *) (+ 1))	-2.28238238567652554.5399929762484854e-5
+((S *) (+ 1))	-2.28238238567652734.248354255291589e-18
+((S *) (+ 1))	-2.28238239816232648.194012623990515e-40
+((S *) ((B (+ 1)) ((I +) ((* 1) (I (I 1))))))	-0.69314718159051841.2160992992528256e-37
+((S *) ((B (+ 1)) ((I +) ((* 1) (I (I 1))))))	-1.09861228866810731.2160992992528256e-37
+((B ((((B S) ((I I) C)) *) I)) (I ((I I) (+ (I (I (I 1)))))))	-4.122313157495228e-91.2160992992528256e-37
+((B ((((B S) ((I I) C)) *) I)) (I ((I I) (+ (I (I (I 1)))))))	0.02.506567475899953e-46
+((B ((((B S) ((I I) C)) *) I)) (I ((I I) (+ (I (I (I 1)))))))	0.01.0648786602415064e-63
+((B ((((B S) ((I I) C)) *) I)) (I ((I I) (+ (I (I (I 1)))))))	0.09.324621449370601e-90
+((S *) ((B (+ 1)) ((I +) ((* 1) (I (I 1))))))	-0.69316988026718611.0
+((B ((((B S) ((I I) C)) *) I)) (I ((I I) (+ (I (I (I 1)))))))	-9.079573746725622e-51.0
+((B ((((B S) ((I I) C)) *) I)) (I ((I I) (+ (I (I (I 1)))))))	-1.865174681370263e-134.5399929762484854e-5
+((B ((((B S) ((I I) C)) *) I)) (I ((I I) (+ (I (I (I 1)))))))	0.04.248354255291589e-18
+((B ((((B S) ((I I) C)) *) I)) (I ((I I) (+ (I (I (I 1)))))))	0.08.194012623990515e-40
+((B ((((B S) ((I I) C)) *) I)) (I ((I I) (+ (I (I (I 1)))))))	0.03.257488532207521e-70
+((B ((((B S) ((I I) C)) *) I)) (I ((I I) (+ (I (I (I 1)))))))	0.02.6691902155412764e-109
+((B ((((B S) ((I I) C)) *) I)) (I ((I I) (+ (I (I (I 1)))))))	0.04.508027065606742e-157
+((B ((((B S) ((I I) C)) *) I)) (I ((I I) (+ (I (I (I 1)))))))	0.01.5692923852557387e-213
+((B ((((B S) ((I I) C)) *) I)) (I ((I I) (+ (I (I (I 1)))))))	0.01.1259823474166023e-278
+((B ((((B S) ((I I) C)) *) I)) (I ((I I) (+ (I (I (I 1)))))))	0.09.324621449370601e-90
+((B ((((B S) ((I I) C)) *) I)) (I ((I I) (+ (I (I (I 1)))))))	0.01.6829555964029658e-124
+((B ((((B S) ((I I) C)) *) I)) (I ((I I) (+ (I (I (I 1)))))))	0.06.260722682888491e-168
+((B ((((B S) ((I I) C)) *) I)) (I ((I I) (+ (I (I (I 1)))))))	0.04.800501821955756e-220
+((B ((((B S) ((I I) C)) *) I)) (I ((I I) (+ (I (I (I 1)))))))	0.07.586809378798905e-281
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+(I ((I (S *)) ((S +) I)))	-2.7080502011022091.0
+(I ((I (S *)) ((S +) I)))	-2.70805020110221144.5399929762484854e-5
+(I ((I (S *)) ((S +) I)))	-2.70805020110220344.248354255291589e-18
+(I ((I (S *)) ((S +) I)))	-2.70805022149568238.194012623990515e-40
+((S *) ((S +) (+ ((((I C) (((((S B) (S B)) (B I)) I) (C +))) 0) 1))))	0.01.2160992992528256e-37
+((S *) ((S +) (+ ((((I C) (((((S B) (S B)) (B I)) I) (C +))) 0) 1))))	0.01.2160992992528256e-37
+((S *) ((S +) (+ ((((I C) (((((S B) (S B)) (B I)) I) (C +))) 0) 1))))	0.02.506567475899953e-46
+((S *) ((S +) (+ ((((I C) (((((S B) (S B)) (B I)) I) (C +))) 0) 1))))	0.01.0648786602415064e-63
+((S *) ((S +) (+ ((((I C) (((((S B) (S B)) (B I)) I) (C +))) 0) 1))))	0.09.324621449370601e-90
+((S *) ((S +) (+ ((((I C) (((((S B) (S B)) (B I)) I) (C +))) 0) 1))))	0.01.6829555964029658e-124
+((S *) ((S +) (+ ((((I C) (((((S B) (S B)) (B I)) I) (C +))) 0) 1))))	0.01.0
+((S *) ((S +) (+ ((((I C) (((((S B) (S B)) (B I)) I) (C +))) 0) 1))))	0.04.5399929762484854e-5
+((S *) ((S +) (+ ((((I C) (((((S B) (S B)) (B I)) I) (C +))) 0) 1))))	0.04.248354255291589e-18
+((S *) ((S +) (+ ((((I C) (((((S B) (S B)) (B I)) I) (C +))) 0) 1))))	0.08.194012623990515e-40
+((S *) ((S +) (+ ((((I C) (((((S B) (S B)) (B I)) I) (C +))) 0) 1))))	0.03.257488532207521e-70
+((S *) ((S +) (+ ((((I C) (((((S B) (S B)) (B I)) I) (C +))) 0) 1))))	0.02.6691902155412764e-109
+((S *) ((S +) (+ ((((I C) (((((S B) (S B)) (B I)) I) (C +))) 0) 1))))	0.04.508027065606742e-157
+((S *) ((S +) (+ ((((I C) (((((S B) (S B)) (B I)) I) (C +))) 0) 1))))	0.01.5692923852557387e-213
+((S *) ((S +) (+ ((((I C) (((((S B) (S B)) (B I)) I) (C +))) 0) 1))))	0.01.1259823474166023e-278
+Miss
+((S *) ((S +) (+ ((((I C) (((((S B) (S B)) (B I)) I) (C +))) 0) 1))))	0.01.6829555964029658e-124
+((S *) ((S +) (+ ((((I C) (((((S B) (S B)) (B I)) I) (C +))) 0) 1))))	0.06.260722682888491e-168
+((S *) ((S +) (+ ((((I C) (((((S B) (S B)) (B I)) I) (C +))) 0) 1))))	0.04.800501821955756e-220
+((S *) ((S +) (+ ((((I C) (((((S B) (S B)) (B I)) I) (C +))) 0) 1))))	0.07.586809378798905e-281
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+(((S B) ((I S) *)) (((I I) (S ((I C) +))) I))	0.01.0
+(((S B) ((I S) *)) (((I I) (S ((I C) +))) I))	0.04.5399929762484854e-5
+(((S B) ((I S) *)) (((I I) (S ((I C) +))) I))	0.04.248354255291589e-18
+(((S B) ((I S) *)) (((I I) (S ((I C) +))) I))	0.08.194012623990515e-40
+(((S B) ((I S) *)) (((I I) (S ((I C) +))) I))	0.03.257488532207521e-70
+(((S B) ((I S) *)) (((I I) (S ((I C) +))) I))	0.02.6691902155412764e-109
+(((S B) ((I S) *)) (((I I) (S ((I C) +))) I))	0.04.508027065606742e-157
+(((S B) ((I S) *)) (((I I) (S ((I C) +))) I))	0.01.5692923852557387e-213
+(((S B) ((I S) *)) (((I I) (S ((I C) +))) I))	0.01.1259823474166023e-278
+Miss
+(((S B) ((I S) *)) (((I I) (S ((I C) +))) I))	0.01.6829555964029658e-124
+(((S B) ((I S) *)) (((I I) (S ((I C) +))) I))	0.06.260722682888491e-168
+(((S B) ((I S) *)) (((I I) (S ((I C) +))) I))	0.04.800501821955756e-220
+(((S B) ((I S) *)) (((I I) (S ((I C) +))) I))	0.07.586809378798905e-281
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+((S (C (S ((B (S *)) (I +))))) +)	0.01.0
+((S (C (S ((B (S *)) (I +))))) +)	0.04.5399929762484854e-5
+((S (C (S ((B (S *)) (I +))))) +)	0.04.248354255291589e-18
+((S (C (S ((B (S *)) (I +))))) +)	0.08.194012623990515e-40
+((S (C (S ((B (S *)) (I +))))) +)	0.03.257488532207521e-70
+((S (C (S ((B (S *)) (I +))))) +)	0.02.6691902155412764e-109
+((S (C (S ((B (S *)) (I +))))) +)	0.04.508027065606742e-157
+((S (C (S ((B (S *)) (I +))))) +)	0.01.5692923852557387e-213
+((S (C (S ((B (S *)) (I +))))) +)	0.01.1259823474166023e-278
+Miss
+((S (C (S ((B (S *)) (I +))))) +)	0.01.6829555964029658e-124
+((S (C (S ((B (S *)) (I +))))) +)	0.06.260722682888491e-168
+((S (C (S ((B (S *)) (I +))))) +)	0.04.800501821955756e-220
+((S (C (S ((B (S *)) (I +))))) +)	0.07.586809378798905e-281
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
+Miss
