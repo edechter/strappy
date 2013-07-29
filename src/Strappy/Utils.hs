@@ -28,6 +28,7 @@ sampleMultinomialLogProb dist =
           
 logSumExpList :: [Double] -> Double
 logSumExpList = foldl1 logSumExp
+           
 
 logSumExp :: Double -> Double -> Double
 logSumExp x y | isNaN x = y

@@ -1,5 +1,5 @@
 em:
-	ghc -O3 -threaded +RTS -N -RTS -rtsopts --make Strappy/EM.hs
+	ghc -O3 -rtsopts --make Strappy/EM.hs
 plan:
 	ghc -O3 -rtsopts --make Strappy/PlanTest.hs
 kpca:
