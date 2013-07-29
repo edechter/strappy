@@ -13,6 +13,7 @@ import Data.Maybe
 
 import Strappy.Type
 import Strappy.EnumBF
+import Strappy.EnumBits
 import Strappy.Expr
 import Strappy.Library
 import Strappy.Utils 
@@ -89,3 +90,14 @@ sampleBF n gr tp =
 -- | Monadic wrapper
 sampleBFM :: Monad m => Int -> Grammar -> Type -> m (ExprMap Double)
 sampleBFM n gr tp = return $ sampleBF n gr tp
+
+-- | Uses encoding enumeration (enumeration of bits) to "sample" a grammar
+sampleBits :: Int -> Grammar -> Type -> ExprMap Double
+sampleBits n gr tp =
+  Map.fromList $ map (\e -> let e' = exprLogLikelihood gr $ annotateRequested' tp e
+                            in (e', fromJust $ eLogLikelihood e'))
+               $ enumBits gr n tp
+
+-- | Monadic wrapper
+sampleBitsM :: Monad m => Int -> Grammar -> Type -> m (ExprMap Double)
+sampleBitsM n gr tp = return $ sampleBits n gr tp
