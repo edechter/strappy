@@ -21,11 +21,11 @@ pruneGrammar = False
 
 -- | Sample by enumeration?
 sampleByEnumeration :: Bool
-sampleByEnumeration = False
+sampleByEnumeration = True
 
 -- | Max size of the frontier enumerated, or sampled, during the "E" step
 frontierSize :: Int
-frontierSize = 5000
+frontierSize = 3000
 
 -- | Maximum number of samples drawn from the grammar
 frontierSamples :: Int
