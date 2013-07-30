@@ -19,13 +19,12 @@ import System.IO.Unsafe
 import System.CPUTime
 
 
-compressWeightedCorpus :: Type -> -- ^ Toplevel type of the tasks
-                          Double -> -- ^ lambda
+compressWeightedCorpus :: Double -> -- ^ lambda
                           Double -> -- ^ pseudocounts
                           Grammar -> -- ^ initial grammar
                           [(Expr, Double)] -> -- ^ weighted corpus
                           Grammar
-compressWeightedCorpus tp lambda pseudocounts grammar corpus =
+compressWeightedCorpus lambda pseudocounts grammar corpus =
   let subtrees = foldl1 (Map.unionWith (+)) $ map (countSubtrees Map.empty) corpus
       terminals = filter isTerm $ Map.keys $ grExprDistr grammar
       newProductions = compressCorpus lambda subtrees
@@ -35,15 +34,8 @@ compressWeightedCorpus tp lambda pseudocounts grammar corpus =
       grammar''  = if pruneGrammar
                    then removeUnusedProductions grammar' $ map fst corpus
                    else grammar'
-      (grammar''', corpus') = if compressLibrary
-                              then let (compProds, subseq) = simplifyLibrary productions
-                                       compCorpus = map (\(e,w) -> (foldl (\ce (old,new) -> subExpr old new ce) e subseq, w)) corpus
-                                       compCorpus' = map (\(e, w) -> (annotateRequested' tp e, w)) compCorpus
-                                       uniLogProb = - log (genericLength compProds)
-                                   in (Grammar (log 0.5) $ Map.fromList [ (prod, uniLogProb) | prod <- compProds ], compCorpus')
-                              else (grammar'', corpus)
-      grammar'''' = inoutEstimateGrammar grammar''' pseudocounts corpus'
-  in grammar''''
+      grammar''' = inoutEstimateGrammar grammar'' pseudocounts corpus
+  in grammar'''
 
 -- Weighted Nevill-Manning
 compressCorpus :: Double -> ExprMap Double -> [Expr]

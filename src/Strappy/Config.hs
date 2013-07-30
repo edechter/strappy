@@ -48,10 +48,3 @@ planningBeta = 1
 --   Measured in nanoseconds
 maxEvalTime :: Timeout
 maxEvalTime = fromIntegral 10000
-
--- | Truncated stick for variational inference
-truncatedStickLen = 20
-
--- | Should we coalesce identical productions when it reduces description length?
-compressLibrary :: Bool
-compressLibrary = False

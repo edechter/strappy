@@ -35,6 +35,7 @@ mcmcPlan :: (Eq a, Ord a, Show a) => -- ^ Type of plans, such as list of actions
             Int -> -- ^ length of the plan
             IO (Double, [(Expr, Double)], Bool) -- ^ log partition function, expressions and log rewards, hit task
 -}
+{-
 mcmcPlan p0 dist likelihood len =
   mcmc p0 1 0
   where mcmc prefix prefixRecipLike lenSoFar = do
@@ -75,10 +76,7 @@ mcmcPlan p0 dist likelihood len =
                     -- and then get the expected rewards
                     let exprRewards = map (\(e,w) -> (e, partitionFunction * exp w)) $ normalizeDist wtdExprs
                     return (partitionFunction, exprRewards ++ suffixRewards, hit)
-
-{- Old implementation of MCMC plan:
-   Does not distribute credit across equivalent programs
-   I'm keeping this around because I like how it handles holes better.
+-}
 mcmcPlan e0 dist likelihood len =
   mcmc e0 1 0
   where mcmc prefix prefixRecipLike lenSoFar = do
@@ -104,7 +102,6 @@ mcmcPlan e0 dist likelihood len =
                 let epsilon = 0.01 -- tolerance for deciding if a plan has hit a task
                 let hit = suffixHit || eLike >= 0.0-epsilon
                 return (partitionFunction, (e, partitionFunction):suffixRewards, hit)
--}
 
 
 {-doEMPlan :: Eq a, Ord a, Show a =>
@@ -140,15 +137,10 @@ doEMPlan tasks isHarderThan lambda pseudocounts frontierSize numPlans planLen gr
       else do
       let frontier = snd $ fromJust $ find ((==tp) . fst) frontiers
       (logPartitionFunction, programLogRewards, anyHit, anyPartial) <- do
-        (firstZ,firstRS,firstHit) <- mcmcPlan seed frontier likelihood planLen
-        -- If firstResult is empty, (can't make any progress on the task), then just give up
-        if null firstRS
-          then return (firstZ, [], False, False)
-          else do
-          planResults <- Parallel.replicateM (numPlans-1) $ mcmcPlan seed frontier likelihood planLen
-          return $ foldl (\ (logZ, rewards, hit, part) (logZ', rewards', hit') ->
-                           (logSumExp logZ logZ', rewards++rewards', hit||hit', part||(not (null rewards'))))
-                         (firstZ, firstRS, firstHit, True) planResults
+        planResults <- Parallel.replicateM numPlans $ mcmcPlan seed frontier likelihood planLen
+        return $ foldl (\ (logZ, rewards, hit, part) (logZ', rewards', hit') ->
+                         (logSumExp logZ logZ', rewards++rewards', hit||hit', part||(not (null rewards'))))
+                       (log 0, [], False, False) planResults
       when anyHit $ do
         when verbose $ putStrLn $ "Hit " ++ nm
         modifyIORef numHitRef (+1)
@@ -163,9 +155,7 @@ doEMPlan tasks isHarderThan lambda pseudocounts frontierSize numPlans planLen gr
   putStrLn $ "Hit " ++ show numHit ++ "/" ++ show (length tasks) ++ " tasks."
   -- Compress the corpus
   let normalizedRewards' = Map.toList $ Map.fromListWith (+) $ concat normalizedRewards
-  -- Hack: assume that all tasks have the same type
-  let reqTp = (ptType $ head tasks) ->- (ptType $ head tasks)
-  let grammar' = compressWeightedCorpus reqTp lambda pseudocounts grammar normalizedRewards'
+  let grammar' = compressWeightedCorpus lambda pseudocounts grammar normalizedRewards'
   let terminalLen = length $ filter isTerm $ Map.keys $ grExprDistr grammar
   putStrLn $ "Got " ++ show ((length $ lines $ showGrammar $ removeSubProductions grammar') - terminalLen - 1) ++ " new productions."
   putStrLn $ "Grammar entropy: " ++ show (entropyLogDist $ Map.elems $ grExprDistr grammar') ++ " nats."
