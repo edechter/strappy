@@ -29,7 +29,7 @@ frontierSize = 1000
 
 -- | Maximum number of samples drawn from the grammar
 frontierSamples :: Int
-frontierSamples = 60000
+frontierSamples = 50000
 
 -- | Number of plans sampled for each task
 numberOfPlansPerTask :: Int

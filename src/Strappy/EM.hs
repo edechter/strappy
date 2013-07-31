@@ -1,7 +1,7 @@
 {-# LANGUAGE TupleSections  #-}
 
---module Strappy.EM where
-module Main where
+module Strappy.EM where
+--module Main where
 
 import Strappy.Sample
 import Strappy.Expr
@@ -71,7 +71,7 @@ doEMIter prefix reqTp compile tasks lambda pseudocounts frontierSize grammar = d
   if length obs' == 0
     then do putStrLn "Hit no tasks."
             return grammar -- Didn't hit any tasks
-    else do let grammar' = compressWeightedCorpus undefined lambda pseudocounts grammar obs'
+    else do let grammar' = compressWeightedCorpus lambda pseudocounts grammar obs'
             let terminalLen = length $ filter isTerm $ Map.keys $ grExprDistr grammar
             putStrLn $ "Got " ++ show ((length $ lines $ showGrammar $ removeSubProductions grammar') - terminalLen - 1) ++ " new productions."
             putStrLn $ "Grammar entropy: " ++ show (entropyLogDist $ Map.elems $ grExprDistr grammar')
@@ -111,4 +111,4 @@ polyEM = do
     return grammar'
   return ()
 
-main = polyEM
+--main = polyEM
