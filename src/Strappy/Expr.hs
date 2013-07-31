@@ -54,6 +54,16 @@ a <> b = App { eLeft = a,
                eReqType = Nothing }
          where tp = runIdentity . runTI $ typeOfApp a b
 
+ma <.> mb = do a <- ma
+               b <- mb
+               ta <- instantiateType (eType a)
+               tb <- instantiateType (eType b)
+               let a' = a{eType=ta}
+                   b' = b{eType=tb}
+               tp <- typeOfApp a' b'
+               return $ App {eLeft = a', eRight = b', eType = tp, eLogLikelihood = Nothing, eReqType = Nothing}
+ 
+
 instance Show Expr where
     show Term{eName=s} = s
     show App{eLeft=el, eRight=er} = "(" ++ show el ++ " " ++  show er ++ ")"
