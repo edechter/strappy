@@ -11,9 +11,13 @@ flipCoin :: (Num a, Ord a, Random a, MonadRandom m) => a -> m Bool
 flipCoin p = do r <- getRandomR (0, 1)
                 return $ r < p
 
-sampleMultinomial :: (Show a, Num a, Ord a, Random a, MonadRandom m) => [(b, a)] -> m b
+sampleMultinomial :: MonadRandom m => [(b, Double)] -> m b
 sampleMultinomial dist = do r <- getRandomR (0, 1)
-                            return $ sample r dist
+                            return $ sampleMultinomialNogen dist r
+
+-- | As in sampleMultinomial, but takes in a random number in [0,1)
+sampleMultinomialNogen :: [(b, Double)] -> Double -> b
+sampleMultinomialNogen dist rnd = sample rnd dist
     where sample r ((a, p):rest) = if r <= p then a 
                                              else sample (r - p) rest
           sample _ _ = error $ "Error when sampling from distribution: " ++ show (map snd dist)
@@ -25,6 +29,14 @@ sampleMultinomialLogProb dist =
   let logZ = logSumExpList $ map snd dist
       dist' = map (\(thing, ll) -> (thing, exp (ll - logZ))) dist
   in sampleMultinomial dist'
+  
+-- | As in sampleMultinomialLogProb, but takes in a random number in [0,1)
+sampleMultinomialLogProbNogen :: [(b, Double)] -> Double -> b
+sampleMultinomialLogProbNogen dist rnd =
+  -- Normalize
+  let logZ = logSumExpList $ map snd dist
+      dist' = map (\(thing, ll) -> (thing, exp (ll - logZ))) dist
+  in sampleMultinomialNogen dist' rnd
           
 logSumExpList :: [Double] -> Double
 logSumExpList = foldl1 logSumExp

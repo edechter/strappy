@@ -23,7 +23,7 @@ floor_height = -3
 stage_width = 10
 
 # Timestep size
-dt = 0.0001
+dt = 0.01
 
 perturb_strength = 5.0
 perturb_duration = 0.6
@@ -198,7 +198,7 @@ def impart_random_impulses(world, dynamic_objects,
             np.node().setAngularVelocity(Vec3(0, -strength, 0))
         ang = random.random() * 2 * math.pi
         vx = strength * math.cos(ang)
-        vy = strength * math.cos(ang)
+        vy = strength * math.sin(ang)
         np.node().setLinearVelocity(Vec3(vx,0,vy))
 
 def lowest_allowed_z(world, x, z, dx, dz):
