@@ -74,7 +74,7 @@ mcmcPlan e0 dist likelihood len randstream =
 -}
 doEMPlan tasks isHarderThan lambda pseudocounts frontierSize numPlans planLen grammar = do
   -- For each type, sample a frontier of actions
-  frontiers <- mapM (\tp -> (if sampleByEnumeration then sampleBFM else sampleExprs)
+  frontiers <- mapM (\tp -> (if sampleByEnumeration then sampleBitsM else sampleExprs)
                             frontierSize grammar (tp ->- tp)
                             >>= return . (tp,) . Map.toList)
                $ nub $ map ptType tasks

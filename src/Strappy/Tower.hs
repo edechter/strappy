@@ -65,8 +65,8 @@ towerLikelihood cache e =
 planLikelihood :: SharedCache -> [(Double, Bool)] -> IO Double
 planLikelihood _ plan | length plan > 8 = return (log 0)
 planLikelihood cache plan = do
-  (ht, stabilities) <- cachedPerturb cache [0.9, 1.3, 1.7, 2.1] plan
-  let ll = ((ht - gnd_height) * (sum stabilities) - 0.5 * log (genericLength plan))/5.0
+  (ht, stabilities) <- cachedPerturb cache [0.9, 1.3, 1.7] plan
+  let ll = ((ht - gnd_height) * (sum stabilities) - log (genericLength plan))/5.0
   if isNaN ht || isInfinite ht
     then return (log 0)
     else return $ trace ("LL: " ++ show ll ++ "\n\t" ++ show plan) ll
@@ -80,9 +80,7 @@ main = do
 --  (seed, num) <- loadNextGrammar -- Replace with above commented out code to start fresh
   loopM seed [num+1..num+21] $ \grammar step -> do
     putStrLn $ "EM Iteration: " ++ show step
-    grammar' <- doEMIter ("towerem"++show step) (tList (tPair tDouble tBool)) (timeLimitedEval :: Expr -> Maybe [(Double, Bool)])
-                         [maybe 0.0 (exp . unsafePerformIO . planLikelihood cache)] 0.01 0.02 frontierSize grammar
---    grammar' <- doEMPlan [makeReflectTask,makeFlipTask,task,task,task] (\x y -> False) 0.015 1.0 frontierSize numberOfPlansPerTask maximumPlanLength grammar
+    grammar' <- doEMPlan [task,task,task] (\x y -> False) 0.015 1.0 frontierSize numberOfPlansPerTask maximumPlanLength grammar
     saveGrammar ("grammar_"++show step) grammar'
     savePhysicsCache cache "physics_cache"
     return grammar'

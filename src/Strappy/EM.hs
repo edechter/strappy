@@ -1,7 +1,7 @@
 {-# LANGUAGE TupleSections  #-}
 
-module Strappy.EM where
---module Main where
+--module Strappy.EM where
+module Main where
 
 import Strappy.Sample
 import Strappy.Expr
@@ -31,7 +31,7 @@ import System.Environment
 doEMIter :: String -> -- ^ Prefix for log output
             Type -- ^ Type of the tasks
             -> (Expr -> a) -- ^ Procedure for compiling expressions
-            -> [a -> Double] -- ^ Tasks (functions from compiled expressions to log likelihoods)
+            -> [(a -> Double, String)] -- ^ Tasks (functions from compiled expressions to log likelihoods)
             -> Double -- ^ Lambda
             -> Double -- ^ pseudocounts
             -> Int -- ^ frontier size
@@ -48,17 +48,17 @@ doEMIter prefix reqTp compile tasks lambda pseudocounts frontierSize grammar = d
   -- Compile each program
   let compFrontier = Map.mapWithKey (\e w -> (compile e, w)) frontier
   -- For each task, compute the P(t|e) terms
-  let rewardedFrontiers = flip map tasks $ \ tsk ->
-        Map.mapWithKey (\expr (cExpr, w) -> (w, log $ tsk cExpr)) compFrontier
+  let rewardedFrontiers = flip map tasks $ \ (tsk, tskNm) ->
+        (tskNm, Map.mapWithKey (\expr (cExpr, w) -> (w, log $ tsk cExpr)) compFrontier)
   -- For each task, weight the corresponding frontier by P(e|g)
-  let weightedFrontiers = flip map rewardedFrontiers $ Map.map (uncurry (+))
+  let weightedFrontiers = flip map rewardedFrontiers $ Map.map (uncurry (+)) . snd
   -- Normalize frontiers
   let logZs = map (Map.fold logSumExp (log 0.0)) weightedFrontiers
   let weightedFrontiers' = zipWith (\logZ -> filter (\(_,x) -> not (isNaN x) && not (isInfinite x)) . Map.toList .
                                              Map.map (\x-> x-logZ))
                                    logZs weightedFrontiers
-  let numHit = length $ filter id $ flip map rewardedFrontiers $
-                any ((>= -0.001) . snd . snd) . Map.toList
+  let numHit = length $ filter id $ flip map weightedFrontiers' $
+                any ((>= -0.001) . snd)
   putStrLn $ "Completely solved " ++ show numHit ++ "/" ++ show (length tasks) ++ " tasks."
   -- Save out the best program for each task to a file
   saveBest prefix rewardedFrontiers
@@ -80,12 +80,16 @@ doEMIter prefix reqTp compile tasks lambda pseudocounts frontierSize grammar = d
             return grammar'
             
 saveBest fname fronts =
-  let fronts' = map Map.toList fronts
-      bestprogs = map (\front -> if null front
-                                  then Nothing
-                                  else Just $ maximumBy (\(_, (w,ll)) (_, (w',ll')) -> compare (w+ll) (w'+ll')) front)
-                                  fronts'
-      str = map (maybe "Miss" (\(e, (w,ll)) -> show e ++ "\t" ++ show w ++ "\t" ++ show ll)) bestprogs
+  let fronts' = map (\(nm, es) -> let es' = filter (\(_, (w, ll)) -> not (isNaN w) && not (isNaN ll) &&
+                                                                     not (isInfinite w) && not (isInfinite ll))
+                                                   $ Map.toList es
+                                  in (nm, es')) fronts
+      bestprogs = map (\(nm, front) -> if null front
+                                       then (nm, Nothing)
+                                       else (nm, Just $ maximumBy (\(_, (w,ll)) (_, (w',ll')) -> compare (w+ll) (w'+ll')) front))
+                      fronts'
+      str = flip map bestprogs $ \(nm, result) ->
+                                 maybe ("Missed "++nm) (\(e, (w,ll)) -> nm ++ "\t" ++ show e ++ "\t" ++ show ll) result
   in writeFile fname (unlines str)
 
 -- Polynomial regression test for EM
@@ -102,7 +106,8 @@ polyEM = do
   let mkNthDet :: (Int -> Int) -> (Maybe [Int] -> Double)
       mkNthDet poly = let points = map poly [0..9] in
                       maybe 0 (exp . fromIntegral . negate . sum . map (\x->x*x) . zipWith (-) points)
-  let dets = [ mkNthDet (\a -> x * a * a + y * a + z) | x <- [0..9], y <- [0..9], z <- [0..9] ]
+  let dets = [ (mkNthDet (\a -> x * a * a + y * a + z), 
+                show x ++ "x^2+" ++ show y ++ "x+" ++ show z) | x <- [0..9], y <- [0..9], z <- [0..9] ]
   loopM seed [0..20] $ \grammar step -> do
     putStrLn $ "EM Iteration: " ++ show step
     grammar' <- doEMIter (prefix++"_"++show step) (tInt ->- tInt) compilePoly dets
@@ -111,4 +116,4 @@ polyEM = do
     return grammar'
   return ()
 
---main = polyEM
+main = polyEM
