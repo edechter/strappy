@@ -57,8 +57,7 @@ doEMIter prefix reqTp compile tasks lambda pseudocounts frontierSize grammar = d
   let weightedFrontiers' = zipWith (\logZ -> filter (\(_,x) -> not (isNaN x) && not (isInfinite x)) . Map.toList .
                                              Map.map (\x-> x-logZ))
                                    logZs weightedFrontiers
-  let numHit = length $ filter id $ flip map weightedFrontiers' $
-                any ((>= -0.001) . snd)
+  let numHit = length $ filter id $ flip map rewardedFrontiers $ \ (_, mp) -> any (\x-> x >= -0.01) $ filter (\x -> not (isNaN x) && not (isInfinite x)) $ map (snd . snd) $ Map.toList mp
   putStrLn $ "Completely solved " ++ show numHit ++ "/" ++ show (length tasks) ++ " tasks."
   -- Save out the best program for each task to a file
   saveBest prefix rewardedFrontiers
