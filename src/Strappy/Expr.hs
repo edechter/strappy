@@ -109,6 +109,7 @@ eval Term{eThing=f} = unsafeCoerce f
 eval App{eLeft=el, eRight=er} = (eval el) (eval er)
 
 
+
 isTerm :: Expr -> Bool
 isTerm Term{} = True
 isTerm _ = False

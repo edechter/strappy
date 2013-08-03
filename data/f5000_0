@@ -1,1000 +1,1000 @@
-(* 0)	-0.78361136883180741.0
-((C ((B +) (* 0))) 1)	-1.63963149624232441.0
-((C ((B +) (* 0))) 1)	-1.6094379124971874.5399929762484854e-5
-((C ((B +) (* 0))) 1)	-1.60943791243410324.248354255291589e-18
-I	-0.240447973786757531.2160992992528256e-37
-I	-0.29979232901196441.2160992992528256e-37
-(+ 1)	-0.75316522265130461.2160992992528256e-37
-(+ ((+ 1) 1))	-2.2192035313720171.2160992992528256e-37
-(+ (I (I ((+ 1) (I ((+ 1) ((I I) 1)))))))	-2.3025851204073861.2160992992528256e-37
-(+ (((C (S +)) (I (I (I (I ((+ (I 1)) ((I ((I I) ((((B B) (S *)) (((B +) I) 0)) I))) (I (I ((+ 0) (I 1))))))))))) I))	-1.6094379149074741.2160992992528256e-37
-I	-0.240450098444389581.0
-(+ 1)	-0.71303678663729641.0
-(+ ((+ 1) 1))	-2.1758410701815251.0
-(+ (I (I ((+ 1) (I ((+ 1) ((I I) 1)))))))	-1.79278800517817971.0
-(+ (((C (S +)) (I (I (I (I ((+ (I 1)) ((I ((I I) ((((B B) (S *)) (((B +) I) 0)) I))) (I (I ((+ 0) (I 1))))))))))) I))	-1.3863738078410011.0
-((B I) (I (+ (I ((+ 1) (((((B S) (B *)) I) I) ((+ 1) 1)))))))	-1.8158323181689595e-41.0
-((B I) (I (+ (I ((+ 1) (((((B S) (B *)) I) I) ((+ 1) 1)))))))	-3.7481129311345285e-134.5399929762484854e-5
-((B I) (I (+ (I ((+ 1) (((((B S) (B *)) I) I) ((+ 1) 1)))))))	0.04.248354255291589e-18
-((((B B) (S +)) (I (+ ((I I) (I (I 1)))))) ((I +) (I 1)))	-6.715360773270618e-31.2160992992528256e-37
-((((B B) (S +)) (I (+ ((I I) (I (I 1)))))) ((I +) (I 1)))	0.02.506567475899953e-46
-((S +) I)	-1.07881274856238821.0
-((S +) (+ 1))	-1.3675490361025841.0
-((I (B (+ (I 0)))) ((S (C +)) (((I I) (I (I ((I (I B)) ((C I) ((((((S B) I) I) (I (I +))) 1) ((* 1) 1))))))) ((B I) +))))	-1.79215285789852621.0
-((((B B) (S +)) (I (+ ((I I) (I (I 1)))))) ((I +) (I 1)))	-2.7236248454609135e-41.0
-((((B B) (S +)) (I (+ ((I I) (I (I 1)))))) ((I +) (I 1)))	-5.613287612504791e-134.5399929762484854e-5
-((((B B) (S +)) (I (+ ((I I) (I (I 1)))))) ((I +) (I 1)))	0.04.248354255291589e-18
-((S +) (((I S) +) ((C +) 1)))	-6.71539557839651e-31.2160992992528256e-37
-((S +) (((I S) +) ((C +) 1)))	0.02.506567475899953e-46
-((S +) (((I S) +) ((C +) 1)))	0.01.0648786602415064e-63
-((S +) (((I S) +) ((C +) 1)))	0.09.324621449370601e-90
-((S +) ((S +) I))	-2.44234900927724531.0
-((S +) (((I S) +) ((C +) 1)))	-1.0436535886210508e-31.0
-((S +) (((I S) +) ((C +) 1)))	-2.1582735598713043e-124.5399929762484854e-5
-((S +) (((I S) +) ((C +) 1)))	0.04.248354255291589e-18
-((B ((S +) I)) ((S +) I))	-1.1008557525530451.2160992992528256e-37
-((B ((S +) I)) ((S +) I))	-1.09861228866810731.2160992992528256e-37
-((B ((S +) I)) ((S +) I))	-1.09861228866810732.506567475899953e-46
-((B ((S +) I)) ((S +) I))	-1.09861228866810731.0648786602415064e-63
-((B ((S +) I)) ((S +) I))	-1.09861228866810739.324621449370601e-90
-((B ((S +) I)) ((S +) I))	-1.09861228866810731.6829555964029658e-124
-((B ((S +) I)) ((S +) I))	-1.09861228866810961.0
-((B ((S +) I)) ((S +) I))	-1.09861228866810914.5399929762484854e-5
-((B ((S +) I)) ((S +) I))	-1.09861228866811444.248354255291589e-18
-((B ((S +) I)) ((S +) I))	-1.09861228866810738.194012623990515e-40
-((B ((S +) I)) ((S +) I))	-1.09861228866810733.257488532207521e-70
-((B ((S +) I)) ((S +) I))	-1.09861228866810732.6691902155412764e-109
-((B ((S +) I)) ((S +) I))	-1.09861228866810734.508027065606742e-157
-(((B *) I) (((S *) (I (+ 1))) (I ((+ (I 0)) ((+ ((* ((+ 1) 1)) 1)) 0)))))	0.02.0466411214592676e-161
-(((B *) I) (((S *) (I (+ 1))) (I ((+ (I 0)) ((+ ((* ((+ 1) 1)) 1)) 0)))))	0.02.1871378321977182e-148
-(((B *) I) (((S *) (I (+ 1))) (I ((+ (I 0)) ((+ ((* ((+ 1) 1)) 1)) 0)))))	0.04.8174916649430757e-144
-((B ((S +) I)) ((S +) I))	-1.38629436111989431.6829555964029658e-124
-(((B *) I) (((S *) (I (+ 1))) (I ((+ (I 0)) ((+ ((* ((+ 1) 1)) 1)) 0)))))	0.09.324621449370601e-90
-(((B *) I) (((S *) (I (+ 1))) (I ((+ (I 0)) ((+ ((* ((+ 1) 1)) 1)) 0)))))	0.01.0648786602415064e-63
-(((B *) I) (((S *) (I (+ 1))) (I ((+ (I 0)) ((+ ((* ((+ 1) 1)) 1)) 0)))))	0.02.506567475899953e-46
-(((B *) I) (((S *) (I (+ 1))) (I ((+ (I 0)) ((+ ((* ((+ 1) 1)) 1)) 0)))))	0.01.2160992992528256e-37
-(((B *) I) (((S *) (I (+ 1))) (I ((+ (I 0)) ((+ ((* ((+ 1) 1)) 1)) 0)))))	0.01.2160992992528256e-37
-(((B *) I) (((S *) (I (+ 1))) (I ((+ (I 0)) ((+ ((* ((+ 1) 1)) 1)) 0)))))	0.02.506567475899953e-46
-(((B *) I) (((S *) (I (+ 1))) (I ((+ (I 0)) ((+ ((* ((+ 1) 1)) 1)) 0)))))	0.01.0648786602415064e-63
-(((B *) I) (((S *) (I (+ 1))) (I ((+ (I 0)) ((+ ((* ((+ 1) 1)) 1)) 0)))))	0.09.324621449370601e-90
-(((B *) I) (((S *) (I (+ 1))) (I ((+ (I 0)) ((+ ((* ((+ 1) 1)) 1)) 0)))))	0.01.6829555964029658e-124
-(((B *) I) (((S *) (I (+ 1))) (I ((+ (I 0)) ((+ ((* ((+ 1) 1)) 1)) 0)))))	0.01.0
-(((B *) I) (((S *) (I (+ 1))) (I ((+ (I 0)) ((+ ((* ((+ 1) 1)) 1)) 0)))))	0.04.5399929762484854e-5
-(((B *) I) (((S *) (I (+ 1))) (I ((+ (I 0)) ((+ ((* ((+ 1) 1)) 1)) 0)))))	0.04.248354255291589e-18
-(((B *) I) (((S *) (I (+ 1))) (I ((+ (I 0)) ((+ ((* ((+ 1) 1)) 1)) 0)))))	0.08.194012623990515e-40
-(((B *) I) (((S *) (I (+ 1))) (I ((+ (I 0)) ((+ ((* ((+ 1) 1)) 1)) 0)))))	0.03.257488532207521e-70
-(((B *) I) (((S *) (I (+ 1))) (I ((+ (I 0)) ((+ ((* ((+ 1) 1)) 1)) 0)))))	0.02.6691902155412764e-109
-(((B *) I) (((S *) (I (+ 1))) (I ((+ (I 0)) ((+ ((* ((+ 1) 1)) 1)) 0)))))	0.04.508027065606742e-157
-(((B *) I) (((S *) (I (+ 1))) (I ((+ (I 0)) ((+ ((* ((+ 1) 1)) 1)) 0)))))	0.01.5692923852557387e-213
-(((B *) I) (((S *) (I (+ 1))) (I ((+ (I 0)) ((+ ((* ((+ 1) 1)) 1)) 0)))))	0.01.1259823474166023e-278
-Miss
-(((B *) I) (((S *) (I (+ 1))) (I ((+ (I 0)) ((+ ((* ((+ 1) 1)) 1)) 0)))))	0.01.6829555964029658e-124
-(((B *) I) (((S *) (I (+ 1))) (I ((+ (I 0)) ((+ ((* ((+ 1) 1)) 1)) 0)))))	0.06.260722682888491e-168
-(((B *) I) (((S *) (I (+ 1))) (I ((+ (I 0)) ((+ ((* ((+ 1) 1)) 1)) 0)))))	0.04.800501821955756e-220
-(((B *) I) (((S *) (I (+ 1))) (I ((+ (I 0)) ((+ ((* ((+ 1) 1)) 1)) 0)))))	0.07.586809378798905e-281
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-((S *) I)	-0.89908936951560571.0
-((S *) I)	-0.89908936951560974.5399929762484854e-5
-((S *) I)	-0.89908936951561464.248354255291589e-18
-((S *) I)	-0.89908939508792688.194012623990515e-40
-((S *) (+ 1))	-1.77306733621590241.2160992992528256e-37
-((S *) (+ 1))	-1.77306733621590241.2160992992528256e-37
-((S *) (+ 1))	-1.77306733621590242.506567475899953e-46
-((S *) (+ 1))	-1.77306733621591661.0648786602415064e-63
-((S *) (+ 1))	-1.77306733621591669.324621449370601e-90
-((S *) (+ 1))	-1.7730673362159451.6829555964029658e-124
-((S *) (+ 1))	-1.7730673362159021.0
-((S *) (+ 1))	-1.77306733621590154.5399929762484854e-5
-((S *) (+ 1))	-1.77306733621590244.248354255291589e-18
-((S *) (+ 1))	-1.7730673477593948.194012623990515e-40
-((S +) ((((C I) *) S) ((C (I +)) (I 1))))	-0.69314718055994721.2160992992528256e-37
-((S +) ((((C I) *) S) ((C (I +)) (I 1))))	-0.69314718055994721.2160992992528256e-37
-((S +) ((((C I) *) S) ((C (I +)) (I 1))))	-0.69314718055994722.506567475899953e-46
-((S +) ((((C I) *) S) ((C (I +)) (I 1))))	-0.69314718055994721.0648786602415064e-63
-((S +) ((((C I) *) S) ((C (I +)) (I 1))))	-0.69314718055994729.324621449370601e-90
-((S +) ((((C I) *) S) ((C (I +)) (I 1))))	-0.69314718055994721.6829555964029658e-124
-((S +) ((((C I) *) S) ((C (I +)) (I 1))))	-0.69314718055994531.0
-((S +) ((((C I) *) S) ((C (I +)) (I 1))))	-0.69314718055994544.5399929762484854e-5
-((S +) ((((C I) *) S) ((C (I +)) (I 1))))	-0.69314718055994724.248354255291589e-18
-((S +) ((((C I) *) S) ((C (I +)) (I 1))))	-0.69314718055994728.194012623990515e-40
-((S +) ((((C I) *) S) ((C (I +)) (I 1))))	-0.69314718055994723.257488532207521e-70
-((S +) ((((C I) *) S) ((C (I +)) (I 1))))	-0.69314718055994722.6691902155412764e-109
-((S +) ((((C I) *) S) ((C (I +)) (I 1))))	-0.69314718055994724.508027065606742e-157
-((S +) ((((C I) *) S) ((C (I +)) (I 1))))	-0.69314718055994721.5692923852557387e-213
-((S +) ((((C I) *) S) ((C (I +)) (I 1))))	-0.69314718055989031.1259823474166023e-278
-Miss
-((S +) ((((C I) *) S) ((C (I +)) (I 1))))	-0.69314718055994721.6829555964029658e-124
-((S +) ((((C I) *) S) ((C (I +)) (I 1))))	-0.69314718055994726.260722682888491e-168
-((S +) ((((C I) *) S) ((C (I +)) (I 1))))	-0.69314718055994724.800501821955756e-220
-((S +) ((((C I) *) S) ((C (I +)) (I 1))))	-0.69314718055989037.586809378798905e-281
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-((S *) ((S +) I))	-2.140066163496271.0
-((S *) ((S +) I))	-2.14006616349627174.5399929762484854e-5
-((S *) ((S +) I))	-2.14006616349626464.248354255291589e-18
-((S *) ((S +) I))	-2.1400661814905398.194012623990515e-40
-((((C (I (S B))) (S +)) (B (S *))) I)	0.01.2160992992528256e-37
-((((C (I (S B))) (S +)) (B (S *))) I)	0.01.2160992992528256e-37
-((((C (I (S B))) (S +)) (B (S *))) I)	0.02.506567475899953e-46
-((((C (I (S B))) (S +)) (B (S *))) I)	0.01.0648786602415064e-63
-((((C (I (S B))) (S +)) (B (S *))) I)	0.09.324621449370601e-90
-((((C (I (S B))) (S +)) (B (S *))) I)	0.01.6829555964029658e-124
-((((C (I (S B))) (S +)) (B (S *))) I)	0.01.0
-((((C (I (S B))) (S +)) (B (S *))) I)	0.04.5399929762484854e-5
-((((C (I (S B))) (S +)) (B (S *))) I)	0.04.248354255291589e-18
-((((C (I (S B))) (S +)) (B (S *))) I)	0.08.194012623990515e-40
-((((C (I (S B))) (S +)) (B (S *))) I)	0.03.257488532207521e-70
-((((C (I (S B))) (S +)) (B (S *))) I)	0.02.6691902155412764e-109
-((((C (I (S B))) (S +)) (B (S *))) I)	0.04.508027065606742e-157
-((((C (I (S B))) (S +)) (B (S *))) I)	0.01.5692923852557387e-213
-((((C (I (S B))) (S +)) (B (S *))) I)	0.01.1259823474166023e-278
-Miss
-((((C (I (S B))) (S +)) (B (S *))) I)	0.01.6829555964029658e-124
-((((C (I (S B))) (S +)) (B (S *))) I)	0.06.260722682888491e-168
-((((C (I (S B))) (S +)) (B (S *))) I)	0.04.800501821955756e-220
-((((C (I (S B))) (S +)) (B (S *))) I)	0.07.586809378798905e-281
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
-Miss
+0x^2+0x+0	(* 0)	0.0
+0x^2+0x+1	((B (+ 1)) (* 0))	0.0
+0x^2+0x+2	((B (+ 1)) (* 0))	-10.0
+0x^2+0x+3	((B (+ 1)) (* 0))	-40.0
+0x^2+0x+4	I	-85.0
+0x^2+0x+5	I	-85.0
+0x^2+0x+6	(+ 1)	-85.0
+0x^2+0x+7	(+ ((+ 1) 1))	-85.0
+0x^2+0x+8	(+ ((+ 1) ((+ 1) 1)))	-85.0
+0x^2+0x+9	(+ ((+ 1) ((+ 1) 1)))	-105.0
+0x^2+1x+0	I	0.0
+0x^2+1x+1	(+ 1)	0.0
+0x^2+1x+2	(+ ((+ 1) 1))	0.0
+0x^2+1x+3	(+ ((+ 1) ((+ 1) 1)))	0.0
+0x^2+1x+4	(+ ((+ 1) ((+ 1) 1)))	-10.0
+0x^2+1x+5	(+ ((+ 1) ((+ 1) 1)))	-40.0
+0x^2+1x+6	((S +) (+ 1))	-85.0
+0x^2+1x+7	((S +) (+ 1))	-105.0
+0x^2+1x+8	((S +) (+ 1))	-145.0
+0x^2+1x+9	((S +) (+ 1))	-205.0
+0x^2+2x+0	((S +) I)	0.0
+0x^2+2x+1	((S +) (+ 1))	0.0
+0x^2+2x+2	((S +) (+ 1))	-10.0
+0x^2+2x+3	((S +) (+ 1))	-40.0
+0x^2+2x+4	((S +) ((S +) I))	-85.0
+0x^2+2x+5	((S +) ((S +) I))	-85.0
+0x^2+2x+6	((S +) ((S +) I))	-105.0
+0x^2+2x+7	((S +) ((S +) I))	-145.0
+0x^2+2x+8	((S +) ((S +) I))	-205.0
+0x^2+2x+9	((S +) ((S +) I))	-285.0
+0x^2+3x+0	((S +) ((S +) I))	0.0
+0x^2+3x+1	((S +) ((S +) I))	-10.0
+0x^2+3x+2	((S +) ((S +) I))	-40.0
+0x^2+3x+3	((S +) ((S +) I))	-90.0
+0x^2+3x+4	((S +) ((S +) I))	-160.0
+0x^2+3x+5	((S +) ((S +) I))	-250.0
+0x^2+3x+6	((S +) ((S +) I))	-360.0
+0x^2+3x+7	((S +) ((S +) I))	-490.0
+0x^2+3x+8	((S +) ((S +) I))	-640.0
+Missed 0x^2+3x+9
+0x^2+4x+0	((S +) ((S +) I))	-285.0
+0x^2+4x+1	((S +) ((S +) I))	-385.0
+0x^2+4x+2	((S +) ((S +) I))	-505.0
+0x^2+4x+3	((S +) ((S +) I))	-645.0
+Missed 0x^2+4x+4
+Missed 0x^2+4x+5
+Missed 0x^2+4x+6
+Missed 0x^2+4x+7
+Missed 0x^2+4x+8
+Missed 0x^2+4x+9
+Missed 0x^2+5x+0
+Missed 0x^2+5x+1
+Missed 0x^2+5x+2
+Missed 0x^2+5x+3
+Missed 0x^2+5x+4
+Missed 0x^2+5x+5
+Missed 0x^2+5x+6
+Missed 0x^2+5x+7
+Missed 0x^2+5x+8
+Missed 0x^2+5x+9
+Missed 0x^2+6x+0
+Missed 0x^2+6x+1
+Missed 0x^2+6x+2
+Missed 0x^2+6x+3
+Missed 0x^2+6x+4
+Missed 0x^2+6x+5
+Missed 0x^2+6x+6
+Missed 0x^2+6x+7
+Missed 0x^2+6x+8
+Missed 0x^2+6x+9
+Missed 0x^2+7x+0
+Missed 0x^2+7x+1
+Missed 0x^2+7x+2
+Missed 0x^2+7x+3
+Missed 0x^2+7x+4
+Missed 0x^2+7x+5
+Missed 0x^2+7x+6
+Missed 0x^2+7x+7
+Missed 0x^2+7x+8
+Missed 0x^2+7x+9
+Missed 0x^2+8x+0
+Missed 0x^2+8x+1
+Missed 0x^2+8x+2
+Missed 0x^2+8x+3
+Missed 0x^2+8x+4
+Missed 0x^2+8x+5
+Missed 0x^2+8x+6
+Missed 0x^2+8x+7
+Missed 0x^2+8x+8
+Missed 0x^2+8x+9
+Missed 0x^2+9x+0
+Missed 0x^2+9x+1
+Missed 0x^2+9x+2
+Missed 0x^2+9x+3
+Missed 0x^2+9x+4
+Missed 0x^2+9x+5
+Missed 0x^2+9x+6
+Missed 0x^2+9x+7
+Missed 0x^2+9x+8
+Missed 0x^2+9x+9
+1x^2+0x+0	((S *) I)	0.0
+1x^2+0x+1	((S *) I)	-10.0
+1x^2+0x+2	((S *) I)	-40.0
+1x^2+0x+3	((S *) I)	-90.0
+1x^2+0x+4	((S *) (+ 1))	-85.0
+1x^2+0x+5	((S *) (+ 1))	-85.0
+1x^2+0x+6	((S *) (+ 1))	-105.0
+1x^2+0x+7	((S *) (+ 1))	-145.0
+1x^2+0x+8	((S *) (+ 1))	-205.0
+1x^2+0x+9	((S *) (+ 1))	-285.0
+1x^2+1x+0	((S *) (+ 1))	0.0
+1x^2+1x+1	((S *) (+ 1))	-10.0
+1x^2+1x+2	((S *) (+ 1))	-40.0
+1x^2+1x+3	((S *) (+ 1))	-90.0
+1x^2+1x+4	((S *) (+ 1))	-160.0
+1x^2+1x+5	((S *) (+ 1))	-250.0
+1x^2+1x+6	((S *) (+ 1))	-360.0
+1x^2+1x+7	((S *) (+ 1))	-490.0
+1x^2+1x+8	((S *) (+ 1))	-640.0
+Missed 1x^2+1x+9
+1x^2+2x+0	((S *) (+ 1))	-285.0
+1x^2+2x+1	((S *) (+ 1))	-385.0
+1x^2+2x+2	((S *) (+ 1))	-505.0
+1x^2+2x+3	((S *) (+ 1))	-645.0
+Missed 1x^2+2x+4
+Missed 1x^2+2x+5
+Missed 1x^2+2x+6
+Missed 1x^2+2x+7
+Missed 1x^2+2x+8
+Missed 1x^2+2x+9
+Missed 1x^2+3x+0
+Missed 1x^2+3x+1
+Missed 1x^2+3x+2
+Missed 1x^2+3x+3
+Missed 1x^2+3x+4
+Missed 1x^2+3x+5
+Missed 1x^2+3x+6
+Missed 1x^2+3x+7
+Missed 1x^2+3x+8
+Missed 1x^2+3x+9
+Missed 1x^2+4x+0
+Missed 1x^2+4x+1
+Missed 1x^2+4x+2
+Missed 1x^2+4x+3
+Missed 1x^2+4x+4
+Missed 1x^2+4x+5
+Missed 1x^2+4x+6
+Missed 1x^2+4x+7
+Missed 1x^2+4x+8
+Missed 1x^2+4x+9
+Missed 1x^2+5x+0
+Missed 1x^2+5x+1
+Missed 1x^2+5x+2
+Missed 1x^2+5x+3
+Missed 1x^2+5x+4
+Missed 1x^2+5x+5
+Missed 1x^2+5x+6
+Missed 1x^2+5x+7
+Missed 1x^2+5x+8
+Missed 1x^2+5x+9
+Missed 1x^2+6x+0
+Missed 1x^2+6x+1
+Missed 1x^2+6x+2
+Missed 1x^2+6x+3
+Missed 1x^2+6x+4
+Missed 1x^2+6x+5
+Missed 1x^2+6x+6
+Missed 1x^2+6x+7
+Missed 1x^2+6x+8
+Missed 1x^2+6x+9
+Missed 1x^2+7x+0
+Missed 1x^2+7x+1
+Missed 1x^2+7x+2
+Missed 1x^2+7x+3
+Missed 1x^2+7x+4
+Missed 1x^2+7x+5
+Missed 1x^2+7x+6
+Missed 1x^2+7x+7
+Missed 1x^2+7x+8
+Missed 1x^2+7x+9
+Missed 1x^2+8x+0
+Missed 1x^2+8x+1
+Missed 1x^2+8x+2
+Missed 1x^2+8x+3
+Missed 1x^2+8x+4
+Missed 1x^2+8x+5
+Missed 1x^2+8x+6
+Missed 1x^2+8x+7
+Missed 1x^2+8x+8
+Missed 1x^2+8x+9
+Missed 1x^2+9x+0
+Missed 1x^2+9x+1
+Missed 1x^2+9x+2
+Missed 1x^2+9x+3
+Missed 1x^2+9x+4
+Missed 1x^2+9x+5
+Missed 1x^2+9x+6
+Missed 1x^2+9x+7
+Missed 1x^2+9x+8
+Missed 1x^2+9x+9
+2x^2+0x+0	((S *) ((S +) I))	0.0
+2x^2+0x+1	((S *) ((S +) I))	-10.0
+2x^2+0x+2	((S *) ((S +) I))	-40.0
+2x^2+0x+3	((S *) ((S +) I))	-90.0
+2x^2+0x+4	((S *) ((S +) I))	-160.0
+2x^2+0x+5	((S *) ((S +) I))	-250.0
+2x^2+0x+6	((S *) ((S +) I))	-360.0
+2x^2+0x+7	((S *) ((S +) I))	-490.0
+2x^2+0x+8	((S *) ((S +) I))	-640.0
+Missed 2x^2+0x+9
+2x^2+1x+0	((S *) ((S +) I))	-285.0
+2x^2+1x+1	((S *) ((S +) I))	-385.0
+2x^2+1x+2	((S *) ((S +) I))	-505.0
+2x^2+1x+3	((S *) ((S +) I))	-645.0
+Missed 2x^2+1x+4
+Missed 2x^2+1x+5
+Missed 2x^2+1x+6
+Missed 2x^2+1x+7
+Missed 2x^2+1x+8
+Missed 2x^2+1x+9
+Missed 2x^2+2x+0
+Missed 2x^2+2x+1
+Missed 2x^2+2x+2
+Missed 2x^2+2x+3
+Missed 2x^2+2x+4
+Missed 2x^2+2x+5
+Missed 2x^2+2x+6
+Missed 2x^2+2x+7
+Missed 2x^2+2x+8
+Missed 2x^2+2x+9
+Missed 2x^2+3x+0
+Missed 2x^2+3x+1
+Missed 2x^2+3x+2
+Missed 2x^2+3x+3
+Missed 2x^2+3x+4
+Missed 2x^2+3x+5
+Missed 2x^2+3x+6
+Missed 2x^2+3x+7
+Missed 2x^2+3x+8
+Missed 2x^2+3x+9
+Missed 2x^2+4x+0
+Missed 2x^2+4x+1
+Missed 2x^2+4x+2
+Missed 2x^2+4x+3
+Missed 2x^2+4x+4
+Missed 2x^2+4x+5
+Missed 2x^2+4x+6
+Missed 2x^2+4x+7
+Missed 2x^2+4x+8
+Missed 2x^2+4x+9
+Missed 2x^2+5x+0
+Missed 2x^2+5x+1
+Missed 2x^2+5x+2
+Missed 2x^2+5x+3
+Missed 2x^2+5x+4
+Missed 2x^2+5x+5
+Missed 2x^2+5x+6
+Missed 2x^2+5x+7
+Missed 2x^2+5x+8
+Missed 2x^2+5x+9
+Missed 2x^2+6x+0
+Missed 2x^2+6x+1
+Missed 2x^2+6x+2
+Missed 2x^2+6x+3
+Missed 2x^2+6x+4
+Missed 2x^2+6x+5
+Missed 2x^2+6x+6
+Missed 2x^2+6x+7
+Missed 2x^2+6x+8
+Missed 2x^2+6x+9
+Missed 2x^2+7x+0
+Missed 2x^2+7x+1
+Missed 2x^2+7x+2
+Missed 2x^2+7x+3
+Missed 2x^2+7x+4
+Missed 2x^2+7x+5
+Missed 2x^2+7x+6
+Missed 2x^2+7x+7
+Missed 2x^2+7x+8
+Missed 2x^2+7x+9
+Missed 2x^2+8x+0
+Missed 2x^2+8x+1
+Missed 2x^2+8x+2
+Missed 2x^2+8x+3
+Missed 2x^2+8x+4
+Missed 2x^2+8x+5
+Missed 2x^2+8x+6
+Missed 2x^2+8x+7
+Missed 2x^2+8x+8
+Missed 2x^2+8x+9
+Missed 2x^2+9x+0
+Missed 2x^2+9x+1
+Missed 2x^2+9x+2
+Missed 2x^2+9x+3
+Missed 2x^2+9x+4
+Missed 2x^2+9x+5
+Missed 2x^2+9x+6
+Missed 2x^2+9x+7
+Missed 2x^2+9x+8
+Missed 2x^2+9x+9
+Missed 3x^2+0x+0
+Missed 3x^2+0x+1
+Missed 3x^2+0x+2
+Missed 3x^2+0x+3
+Missed 3x^2+0x+4
+Missed 3x^2+0x+5
+Missed 3x^2+0x+6
+Missed 3x^2+0x+7
+Missed 3x^2+0x+8
+Missed 3x^2+0x+9
+Missed 3x^2+1x+0
+Missed 3x^2+1x+1
+Missed 3x^2+1x+2
+Missed 3x^2+1x+3
+Missed 3x^2+1x+4
+Missed 3x^2+1x+5
+Missed 3x^2+1x+6
+Missed 3x^2+1x+7
+Missed 3x^2+1x+8
+Missed 3x^2+1x+9
+Missed 3x^2+2x+0
+Missed 3x^2+2x+1
+Missed 3x^2+2x+2
+Missed 3x^2+2x+3
+Missed 3x^2+2x+4
+Missed 3x^2+2x+5
+Missed 3x^2+2x+6
+Missed 3x^2+2x+7
+Missed 3x^2+2x+8
+Missed 3x^2+2x+9
+Missed 3x^2+3x+0
+Missed 3x^2+3x+1
+Missed 3x^2+3x+2
+Missed 3x^2+3x+3
+Missed 3x^2+3x+4
+Missed 3x^2+3x+5
+Missed 3x^2+3x+6
+Missed 3x^2+3x+7
+Missed 3x^2+3x+8
+Missed 3x^2+3x+9
+Missed 3x^2+4x+0
+Missed 3x^2+4x+1
+Missed 3x^2+4x+2
+Missed 3x^2+4x+3
+Missed 3x^2+4x+4
+Missed 3x^2+4x+5
+Missed 3x^2+4x+6
+Missed 3x^2+4x+7
+Missed 3x^2+4x+8
+Missed 3x^2+4x+9
+Missed 3x^2+5x+0
+Missed 3x^2+5x+1
+Missed 3x^2+5x+2
+Missed 3x^2+5x+3
+Missed 3x^2+5x+4
+Missed 3x^2+5x+5
+Missed 3x^2+5x+6
+Missed 3x^2+5x+7
+Missed 3x^2+5x+8
+Missed 3x^2+5x+9
+Missed 3x^2+6x+0
+Missed 3x^2+6x+1
+Missed 3x^2+6x+2
+Missed 3x^2+6x+3
+Missed 3x^2+6x+4
+Missed 3x^2+6x+5
+Missed 3x^2+6x+6
+Missed 3x^2+6x+7
+Missed 3x^2+6x+8
+Missed 3x^2+6x+9
+Missed 3x^2+7x+0
+Missed 3x^2+7x+1
+Missed 3x^2+7x+2
+Missed 3x^2+7x+3
+Missed 3x^2+7x+4
+Missed 3x^2+7x+5
+Missed 3x^2+7x+6
+Missed 3x^2+7x+7
+Missed 3x^2+7x+8
+Missed 3x^2+7x+9
+Missed 3x^2+8x+0
+Missed 3x^2+8x+1
+Missed 3x^2+8x+2
+Missed 3x^2+8x+3
+Missed 3x^2+8x+4
+Missed 3x^2+8x+5
+Missed 3x^2+8x+6
+Missed 3x^2+8x+7
+Missed 3x^2+8x+8
+Missed 3x^2+8x+9
+Missed 3x^2+9x+0
+Missed 3x^2+9x+1
+Missed 3x^2+9x+2
+Missed 3x^2+9x+3
+Missed 3x^2+9x+4
+Missed 3x^2+9x+5
+Missed 3x^2+9x+6
+Missed 3x^2+9x+7
+Missed 3x^2+9x+8
+Missed 3x^2+9x+9
+Missed 4x^2+0x+0
+Missed 4x^2+0x+1
+Missed 4x^2+0x+2
+Missed 4x^2+0x+3
+Missed 4x^2+0x+4
+Missed 4x^2+0x+5
+Missed 4x^2+0x+6
+Missed 4x^2+0x+7
+Missed 4x^2+0x+8
+Missed 4x^2+0x+9
+Missed 4x^2+1x+0
+Missed 4x^2+1x+1
+Missed 4x^2+1x+2
+Missed 4x^2+1x+3
+Missed 4x^2+1x+4
+Missed 4x^2+1x+5
+Missed 4x^2+1x+6
+Missed 4x^2+1x+7
+Missed 4x^2+1x+8
+Missed 4x^2+1x+9
+Missed 4x^2+2x+0
+Missed 4x^2+2x+1
+Missed 4x^2+2x+2
+Missed 4x^2+2x+3
+Missed 4x^2+2x+4
+Missed 4x^2+2x+5
+Missed 4x^2+2x+6
+Missed 4x^2+2x+7
+Missed 4x^2+2x+8
+Missed 4x^2+2x+9
+Missed 4x^2+3x+0
+Missed 4x^2+3x+1
+Missed 4x^2+3x+2
+Missed 4x^2+3x+3
+Missed 4x^2+3x+4
+Missed 4x^2+3x+5
+Missed 4x^2+3x+6
+Missed 4x^2+3x+7
+Missed 4x^2+3x+8
+Missed 4x^2+3x+9
+Missed 4x^2+4x+0
+Missed 4x^2+4x+1
+Missed 4x^2+4x+2
+Missed 4x^2+4x+3
+Missed 4x^2+4x+4
+Missed 4x^2+4x+5
+Missed 4x^2+4x+6
+Missed 4x^2+4x+7
+Missed 4x^2+4x+8
+Missed 4x^2+4x+9
+Missed 4x^2+5x+0
+Missed 4x^2+5x+1
+Missed 4x^2+5x+2
+Missed 4x^2+5x+3
+Missed 4x^2+5x+4
+Missed 4x^2+5x+5
+Missed 4x^2+5x+6
+Missed 4x^2+5x+7
+Missed 4x^2+5x+8
+Missed 4x^2+5x+9
+Missed 4x^2+6x+0
+Missed 4x^2+6x+1
+Missed 4x^2+6x+2
+Missed 4x^2+6x+3
+Missed 4x^2+6x+4
+Missed 4x^2+6x+5
+Missed 4x^2+6x+6
+Missed 4x^2+6x+7
+Missed 4x^2+6x+8
+Missed 4x^2+6x+9
+Missed 4x^2+7x+0
+Missed 4x^2+7x+1
+Missed 4x^2+7x+2
+Missed 4x^2+7x+3
+Missed 4x^2+7x+4
+Missed 4x^2+7x+5
+Missed 4x^2+7x+6
+Missed 4x^2+7x+7
+Missed 4x^2+7x+8
+Missed 4x^2+7x+9
+Missed 4x^2+8x+0
+Missed 4x^2+8x+1
+Missed 4x^2+8x+2
+Missed 4x^2+8x+3
+Missed 4x^2+8x+4
+Missed 4x^2+8x+5
+Missed 4x^2+8x+6
+Missed 4x^2+8x+7
+Missed 4x^2+8x+8
+Missed 4x^2+8x+9
+Missed 4x^2+9x+0
+Missed 4x^2+9x+1
+Missed 4x^2+9x+2
+Missed 4x^2+9x+3
+Missed 4x^2+9x+4
+Missed 4x^2+9x+5
+Missed 4x^2+9x+6
+Missed 4x^2+9x+7
+Missed 4x^2+9x+8
+Missed 4x^2+9x+9
+Missed 5x^2+0x+0
+Missed 5x^2+0x+1
+Missed 5x^2+0x+2
+Missed 5x^2+0x+3
+Missed 5x^2+0x+4
+Missed 5x^2+0x+5
+Missed 5x^2+0x+6
+Missed 5x^2+0x+7
+Missed 5x^2+0x+8
+Missed 5x^2+0x+9
+Missed 5x^2+1x+0
+Missed 5x^2+1x+1
+Missed 5x^2+1x+2
+Missed 5x^2+1x+3
+Missed 5x^2+1x+4
+Missed 5x^2+1x+5
+Missed 5x^2+1x+6
+Missed 5x^2+1x+7
+Missed 5x^2+1x+8
+Missed 5x^2+1x+9
+Missed 5x^2+2x+0
+Missed 5x^2+2x+1
+Missed 5x^2+2x+2
+Missed 5x^2+2x+3
+Missed 5x^2+2x+4
+Missed 5x^2+2x+5
+Missed 5x^2+2x+6
+Missed 5x^2+2x+7
+Missed 5x^2+2x+8
+Missed 5x^2+2x+9
+Missed 5x^2+3x+0
+Missed 5x^2+3x+1
+Missed 5x^2+3x+2
+Missed 5x^2+3x+3
+Missed 5x^2+3x+4
+Missed 5x^2+3x+5
+Missed 5x^2+3x+6
+Missed 5x^2+3x+7
+Missed 5x^2+3x+8
+Missed 5x^2+3x+9
+Missed 5x^2+4x+0
+Missed 5x^2+4x+1
+Missed 5x^2+4x+2
+Missed 5x^2+4x+3
+Missed 5x^2+4x+4
+Missed 5x^2+4x+5
+Missed 5x^2+4x+6
+Missed 5x^2+4x+7
+Missed 5x^2+4x+8
+Missed 5x^2+4x+9
+Missed 5x^2+5x+0
+Missed 5x^2+5x+1
+Missed 5x^2+5x+2
+Missed 5x^2+5x+3
+Missed 5x^2+5x+4
+Missed 5x^2+5x+5
+Missed 5x^2+5x+6
+Missed 5x^2+5x+7
+Missed 5x^2+5x+8
+Missed 5x^2+5x+9
+Missed 5x^2+6x+0
+Missed 5x^2+6x+1
+Missed 5x^2+6x+2
+Missed 5x^2+6x+3
+Missed 5x^2+6x+4
+Missed 5x^2+6x+5
+Missed 5x^2+6x+6
+Missed 5x^2+6x+7
+Missed 5x^2+6x+8
+Missed 5x^2+6x+9
+Missed 5x^2+7x+0
+Missed 5x^2+7x+1
+Missed 5x^2+7x+2
+Missed 5x^2+7x+3
+Missed 5x^2+7x+4
+Missed 5x^2+7x+5
+Missed 5x^2+7x+6
+Missed 5x^2+7x+7
+Missed 5x^2+7x+8
+Missed 5x^2+7x+9
+Missed 5x^2+8x+0
+Missed 5x^2+8x+1
+Missed 5x^2+8x+2
+Missed 5x^2+8x+3
+Missed 5x^2+8x+4
+Missed 5x^2+8x+5
+Missed 5x^2+8x+6
+Missed 5x^2+8x+7
+Missed 5x^2+8x+8
+Missed 5x^2+8x+9
+Missed 5x^2+9x+0
+Missed 5x^2+9x+1
+Missed 5x^2+9x+2
+Missed 5x^2+9x+3
+Missed 5x^2+9x+4
+Missed 5x^2+9x+5
+Missed 5x^2+9x+6
+Missed 5x^2+9x+7
+Missed 5x^2+9x+8
+Missed 5x^2+9x+9
+Missed 6x^2+0x+0
+Missed 6x^2+0x+1
+Missed 6x^2+0x+2
+Missed 6x^2+0x+3
+Missed 6x^2+0x+4
+Missed 6x^2+0x+5
+Missed 6x^2+0x+6
+Missed 6x^2+0x+7
+Missed 6x^2+0x+8
+Missed 6x^2+0x+9
+Missed 6x^2+1x+0
+Missed 6x^2+1x+1
+Missed 6x^2+1x+2
+Missed 6x^2+1x+3
+Missed 6x^2+1x+4
+Missed 6x^2+1x+5
+Missed 6x^2+1x+6
+Missed 6x^2+1x+7
+Missed 6x^2+1x+8
+Missed 6x^2+1x+9
+Missed 6x^2+2x+0
+Missed 6x^2+2x+1
+Missed 6x^2+2x+2
+Missed 6x^2+2x+3
+Missed 6x^2+2x+4
+Missed 6x^2+2x+5
+Missed 6x^2+2x+6
+Missed 6x^2+2x+7
+Missed 6x^2+2x+8
+Missed 6x^2+2x+9
+Missed 6x^2+3x+0
+Missed 6x^2+3x+1
+Missed 6x^2+3x+2
+Missed 6x^2+3x+3
+Missed 6x^2+3x+4
+Missed 6x^2+3x+5
+Missed 6x^2+3x+6
+Missed 6x^2+3x+7
+Missed 6x^2+3x+8
+Missed 6x^2+3x+9
+Missed 6x^2+4x+0
+Missed 6x^2+4x+1
+Missed 6x^2+4x+2
+Missed 6x^2+4x+3
+Missed 6x^2+4x+4
+Missed 6x^2+4x+5
+Missed 6x^2+4x+6
+Missed 6x^2+4x+7
+Missed 6x^2+4x+8
+Missed 6x^2+4x+9
+Missed 6x^2+5x+0
+Missed 6x^2+5x+1
+Missed 6x^2+5x+2
+Missed 6x^2+5x+3
+Missed 6x^2+5x+4
+Missed 6x^2+5x+5
+Missed 6x^2+5x+6
+Missed 6x^2+5x+7
+Missed 6x^2+5x+8
+Missed 6x^2+5x+9
+Missed 6x^2+6x+0
+Missed 6x^2+6x+1
+Missed 6x^2+6x+2
+Missed 6x^2+6x+3
+Missed 6x^2+6x+4
+Missed 6x^2+6x+5
+Missed 6x^2+6x+6
+Missed 6x^2+6x+7
+Missed 6x^2+6x+8
+Missed 6x^2+6x+9
+Missed 6x^2+7x+0
+Missed 6x^2+7x+1
+Missed 6x^2+7x+2
+Missed 6x^2+7x+3
+Missed 6x^2+7x+4
+Missed 6x^2+7x+5
+Missed 6x^2+7x+6
+Missed 6x^2+7x+7
+Missed 6x^2+7x+8
+Missed 6x^2+7x+9
+Missed 6x^2+8x+0
+Missed 6x^2+8x+1
+Missed 6x^2+8x+2
+Missed 6x^2+8x+3
+Missed 6x^2+8x+4
+Missed 6x^2+8x+5
+Missed 6x^2+8x+6
+Missed 6x^2+8x+7
+Missed 6x^2+8x+8
+Missed 6x^2+8x+9
+Missed 6x^2+9x+0
+Missed 6x^2+9x+1
+Missed 6x^2+9x+2
+Missed 6x^2+9x+3
+Missed 6x^2+9x+4
+Missed 6x^2+9x+5
+Missed 6x^2+9x+6
+Missed 6x^2+9x+7
+Missed 6x^2+9x+8
+Missed 6x^2+9x+9
+Missed 7x^2+0x+0
+Missed 7x^2+0x+1
+Missed 7x^2+0x+2
+Missed 7x^2+0x+3
+Missed 7x^2+0x+4
+Missed 7x^2+0x+5
+Missed 7x^2+0x+6
+Missed 7x^2+0x+7
+Missed 7x^2+0x+8
+Missed 7x^2+0x+9
+Missed 7x^2+1x+0
+Missed 7x^2+1x+1
+Missed 7x^2+1x+2
+Missed 7x^2+1x+3
+Missed 7x^2+1x+4
+Missed 7x^2+1x+5
+Missed 7x^2+1x+6
+Missed 7x^2+1x+7
+Missed 7x^2+1x+8
+Missed 7x^2+1x+9
+Missed 7x^2+2x+0
+Missed 7x^2+2x+1
+Missed 7x^2+2x+2
+Missed 7x^2+2x+3
+Missed 7x^2+2x+4
+Missed 7x^2+2x+5
+Missed 7x^2+2x+6
+Missed 7x^2+2x+7
+Missed 7x^2+2x+8
+Missed 7x^2+2x+9
+Missed 7x^2+3x+0
+Missed 7x^2+3x+1
+Missed 7x^2+3x+2
+Missed 7x^2+3x+3
+Missed 7x^2+3x+4
+Missed 7x^2+3x+5
+Missed 7x^2+3x+6
+Missed 7x^2+3x+7
+Missed 7x^2+3x+8
+Missed 7x^2+3x+9
+Missed 7x^2+4x+0
+Missed 7x^2+4x+1
+Missed 7x^2+4x+2
+Missed 7x^2+4x+3
+Missed 7x^2+4x+4
+Missed 7x^2+4x+5
+Missed 7x^2+4x+6
+Missed 7x^2+4x+7
+Missed 7x^2+4x+8
+Missed 7x^2+4x+9
+Missed 7x^2+5x+0
+Missed 7x^2+5x+1
+Missed 7x^2+5x+2
+Missed 7x^2+5x+3
+Missed 7x^2+5x+4
+Missed 7x^2+5x+5
+Missed 7x^2+5x+6
+Missed 7x^2+5x+7
+Missed 7x^2+5x+8
+Missed 7x^2+5x+9
+Missed 7x^2+6x+0
+Missed 7x^2+6x+1
+Missed 7x^2+6x+2
+Missed 7x^2+6x+3
+Missed 7x^2+6x+4
+Missed 7x^2+6x+5
+Missed 7x^2+6x+6
+Missed 7x^2+6x+7
+Missed 7x^2+6x+8
+Missed 7x^2+6x+9
+Missed 7x^2+7x+0
+Missed 7x^2+7x+1
+Missed 7x^2+7x+2
+Missed 7x^2+7x+3
+Missed 7x^2+7x+4
+Missed 7x^2+7x+5
+Missed 7x^2+7x+6
+Missed 7x^2+7x+7
+Missed 7x^2+7x+8
+Missed 7x^2+7x+9
+Missed 7x^2+8x+0
+Missed 7x^2+8x+1
+Missed 7x^2+8x+2
+Missed 7x^2+8x+3
+Missed 7x^2+8x+4
+Missed 7x^2+8x+5
+Missed 7x^2+8x+6
+Missed 7x^2+8x+7
+Missed 7x^2+8x+8
+Missed 7x^2+8x+9
+Missed 7x^2+9x+0
+Missed 7x^2+9x+1
+Missed 7x^2+9x+2
+Missed 7x^2+9x+3
+Missed 7x^2+9x+4
+Missed 7x^2+9x+5
+Missed 7x^2+9x+6
+Missed 7x^2+9x+7
+Missed 7x^2+9x+8
+Missed 7x^2+9x+9
+Missed 8x^2+0x+0
+Missed 8x^2+0x+1
+Missed 8x^2+0x+2
+Missed 8x^2+0x+3
+Missed 8x^2+0x+4
+Missed 8x^2+0x+5
+Missed 8x^2+0x+6
+Missed 8x^2+0x+7
+Missed 8x^2+0x+8
+Missed 8x^2+0x+9
+Missed 8x^2+1x+0
+Missed 8x^2+1x+1
+Missed 8x^2+1x+2
+Missed 8x^2+1x+3
+Missed 8x^2+1x+4
+Missed 8x^2+1x+5
+Missed 8x^2+1x+6
+Missed 8x^2+1x+7
+Missed 8x^2+1x+8
+Missed 8x^2+1x+9
+Missed 8x^2+2x+0
+Missed 8x^2+2x+1
+Missed 8x^2+2x+2
+Missed 8x^2+2x+3
+Missed 8x^2+2x+4
+Missed 8x^2+2x+5
+Missed 8x^2+2x+6
+Missed 8x^2+2x+7
+Missed 8x^2+2x+8
+Missed 8x^2+2x+9
+Missed 8x^2+3x+0
+Missed 8x^2+3x+1
+Missed 8x^2+3x+2
+Missed 8x^2+3x+3
+Missed 8x^2+3x+4
+Missed 8x^2+3x+5
+Missed 8x^2+3x+6
+Missed 8x^2+3x+7
+Missed 8x^2+3x+8
+Missed 8x^2+3x+9
+Missed 8x^2+4x+0
+Missed 8x^2+4x+1
+Missed 8x^2+4x+2
+Missed 8x^2+4x+3
+Missed 8x^2+4x+4
+Missed 8x^2+4x+5
+Missed 8x^2+4x+6
+Missed 8x^2+4x+7
+Missed 8x^2+4x+8
+Missed 8x^2+4x+9
+Missed 8x^2+5x+0
+Missed 8x^2+5x+1
+Missed 8x^2+5x+2
+Missed 8x^2+5x+3
+Missed 8x^2+5x+4
+Missed 8x^2+5x+5
+Missed 8x^2+5x+6
+Missed 8x^2+5x+7
+Missed 8x^2+5x+8
+Missed 8x^2+5x+9
+Missed 8x^2+6x+0
+Missed 8x^2+6x+1
+Missed 8x^2+6x+2
+Missed 8x^2+6x+3
+Missed 8x^2+6x+4
+Missed 8x^2+6x+5
+Missed 8x^2+6x+6
+Missed 8x^2+6x+7
+Missed 8x^2+6x+8
+Missed 8x^2+6x+9
+Missed 8x^2+7x+0
+Missed 8x^2+7x+1
+Missed 8x^2+7x+2
+Missed 8x^2+7x+3
+Missed 8x^2+7x+4
+Missed 8x^2+7x+5
+Missed 8x^2+7x+6
+Missed 8x^2+7x+7
+Missed 8x^2+7x+8
+Missed 8x^2+7x+9
+Missed 8x^2+8x+0
+Missed 8x^2+8x+1
+Missed 8x^2+8x+2
+Missed 8x^2+8x+3
+Missed 8x^2+8x+4
+Missed 8x^2+8x+5
+Missed 8x^2+8x+6
+Missed 8x^2+8x+7
+Missed 8x^2+8x+8
+Missed 8x^2+8x+9
+Missed 8x^2+9x+0
+Missed 8x^2+9x+1
+Missed 8x^2+9x+2
+Missed 8x^2+9x+3
+Missed 8x^2+9x+4
+Missed 8x^2+9x+5
+Missed 8x^2+9x+6
+Missed 8x^2+9x+7
+Missed 8x^2+9x+8
+Missed 8x^2+9x+9
+Missed 9x^2+0x+0
+Missed 9x^2+0x+1
+Missed 9x^2+0x+2
+Missed 9x^2+0x+3
+Missed 9x^2+0x+4
+Missed 9x^2+0x+5
+Missed 9x^2+0x+6
+Missed 9x^2+0x+7
+Missed 9x^2+0x+8
+Missed 9x^2+0x+9
+Missed 9x^2+1x+0
+Missed 9x^2+1x+1
+Missed 9x^2+1x+2
+Missed 9x^2+1x+3
+Missed 9x^2+1x+4
+Missed 9x^2+1x+5
+Missed 9x^2+1x+6
+Missed 9x^2+1x+7
+Missed 9x^2+1x+8
+Missed 9x^2+1x+9
+Missed 9x^2+2x+0
+Missed 9x^2+2x+1
+Missed 9x^2+2x+2
+Missed 9x^2+2x+3
+Missed 9x^2+2x+4
+Missed 9x^2+2x+5
+Missed 9x^2+2x+6
+Missed 9x^2+2x+7
+Missed 9x^2+2x+8
+Missed 9x^2+2x+9
+Missed 9x^2+3x+0
+Missed 9x^2+3x+1
+Missed 9x^2+3x+2
+Missed 9x^2+3x+3
+Missed 9x^2+3x+4
+Missed 9x^2+3x+5
+Missed 9x^2+3x+6
+Missed 9x^2+3x+7
+Missed 9x^2+3x+8
+Missed 9x^2+3x+9
+Missed 9x^2+4x+0
+Missed 9x^2+4x+1
+Missed 9x^2+4x+2
+Missed 9x^2+4x+3
+Missed 9x^2+4x+4
+Missed 9x^2+4x+5
+Missed 9x^2+4x+6
+Missed 9x^2+4x+7
+Missed 9x^2+4x+8
+Missed 9x^2+4x+9
+Missed 9x^2+5x+0
+Missed 9x^2+5x+1
+Missed 9x^2+5x+2
+Missed 9x^2+5x+3
+Missed 9x^2+5x+4
+Missed 9x^2+5x+5
+Missed 9x^2+5x+6
+Missed 9x^2+5x+7
+Missed 9x^2+5x+8
+Missed 9x^2+5x+9
+Missed 9x^2+6x+0
+Missed 9x^2+6x+1
+Missed 9x^2+6x+2
+Missed 9x^2+6x+3
+Missed 9x^2+6x+4
+Missed 9x^2+6x+5
+Missed 9x^2+6x+6
+Missed 9x^2+6x+7
+Missed 9x^2+6x+8
+Missed 9x^2+6x+9
+Missed 9x^2+7x+0
+Missed 9x^2+7x+1
+Missed 9x^2+7x+2
+Missed 9x^2+7x+3
+Missed 9x^2+7x+4
+Missed 9x^2+7x+5
+Missed 9x^2+7x+6
+Missed 9x^2+7x+7
+Missed 9x^2+7x+8
+Missed 9x^2+7x+9
+Missed 9x^2+8x+0
+Missed 9x^2+8x+1
+Missed 9x^2+8x+2
+Missed 9x^2+8x+3
+Missed 9x^2+8x+4
+Missed 9x^2+8x+5
+Missed 9x^2+8x+6
+Missed 9x^2+8x+7
+Missed 9x^2+8x+8
+Missed 9x^2+8x+9
+Missed 9x^2+9x+0
+Missed 9x^2+9x+1
+Missed 9x^2+9x+2
+Missed 9x^2+9x+3
+Missed 9x^2+9x+4
+Missed 9x^2+9x+5
+Missed 9x^2+9x+6
+Missed 9x^2+9x+7
+Missed 9x^2+9x+8
+Missed 9x^2+9x+9

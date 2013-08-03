@@ -21,6 +21,8 @@ import Data.Maybe
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 
+import Debug.Trace
+
 data PrefixTree a = PrefixBranch (PrefixTree a) (PrefixTree a) | PrefixLeaf a
 
 data Bit = Zero | One
@@ -36,7 +38,7 @@ data ParseResult = ParseBlacklist | ParseFrontier
 getNextBitstring :: PrefixTree ParseResult -> [Bit] -> [Bit]
 getNextBitstring parses bits =
   let bits' = if all (==One) bits
-              then replicate (length bits + 1) Zero
+              then trace ("Enumerated up to length " ++ show (length bits)) $ replicate (length bits + 1) Zero
               else bitSucc bits
   in if isPrefixOfProgram parses bits'
      then getNextBitstring parses bits'

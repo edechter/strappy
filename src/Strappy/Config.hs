@@ -25,15 +25,15 @@ sampleByEnumeration = True
 
 -- | Max size of the frontier enumerated, or sampled, during the "E" step
 frontierSize :: Int
-frontierSize = 3000
+frontierSize = 100
 
 -- | Maximum number of samples drawn from the grammar
 frontierSamples :: Int
-frontierSamples = 20000
+frontierSamples = 60000
 
 -- | Number of plans sampled for each task
 numberOfPlansPerTask :: Int
-numberOfPlansPerTask = 50
+numberOfPlansPerTask = 10
 
 -- | Length of each plan sampled
 maximumPlanLength :: Int
@@ -48,10 +48,3 @@ planningBeta = 1
 --   Measured in nanoseconds
 maxEvalTime :: Timeout
 maxEvalTime = fromIntegral 10000
-
--- | Truncated stick for variational inference
-truncatedStickLen = 20
-
--- | Should we coalesce identical productions when it reduces description length?
-compressLibrary :: Bool
-compressLibrary = False

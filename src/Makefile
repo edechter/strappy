@@ -5,7 +5,7 @@ plan:
 kpca:
 	ghc -O3 -rtsopts --make Strappy/KPCA.hs
 tower:
-	ghc -O3 -threaded +RTS -N -RTS -rtsopts --make Strappy/Tower.hs
+	ghc -O3 -rtsopts --make Strappy/Tower.hs
 proftower:
 	ghc -O3 -fbreak-on-exception -prof -auto-all -caf-all -fforce-recomp -rtsopts --make Strappy/Tower.hs
 profem:

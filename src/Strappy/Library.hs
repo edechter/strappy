@@ -371,8 +371,8 @@ towerExprs = [cI,
               cFoldl,
               cSingle,
               cRep,
-              cPair, cFst, cSnd,
-              cHole
+              cPair, cFst, cSnd--,
+--              cHole
               ] ++ [ cDouble2Expr 0, cDouble2Expr 1, cDouble2Expr (-1) ]
                 ++ [ cBool2Expr True, cBool2Expr False ]
 
