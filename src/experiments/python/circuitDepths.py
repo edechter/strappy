@@ -8,12 +8,12 @@ import matplotlib
 import csv
 
 
-circuitDepthsFile = "../data/EX1_R1_10000_2013-01-27_07-18-59.231023_UTC/circuitDepths.txt"
+circuitDepthsFile = "/Users/edechter/Dropbox/Projects/Strappy/src/experiments/" + "data/EX1_R1_10000_2013-01-27_07-18-59.231023_UTC/circuitDepths.txt"
 assert(exists(circuitDepthsFile))
-circuitDepthsBruteFile = "../data/EX1_15000_cDepths.txt"
+circuitDepthsBruteFile = "/Users/edechter/Dropbox/Projects/Strappy/src/experiments/" + "data/EX1_15000_cDepths.txt"
 assert(exists(circuitDepthsBruteFile))
 
-reader = csv.reader(open("../data/EX1_R1_10000_2013-01-27_07-18-59.231023_UTC/circuitDepths.txt", 'r'))
+reader = csv.reader(open("/Users/edechter/Dropbox/Projects/Strappy/src/experiments/" + "data/EX1_R1_10000_2013-01-27_07-18-59.231023_UTC/circuitDepths.txt", 'r'))
 D = []
 for row in reader: D.append([int(r) for r in row])
 df = pd.DataFrame(D)
@@ -37,7 +37,7 @@ ax.set_xlabel("iteration")
 ax.set_ylabel("circuit depth")
 ax.set_ylim([0, 11])
 ax.legend(loc=4)
-figdir = "/Users/edechter/Dropbox/Projects/ProgramInduction/drafts/ijcai2013/figures/"
+figdir = "/Users/edechter/Dropbox/Projects/Strappy/drafts/ijcai2013/figures/"
 plt.tight_layout()
 fig.savefig(join(figdir, figname))
 
