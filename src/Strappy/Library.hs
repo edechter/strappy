@@ -16,8 +16,8 @@ import Control.Monad.Identity
 import Control.Monad.State
 import Control.Arrow (first)
 import Debug.Trace
-import qualified Text.ParserCombinators.Parsec as Parsec
-import qualified Text.ParserCombinators.Parsec.Lisp as LispParse
+import Text.ParserCombinators.Parsec hiding (spaces)
+import System.Directory
 
 import Strappy.Type
 import Strappy.Expr
@@ -76,6 +76,8 @@ pcfgLogLikelihood gr@(Grammar { grExprDistr = distr, grApp = app }) e@(App { eLe
 
 -- | Annotates log likelihood as done in IJCAI paper
 ijcaiLogLikelihood :: Grammar -> Expr -> Expr
+ijcaiLogLikelihood (Grammar { grApp = logApp, grExprDistr = distr }) e@(Term { eReqType = Just tp}) | not (Map.member e distr) =
+  error "ijcaiLogLikelihood: Terminal not in library"
 ijcaiLogLikelihood (Grammar { grApp = logApp, grExprDistr = distr }) e@(Term { eReqType = Just tp}) =
   let alts = filter (\(e', _) -> canUnifyFast tp (eType e')) $ Map.toList distr
       zT = logSumExpList $ map snd alts
@@ -247,6 +249,20 @@ cC = mkTerm "C" ((t1 ->- t2 ->- t) ->- t2 ->- t1 ->- t) $
 cK = mkTerm "K" (t1 ->- t2 ->- t1) $ 
      \x y -> x
 
+-- | Holes
+cHole :: Expr
+cHole = mkTerm "H" tDouble $ error "Attempt to evaluate a hole"
+
+-- | Tuples
+cPair :: Expr
+cPair = mkTerm "pair" (t1 ->- t2 ->- tPair t1 t2) (,)
+
+cFst :: Expr
+cFst = mkTerm "fst" (tPair t1 t2 ->- t1) fst
+
+cSnd :: Expr
+cSnd = mkTerm "snd" (tPair t1 t2 ->- t2) snd
+
 -- | Integer arithmetic
 cPlus :: Expr
 cPlus = mkTerm "+" (tInt ->- tInt ->- tInt) $
@@ -260,9 +276,22 @@ cMinus :: Expr
 cMinus = mkTerm "-" (tInt ->- tInt ->- tInt) $
          (-)
 
-cRem :: Expr
-cRem = mkTerm "rem" (tInt ->- tInt ->- tInt) $
-       mod
+-- | Floating-point arithmetic
+cFPlus :: Expr
+cFPlus = mkTerm "+." (tDouble ->- tDouble ->- tDouble) $
+        ((+) :: Double -> Double -> Double)
+
+cFDiv :: Expr
+cFDiv = mkTerm "/." (tDouble ->- tDouble ->- tDouble) $
+        ((/) :: Double -> Double -> Double)
+
+cFTimes :: Expr
+cFTimes = mkTerm "*." (tDouble ->- tDouble ->- tDouble) $
+         ((*) :: Double -> Double -> Double)
+
+cFMinus :: Expr
+cFMinus = mkTerm "-." (tDouble ->- tDouble ->- tDouble) $
+         ((-) :: Double -> Double -> Double)
 
 -- | Lists
 cCons = mkTerm ":"  (t ->- tList t ->- tList t) $
@@ -271,6 +300,8 @@ cAppend = mkTerm "++" (tList t ->- tList t ->- tList t) $
           (++)
 cHead = mkTerm "head" (tList t ->- t) $ 
         head
+cTail = mkTerm "tail" (tList t ->- tList t) $ 
+        tail
 cMap = mkTerm "map" ((t ->- t1) ->- tList t ->- tList t1) $
        map
 cEmpty = mkTerm "[]" (tList t) $ []
@@ -280,8 +311,8 @@ cRep = mkTerm "rep" (tInt ->- t ->- tList t) $
        replicate
 cFoldl = mkTerm "foldl" ((t ->- t1 ->- t) ->- t ->- tList t1 ->- t) $ 
          List.foldl'
-cInts =  [ cInt2Expr i | i <- [1..10]]
-cDoubles =  [ cDouble2Expr i | i <- [1..10]]
+cInts =  [ cInt2Expr i | i <- [-10..10]]
+cDoubles =  [ cDouble2Expr i | i <- [-10..10]]
 
 listExprs = [cCons, cAppend, cMap, cEmpty, cSingle, cRep, cFoldl]
 
@@ -295,27 +326,57 @@ basicExprs = [cI,
 --              cBottom, -- Why would we put cBottom in to the library?
               cPlus,
               cTimes, 
+              cFPlus,
+              cFMinus,
+              cFTimes,
+              cFDiv,
               cCons, 
               cEmpty,
               cAppend,
-              --         cHead,
+              cHead,
               cMap,
               cFoldl,
               cSingle,
-              cRep
-             ] ++ cInts
+              cRep,
+              cTail,
+              cPair,
+              cFst,
+              cSnd,
+              cBool2Expr True,
+              cBool2Expr False,
+              cHole
+             ] ++ cInts ++ cDoubles
              
 -- Library for testing EM+polynomial regression
--- This is what was used in the IJCAI paper
 polyExprs :: [Expr]
 polyExprs = [cI, 
+             cS, 
+             cB, 
+             cC, 
+--              cK, 
+             cPlus,
+             cTimes] ++ [ cInt2Expr 0, cInt2Expr 1 ]
+
+-- Library for tower building
+towerExprs :: [Expr]
+towerExprs = [cI, 
               cS, 
               cB, 
               cC, 
---              cK, 
-              cPlus,
-              cTimes
-              ] ++ [ cInt2Expr 0, cInt2Expr 1 ]
+              cFPlus,
+              cFMinus,
+              cFTimes,
+              cFDiv,
+              cCons,
+              cAppend,
+              cMap,
+              cFoldl,
+              cSingle,
+              cRep,
+              cPair, cFst, cSnd--,
+--              cHole
+              ] ++ [ cDouble2Expr 0, cDouble2Expr 1, cDouble2Expr (-1) ]
+                ++ [ cBool2Expr True, cBool2Expr False ]
 
 mkExprDistr :: [Expr] -> ExprDistr
 mkExprDistr exprs = Map.adjust (const (-5)) cBottom
@@ -354,7 +415,7 @@ removeSubProductions gr@Grammar{grExprDistr = distr} =
   let keys = Map.keys distr
       prods = filter (not . isTerm) keys
       subProductions = map eLeft prods ++ map eRight prods
-      prods' = List.nub $ filter (not . Prelude.flip elem subProductions) prods
+      prods' = List.nub $ filter (not . flip elem subProductions) prods
       prods'' = prods' ++ filter isTerm keys
   in gr { grExprDistr = Map.filterWithKey (\k v -> k `elem` prods'') distr }
 
@@ -400,6 +461,47 @@ incCount cnt (expr@App{},wt) =
   Map.insertWith (+) expr wt cnt
 incCount cnt _ = cnt
 
+-- | Accumulates all of the subtrees in an expression in to a set
+collectSubtrees :: Set.Set Expr -> Expr -> Set.Set Expr
+collectSubtrees s e@(App { eLeft = l, eRight = r }) =
+  collectSubtrees (collectSubtrees (e `Set.insert` s) l) r
+collectSubtrees s e = e `Set.insert` s
+
+-- | Simplifies an expression
+simplifyExpr :: Expr -> Expr
+simplifyExpr expr =
+  let loop 0 expr = expr
+      loop n e@(Term {}) = e
+      loop n e@(App { eLeft = l, eRight = r }) =
+        let l' = simplifyExpr l
+            r' = simplifyExpr r
+            e' = l' <> r'
+            e'' = foldl (Prelude.flip ($)) e' patterns
+        in
+         if e' /= e''
+         then loop (n-1) e''
+         else e''
+  in loop 100 expr
+  where
+    patterns = map (\(str, proc) -> matchExpr (readExpr str) proc)
+                   [ -- Combinator identities
+                     ( "((K ?) ?)", \ [x, _] -> x),
+                     ( "(((B ?) ?) ?)", \ [f, g, x] -> f <> (g <> x)),
+                     ( "(((C ?) ?) ?)", \ [f, g, x] -> (f <> x) <> g),
+                     ( "(((S ?) ?) ?d)", \ [f, g, x] -> (f <> x) <> (g <> x)),
+                     ( "(I ?)", \ [x] -> x),
+                     -- Arithmetic identities
+                     ( "((+ 0) ?)", \ [x] -> x),
+                     ( "((+ ?) 0)", \ [x] -> x),
+                     ( "((* 1) ?)", \ [x] -> x),
+                     ( "((* ?) 1)", \ [x] -> x),
+                     ( "((* ?) 1)", \ [x] -> x),
+                     ( "((* 0) ?)", \ [_] -> cInt2Expr 0),
+                     ( "((* ?) 0)", \ [_] -> cInt2Expr 0),
+                     -- Evaluation
+                     ( "((+ ?t) ?t)", \ [x, y] -> cInt2Expr ((eval x) + (eval y))),
+                     ( "((* ?t) ?t)", \ [x, y] -> cInt2Expr ((eval x) * (eval y))) ]
+
 
 -- | Saves a grammar to a file
 saveGrammar :: String -> Grammar -> IO ()
@@ -414,29 +516,73 @@ loadGrammar fname = do
   let (papp : prods) = lines fcontents
   let prods' = map (\ln ->
                      let p = read $ takeWhile (/=' ') ln
-                         c = parseComb $ drop 1 $ dropWhile (/=' ') ln
+                         c = readExpr $ drop 1 $ dropWhile (/=' ') ln
                          c' = c { eType = doTypeInference c }
                      in (c', p)) prods
   return $ Grammar { grApp = read papp,
                      grExprDistr = Map.fromList prods' }
   
-    
+
+-- | Looks for the largest file of the form grammar_#, and returns the grammar and the number
+loadNextGrammar :: IO (Grammar, Int)
+loadNextGrammar = do
+  contents <- getDirectoryContents "."
+  let contents' = filter (\c -> take 8 c == "grammar_") contents
+  let latest = List.maximumBy (\c c' -> compare (read (drop 8 c)) ((read (drop 8 c)) :: Int)) contents'
+  let num = read $ drop 8 latest
+  gr <- loadGrammar latest
+  return (gr, num)
+
   
   
 
--- | Reads a combinator from a string
---   Defined in Library.hs because we need to reference various library combinators
-parseComb :: String -> Expr
-parseComb str = either (const $ error $ "Could not parse " ++ str) unlisp $ Parsec.parse LispParse.parseExpr "" str
-  where unlisp (LispParse.Number c) = cInt2Expr $ fromIntegral $ c
-        unlisp (LispParse.Atom s) =
-          case List.find (\c -> show c == s) basicExprs of
-            Nothing -> error $ "Could not unlisp " ++ show s
-            Just e -> e
-        unlisp (LispParse.List [l, r]) = App { eLeft = unlisp l, 
-                                               eRight = unlisp r,
-                                               eType = undefined,
-                                               eReqType = Nothing,
-                                               eLogLikelihood = Nothing }
-        unlisp err = error $ "Could not unlisp " ++ show err
+-- | Simplifies terms in the grammar, subject to the constraint that it reduces description length
+-- Does a greedy, best-first search
+simplifyLibrary :: [Expr] -> -- ^ library productions
+                   ([Expr], -- ^ new library productions
+                    [(Expr, Expr)]) -- ^ substitutions made
+simplifyLibrary prods =
+  let (newprods, subs) = simplify prods $ score prods
+      newprods' = Set.toList $ foldl (\acc prod -> collectSubtrees acc prod) Set.empty newprods
+  in (map (\prod -> prod { eType = doTypeInference prod}) newprods', subs)
+  where -- Score counts # unique subtrees
+        score = Set.size . foldl (\acc prod -> collectSubtrees acc prod) Set.empty
+        -- Takes as input a library and its score
+        simplify lib libScore =
+          let simplifiedLib = filter (\ (x, y) -> x /= y) $ map (\prod -> (prod, simplifyExpr prod)) lib
+              newLibs = map (\(prod, simpProd) -> let lib' = List.nub $ map (subExpr prod simpProd) lib
+                                                  in ((lib', (prod, simpProd)), score lib')) simplifiedLib
+              ((newLib, newSub), newScore) = List.minimumBy (compare `on` snd) newLibs
+          in
+           if newScore < libScore
+           then trace ("Improved score from " ++ show libScore ++ " to " ++ show newScore)
+                      (let (bestLib, bestSubs) = simplify newLib newScore in (bestLib, newSub:bestSubs))
+           else (lib, [])
 
+readExpr :: String -> Expr
+readExpr input = case parse parseComb "CL" input of
+     Left err -> error $ "No match: " ++ show err
+     Right val -> val
+     where symbol :: Parser Char
+           symbol = oneOf "!#$%&|*+-/:<=>?@^_~.[]?"
+           parseAtom :: Parser Expr
+           parseAtom = do 
+             hd <- letter <|> digit <|> symbol
+             tl <- many (letter <|> digit <|> symbol)
+             let atom = hd:tl
+             case hd of
+               '?' -> return $ mkTerm atom undefined undefined -- wildcard for pattern matching
+               _ ->
+                 return $ case List.find (\c -> show c == atom) basicExprs of
+                   Nothing -> error $ "Could not find in library: " ++ show atom
+                   Just e -> e
+           parseApp :: Parser Expr
+           parseApp = do
+             char '('
+             f <- parseComb
+             char ' '
+             a <- parseComb
+             char ')'
+             return $ f <> a
+           parseComb :: Parser Expr
+           parseComb = parseAtom <|> parseApp

@@ -1,7 +1,6 @@
 
 module Strappy.Sample where
 
-import Prelude hiding (flip)
 import Control.Monad.Identity
 import Control.Monad.State
 import Control.Monad.Maybe
@@ -14,6 +13,7 @@ import Data.Maybe
 
 import Strappy.Type
 import Strappy.EnumBF
+import Strappy.EnumBits
 import Strappy.Expr
 import Strappy.Library
 import Strappy.Utils 
@@ -34,7 +34,7 @@ sampleExpr Grammar{grApp=p, grExprDistr=exprDistr} requestedType
                  return expr
     where 
       sample tp = do
-            shouldExpand <- lift $ flip (exp p)
+            shouldExpand <- lift $ flipCoin (exp p)
             case shouldExpand of
               True -> do t <- mkTVar
                          e_left  <- sample (t ->- tp)
@@ -67,8 +67,9 @@ safeSample gr tp = do
 sampleExprs :: (MonadPlus m, MonadRandom m) =>
                Int -> Grammar -> Type -> m (ExprMap Double)
 sampleExprs n library tp =
-  liftM (Map.mapWithKey reweight) $ foldM accSample Map.empty [1..n]
-  where accSample acc _ = do
+  liftM (Map.mapWithKey reweight) $ foldM accSample Map.empty [1..frontierSamples]
+  where accSample acc _ | Map.size acc >= n = return acc
+        accSample acc _ = do
           expr <- safeSample library tp
           return $ Map.insertWith (+) expr 1 acc
         reweight expr cnt =
@@ -90,3 +91,13 @@ sampleBF n gr tp =
 sampleBFM :: Monad m => Int -> Grammar -> Type -> m (ExprMap Double)
 sampleBFM n gr tp = return $ sampleBF n gr tp
 
+-- | Uses encoding enumeration (enumeration of bits) to "sample" a grammar
+sampleBits :: Int -> Grammar -> Type -> ExprMap Double
+sampleBits n gr tp =
+  Map.fromList $ map (\e -> let e' = exprLogLikelihood gr $ annotateRequested' tp e
+                            in (e', fromJust $ eLogLikelihood e'))
+               $ enumBits gr n tp
+
+-- | Monadic wrapper
+sampleBitsM :: Monad m => Int -> Grammar -> Type -> m (ExprMap Double)
+sampleBitsM n gr tp = return $ sampleBits n gr tp

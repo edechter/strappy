@@ -21,11 +21,15 @@ pruneGrammar = False
 
 -- | Sample by enumeration?
 sampleByEnumeration :: Bool
-sampleByEnumeration = False
+sampleByEnumeration = True
 
--- | Size of the frontier enumerated, or sampled, during the "E" step
+-- | Max size of the frontier enumerated, or sampled, during the "E" step
 frontierSize :: Int
-frontierSize = 1000
+frontierSize = 100
+
+-- | Maximum number of samples drawn from the grammar
+frontierSamples :: Int
+frontierSamples = 60000
 
 -- | Number of plans sampled for each task
 numberOfPlansPerTask :: Int
@@ -44,6 +48,3 @@ planningBeta = 1
 --   Measured in nanoseconds
 maxEvalTime :: Timeout
 maxEvalTime = fromIntegral 10000
-
--- | Truncated stick for variational inference
-truncatedStickLen = 20

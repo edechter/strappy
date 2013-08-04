@@ -7,15 +7,20 @@ import Control.Monad.Trans
 import Control.Monad.Random
 import Control.Monad.Maybe
 
-flip :: (Num a, Ord a, Random a, MonadRandom m) => a -> m Bool
-flip p = do r <- getRandomR (0, 1)
-            return $ r < p
+flipCoin :: (Num a, Ord a, Random a, MonadRandom m) => a -> m Bool
+flipCoin p = do r <- getRandomR (0, 1)
+                return $ r < p
 
-sampleMultinomial :: (Num a, Ord a, Random a, MonadRandom m) => [(b, a)] -> m b
+sampleMultinomial :: MonadRandom m => [(b, Double)] -> m b
 sampleMultinomial dist = do r <- getRandomR (0, 1)
-                            return $ sample r dist
+                            return $ sampleMultinomialNogen dist r
+
+-- | As in sampleMultinomial, but takes in a random number in [0,1)
+sampleMultinomialNogen :: [(b, Double)] -> Double -> b
+sampleMultinomialNogen dist rnd = sample rnd dist
     where sample r ((a, p):rest) = if r <= p then a 
                                              else sample (r - p) rest
+          sample _ _ = error $ "Error when sampling from distribution: " ++ show (map snd dist)
 
 -- | As in sampleMultinomial, but takes in unnormalized log probabilities
 sampleMultinomialLogProb :: MonadRandom m => [(b, Double)] -> m b
@@ -24,15 +29,24 @@ sampleMultinomialLogProb dist =
   let logZ = logSumExpList $ map snd dist
       dist' = map (\(thing, ll) -> (thing, exp (ll - logZ))) dist
   in sampleMultinomial dist'
+  
+-- | As in sampleMultinomialLogProb, but takes in a random number in [0,1)
+sampleMultinomialLogProbNogen :: [(b, Double)] -> Double -> b
+sampleMultinomialLogProbNogen dist rnd =
+  -- Normalize
+  let logZ = logSumExpList $ map snd dist
+      dist' = map (\(thing, ll) -> (thing, exp (ll - logZ))) dist
+  in sampleMultinomialNogen dist' rnd
           
 logSumExpList :: [Double] -> Double
-logSumExpList xs = a + (log . sum . map (exp . (\x -> x - a)) $ xs)
-    where a = if null xs then error $ "logSumExpList: list argument must have length greater than zero, but got [].\n\n"
-                         else maximum xs
+logSumExpList = foldl1 logSumExp
+           
 
 logSumExp :: Double -> Double -> Double
 logSumExp x y | isNaN x = y
 logSumExp x y | isNaN y = x
+logSumExp x y | isInfinite y = x
+logSumExp x y | isInfinite x = y
 logSumExp x y | x > y = x + log (1 + exp (y-x))
 logSumExp x y = y + log (1 + exp (x-y))
 
@@ -68,6 +82,10 @@ safeFromJust :: String -> Maybe a -> a
 safeFromJust str Nothing = error str
 safeFromJust _ (Just x) = x
 
+
+unwordsBy :: String -> [String] -> String
+unwordsBy sep [x] = x
+unwordsBy sep (x:xs) = x ++ sep ++ unwordsBy sep xs
 
 instance (MonadRandom m) => MonadRandom (MaybeT m) where
   getRandom = lift getRandom

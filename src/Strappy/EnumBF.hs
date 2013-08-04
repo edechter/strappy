@@ -127,7 +127,7 @@ expand gr bestLeaf (CombBase expr@(App { eRight = right }) (Just (R:rest)) unexp
 
 expandToApp :: Grammar -> Double -> CombBase -> CombBase
 expandToApp gr bestLeaf (CombBase (Term { eType = tp }) (Just []) unexpanded ti v) =
-  let ((lTp, rTp), ti') = runIdentity $ Prelude.flip runStateT ti $ do
+  let ((lTp, rTp), ti') = runIdentity $ flip runStateT ti $ do
         rightType <- mkTVar
         leftType <- applySub $ rightType ->- tp
         return (leftType, rightType)

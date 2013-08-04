@@ -1,0 +1,3135 @@
+EM Planning Iteration: 0
+Frontier size: 100
+Hit 0x^2 + 0x + 0
+Hit 0x^2 + 0x + 1
+Got partial credit for 0x^2 + 0x + 2
+Got partial credit for 0x^2 + 0x + 3
+Got partial credit for 0x^2 + 0x + 4
+Got partial credit for 0x^2 + 0x + 5
+Got partial credit for 0x^2 + 0x + 6
+Got partial credit for 0x^2 + 0x + 7
+Got partial credit for 0x^2 + 0x + 8
+Got partial credit for 0x^2 + 0x + 9
+Hit 0x^2 + 1x + 0
+Hit 0x^2 + 1x + 1
+Hit 0x^2 + 1x + 2
+Hit 0x^2 + 1x + 3
+Got partial credit for 0x^2 + 1x + 4
+Got partial credit for 0x^2 + 1x + 5
+Got partial credit for 0x^2 + 1x + 6
+Got partial credit for 0x^2 + 1x + 7
+Got partial credit for 0x^2 + 1x + 8
+Got partial credit for 0x^2 + 1x + 9
+Hit 0x^2 + 2x + 0
+Hit 0x^2 + 2x + 1
+Got partial credit for 0x^2 + 2x + 2
+Got partial credit for 0x^2 + 2x + 3
+Got partial credit for 0x^2 + 2x + 4
+Got partial credit for 0x^2 + 2x + 5
+Got partial credit for 0x^2 + 2x + 6
+Got partial credit for 0x^2 + 2x + 7
+Got partial credit for 0x^2 + 2x + 8
+Got partial credit for 0x^2 + 2x + 9
+Hit 0x^2 + 3x + 0
+Hit 0x^2 + 3x + 1
+Got partial credit for 0x^2 + 3x + 2
+Got partial credit for 0x^2 + 3x + 3
+Got partial credit for 0x^2 + 3x + 4
+Got partial credit for 0x^2 + 3x + 5
+Got partial credit for 0x^2 + 3x + 6
+Got partial credit for 0x^2 + 3x + 7
+Got partial credit for 0x^2 + 3x + 8
+Got partial credit for 0x^2 + 3x + 9
+Hit 0x^2 + 4x + 0
+Hit 0x^2 + 4x + 1
+Got partial credit for 0x^2 + 4x + 2
+Got partial credit for 0x^2 + 4x + 3
+Got partial credit for 0x^2 + 4x + 4
+Got partial credit for 0x^2 + 4x + 5
+Got partial credit for 0x^2 + 4x + 6
+Got partial credit for 0x^2 + 4x + 7
+Got partial credit for 0x^2 + 4x + 8
+Got partial credit for 0x^2 + 4x + 9
+Hit 0x^2 + 5x + 0
+Got partial credit for 0x^2 + 5x + 1
+Got partial credit for 0x^2 + 5x + 2
+Got partial credit for 0x^2 + 5x + 3
+Got partial credit for 0x^2 + 5x + 4
+Got partial credit for 0x^2 + 5x + 5
+Got partial credit for 0x^2 + 5x + 6
+Got partial credit for 0x^2 + 5x + 7
+Got partial credit for 0x^2 + 5x + 8
+Got partial credit for 0x^2 + 5x + 9
+Got partial credit for 0x^2 + 6x + 0
+Got partial credit for 0x^2 + 6x + 1
+Got partial credit for 0x^2 + 6x + 2
+Got partial credit for 0x^2 + 6x + 3
+Got partial credit for 0x^2 + 6x + 4
+Got partial credit for 0x^2 + 6x + 5
+Got partial credit for 0x^2 + 6x + 6
+Got partial credit for 0x^2 + 6x + 7
+Got partial credit for 0x^2 + 6x + 8
+Got partial credit for 0x^2 + 6x + 9
+Got partial credit for 0x^2 + 7x + 0
+Got partial credit for 0x^2 + 7x + 1
+Got partial credit for 0x^2 + 7x + 2
+Got partial credit for 0x^2 + 7x + 3
+Got partial credit for 0x^2 + 7x + 4
+Got partial credit for 0x^2 + 7x + 5
+Got partial credit for 0x^2 + 7x + 6
+Got partial credit for 0x^2 + 7x + 7
+Got partial credit for 0x^2 + 7x + 8
+Got partial credit for 0x^2 + 7x + 9
+Got partial credit for 0x^2 + 8x + 0
+Got partial credit for 0x^2 + 8x + 1
+Got partial credit for 0x^2 + 8x + 2
+Got partial credit for 0x^2 + 8x + 3
+Got partial credit for 0x^2 + 8x + 4
+Got partial credit for 0x^2 + 8x + 5
+Got partial credit for 0x^2 + 8x + 6
+Got partial credit for 0x^2 + 8x + 7
+Got partial credit for 0x^2 + 8x + 8
+Got partial credit for 0x^2 + 8x + 9
+Got partial credit for 0x^2 + 9x + 0
+Got partial credit for 0x^2 + 9x + 1
+Got partial credit for 0x^2 + 9x + 2
+Got partial credit for 0x^2 + 9x + 3
+Got partial credit for 0x^2 + 9x + 4
+Got partial credit for 0x^2 + 9x + 5
+Got partial credit for 0x^2 + 9x + 6
+Got partial credit for 0x^2 + 9x + 7
+Got partial credit for 0x^2 + 9x + 8
+Got partial credit for 0x^2 + 9x + 9
+Hit 1x^2 + 0x + 0
+Hit 1x^2 + 0x + 1
+Got partial credit for 1x^2 + 0x + 2
+Got partial credit for 1x^2 + 0x + 3
+Got partial credit for 1x^2 + 0x + 4
+Got partial credit for 1x^2 + 0x + 5
+Got partial credit for 1x^2 + 0x + 6
+Got partial credit for 1x^2 + 0x + 7
+Got partial credit for 1x^2 + 0x + 8
+Got partial credit for 1x^2 + 0x + 9
+Hit 1x^2 + 1x + 0
+Hit 1x^2 + 1x + 1
+Got partial credit for 1x^2 + 1x + 2
+Got partial credit for 1x^2 + 1x + 3
+Got partial credit for 1x^2 + 1x + 4
+Got partial credit for 1x^2 + 1x + 5
+Got partial credit for 1x^2 + 1x + 6
+Got partial credit for 1x^2 + 1x + 7
+Got partial credit for 1x^2 + 1x + 8
+Got partial credit for 1x^2 + 1x + 9
+Hit 1x^2 + 2x + 0
+Got partial credit for 1x^2 + 2x + 1
+Got partial credit for 1x^2 + 2x + 2
+Got partial credit for 1x^2 + 2x + 3
+Got partial credit for 1x^2 + 2x + 4
+Got partial credit for 1x^2 + 2x + 5
+Got partial credit for 1x^2 + 2x + 6
+Got partial credit for 1x^2 + 2x + 7
+Got partial credit for 1x^2 + 2x + 8
+Got partial credit for 1x^2 + 2x + 9
+Got partial credit for 1x^2 + 3x + 0
+Got partial credit for 1x^2 + 3x + 1
+Got partial credit for 1x^2 + 3x + 2
+Got partial credit for 1x^2 + 3x + 3
+Got partial credit for 1x^2 + 3x + 4
+Got partial credit for 1x^2 + 3x + 5
+Got partial credit for 1x^2 + 3x + 6
+Got partial credit for 1x^2 + 3x + 7
+Got partial credit for 1x^2 + 3x + 8
+Got partial credit for 1x^2 + 3x + 9
+Got partial credit for 1x^2 + 4x + 0
+Got partial credit for 1x^2 + 4x + 1
+Got partial credit for 1x^2 + 4x + 2
+Got partial credit for 1x^2 + 4x + 3
+Got partial credit for 1x^2 + 4x + 4
+Got partial credit for 1x^2 + 4x + 5
+Got partial credit for 1x^2 + 4x + 6
+Got partial credit for 1x^2 + 4x + 7
+Got partial credit for 1x^2 + 4x + 8
+Got partial credit for 1x^2 + 4x + 9
+Got partial credit for 1x^2 + 5x + 0
+Got partial credit for 1x^2 + 5x + 1
+Got partial credit for 1x^2 + 5x + 2
+Got partial credit for 1x^2 + 5x + 3
+Got partial credit for 1x^2 + 5x + 4
+Got partial credit for 1x^2 + 5x + 5
+Got partial credit for 1x^2 + 5x + 6
+Got partial credit for 1x^2 + 5x + 7
+Got partial credit for 1x^2 + 5x + 8
+Got partial credit for 1x^2 + 5x + 9
+Got partial credit for 1x^2 + 6x + 0
+Got partial credit for 1x^2 + 6x + 1
+Got partial credit for 1x^2 + 6x + 2
+Got partial credit for 1x^2 + 6x + 3
+Got partial credit for 1x^2 + 6x + 4
+Got partial credit for 1x^2 + 6x + 5
+Got partial credit for 1x^2 + 6x + 6
+Got partial credit for 1x^2 + 6x + 7
+Got partial credit for 1x^2 + 6x + 8
+Got partial credit for 1x^2 + 6x + 9
+Got partial credit for 1x^2 + 7x + 0
+Got partial credit for 1x^2 + 7x + 1
+Got partial credit for 1x^2 + 7x + 2
+Got partial credit for 1x^2 + 7x + 3
+Got partial credit for 1x^2 + 7x + 4
+Got partial credit for 1x^2 + 7x + 5
+Got partial credit for 1x^2 + 7x + 6
+Got partial credit for 1x^2 + 7x + 7
+Got partial credit for 1x^2 + 7x + 8
+Got partial credit for 1x^2 + 7x + 9
+Got partial credit for 1x^2 + 8x + 0
+Got partial credit for 1x^2 + 8x + 1
+Got partial credit for 1x^2 + 8x + 2
+Got partial credit for 1x^2 + 8x + 3
+Got partial credit for 1x^2 + 8x + 4
+Got partial credit for 1x^2 + 8x + 5
+Got partial credit for 1x^2 + 8x + 6
+Got partial credit for 1x^2 + 8x + 7
+Got partial credit for 1x^2 + 8x + 8
+Got partial credit for 1x^2 + 8x + 9
+Got partial credit for 1x^2 + 9x + 0
+Got partial credit for 1x^2 + 9x + 1
+Got partial credit for 1x^2 + 9x + 2
+Got partial credit for 1x^2 + 9x + 3
+Got partial credit for 1x^2 + 9x + 4
+Got partial credit for 1x^2 + 9x + 5
+Got partial credit for 1x^2 + 9x + 6
+Got partial credit for 1x^2 + 9x + 7
+Got partial credit for 1x^2 + 9x + 8
+Got partial credit for 1x^2 + 9x + 9
+Got partial credit for 2x^2 + 0x + 0
+Got partial credit for 2x^2 + 0x + 1
+Got partial credit for 2x^2 + 0x + 2
+Got partial credit for 2x^2 + 0x + 3
+Got partial credit for 2x^2 + 0x + 4
+Got partial credit for 2x^2 + 0x + 5
+Got partial credit for 2x^2 + 0x + 6
+Got partial credit for 2x^2 + 0x + 7
+Got partial credit for 2x^2 + 0x + 8
+Got partial credit for 2x^2 + 0x + 9
+Got partial credit for 2x^2 + 1x + 0
+Got partial credit for 2x^2 + 1x + 1
+Got partial credit for 2x^2 + 1x + 2
+Got partial credit for 2x^2 + 1x + 3
+Got partial credit for 2x^2 + 1x + 4
+Got partial credit for 2x^2 + 1x + 5
+Got partial credit for 2x^2 + 1x + 6
+Got partial credit for 2x^2 + 1x + 7
+Got partial credit for 2x^2 + 1x + 8
+Got partial credit for 2x^2 + 1x + 9
+Hit 2x^2 + 2x + 0
+Got partial credit for 2x^2 + 2x + 1
+Got partial credit for 2x^2 + 2x + 2
+Got partial credit for 2x^2 + 2x + 3
+Got partial credit for 2x^2 + 2x + 4
+Got partial credit for 2x^2 + 2x + 5
+Got partial credit for 2x^2 + 2x + 6
+Got partial credit for 2x^2 + 2x + 7
+Got partial credit for 2x^2 + 2x + 8
+Got partial credit for 2x^2 + 2x + 9
+Got partial credit for 2x^2 + 3x + 0
+Got partial credit for 2x^2 + 3x + 1
+Got partial credit for 2x^2 + 3x + 2
+Got partial credit for 2x^2 + 3x + 3
+Got partial credit for 2x^2 + 3x + 4
+Got partial credit for 2x^2 + 3x + 5
+Got partial credit for 2x^2 + 3x + 6
+Got partial credit for 2x^2 + 3x + 7
+Got partial credit for 2x^2 + 3x + 8
+Got partial credit for 2x^2 + 3x + 9
+Got partial credit for 2x^2 + 4x + 0
+Got partial credit for 2x^2 + 4x + 1
+Got partial credit for 2x^2 + 4x + 2
+Got partial credit for 2x^2 + 4x + 3
+Got partial credit for 2x^2 + 4x + 4
+Got partial credit for 2x^2 + 4x + 5
+Got partial credit for 2x^2 + 4x + 6
+Got partial credit for 2x^2 + 4x + 7
+Got partial credit for 2x^2 + 4x + 8
+Got partial credit for 2x^2 + 4x + 9
+Got partial credit for 2x^2 + 5x + 0
+Got partial credit for 2x^2 + 5x + 1
+Got partial credit for 2x^2 + 5x + 2
+Got partial credit for 2x^2 + 5x + 3
+Got partial credit for 2x^2 + 5x + 4
+Got partial credit for 2x^2 + 5x + 5
+Got partial credit for 2x^2 + 5x + 6
+Got partial credit for 2x^2 + 5x + 7
+Got partial credit for 2x^2 + 5x + 8
+Got partial credit for 2x^2 + 5x + 9
+Got partial credit for 2x^2 + 6x + 0
+Got partial credit for 2x^2 + 6x + 1
+Got partial credit for 2x^2 + 6x + 2
+Got partial credit for 2x^2 + 6x + 3
+Got partial credit for 2x^2 + 6x + 4
+Got partial credit for 2x^2 + 6x + 5
+Got partial credit for 2x^2 + 6x + 6
+Got partial credit for 2x^2 + 6x + 7
+Got partial credit for 2x^2 + 6x + 8
+Got partial credit for 2x^2 + 6x + 9
+Got partial credit for 2x^2 + 7x + 0
+Got partial credit for 2x^2 + 7x + 1
+Got partial credit for 2x^2 + 7x + 2
+Got partial credit for 2x^2 + 7x + 3
+Got partial credit for 2x^2 + 7x + 4
+Got partial credit for 2x^2 + 7x + 5
+Got partial credit for 2x^2 + 7x + 6
+Got partial credit for 2x^2 + 7x + 7
+Got partial credit for 2x^2 + 7x + 8
+Got partial credit for 2x^2 + 7x + 9
+Got partial credit for 2x^2 + 8x + 0
+Got partial credit for 2x^2 + 8x + 1
+Got partial credit for 2x^2 + 8x + 2
+Got partial credit for 2x^2 + 8x + 3
+Got partial credit for 2x^2 + 8x + 4
+Got partial credit for 2x^2 + 8x + 5
+Got partial credit for 2x^2 + 8x + 6
+Got partial credit for 2x^2 + 8x + 7
+Got partial credit for 2x^2 + 8x + 8
+Got partial credit for 2x^2 + 8x + 9
+Got partial credit for 2x^2 + 9x + 0
+Got partial credit for 2x^2 + 9x + 1
+Got partial credit for 2x^2 + 9x + 2
+Got partial credit for 2x^2 + 9x + 3
+Got partial credit for 2x^2 + 9x + 4
+Got partial credit for 2x^2 + 9x + 5
+Got partial credit for 2x^2 + 9x + 6
+Got partial credit for 2x^2 + 9x + 7
+Got partial credit for 2x^2 + 9x + 8
+Got partial credit for 2x^2 + 9x + 9
+Got partial credit for 3x^2 + 0x + 0
+Got partial credit for 3x^2 + 0x + 1
+Got partial credit for 3x^2 + 0x + 2
+Got partial credit for 3x^2 + 0x + 3
+Got partial credit for 3x^2 + 0x + 4
+Got partial credit for 3x^2 + 0x + 5
+Got partial credit for 3x^2 + 0x + 6
+Got partial credit for 3x^2 + 0x + 7
+Got partial credit for 3x^2 + 0x + 8
+Got partial credit for 3x^2 + 0x + 9
+Got partial credit for 3x^2 + 1x + 0
+Got partial credit for 3x^2 + 1x + 1
+Got partial credit for 3x^2 + 1x + 2
+Got partial credit for 3x^2 + 1x + 3
+Got partial credit for 3x^2 + 1x + 4
+Got partial credit for 3x^2 + 1x + 5
+Got partial credit for 3x^2 + 1x + 6
+Got partial credit for 3x^2 + 1x + 7
+Got partial credit for 3x^2 + 1x + 8
+Got partial credit for 3x^2 + 1x + 9
+Got partial credit for 3x^2 + 2x + 0
+Got partial credit for 3x^2 + 2x + 1
+Got partial credit for 3x^2 + 2x + 2
+Got partial credit for 3x^2 + 2x + 3
+Got partial credit for 3x^2 + 2x + 4
+Got partial credit for 3x^2 + 2x + 5
+Got partial credit for 3x^2 + 2x + 6
+Got partial credit for 3x^2 + 2x + 7
+Got partial credit for 3x^2 + 2x + 8
+Got partial credit for 3x^2 + 2x + 9
+Hit 3x^2 + 3x + 0
+Got partial credit for 3x^2 + 3x + 1
+Got partial credit for 3x^2 + 3x + 2
+Got partial credit for 3x^2 + 3x + 3
+Got partial credit for 3x^2 + 3x + 4
+Got partial credit for 3x^2 + 3x + 5
+Got partial credit for 3x^2 + 3x + 6
+Got partial credit for 3x^2 + 3x + 7
+Got partial credit for 3x^2 + 3x + 8
+Got partial credit for 3x^2 + 3x + 9
+Got partial credit for 3x^2 + 4x + 0
+Got partial credit for 3x^2 + 4x + 1
+Got partial credit for 3x^2 + 4x + 2
+Got partial credit for 3x^2 + 4x + 3
+Got partial credit for 3x^2 + 4x + 4
+Got partial credit for 3x^2 + 4x + 5
+Got partial credit for 3x^2 + 4x + 6
+Got partial credit for 3x^2 + 4x + 7
+Got partial credit for 3x^2 + 4x + 8
+Got partial credit for 3x^2 + 4x + 9
+Got partial credit for 3x^2 + 5x + 0
+Got partial credit for 3x^2 + 5x + 1
+Got partial credit for 3x^2 + 5x + 2
+Got partial credit for 3x^2 + 5x + 3
+Got partial credit for 3x^2 + 5x + 4
+Got partial credit for 3x^2 + 5x + 5
+Got partial credit for 3x^2 + 5x + 6
+Got partial credit for 3x^2 + 5x + 7
+Got partial credit for 3x^2 + 5x + 8
+Got partial credit for 3x^2 + 5x + 9
+Got partial credit for 3x^2 + 6x + 0
+Got partial credit for 3x^2 + 6x + 1
+Got partial credit for 3x^2 + 6x + 2
+Got partial credit for 3x^2 + 6x + 3
+Got partial credit for 3x^2 + 6x + 4
+Got partial credit for 3x^2 + 6x + 5
+Got partial credit for 3x^2 + 6x + 6
+Got partial credit for 3x^2 + 6x + 7
+Got partial credit for 3x^2 + 6x + 8
+Got partial credit for 3x^2 + 6x + 9
+Got partial credit for 3x^2 + 7x + 0
+Got partial credit for 3x^2 + 7x + 1
+Got partial credit for 3x^2 + 7x + 2
+Got partial credit for 3x^2 + 7x + 3
+Got partial credit for 3x^2 + 7x + 4
+Got partial credit for 3x^2 + 7x + 5
+Got partial credit for 3x^2 + 7x + 6
+Got partial credit for 3x^2 + 7x + 7
+Got partial credit for 3x^2 + 7x + 8
+Got partial credit for 3x^2 + 7x + 9
+Got partial credit for 3x^2 + 8x + 0
+Got partial credit for 3x^2 + 8x + 1
+Got partial credit for 3x^2 + 8x + 2
+Got partial credit for 3x^2 + 8x + 3
+Got partial credit for 3x^2 + 8x + 4
+Got partial credit for 3x^2 + 8x + 5
+Got partial credit for 3x^2 + 8x + 6
+Got partial credit for 3x^2 + 8x + 7
+Got partial credit for 3x^2 + 8x + 8
+Got partial credit for 3x^2 + 8x + 9
+Got partial credit for 3x^2 + 9x + 0
+Got partial credit for 3x^2 + 9x + 1
+Got partial credit for 3x^2 + 9x + 2
+Got partial credit for 3x^2 + 9x + 3
+Got partial credit for 3x^2 + 9x + 4
+Got partial credit for 3x^2 + 9x + 5
+Got partial credit for 3x^2 + 9x + 6
+Got partial credit for 3x^2 + 9x + 7
+Got partial credit for 3x^2 + 9x + 8
+Got partial credit for 3x^2 + 9x + 9
+Got partial credit for 4x^2 + 0x + 0
+Got partial credit for 4x^2 + 0x + 1
+Got partial credit for 4x^2 + 0x + 2
+Got partial credit for 4x^2 + 0x + 3
+Got partial credit for 4x^2 + 0x + 4
+Got partial credit for 4x^2 + 0x + 5
+Got partial credit for 4x^2 + 0x + 6
+Got partial credit for 4x^2 + 0x + 7
+Got partial credit for 4x^2 + 0x + 8
+Got partial credit for 4x^2 + 0x + 9
+Got partial credit for 4x^2 + 1x + 0
+Got partial credit for 4x^2 + 1x + 1
+Got partial credit for 4x^2 + 1x + 2
+Got partial credit for 4x^2 + 1x + 3
+Got partial credit for 4x^2 + 1x + 4
+Got partial credit for 4x^2 + 1x + 5
+Got partial credit for 4x^2 + 1x + 6
+Got partial credit for 4x^2 + 1x + 7
+Got partial credit for 4x^2 + 1x + 8
+Got partial credit for 4x^2 + 1x + 9
+Got partial credit for 4x^2 + 2x + 0
+Got partial credit for 4x^2 + 2x + 1
+Got partial credit for 4x^2 + 2x + 2
+Got partial credit for 4x^2 + 2x + 3
+Got partial credit for 4x^2 + 2x + 4
+Got partial credit for 4x^2 + 2x + 5
+Got partial credit for 4x^2 + 2x + 6
+Got partial credit for 4x^2 + 2x + 7
+Got partial credit for 4x^2 + 2x + 8
+Got partial credit for 4x^2 + 2x + 9
+Got partial credit for 4x^2 + 3x + 0
+Got partial credit for 4x^2 + 3x + 1
+Got partial credit for 4x^2 + 3x + 2
+Got partial credit for 4x^2 + 3x + 3
+Got partial credit for 4x^2 + 3x + 4
+Got partial credit for 4x^2 + 3x + 5
+Got partial credit for 4x^2 + 3x + 6
+Got partial credit for 4x^2 + 3x + 7
+Got partial credit for 4x^2 + 3x + 8
+Got partial credit for 4x^2 + 3x + 9
+Got partial credit for 4x^2 + 4x + 0
+Got partial credit for 4x^2 + 4x + 1
+Got partial credit for 4x^2 + 4x + 2
+Got partial credit for 4x^2 + 4x + 3
+Got partial credit for 4x^2 + 4x + 4
+Got partial credit for 4x^2 + 4x + 5
+Got partial credit for 4x^2 + 4x + 6
+Got partial credit for 4x^2 + 4x + 7
+Got partial credit for 4x^2 + 4x + 8
+Got partial credit for 4x^2 + 4x + 9
+Got partial credit for 4x^2 + 5x + 0
+Got partial credit for 4x^2 + 5x + 1
+Got partial credit for 4x^2 + 5x + 2
+Got partial credit for 4x^2 + 5x + 3
+Got partial credit for 4x^2 + 5x + 4
+Got partial credit for 4x^2 + 5x + 5
+Got partial credit for 4x^2 + 5x + 6
+Got partial credit for 4x^2 + 5x + 7
+Got partial credit for 4x^2 + 5x + 8
+Got partial credit for 4x^2 + 5x + 9
+Got partial credit for 4x^2 + 6x + 0
+Got partial credit for 4x^2 + 6x + 1
+Got partial credit for 4x^2 + 6x + 2
+Got partial credit for 4x^2 + 6x + 3
+Got partial credit for 4x^2 + 6x + 4
+Got partial credit for 4x^2 + 6x + 5
+Got partial credit for 4x^2 + 6x + 6
+Got partial credit for 4x^2 + 6x + 7
+Got partial credit for 4x^2 + 6x + 8
+Got partial credit for 4x^2 + 6x + 9
+Got partial credit for 4x^2 + 7x + 0
+Got partial credit for 4x^2 + 7x + 1
+Got partial credit for 4x^2 + 7x + 2
+Got partial credit for 4x^2 + 7x + 3
+Got partial credit for 4x^2 + 7x + 4
+Got partial credit for 4x^2 + 7x + 5
+Got partial credit for 4x^2 + 7x + 6
+Got partial credit for 4x^2 + 7x + 7
+Got partial credit for 4x^2 + 7x + 8
+Got partial credit for 4x^2 + 7x + 9
+Got partial credit for 4x^2 + 8x + 0
+Got partial credit for 4x^2 + 8x + 1
+Got partial credit for 4x^2 + 8x + 2
+Got partial credit for 4x^2 + 8x + 3
+Got partial credit for 4x^2 + 8x + 4
+Got partial credit for 4x^2 + 8x + 5
+Got partial credit for 4x^2 + 8x + 6
+Got partial credit for 4x^2 + 8x + 7
+Got partial credit for 4x^2 + 8x + 8
+Got partial credit for 4x^2 + 8x + 9
+Got partial credit for 4x^2 + 9x + 0
+Got partial credit for 4x^2 + 9x + 1
+Got partial credit for 4x^2 + 9x + 2
+Got partial credit for 4x^2 + 9x + 3
+Got partial credit for 4x^2 + 9x + 4
+Got partial credit for 4x^2 + 9x + 5
+Got partial credit for 4x^2 + 9x + 6
+Got partial credit for 4x^2 + 9x + 7
+Got partial credit for 4x^2 + 9x + 8
+Got partial credit for 4x^2 + 9x + 9
+Got partial credit for 5x^2 + 0x + 0
+Got partial credit for 5x^2 + 0x + 1
+Got partial credit for 5x^2 + 0x + 2
+Got partial credit for 5x^2 + 0x + 3
+Got partial credit for 5x^2 + 0x + 4
+Got partial credit for 5x^2 + 0x + 5
+Got partial credit for 5x^2 + 0x + 6
+Got partial credit for 5x^2 + 0x + 7
+Got partial credit for 5x^2 + 0x + 8
+Got partial credit for 5x^2 + 0x + 9
+Got partial credit for 5x^2 + 1x + 0
+Got partial credit for 5x^2 + 1x + 1
+Got partial credit for 5x^2 + 1x + 2
+Got partial credit for 5x^2 + 1x + 3
+Got partial credit for 5x^2 + 1x + 4
+Got partial credit for 5x^2 + 1x + 5
+Got partial credit for 5x^2 + 1x + 6
+Got partial credit for 5x^2 + 1x + 7
+Got partial credit for 5x^2 + 1x + 8
+Got partial credit for 5x^2 + 1x + 9
+Got partial credit for 5x^2 + 2x + 0
+Got partial credit for 5x^2 + 2x + 1
+Got partial credit for 5x^2 + 2x + 2
+Got partial credit for 5x^2 + 2x + 3
+Got partial credit for 5x^2 + 2x + 4
+Got partial credit for 5x^2 + 2x + 5
+Got partial credit for 5x^2 + 2x + 6
+Got partial credit for 5x^2 + 2x + 7
+Got partial credit for 5x^2 + 2x + 8
+Got partial credit for 5x^2 + 2x + 9
+Got partial credit for 5x^2 + 3x + 0
+Got partial credit for 5x^2 + 3x + 1
+Got partial credit for 5x^2 + 3x + 2
+Got partial credit for 5x^2 + 3x + 3
+Got partial credit for 5x^2 + 3x + 4
+Got partial credit for 5x^2 + 3x + 5
+Got partial credit for 5x^2 + 3x + 6
+Got partial credit for 5x^2 + 3x + 7
+Got partial credit for 5x^2 + 3x + 8
+Got partial credit for 5x^2 + 3x + 9
+Got partial credit for 5x^2 + 4x + 0
+Got partial credit for 5x^2 + 4x + 1
+Got partial credit for 5x^2 + 4x + 2
+Got partial credit for 5x^2 + 4x + 3
+Got partial credit for 5x^2 + 4x + 4
+Got partial credit for 5x^2 + 4x + 5
+Got partial credit for 5x^2 + 4x + 6
+Got partial credit for 5x^2 + 4x + 7
+Got partial credit for 5x^2 + 4x + 8
+Got partial credit for 5x^2 + 4x + 9
+Got partial credit for 5x^2 + 5x + 0
+Got partial credit for 5x^2 + 5x + 1
+Got partial credit for 5x^2 + 5x + 2
+Got partial credit for 5x^2 + 5x + 3
+Got partial credit for 5x^2 + 5x + 4
+Got partial credit for 5x^2 + 5x + 5
+Got partial credit for 5x^2 + 5x + 6
+Got partial credit for 5x^2 + 5x + 7
+Got partial credit for 5x^2 + 5x + 8
+Got partial credit for 5x^2 + 5x + 9
+Got partial credit for 5x^2 + 6x + 0
+Got partial credit for 5x^2 + 6x + 1
+Got partial credit for 5x^2 + 6x + 2
+Got partial credit for 5x^2 + 6x + 3
+Got partial credit for 5x^2 + 6x + 4
+Got partial credit for 5x^2 + 6x + 5
+Got partial credit for 5x^2 + 6x + 6
+Got partial credit for 5x^2 + 6x + 7
+Got partial credit for 5x^2 + 6x + 8
+Got partial credit for 5x^2 + 6x + 9
+Got partial credit for 5x^2 + 7x + 0
+Got partial credit for 5x^2 + 7x + 1
+Got partial credit for 5x^2 + 7x + 2
+Got partial credit for 5x^2 + 7x + 3
+Got partial credit for 5x^2 + 7x + 4
+Got partial credit for 5x^2 + 7x + 5
+Got partial credit for 5x^2 + 7x + 6
+Got partial credit for 5x^2 + 7x + 7
+Got partial credit for 5x^2 + 7x + 8
+Got partial credit for 5x^2 + 7x + 9
+Got partial credit for 5x^2 + 8x + 0
+Got partial credit for 5x^2 + 8x + 1
+Got partial credit for 5x^2 + 8x + 2
+Got partial credit for 5x^2 + 8x + 3
+Got partial credit for 5x^2 + 8x + 4
+Got partial credit for 5x^2 + 8x + 5
+Got partial credit for 5x^2 + 8x + 6
+Got partial credit for 5x^2 + 8x + 7
+Got partial credit for 5x^2 + 8x + 8
+Got partial credit for 5x^2 + 8x + 9
+Got partial credit for 5x^2 + 9x + 0
+Got partial credit for 5x^2 + 9x + 1
+Got partial credit for 5x^2 + 9x + 2
+Got partial credit for 5x^2 + 9x + 3
+Got partial credit for 5x^2 + 9x + 4
+Got partial credit for 5x^2 + 9x + 5
+Got partial credit for 5x^2 + 9x + 6
+Got partial credit for 5x^2 + 9x + 7
+Got partial credit for 5x^2 + 9x + 8
+Got partial credit for 5x^2 + 9x + 9
+Got partial credit for 6x^2 + 0x + 0
+Got partial credit for 6x^2 + 0x + 1
+Got partial credit for 6x^2 + 0x + 2
+Got partial credit for 6x^2 + 0x + 3
+Got partial credit for 6x^2 + 0x + 4
+Got partial credit for 6x^2 + 0x + 5
+Got partial credit for 6x^2 + 0x + 6
+Got partial credit for 6x^2 + 0x + 7
+Got partial credit for 6x^2 + 0x + 8
+Got partial credit for 6x^2 + 0x + 9
+Got partial credit for 6x^2 + 1x + 0
+Got partial credit for 6x^2 + 1x + 1
+Got partial credit for 6x^2 + 1x + 2
+Got partial credit for 6x^2 + 1x + 3
+Got partial credit for 6x^2 + 1x + 4
+Got partial credit for 6x^2 + 1x + 5
+Got partial credit for 6x^2 + 1x + 6
+Got partial credit for 6x^2 + 1x + 7
+Got partial credit for 6x^2 + 1x + 8
+Got partial credit for 6x^2 + 1x + 9
+Got partial credit for 6x^2 + 2x + 0
+Got partial credit for 6x^2 + 2x + 1
+Got partial credit for 6x^2 + 2x + 2
+Got partial credit for 6x^2 + 2x + 3
+Got partial credit for 6x^2 + 2x + 4
+Got partial credit for 6x^2 + 2x + 5
+Got partial credit for 6x^2 + 2x + 6
+Got partial credit for 6x^2 + 2x + 7
+Got partial credit for 6x^2 + 2x + 8
+Got partial credit for 6x^2 + 2x + 9
+Got partial credit for 6x^2 + 3x + 0
+Got partial credit for 6x^2 + 3x + 1
+Got partial credit for 6x^2 + 3x + 2
+Got partial credit for 6x^2 + 3x + 3
+Got partial credit for 6x^2 + 3x + 4
+Got partial credit for 6x^2 + 3x + 5
+Got partial credit for 6x^2 + 3x + 6
+Got partial credit for 6x^2 + 3x + 7
+Got partial credit for 6x^2 + 3x + 8
+Got partial credit for 6x^2 + 3x + 9
+Got partial credit for 6x^2 + 4x + 0
+Got partial credit for 6x^2 + 4x + 1
+Got partial credit for 6x^2 + 4x + 2
+Got partial credit for 6x^2 + 4x + 3
+Got partial credit for 6x^2 + 4x + 4
+Got partial credit for 6x^2 + 4x + 5
+Got partial credit for 6x^2 + 4x + 6
+Got partial credit for 6x^2 + 4x + 7
+Got partial credit for 6x^2 + 4x + 8
+Got partial credit for 6x^2 + 4x + 9
+Got partial credit for 6x^2 + 5x + 0
+Got partial credit for 6x^2 + 5x + 1
+Got partial credit for 6x^2 + 5x + 2
+Got partial credit for 6x^2 + 5x + 3
+Got partial credit for 6x^2 + 5x + 4
+Got partial credit for 6x^2 + 5x + 5
+Got partial credit for 6x^2 + 5x + 6
+Got partial credit for 6x^2 + 5x + 7
+Got partial credit for 6x^2 + 5x + 8
+Got partial credit for 6x^2 + 5x + 9
+Got partial credit for 6x^2 + 6x + 0
+Got partial credit for 6x^2 + 6x + 1
+Got partial credit for 6x^2 + 6x + 2
+Got partial credit for 6x^2 + 6x + 3
+Got partial credit for 6x^2 + 6x + 4
+Got partial credit for 6x^2 + 6x + 5
+Got partial credit for 6x^2 + 6x + 6
+Got partial credit for 6x^2 + 6x + 7
+Got partial credit for 6x^2 + 6x + 8
+Got partial credit for 6x^2 + 6x + 9
+Got partial credit for 6x^2 + 7x + 0
+Got partial credit for 6x^2 + 7x + 1
+Got partial credit for 6x^2 + 7x + 2
+Got partial credit for 6x^2 + 7x + 3
+Got partial credit for 6x^2 + 7x + 4
+Got partial credit for 6x^2 + 7x + 5
+Got partial credit for 6x^2 + 7x + 6
+Got partial credit for 6x^2 + 7x + 7
+Got partial credit for 6x^2 + 7x + 8
+Got partial credit for 6x^2 + 7x + 9
+Got partial credit for 6x^2 + 8x + 0
+Got partial credit for 6x^2 + 8x + 1
+Got partial credit for 6x^2 + 8x + 2
+Got partial credit for 6x^2 + 8x + 3
+Got partial credit for 6x^2 + 8x + 4
+Got partial credit for 6x^2 + 8x + 5
+Got partial credit for 6x^2 + 8x + 6
+Got partial credit for 6x^2 + 8x + 7
+Got partial credit for 6x^2 + 8x + 8
+Got partial credit for 6x^2 + 8x + 9
+Got partial credit for 6x^2 + 9x + 0
+Got partial credit for 6x^2 + 9x + 1
+Got partial credit for 6x^2 + 9x + 2
+Got partial credit for 6x^2 + 9x + 3
+Got partial credit for 6x^2 + 9x + 4
+Got partial credit for 6x^2 + 9x + 5
+Got partial credit for 6x^2 + 9x + 6
+Got partial credit for 6x^2 + 9x + 7
+Got partial credit for 6x^2 + 9x + 8
+Got partial credit for 6x^2 + 9x + 9
+Got partial credit for 7x^2 + 0x + 0
+Got partial credit for 7x^2 + 0x + 1
+Got partial credit for 7x^2 + 0x + 2
+Got partial credit for 7x^2 + 0x + 3
+Got partial credit for 7x^2 + 0x + 4
+Got partial credit for 7x^2 + 0x + 5
+Got partial credit for 7x^2 + 0x + 6
+Got partial credit for 7x^2 + 0x + 7
+Got partial credit for 7x^2 + 0x + 8
+Got partial credit for 7x^2 + 0x + 9
+Got partial credit for 7x^2 + 1x + 0
+Got partial credit for 7x^2 + 1x + 1
+Got partial credit for 7x^2 + 1x + 2
+Got partial credit for 7x^2 + 1x + 3
+Got partial credit for 7x^2 + 1x + 4
+Got partial credit for 7x^2 + 1x + 5
+Got partial credit for 7x^2 + 1x + 6
+Got partial credit for 7x^2 + 1x + 7
+Got partial credit for 7x^2 + 1x + 8
+Got partial credit for 7x^2 + 1x + 9
+Got partial credit for 7x^2 + 2x + 0
+Got partial credit for 7x^2 + 2x + 1
+Got partial credit for 7x^2 + 2x + 2
+Got partial credit for 7x^2 + 2x + 3
+Got partial credit for 7x^2 + 2x + 4
+Got partial credit for 7x^2 + 2x + 5
+Got partial credit for 7x^2 + 2x + 6
+Got partial credit for 7x^2 + 2x + 7
+Got partial credit for 7x^2 + 2x + 8
+Got partial credit for 7x^2 + 2x + 9
+Got partial credit for 7x^2 + 3x + 0
+Got partial credit for 7x^2 + 3x + 1
+Got partial credit for 7x^2 + 3x + 2
+Got partial credit for 7x^2 + 3x + 3
+Got partial credit for 7x^2 + 3x + 4
+Got partial credit for 7x^2 + 3x + 5
+Got partial credit for 7x^2 + 3x + 6
+Got partial credit for 7x^2 + 3x + 7
+Got partial credit for 7x^2 + 3x + 8
+Got partial credit for 7x^2 + 3x + 9
+Got partial credit for 7x^2 + 4x + 0
+Got partial credit for 7x^2 + 4x + 1
+Got partial credit for 7x^2 + 4x + 2
+Got partial credit for 7x^2 + 4x + 3
+Got partial credit for 7x^2 + 4x + 4
+Got partial credit for 7x^2 + 4x + 5
+Got partial credit for 7x^2 + 4x + 6
+Got partial credit for 7x^2 + 4x + 7
+Got partial credit for 7x^2 + 4x + 8
+Got partial credit for 7x^2 + 4x + 9
+Got partial credit for 7x^2 + 5x + 0
+Got partial credit for 7x^2 + 5x + 1
+Got partial credit for 7x^2 + 5x + 2
+Got partial credit for 7x^2 + 5x + 3
+Got partial credit for 7x^2 + 5x + 4
+Got partial credit for 7x^2 + 5x + 5
+Got partial credit for 7x^2 + 5x + 6
+Got partial credit for 7x^2 + 5x + 7
+Got partial credit for 7x^2 + 5x + 8
+Got partial credit for 7x^2 + 5x + 9
+Got partial credit for 7x^2 + 6x + 0
+Got partial credit for 7x^2 + 6x + 1
+Got partial credit for 7x^2 + 6x + 2
+Got partial credit for 7x^2 + 6x + 3
+Got partial credit for 7x^2 + 6x + 4
+Got partial credit for 7x^2 + 6x + 5
+Got partial credit for 7x^2 + 6x + 6
+Got partial credit for 7x^2 + 6x + 7
+Got partial credit for 7x^2 + 6x + 8
+Got partial credit for 7x^2 + 6x + 9
+Got partial credit for 7x^2 + 7x + 0
+Got partial credit for 7x^2 + 7x + 1
+Got partial credit for 7x^2 + 7x + 2
+Got partial credit for 7x^2 + 7x + 3
+Got partial credit for 7x^2 + 7x + 4
+Got partial credit for 7x^2 + 7x + 5
+Got partial credit for 7x^2 + 7x + 6
+Got partial credit for 7x^2 + 7x + 7
+Got partial credit for 7x^2 + 7x + 8
+Got partial credit for 7x^2 + 7x + 9
+Got partial credit for 7x^2 + 8x + 0
+Got partial credit for 7x^2 + 8x + 1
+Got partial credit for 7x^2 + 8x + 2
+Got partial credit for 7x^2 + 8x + 3
+Got partial credit for 7x^2 + 8x + 4
+Got partial credit for 7x^2 + 8x + 5
+Got partial credit for 7x^2 + 8x + 6
+Got partial credit for 7x^2 + 8x + 7
+Got partial credit for 7x^2 + 8x + 8
+Got partial credit for 7x^2 + 8x + 9
+Got partial credit for 7x^2 + 9x + 0
+Got partial credit for 7x^2 + 9x + 1
+Got partial credit for 7x^2 + 9x + 2
+Got partial credit for 7x^2 + 9x + 3
+Got partial credit for 7x^2 + 9x + 4
+Got partial credit for 7x^2 + 9x + 5
+Got partial credit for 7x^2 + 9x + 6
+Got partial credit for 7x^2 + 9x + 7
+Got partial credit for 7x^2 + 9x + 8
+Got partial credit for 7x^2 + 9x + 9
+Got partial credit for 8x^2 + 0x + 0
+Got partial credit for 8x^2 + 0x + 1
+Got partial credit for 8x^2 + 0x + 2
+Got partial credit for 8x^2 + 0x + 3
+Got partial credit for 8x^2 + 0x + 4
+Got partial credit for 8x^2 + 0x + 5
+Got partial credit for 8x^2 + 0x + 6
+Got partial credit for 8x^2 + 0x + 7
+Got partial credit for 8x^2 + 0x + 8
+Got partial credit for 8x^2 + 0x + 9
+Got partial credit for 8x^2 + 1x + 0
+Got partial credit for 8x^2 + 1x + 1
+Got partial credit for 8x^2 + 1x + 2
+Got partial credit for 8x^2 + 1x + 3
+Got partial credit for 8x^2 + 1x + 4
+Got partial credit for 8x^2 + 1x + 5
+Got partial credit for 8x^2 + 1x + 6
+Got partial credit for 8x^2 + 1x + 7
+Got partial credit for 8x^2 + 1x + 8
+Got partial credit for 8x^2 + 1x + 9
+Got partial credit for 8x^2 + 2x + 0
+Got partial credit for 8x^2 + 2x + 1
+Got partial credit for 8x^2 + 2x + 2
+Got partial credit for 8x^2 + 2x + 3
+Got partial credit for 8x^2 + 2x + 4
+Got partial credit for 8x^2 + 2x + 5
+Got partial credit for 8x^2 + 2x + 6
+Got partial credit for 8x^2 + 2x + 7
+Got partial credit for 8x^2 + 2x + 8
+Got partial credit for 8x^2 + 2x + 9
+Got partial credit for 8x^2 + 3x + 0
+Got partial credit for 8x^2 + 3x + 1
+Got partial credit for 8x^2 + 3x + 2
+Got partial credit for 8x^2 + 3x + 3
+Got partial credit for 8x^2 + 3x + 4
+Got partial credit for 8x^2 + 3x + 5
+Got partial credit for 8x^2 + 3x + 6
+Got partial credit for 8x^2 + 3x + 7
+Got partial credit for 8x^2 + 3x + 8
+Got partial credit for 8x^2 + 3x + 9
+Got partial credit for 8x^2 + 4x + 0
+Got partial credit for 8x^2 + 4x + 1
+Got partial credit for 8x^2 + 4x + 2
+Got partial credit for 8x^2 + 4x + 3
+Got partial credit for 8x^2 + 4x + 4
+Got partial credit for 8x^2 + 4x + 5
+Got partial credit for 8x^2 + 4x + 6
+Got partial credit for 8x^2 + 4x + 7
+Got partial credit for 8x^2 + 4x + 8
+Got partial credit for 8x^2 + 4x + 9
+Got partial credit for 8x^2 + 5x + 0
+Got partial credit for 8x^2 + 5x + 1
+Got partial credit for 8x^2 + 5x + 2
+Got partial credit for 8x^2 + 5x + 3
+Got partial credit for 8x^2 + 5x + 4
+Got partial credit for 8x^2 + 5x + 5
+Got partial credit for 8x^2 + 5x + 6
+Got partial credit for 8x^2 + 5x + 7
+Got partial credit for 8x^2 + 5x + 8
+Got partial credit for 8x^2 + 5x + 9
+Got partial credit for 8x^2 + 6x + 0
+Got partial credit for 8x^2 + 6x + 1
+Got partial credit for 8x^2 + 6x + 2
+Got partial credit for 8x^2 + 6x + 3
+Got partial credit for 8x^2 + 6x + 4
+Got partial credit for 8x^2 + 6x + 5
+Got partial credit for 8x^2 + 6x + 6
+Got partial credit for 8x^2 + 6x + 7
+Got partial credit for 8x^2 + 6x + 8
+Got partial credit for 8x^2 + 6x + 9
+Got partial credit for 8x^2 + 7x + 0
+Got partial credit for 8x^2 + 7x + 1
+Got partial credit for 8x^2 + 7x + 2
+Got partial credit for 8x^2 + 7x + 3
+Got partial credit for 8x^2 + 7x + 4
+Got partial credit for 8x^2 + 7x + 5
+Got partial credit for 8x^2 + 7x + 6
+Got partial credit for 8x^2 + 7x + 7
+Got partial credit for 8x^2 + 7x + 8
+Got partial credit for 8x^2 + 7x + 9
+Got partial credit for 8x^2 + 8x + 0
+Got partial credit for 8x^2 + 8x + 1
+Got partial credit for 8x^2 + 8x + 2
+Got partial credit for 8x^2 + 8x + 3
+Got partial credit for 8x^2 + 8x + 4
+Got partial credit for 8x^2 + 8x + 5
+Got partial credit for 8x^2 + 8x + 6
+Got partial credit for 8x^2 + 8x + 7
+Got partial credit for 8x^2 + 8x + 8
+Got partial credit for 8x^2 + 8x + 9
+Got partial credit for 8x^2 + 9x + 0
+Got partial credit for 8x^2 + 9x + 1
+Got partial credit for 8x^2 + 9x + 2
+Got partial credit for 8x^2 + 9x + 3
+Got partial credit for 8x^2 + 9x + 4
+Got partial credit for 8x^2 + 9x + 5
+Got partial credit for 8x^2 + 9x + 6
+Got partial credit for 8x^2 + 9x + 7
+Got partial credit for 8x^2 + 9x + 8
+Got partial credit for 8x^2 + 9x + 9
+Got partial credit for 9x^2 + 0x + 0
+Got partial credit for 9x^2 + 0x + 1
+Got partial credit for 9x^2 + 0x + 2
+Got partial credit for 9x^2 + 0x + 3
+Got partial credit for 9x^2 + 0x + 4
+Got partial credit for 9x^2 + 0x + 5
+Got partial credit for 9x^2 + 0x + 6
+Got partial credit for 9x^2 + 0x + 7
+Got partial credit for 9x^2 + 0x + 8
+Got partial credit for 9x^2 + 0x + 9
+Got partial credit for 9x^2 + 1x + 0
+Got partial credit for 9x^2 + 1x + 1
+Got partial credit for 9x^2 + 1x + 2
+Got partial credit for 9x^2 + 1x + 3
+Got partial credit for 9x^2 + 1x + 4
+Got partial credit for 9x^2 + 1x + 5
+Got partial credit for 9x^2 + 1x + 6
+Got partial credit for 9x^2 + 1x + 7
+Got partial credit for 9x^2 + 1x + 8
+Got partial credit for 9x^2 + 1x + 9
+Got partial credit for 9x^2 + 2x + 0
+Got partial credit for 9x^2 + 2x + 1
+Got partial credit for 9x^2 + 2x + 2
+Got partial credit for 9x^2 + 2x + 3
+Got partial credit for 9x^2 + 2x + 4
+Got partial credit for 9x^2 + 2x + 5
+Got partial credit for 9x^2 + 2x + 6
+Got partial credit for 9x^2 + 2x + 7
+Got partial credit for 9x^2 + 2x + 8
+Got partial credit for 9x^2 + 2x + 9
+Got partial credit for 9x^2 + 3x + 0
+Got partial credit for 9x^2 + 3x + 1
+Got partial credit for 9x^2 + 3x + 2
+Got partial credit for 9x^2 + 3x + 3
+Got partial credit for 9x^2 + 3x + 4
+Got partial credit for 9x^2 + 3x + 5
+Got partial credit for 9x^2 + 3x + 6
+Got partial credit for 9x^2 + 3x + 7
+Got partial credit for 9x^2 + 3x + 8
+Got partial credit for 9x^2 + 3x + 9
+Got partial credit for 9x^2 + 4x + 0
+Got partial credit for 9x^2 + 4x + 1
+Got partial credit for 9x^2 + 4x + 2
+Got partial credit for 9x^2 + 4x + 3
+Got partial credit for 9x^2 + 4x + 4
+Got partial credit for 9x^2 + 4x + 5
+Got partial credit for 9x^2 + 4x + 6
+Got partial credit for 9x^2 + 4x + 7
+Got partial credit for 9x^2 + 4x + 8
+Got partial credit for 9x^2 + 4x + 9
+Got partial credit for 9x^2 + 5x + 0
+Got partial credit for 9x^2 + 5x + 1
+Got partial credit for 9x^2 + 5x + 2
+Got partial credit for 9x^2 + 5x + 3
+Got partial credit for 9x^2 + 5x + 4
+Got partial credit for 9x^2 + 5x + 5
+Got partial credit for 9x^2 + 5x + 6
+Got partial credit for 9x^2 + 5x + 7
+Got partial credit for 9x^2 + 5x + 8
+Got partial credit for 9x^2 + 5x + 9
+Got partial credit for 9x^2 + 6x + 0
+Got partial credit for 9x^2 + 6x + 1
+Got partial credit for 9x^2 + 6x + 2
+Got partial credit for 9x^2 + 6x + 3
+Got partial credit for 9x^2 + 6x + 4
+Got partial credit for 9x^2 + 6x + 5
+Got partial credit for 9x^2 + 6x + 6
+Got partial credit for 9x^2 + 6x + 7
+Got partial credit for 9x^2 + 6x + 8
+Got partial credit for 9x^2 + 6x + 9
+Got partial credit for 9x^2 + 7x + 0
+Got partial credit for 9x^2 + 7x + 1
+Got partial credit for 9x^2 + 7x + 2
+Got partial credit for 9x^2 + 7x + 3
+Got partial credit for 9x^2 + 7x + 4
+Got partial credit for 9x^2 + 7x + 5
+Got partial credit for 9x^2 + 7x + 6
+Got partial credit for 9x^2 + 7x + 7
+Got partial credit for 9x^2 + 7x + 8
+Got partial credit for 9x^2 + 7x + 9
+Got partial credit for 9x^2 + 8x + 0
+Got partial credit for 9x^2 + 8x + 1
+Got partial credit for 9x^2 + 8x + 2
+Got partial credit for 9x^2 + 8x + 3
+Got partial credit for 9x^2 + 8x + 4
+Got partial credit for 9x^2 + 8x + 5
+Got partial credit for 9x^2 + 8x + 6
+Got partial credit for 9x^2 + 8x + 7
+Got partial credit for 9x^2 + 8x + 8
+Got partial credit for 9x^2 + 8x + 9
+Got partial credit for 9x^2 + 9x + 0
+Got partial credit for 9x^2 + 9x + 1
+Got partial credit for 9x^2 + 9x + 2
+Got partial credit for 9x^2 + 9x + 3
+Got partial credit for 9x^2 + 9x + 4
+Got partial credit for 9x^2 + 9x + 5
+Got partial credit for 9x^2 + 9x + 6
+Got partial credit for 9x^2 + 9x + 7
+Got partial credit for 9x^2 + 9x + 8
+Got partial credit for 9x^2 + 9x + 9
+Hit 20/1000 tasks.
+Got 32 new productions.
+Grammar entropy: 3.981224633266307 nats.
+      p:   0.04
+(((B S) I) +):  -6.48
+(S (C (C +))):  -6.45
+(S (C (I +))):  -6.44
+(C (C ((I S) (I +)))):  -6.42
+(S (((C (I B)) +) I)):  -6.42
+(((I I) S) ((I I) (C +))):  -6.40
+(((B (I (S B))) ((((S B) ((C B) I)) C) (I (I B)))) (+ 1)):  -6.11
+(S (I (I +))):  -5.85
+(S (I +)):  -5.84
+(S (I ((B *) I))):  -5.67
+(S (((I I) C) *)):  -5.63
+(S ((I C) *)):  -5.61
+(I ((B (B I)) (S (I *)))):  -5.59
+(((B S) C) (I *)):  -5.57
+(S ((I I) *)):  -5.57
+((B (S *)) I):  -5.56
+(I (I (S *))):  -5.55
+((I S) *):  -5.52
+(S (I (((I I) C) *))):  -5.51
+((((I I) I) B) (+ 1)):  -5.48
+(I (B (+ 1))):  -5.44
+((I B) (+ 1)):  -5.41
+(B ((I (I I)) (+ (I 1)))):  -5.39
+(((B C) C) (B ((B I) (+ 1)))):  -5.39
+(B (+ ((I (I I)) 1))):  -5.32
+(S (C *)):  -4.33
+((((I S) (C S)) (B B)) (B ((S +) I))):  -4.26
+      I:  -4.23
+      S:  -2.85
+  (* 0):  -1.82
+  (C I):  -1.69
+(B ((I (C *)) (I ((+ ((+ 1) 1)) 1)))):  -1.69
+      C:  -1.69
+      +:  -1.65
+(S ((B (S +)) *)):  -1.33
+(((B (B (S (C +)))) S) *):  -1.28
+      1:  -1.13
+      B:  -1.02
+      *:  -0.78
+      0:  -0.64
+
+
+EM Planning Iteration: 1
+Frontier size: 100
+Hit 0x^2 + 0x + 0
+Hit 0x^2 + 0x + 1
+Got partial credit for 0x^2 + 0x + 2
+Got partial credit for 0x^2 + 0x + 3
+Got partial credit for 0x^2 + 0x + 4
+Got partial credit for 0x^2 + 0x + 5
+Got partial credit for 0x^2 + 0x + 6
+Got partial credit for 0x^2 + 0x + 7
+Got partial credit for 0x^2 + 0x + 8
+Got partial credit for 0x^2 + 0x + 9
+Hit 0x^2 + 1x + 0
+Hit 0x^2 + 1x + 1
+Hit 0x^2 + 1x + 2
+Hit 0x^2 + 1x + 3
+Got partial credit for 0x^2 + 1x + 4
+Got partial credit for 0x^2 + 1x + 5
+Got partial credit for 0x^2 + 1x + 6
+Got partial credit for 0x^2 + 1x + 7
+Got partial credit for 0x^2 + 1x + 8
+Got partial credit for 0x^2 + 1x + 9
+Hit 0x^2 + 2x + 0
+Hit 0x^2 + 2x + 1
+Hit 0x^2 + 2x + 2
+Hit 0x^2 + 2x + 3
+Got partial credit for 0x^2 + 2x + 4
+Got partial credit for 0x^2 + 2x + 5
+Got partial credit for 0x^2 + 2x + 6
+Got partial credit for 0x^2 + 2x + 7
+Got partial credit for 0x^2 + 2x + 8
+Got partial credit for 0x^2 + 2x + 9
+Hit 0x^2 + 3x + 0
+Hit 0x^2 + 3x + 1
+Got partial credit for 0x^2 + 3x + 2
+Got partial credit for 0x^2 + 3x + 3
+Got partial credit for 0x^2 + 3x + 4
+Got partial credit for 0x^2 + 3x + 5
+Got partial credit for 0x^2 + 3x + 6
+Got partial credit for 0x^2 + 3x + 7
+Got partial credit for 0x^2 + 3x + 8
+Got partial credit for 0x^2 + 3x + 9
+Hit 0x^2 + 4x + 0
+Hit 0x^2 + 4x + 1
+Got partial credit for 0x^2 + 4x + 2
+Got partial credit for 0x^2 + 4x + 3
+Got partial credit for 0x^2 + 4x + 4
+Got partial credit for 0x^2 + 4x + 5
+Got partial credit for 0x^2 + 4x + 6
+Got partial credit for 0x^2 + 4x + 7
+Got partial credit for 0x^2 + 4x + 8
+Got partial credit for 0x^2 + 4x + 9
+Hit 0x^2 + 5x + 0
+Hit 0x^2 + 5x + 1
+Got partial credit for 0x^2 + 5x + 2
+Got partial credit for 0x^2 + 5x + 3
+Got partial credit for 0x^2 + 5x + 4
+Got partial credit for 0x^2 + 5x + 5
+Got partial credit for 0x^2 + 5x + 6
+Got partial credit for 0x^2 + 5x + 7
+Got partial credit for 0x^2 + 5x + 8
+Got partial credit for 0x^2 + 5x + 9
+Hit 0x^2 + 6x + 0
+Got partial credit for 0x^2 + 6x + 1
+Got partial credit for 0x^2 + 6x + 2
+Got partial credit for 0x^2 + 6x + 3
+Got partial credit for 0x^2 + 6x + 4
+Got partial credit for 0x^2 + 6x + 5
+Got partial credit for 0x^2 + 6x + 6
+Got partial credit for 0x^2 + 6x + 7
+Got partial credit for 0x^2 + 6x + 8
+Got partial credit for 0x^2 + 6x + 9
+Got partial credit for 0x^2 + 7x + 0
+Got partial credit for 0x^2 + 7x + 1
+Got partial credit for 0x^2 + 7x + 2
+Got partial credit for 0x^2 + 7x + 3
+Got partial credit for 0x^2 + 7x + 4
+Got partial credit for 0x^2 + 7x + 5
+Got partial credit for 0x^2 + 7x + 6
+Got partial credit for 0x^2 + 7x + 7
+Got partial credit for 0x^2 + 7x + 8
+Got partial credit for 0x^2 + 7x + 9
+Got partial credit for 0x^2 + 8x + 0
+Got partial credit for 0x^2 + 8x + 1
+Got partial credit for 0x^2 + 8x + 2
+Got partial credit for 0x^2 + 8x + 3
+Got partial credit for 0x^2 + 8x + 4
+Got partial credit for 0x^2 + 8x + 5
+Got partial credit for 0x^2 + 8x + 6
+Got partial credit for 0x^2 + 8x + 7
+Got partial credit for 0x^2 + 8x + 8
+Got partial credit for 0x^2 + 8x + 9
+Hit 0x^2 + 9x + 0
+Hit 0x^2 + 9x + 1
+Got partial credit for 0x^2 + 9x + 2
+Got partial credit for 0x^2 + 9x + 3
+Got partial credit for 0x^2 + 9x + 4
+Got partial credit for 0x^2 + 9x + 5
+Got partial credit for 0x^2 + 9x + 6
+Got partial credit for 0x^2 + 9x + 7
+Got partial credit for 0x^2 + 9x + 8
+Got partial credit for 0x^2 + 9x + 9
+Hit 1x^2 + 0x + 0
+Hit 1x^2 + 0x + 1
+Got partial credit for 1x^2 + 0x + 2
+Got partial credit for 1x^2 + 0x + 3
+Got partial credit for 1x^2 + 0x + 4
+Got partial credit for 1x^2 + 0x + 5
+Got partial credit for 1x^2 + 0x + 6
+Got partial credit for 1x^2 + 0x + 7
+Got partial credit for 1x^2 + 0x + 8
+Got partial credit for 1x^2 + 0x + 9
+Hit 1x^2 + 1x + 0
+Hit 1x^2 + 1x + 1
+Got partial credit for 1x^2 + 1x + 2
+Got partial credit for 1x^2 + 1x + 3
+Got partial credit for 1x^2 + 1x + 4
+Got partial credit for 1x^2 + 1x + 5
+Got partial credit for 1x^2 + 1x + 6
+Got partial credit for 1x^2 + 1x + 7
+Got partial credit for 1x^2 + 1x + 8
+Got partial credit for 1x^2 + 1x + 9
+Hit 1x^2 + 2x + 0
+Hit 1x^2 + 2x + 1
+Got partial credit for 1x^2 + 2x + 2
+Got partial credit for 1x^2 + 2x + 3
+Got partial credit for 1x^2 + 2x + 4
+Got partial credit for 1x^2 + 2x + 5
+Got partial credit for 1x^2 + 2x + 6
+Got partial credit for 1x^2 + 2x + 7
+Got partial credit for 1x^2 + 2x + 8
+Got partial credit for 1x^2 + 2x + 9
+Hit 1x^2 + 3x + 0
+Hit 1x^2 + 3x + 1
+Got partial credit for 1x^2 + 3x + 2
+Got partial credit for 1x^2 + 3x + 3
+Got partial credit for 1x^2 + 3x + 4
+Got partial credit for 1x^2 + 3x + 5
+Got partial credit for 1x^2 + 3x + 6
+Got partial credit for 1x^2 + 3x + 7
+Got partial credit for 1x^2 + 3x + 8
+Got partial credit for 1x^2 + 3x + 9
+Hit 1x^2 + 4x + 0
+Got partial credit for 1x^2 + 4x + 1
+Got partial credit for 1x^2 + 4x + 2
+Got partial credit for 1x^2 + 4x + 3
+Got partial credit for 1x^2 + 4x + 4
+Got partial credit for 1x^2 + 4x + 5
+Got partial credit for 1x^2 + 4x + 6
+Got partial credit for 1x^2 + 4x + 7
+Got partial credit for 1x^2 + 4x + 8
+Got partial credit for 1x^2 + 4x + 9
+Got partial credit for 1x^2 + 5x + 0
+Got partial credit for 1x^2 + 5x + 1
+Got partial credit for 1x^2 + 5x + 2
+Got partial credit for 1x^2 + 5x + 3
+Got partial credit for 1x^2 + 5x + 4
+Got partial credit for 1x^2 + 5x + 5
+Got partial credit for 1x^2 + 5x + 6
+Got partial credit for 1x^2 + 5x + 7
+Got partial credit for 1x^2 + 5x + 8
+Got partial credit for 1x^2 + 5x + 9
+Got partial credit for 1x^2 + 6x + 0
+Got partial credit for 1x^2 + 6x + 1
+Got partial credit for 1x^2 + 6x + 2
+Got partial credit for 1x^2 + 6x + 3
+Got partial credit for 1x^2 + 6x + 4
+Got partial credit for 1x^2 + 6x + 5
+Got partial credit for 1x^2 + 6x + 6
+Got partial credit for 1x^2 + 6x + 7
+Got partial credit for 1x^2 + 6x + 8
+Got partial credit for 1x^2 + 6x + 9
+Got partial credit for 1x^2 + 7x + 0
+Got partial credit for 1x^2 + 7x + 1
+Got partial credit for 1x^2 + 7x + 2
+Got partial credit for 1x^2 + 7x + 3
+Got partial credit for 1x^2 + 7x + 4
+Got partial credit for 1x^2 + 7x + 5
+Got partial credit for 1x^2 + 7x + 6
+Got partial credit for 1x^2 + 7x + 7
+Got partial credit for 1x^2 + 7x + 8
+Got partial credit for 1x^2 + 7x + 9
+Got partial credit for 1x^2 + 8x + 0
+Got partial credit for 1x^2 + 8x + 1
+Got partial credit for 1x^2 + 8x + 2
+Got partial credit for 1x^2 + 8x + 3
+Got partial credit for 1x^2 + 8x + 4
+Hit 1x^2 + 8x + 5
+Hit 1x^2 + 8x + 6
+Hit 1x^2 + 8x + 7
+Hit 1x^2 + 8x + 8
+Hit 1x^2 + 8x + 9
+Hit 1x^2 + 9x + 0
+Hit 1x^2 + 9x + 1
+Hit 1x^2 + 9x + 2
+Hit 1x^2 + 9x + 3
+Hit 1x^2 + 9x + 4
+Hit 1x^2 + 9x + 5
+Hit 1x^2 + 9x + 6
+Hit 1x^2 + 9x + 7
+Hit 1x^2 + 9x + 8
+Hit 1x^2 + 9x + 9
+Got partial credit for 2x^2 + 0x + 0
+Got partial credit for 2x^2 + 0x + 1
+Got partial credit for 2x^2 + 0x + 2
+Got partial credit for 2x^2 + 0x + 3
+Got partial credit for 2x^2 + 0x + 4
+Got partial credit for 2x^2 + 0x + 5
+Got partial credit for 2x^2 + 0x + 6
+Got partial credit for 2x^2 + 0x + 7
+Hit 2x^2 + 0x + 8
+Hit 2x^2 + 0x + 9
+Hit 2x^2 + 1x + 0
+Hit 2x^2 + 1x + 1
+Hit 2x^2 + 1x + 2
+Hit 2x^2 + 1x + 3
+Hit 2x^2 + 1x + 4
+Hit 2x^2 + 1x + 5
+Hit 2x^2 + 1x + 6
+Hit 2x^2 + 1x + 7
+Hit 2x^2 + 1x + 8
+Hit 2x^2 + 1x + 9
+Hit 2x^2 + 2x + 0
+Hit 2x^2 + 2x + 1
+Hit 2x^2 + 2x + 2
+Hit 2x^2 + 2x + 3
+Hit 2x^2 + 2x + 4
+Hit 2x^2 + 2x + 5
+Hit 2x^2 + 2x + 6
+Hit 2x^2 + 2x + 7
+Hit 2x^2 + 2x + 8
+Hit 2x^2 + 2x + 9
+Hit 2x^2 + 3x + 0
+Hit 2x^2 + 3x + 1
+Hit 2x^2 + 3x + 2
+Hit 2x^2 + 3x + 3
+Hit 2x^2 + 3x + 4
+Hit 2x^2 + 3x + 5
+Hit 2x^2 + 3x + 6
+Hit 2x^2 + 3x + 7
+Hit 2x^2 + 3x + 8
+Hit 2x^2 + 3x + 9
+Hit 2x^2 + 4x + 0
+Hit 2x^2 + 4x + 1
+Hit 2x^2 + 4x + 2
+Hit 2x^2 + 4x + 3
+Hit 2x^2 + 4x + 4
+Hit 2x^2 + 4x + 5
+Hit 2x^2 + 4x + 6
+Hit 2x^2 + 4x + 7
+Hit 2x^2 + 4x + 8
+Hit 2x^2 + 4x + 9
+Hit 2x^2 + 5x + 0
+Hit 2x^2 + 5x + 1
+Hit 2x^2 + 5x + 2
+Hit 2x^2 + 5x + 3
+Hit 2x^2 + 5x + 4
+Hit 2x^2 + 5x + 5
+Hit 2x^2 + 5x + 6
+Hit 2x^2 + 5x + 7
+Hit 2x^2 + 5x + 8
+Hit 2x^2 + 5x + 9
+Hit 2x^2 + 6x + 0
+Hit 2x^2 + 6x + 1
+Hit 2x^2 + 6x + 2
+Hit 2x^2 + 6x + 3
+Hit 2x^2 + 6x + 4
+Hit 2x^2 + 6x + 5
+Hit 2x^2 + 6x + 6
+Hit 2x^2 + 6x + 7
+Hit 2x^2 + 6x + 8
+Hit 2x^2 + 6x + 9
+Hit 2x^2 + 7x + 0
+Hit 2x^2 + 7x + 1
+Hit 2x^2 + 7x + 2
+Hit 2x^2 + 7x + 3
+Hit 2x^2 + 7x + 4
+Hit 2x^2 + 7x + 5
+Hit 2x^2 + 7x + 6
+Hit 2x^2 + 7x + 7
+Hit 2x^2 + 7x + 8
+Hit 2x^2 + 7x + 9
+Hit 2x^2 + 8x + 0
+Hit 2x^2 + 8x + 1
+Hit 2x^2 + 8x + 2
+Hit 2x^2 + 8x + 3
+Hit 2x^2 + 8x + 4
+Hit 2x^2 + 8x + 5
+Hit 2x^2 + 8x + 6
+Hit 2x^2 + 8x + 7
+Hit 2x^2 + 8x + 8
+Hit 2x^2 + 8x + 9
+Hit 2x^2 + 9x + 0
+Hit 2x^2 + 9x + 1
+Hit 2x^2 + 9x + 2
+Hit 2x^2 + 9x + 3
+Hit 2x^2 + 9x + 4
+Hit 2x^2 + 9x + 5
+Hit 2x^2 + 9x + 6
+Hit 2x^2 + 9x + 7
+Hit 2x^2 + 9x + 8
+Hit 2x^2 + 9x + 9
+Hit 3x^2 + 0x + 0
+Hit 3x^2 + 0x + 1
+Hit 3x^2 + 0x + 2
+Hit 3x^2 + 0x + 3
+Hit 3x^2 + 0x + 4
+Hit 3x^2 + 0x + 5
+Hit 3x^2 + 0x + 6
+Hit 3x^2 + 0x + 7
+Hit 3x^2 + 0x + 8
+Hit 3x^2 + 0x + 9
+Hit 3x^2 + 1x + 0
+Hit 3x^2 + 1x + 1
+Hit 3x^2 + 1x + 2
+Hit 3x^2 + 1x + 3
+Hit 3x^2 + 1x + 4
+Hit 3x^2 + 1x + 5
+Hit 3x^2 + 1x + 6
+Hit 3x^2 + 1x + 7
+Hit 3x^2 + 1x + 8
+Hit 3x^2 + 1x + 9
+Hit 3x^2 + 2x + 0
+Hit 3x^2 + 2x + 1
+Hit 3x^2 + 2x + 2
+Hit 3x^2 + 2x + 3
+Hit 3x^2 + 2x + 4
+Hit 3x^2 + 2x + 5
+Hit 3x^2 + 2x + 6
+Hit 3x^2 + 2x + 7
+Hit 3x^2 + 2x + 8
+Hit 3x^2 + 2x + 9
+Hit 3x^2 + 3x + 0
+Hit 3x^2 + 3x + 1
+Hit 3x^2 + 3x + 2
+Hit 3x^2 + 3x + 3
+Hit 3x^2 + 3x + 4
+Hit 3x^2 + 3x + 5
+Hit 3x^2 + 3x + 6
+Hit 3x^2 + 3x + 7
+Hit 3x^2 + 3x + 8
+Hit 3x^2 + 3x + 9
+Hit 3x^2 + 4x + 0
+Hit 3x^2 + 4x + 1
+Hit 3x^2 + 4x + 2
+Hit 3x^2 + 4x + 3
+Hit 3x^2 + 4x + 4
+Hit 3x^2 + 4x + 5
+Hit 3x^2 + 4x + 6
+Hit 3x^2 + 4x + 7
+Hit 3x^2 + 4x + 8
+Hit 3x^2 + 4x + 9
+Hit 3x^2 + 5x + 0
+Hit 3x^2 + 5x + 1
+Hit 3x^2 + 5x + 2
+Hit 3x^2 + 5x + 3
+Hit 3x^2 + 5x + 4
+Hit 3x^2 + 5x + 5
+Hit 3x^2 + 5x + 6
+Hit 3x^2 + 5x + 7
+Hit 3x^2 + 5x + 8
+Hit 3x^2 + 5x + 9
+Hit 3x^2 + 6x + 0
+Hit 3x^2 + 6x + 1
+Hit 3x^2 + 6x + 2
+Hit 3x^2 + 6x + 3
+Hit 3x^2 + 6x + 4
+Hit 3x^2 + 6x + 5
+Hit 3x^2 + 6x + 6
+Hit 3x^2 + 6x + 7
+Hit 3x^2 + 6x + 8
+Hit 3x^2 + 6x + 9
+Hit 3x^2 + 7x + 0
+Hit 3x^2 + 7x + 1
+Hit 3x^2 + 7x + 2
+Hit 3x^2 + 7x + 3
+Hit 3x^2 + 7x + 4
+Hit 3x^2 + 7x + 5
+Hit 3x^2 + 7x + 6
+Hit 3x^2 + 7x + 7
+Hit 3x^2 + 7x + 8
+Hit 3x^2 + 7x + 9
+Hit 3x^2 + 8x + 0
+Hit 3x^2 + 8x + 1
+Hit 3x^2 + 8x + 2
+Hit 3x^2 + 8x + 3
+Hit 3x^2 + 8x + 4
+Hit 3x^2 + 8x + 5
+Hit 3x^2 + 8x + 6
+Hit 3x^2 + 8x + 7
+Hit 3x^2 + 8x + 8
+Hit 3x^2 + 8x + 9
+Hit 3x^2 + 9x + 0
+Hit 3x^2 + 9x + 1
+Hit 3x^2 + 9x + 2
+Hit 3x^2 + 9x + 3
+Hit 3x^2 + 9x + 4
+Hit 3x^2 + 9x + 5
+Hit 3x^2 + 9x + 6
+Hit 3x^2 + 9x + 7
+Hit 3x^2 + 9x + 8
+Hit 3x^2 + 9x + 9
+Hit 4x^2 + 0x + 0
+Hit 4x^2 + 0x + 1
+Hit 4x^2 + 0x + 2
+Hit 4x^2 + 0x + 3
+Hit 4x^2 + 0x + 4
+Hit 4x^2 + 0x + 5
+Hit 4x^2 + 0x + 6
+Hit 4x^2 + 0x + 7
+Hit 4x^2 + 0x + 8
+Hit 4x^2 + 0x + 9
+Hit 4x^2 + 1x + 0
+Hit 4x^2 + 1x + 1
+Hit 4x^2 + 1x + 2
+Hit 4x^2 + 1x + 3
+Hit 4x^2 + 1x + 4
+Hit 4x^2 + 1x + 5
+Hit 4x^2 + 1x + 6
+Hit 4x^2 + 1x + 7
+Hit 4x^2 + 1x + 8
+Hit 4x^2 + 1x + 9
+Hit 4x^2 + 2x + 0
+Hit 4x^2 + 2x + 1
+Hit 4x^2 + 2x + 2
+Hit 4x^2 + 2x + 3
+Hit 4x^2 + 2x + 4
+Hit 4x^2 + 2x + 5
+Hit 4x^2 + 2x + 6
+Hit 4x^2 + 2x + 7
+Hit 4x^2 + 2x + 8
+Hit 4x^2 + 2x + 9
+Hit 4x^2 + 3x + 0
+Hit 4x^2 + 3x + 1
+Hit 4x^2 + 3x + 2
+Hit 4x^2 + 3x + 3
+Hit 4x^2 + 3x + 4
+Hit 4x^2 + 3x + 5
+Hit 4x^2 + 3x + 6
+Hit 4x^2 + 3x + 7
+Hit 4x^2 + 3x + 8
+Hit 4x^2 + 3x + 9
+Hit 4x^2 + 4x + 0
+Hit 4x^2 + 4x + 1
+Hit 4x^2 + 4x + 2
+Hit 4x^2 + 4x + 3
+Hit 4x^2 + 4x + 4
+Hit 4x^2 + 4x + 5
+Hit 4x^2 + 4x + 6
+Hit 4x^2 + 4x + 7
+Hit 4x^2 + 4x + 8
+Hit 4x^2 + 4x + 9
+Hit 4x^2 + 5x + 0
+Hit 4x^2 + 5x + 1
+Hit 4x^2 + 5x + 2
+Hit 4x^2 + 5x + 3
+Hit 4x^2 + 5x + 4
+Hit 4x^2 + 5x + 5
+Hit 4x^2 + 5x + 6
+Hit 4x^2 + 5x + 7
+Hit 4x^2 + 5x + 8
+Hit 4x^2 + 5x + 9
+Hit 4x^2 + 6x + 0
+Hit 4x^2 + 6x + 1
+Hit 4x^2 + 6x + 2
+Hit 4x^2 + 6x + 3
+Hit 4x^2 + 6x + 4
+Hit 4x^2 + 6x + 5
+Hit 4x^2 + 6x + 6
+Hit 4x^2 + 6x + 7
+Hit 4x^2 + 6x + 8
+Hit 4x^2 + 6x + 9
+Hit 4x^2 + 7x + 0
+Hit 4x^2 + 7x + 1
+Hit 4x^2 + 7x + 2
+Hit 4x^2 + 7x + 3
+Hit 4x^2 + 7x + 4
+Hit 4x^2 + 7x + 5
+Hit 4x^2 + 7x + 6
+Hit 4x^2 + 7x + 7
+Hit 4x^2 + 7x + 8
+Hit 4x^2 + 7x + 9
+Hit 4x^2 + 8x + 0
+Hit 4x^2 + 8x + 1
+Hit 4x^2 + 8x + 2
+Hit 4x^2 + 8x + 3
+Hit 4x^2 + 8x + 4
+Hit 4x^2 + 8x + 5
+Hit 4x^2 + 8x + 6
+Hit 4x^2 + 8x + 7
+Hit 4x^2 + 8x + 8
+Hit 4x^2 + 8x + 9
+Hit 4x^2 + 9x + 0
+Hit 4x^2 + 9x + 1
+Hit 4x^2 + 9x + 2
+Hit 4x^2 + 9x + 3
+Hit 4x^2 + 9x + 4
+Hit 4x^2 + 9x + 5
+Hit 4x^2 + 9x + 6
+Hit 4x^2 + 9x + 7
+Hit 4x^2 + 9x + 8
+Hit 4x^2 + 9x + 9
+Hit 5x^2 + 0x + 0
+Hit 5x^2 + 0x + 1
+Hit 5x^2 + 0x + 2
+Hit 5x^2 + 0x + 3
+Hit 5x^2 + 0x + 4
+Hit 5x^2 + 0x + 5
+Hit 5x^2 + 0x + 6
+Hit 5x^2 + 0x + 7
+Hit 5x^2 + 0x + 8
+Hit 5x^2 + 0x + 9
+Hit 5x^2 + 1x + 0
+Hit 5x^2 + 1x + 1
+Hit 5x^2 + 1x + 2
+Hit 5x^2 + 1x + 3
+Hit 5x^2 + 1x + 4
+Hit 5x^2 + 1x + 5
+Hit 5x^2 + 1x + 6
+Hit 5x^2 + 1x + 7
+Hit 5x^2 + 1x + 8
+Hit 5x^2 + 1x + 9
+Hit 5x^2 + 2x + 0
+Hit 5x^2 + 2x + 1
+Hit 5x^2 + 2x + 2
+Hit 5x^2 + 2x + 3
+Hit 5x^2 + 2x + 4
+Hit 5x^2 + 2x + 5
+Hit 5x^2 + 2x + 6
+Hit 5x^2 + 2x + 7
+Hit 5x^2 + 2x + 8
+Hit 5x^2 + 2x + 9
+Hit 5x^2 + 3x + 0
+Hit 5x^2 + 3x + 1
+Hit 5x^2 + 3x + 2
+Hit 5x^2 + 3x + 3
+Hit 5x^2 + 3x + 4
+Hit 5x^2 + 3x + 5
+Hit 5x^2 + 3x + 6
+Hit 5x^2 + 3x + 7
+Hit 5x^2 + 3x + 8
+Hit 5x^2 + 3x + 9
+Hit 5x^2 + 4x + 0
+Hit 5x^2 + 4x + 1
+Hit 5x^2 + 4x + 2
+Hit 5x^2 + 4x + 3
+Hit 5x^2 + 4x + 4
+Hit 5x^2 + 4x + 5
+Hit 5x^2 + 4x + 6
+Hit 5x^2 + 4x + 7
+Hit 5x^2 + 4x + 8
+Hit 5x^2 + 4x + 9
+Hit 5x^2 + 5x + 0
+Hit 5x^2 + 5x + 1
+Hit 5x^2 + 5x + 2
+Hit 5x^2 + 5x + 3
+Hit 5x^2 + 5x + 4
+Hit 5x^2 + 5x + 5
+Hit 5x^2 + 5x + 6
+Hit 5x^2 + 5x + 7
+Hit 5x^2 + 5x + 8
+Hit 5x^2 + 5x + 9
+Hit 5x^2 + 6x + 0
+Hit 5x^2 + 6x + 1
+Hit 5x^2 + 6x + 2
+Hit 5x^2 + 6x + 3
+Hit 5x^2 + 6x + 4
+Hit 5x^2 + 6x + 5
+Hit 5x^2 + 6x + 6
+Hit 5x^2 + 6x + 7
+Hit 5x^2 + 6x + 8
+Hit 5x^2 + 6x + 9
+Hit 5x^2 + 7x + 0
+Hit 5x^2 + 7x + 1
+Hit 5x^2 + 7x + 2
+Hit 5x^2 + 7x + 3
+Hit 5x^2 + 7x + 4
+Hit 5x^2 + 7x + 5
+Hit 5x^2 + 7x + 6
+Hit 5x^2 + 7x + 7
+Hit 5x^2 + 7x + 8
+Hit 5x^2 + 7x + 9
+Hit 5x^2 + 8x + 0
+Hit 5x^2 + 8x + 1
+Hit 5x^2 + 8x + 2
+Hit 5x^2 + 8x + 3
+Hit 5x^2 + 8x + 4
+Hit 5x^2 + 8x + 5
+Hit 5x^2 + 8x + 6
+Hit 5x^2 + 8x + 7
+Hit 5x^2 + 8x + 8
+Hit 5x^2 + 8x + 9
+Hit 5x^2 + 9x + 0
+Hit 5x^2 + 9x + 1
+Hit 5x^2 + 9x + 2
+Hit 5x^2 + 9x + 3
+Hit 5x^2 + 9x + 4
+Hit 5x^2 + 9x + 5
+Hit 5x^2 + 9x + 6
+Hit 5x^2 + 9x + 7
+Hit 5x^2 + 9x + 8
+Hit 5x^2 + 9x + 9
+Hit 6x^2 + 0x + 0
+Hit 6x^2 + 0x + 1
+Hit 6x^2 + 0x + 2
+Hit 6x^2 + 0x + 3
+Hit 6x^2 + 0x + 4
+Hit 6x^2 + 0x + 5
+Hit 6x^2 + 0x + 6
+Hit 6x^2 + 0x + 7
+Hit 6x^2 + 0x + 8
+Hit 6x^2 + 0x + 9
+Hit 6x^2 + 1x + 0
+Hit 6x^2 + 1x + 1
+Hit 6x^2 + 1x + 2
+Hit 6x^2 + 1x + 3
+Hit 6x^2 + 1x + 4
+Hit 6x^2 + 1x + 5
+Hit 6x^2 + 1x + 6
+Hit 6x^2 + 1x + 7
+Hit 6x^2 + 1x + 8
+Hit 6x^2 + 1x + 9
+Hit 6x^2 + 2x + 0
+Hit 6x^2 + 2x + 1
+Hit 6x^2 + 2x + 2
+Hit 6x^2 + 2x + 3
+Hit 6x^2 + 2x + 4
+Hit 6x^2 + 2x + 5
+Hit 6x^2 + 2x + 6
+Hit 6x^2 + 2x + 7
+Hit 6x^2 + 2x + 8
+Hit 6x^2 + 2x + 9
+Hit 6x^2 + 3x + 0
+Hit 6x^2 + 3x + 1
+Hit 6x^2 + 3x + 2
+Hit 6x^2 + 3x + 3
+Hit 6x^2 + 3x + 4
+Hit 6x^2 + 3x + 5
+Hit 6x^2 + 3x + 6
+Hit 6x^2 + 3x + 7
+Hit 6x^2 + 3x + 8
+Hit 6x^2 + 3x + 9
+Hit 6x^2 + 4x + 0
+Hit 6x^2 + 4x + 1
+Hit 6x^2 + 4x + 2
+Hit 6x^2 + 4x + 3
+Hit 6x^2 + 4x + 4
+Hit 6x^2 + 4x + 5
+Hit 6x^2 + 4x + 6
+Hit 6x^2 + 4x + 7
+Hit 6x^2 + 4x + 8
+Hit 6x^2 + 4x + 9
+Hit 6x^2 + 5x + 0
+Hit 6x^2 + 5x + 1
+Hit 6x^2 + 5x + 2
+Hit 6x^2 + 5x + 3
+Hit 6x^2 + 5x + 4
+Hit 6x^2 + 5x + 5
+Hit 6x^2 + 5x + 6
+Hit 6x^2 + 5x + 7
+Hit 6x^2 + 5x + 8
+Hit 6x^2 + 5x + 9
+Hit 6x^2 + 6x + 0
+Hit 6x^2 + 6x + 1
+Hit 6x^2 + 6x + 2
+Hit 6x^2 + 6x + 3
+Hit 6x^2 + 6x + 4
+Hit 6x^2 + 6x + 5
+Hit 6x^2 + 6x + 6
+Hit 6x^2 + 6x + 7
+Hit 6x^2 + 6x + 8
+Hit 6x^2 + 6x + 9
+Hit 6x^2 + 7x + 0
+Hit 6x^2 + 7x + 1
+Hit 6x^2 + 7x + 2
+Hit 6x^2 + 7x + 3
+Hit 6x^2 + 7x + 4
+Hit 6x^2 + 7x + 5
+Hit 6x^2 + 7x + 6
+Hit 6x^2 + 7x + 7
+Hit 6x^2 + 7x + 8
+Hit 6x^2 + 7x + 9
+Hit 6x^2 + 8x + 0
+Hit 6x^2 + 8x + 1
+Hit 6x^2 + 8x + 2
+Hit 6x^2 + 8x + 3
+Hit 6x^2 + 8x + 4
+Hit 6x^2 + 8x + 5
+Hit 6x^2 + 8x + 6
+Hit 6x^2 + 8x + 7
+Hit 6x^2 + 8x + 8
+Hit 6x^2 + 8x + 9
+Hit 6x^2 + 9x + 0
+Hit 6x^2 + 9x + 1
+Hit 6x^2 + 9x + 2
+Hit 6x^2 + 9x + 3
+Hit 6x^2 + 9x + 4
+Hit 6x^2 + 9x + 5
+Hit 6x^2 + 9x + 6
+Hit 6x^2 + 9x + 7
+Hit 6x^2 + 9x + 8
+Hit 6x^2 + 9x + 9
+Hit 7x^2 + 0x + 0
+Hit 7x^2 + 0x + 1
+Hit 7x^2 + 0x + 2
+Hit 7x^2 + 0x + 3
+Hit 7x^2 + 0x + 4
+Hit 7x^2 + 0x + 5
+Hit 7x^2 + 0x + 6
+Hit 7x^2 + 0x + 7
+Hit 7x^2 + 0x + 8
+Hit 7x^2 + 0x + 9
+Hit 7x^2 + 1x + 0
+Hit 7x^2 + 1x + 1
+Hit 7x^2 + 1x + 2
+Hit 7x^2 + 1x + 3
+Hit 7x^2 + 1x + 4
+Hit 7x^2 + 1x + 5
+Hit 7x^2 + 1x + 6
+Hit 7x^2 + 1x + 7
+Hit 7x^2 + 1x + 8
+Hit 7x^2 + 1x + 9
+Hit 7x^2 + 2x + 0
+Hit 7x^2 + 2x + 1
+Hit 7x^2 + 2x + 2
+Hit 7x^2 + 2x + 3
+Hit 7x^2 + 2x + 4
+Hit 7x^2 + 2x + 5
+Hit 7x^2 + 2x + 6
+Hit 7x^2 + 2x + 7
+Hit 7x^2 + 2x + 8
+Hit 7x^2 + 2x + 9
+Hit 7x^2 + 3x + 0
+Hit 7x^2 + 3x + 1
+Hit 7x^2 + 3x + 2
+Hit 7x^2 + 3x + 3
+Hit 7x^2 + 3x + 4
+Hit 7x^2 + 3x + 5
+Hit 7x^2 + 3x + 6
+Hit 7x^2 + 3x + 7
+Hit 7x^2 + 3x + 8
+Hit 7x^2 + 3x + 9
+Hit 7x^2 + 4x + 0
+Hit 7x^2 + 4x + 1
+Hit 7x^2 + 4x + 2
+Hit 7x^2 + 4x + 3
+Hit 7x^2 + 4x + 4
+Hit 7x^2 + 4x + 5
+Hit 7x^2 + 4x + 6
+Hit 7x^2 + 4x + 7
+Hit 7x^2 + 4x + 8
+Hit 7x^2 + 4x + 9
+Hit 7x^2 + 5x + 0
+Hit 7x^2 + 5x + 1
+Hit 7x^2 + 5x + 2
+Hit 7x^2 + 5x + 3
+Hit 7x^2 + 5x + 4
+Hit 7x^2 + 5x + 5
+Hit 7x^2 + 5x + 6
+Hit 7x^2 + 5x + 7
+Hit 7x^2 + 5x + 8
+Hit 7x^2 + 5x + 9
+Hit 7x^2 + 6x + 0
+Hit 7x^2 + 6x + 1
+Hit 7x^2 + 6x + 2
+Hit 7x^2 + 6x + 3
+Hit 7x^2 + 6x + 4
+Hit 7x^2 + 6x + 5
+Hit 7x^2 + 6x + 6
+Hit 7x^2 + 6x + 7
+Hit 7x^2 + 6x + 8
+Hit 7x^2 + 6x + 9
+Hit 7x^2 + 7x + 0
+Hit 7x^2 + 7x + 1
+Hit 7x^2 + 7x + 2
+Hit 7x^2 + 7x + 3
+Hit 7x^2 + 7x + 4
+Hit 7x^2 + 7x + 5
+Hit 7x^2 + 7x + 6
+Hit 7x^2 + 7x + 7
+Hit 7x^2 + 7x + 8
+Hit 7x^2 + 7x + 9
+Hit 7x^2 + 8x + 0
+Hit 7x^2 + 8x + 1
+Hit 7x^2 + 8x + 2
+Hit 7x^2 + 8x + 3
+Hit 7x^2 + 8x + 4
+Hit 7x^2 + 8x + 5
+Hit 7x^2 + 8x + 6
+Hit 7x^2 + 8x + 7
+Hit 7x^2 + 8x + 8
+Hit 7x^2 + 8x + 9
+Hit 7x^2 + 9x + 0
+Hit 7x^2 + 9x + 1
+Hit 7x^2 + 9x + 2
+Hit 7x^2 + 9x + 3
+Hit 7x^2 + 9x + 4
+Hit 7x^2 + 9x + 5
+Hit 7x^2 + 9x + 6
+Hit 7x^2 + 9x + 7
+Hit 7x^2 + 9x + 8
+Hit 7x^2 + 9x + 9
+Hit 8x^2 + 0x + 0
+Hit 8x^2 + 0x + 1
+Hit 8x^2 + 0x + 2
+Hit 8x^2 + 0x + 3
+Hit 8x^2 + 0x + 4
+Hit 8x^2 + 0x + 5
+Hit 8x^2 + 0x + 6
+Hit 8x^2 + 0x + 7
+Hit 8x^2 + 0x + 8
+Hit 8x^2 + 0x + 9
+Hit 8x^2 + 1x + 0
+Hit 8x^2 + 1x + 1
+Hit 8x^2 + 1x + 2
+Hit 8x^2 + 1x + 3
+Hit 8x^2 + 1x + 4
+Hit 8x^2 + 1x + 5
+Hit 8x^2 + 1x + 6
+Hit 8x^2 + 1x + 7
+Hit 8x^2 + 1x + 8
+Hit 8x^2 + 1x + 9
+Hit 8x^2 + 2x + 0
+Hit 8x^2 + 2x + 1
+Hit 8x^2 + 2x + 2
+Hit 8x^2 + 2x + 3
+Hit 8x^2 + 2x + 4
+Hit 8x^2 + 2x + 5
+Hit 8x^2 + 2x + 6
+Hit 8x^2 + 2x + 7
+Hit 8x^2 + 2x + 8
+Hit 8x^2 + 2x + 9
+Hit 8x^2 + 3x + 0
+Hit 8x^2 + 3x + 1
+Hit 8x^2 + 3x + 2
+Hit 8x^2 + 3x + 3
+Hit 8x^2 + 3x + 4
+Hit 8x^2 + 3x + 5
+Hit 8x^2 + 3x + 6
+Hit 8x^2 + 3x + 7
+Hit 8x^2 + 3x + 8
+Hit 8x^2 + 3x + 9
+Hit 8x^2 + 4x + 0
+Hit 8x^2 + 4x + 1
+Hit 8x^2 + 4x + 2
+Hit 8x^2 + 4x + 3
+Hit 8x^2 + 4x + 4
+Hit 8x^2 + 4x + 5
+Hit 8x^2 + 4x + 6
+Hit 8x^2 + 4x + 7
+Hit 8x^2 + 4x + 8
+Hit 8x^2 + 4x + 9
+Hit 8x^2 + 5x + 0
+Hit 8x^2 + 5x + 1
+Hit 8x^2 + 5x + 2
+Hit 8x^2 + 5x + 3
+Hit 8x^2 + 5x + 4
+Hit 8x^2 + 5x + 5
+Hit 8x^2 + 5x + 6
+Hit 8x^2 + 5x + 7
+Hit 8x^2 + 5x + 8
+Hit 8x^2 + 5x + 9
+Hit 8x^2 + 6x + 0
+Hit 8x^2 + 6x + 1
+Hit 8x^2 + 6x + 2
+Hit 8x^2 + 6x + 3
+Hit 8x^2 + 6x + 4
+Hit 8x^2 + 6x + 5
+Hit 8x^2 + 6x + 6
+Hit 8x^2 + 6x + 7
+Hit 8x^2 + 6x + 8
+Hit 8x^2 + 6x + 9
+Hit 8x^2 + 7x + 0
+Hit 8x^2 + 7x + 1
+Hit 8x^2 + 7x + 2
+Hit 8x^2 + 7x + 3
+Hit 8x^2 + 7x + 4
+Hit 8x^2 + 7x + 5
+Hit 8x^2 + 7x + 6
+Hit 8x^2 + 7x + 7
+Hit 8x^2 + 7x + 8
+Hit 8x^2 + 7x + 9
+Hit 8x^2 + 8x + 0
+Hit 8x^2 + 8x + 1
+Hit 8x^2 + 8x + 2
+Hit 8x^2 + 8x + 3
+Hit 8x^2 + 8x + 4
+Hit 8x^2 + 8x + 5
+Hit 8x^2 + 8x + 6
+Hit 8x^2 + 8x + 7
+Hit 8x^2 + 8x + 8
+Hit 8x^2 + 8x + 9
+Hit 8x^2 + 9x + 0
+Hit 8x^2 + 9x + 1
+Hit 8x^2 + 9x + 2
+Hit 8x^2 + 9x + 3
+Hit 8x^2 + 9x + 4
+Hit 8x^2 + 9x + 5
+Hit 8x^2 + 9x + 6
+Hit 8x^2 + 9x + 7
+Hit 8x^2 + 9x + 8
+Hit 8x^2 + 9x + 9
+Hit 9x^2 + 0x + 0
+Hit 9x^2 + 0x + 1
+Hit 9x^2 + 0x + 2
+Hit 9x^2 + 0x + 3
+Hit 9x^2 + 0x + 4
+Hit 9x^2 + 0x + 5
+Hit 9x^2 + 0x + 6
+Hit 9x^2 + 0x + 7
+Hit 9x^2 + 0x + 8
+Hit 9x^2 + 0x + 9
+Hit 9x^2 + 1x + 0
+Hit 9x^2 + 1x + 1
+Hit 9x^2 + 1x + 2
+Hit 9x^2 + 1x + 3
+Hit 9x^2 + 1x + 4
+Hit 9x^2 + 1x + 5
+Hit 9x^2 + 1x + 6
+Hit 9x^2 + 1x + 7
+Hit 9x^2 + 1x + 8
+Hit 9x^2 + 1x + 9
+Hit 9x^2 + 2x + 0
+Hit 9x^2 + 2x + 1
+Hit 9x^2 + 2x + 2
+Hit 9x^2 + 2x + 3
+Hit 9x^2 + 2x + 4
+Hit 9x^2 + 2x + 5
+Hit 9x^2 + 2x + 6
+Hit 9x^2 + 2x + 7
+Hit 9x^2 + 2x + 8
+Hit 9x^2 + 2x + 9
+Hit 9x^2 + 3x + 0
+Hit 9x^2 + 3x + 1
+Hit 9x^2 + 3x + 2
+Hit 9x^2 + 3x + 3
+Hit 9x^2 + 3x + 4
+Hit 9x^2 + 3x + 5
+Hit 9x^2 + 3x + 6
+Hit 9x^2 + 3x + 7
+Hit 9x^2 + 3x + 8
+Hit 9x^2 + 3x + 9
+Hit 9x^2 + 4x + 0
+Hit 9x^2 + 4x + 1
+Hit 9x^2 + 4x + 2
+Hit 9x^2 + 4x + 3
+Hit 9x^2 + 4x + 4
+Hit 9x^2 + 4x + 5
+Hit 9x^2 + 4x + 6
+Hit 9x^2 + 4x + 7
+Hit 9x^2 + 4x + 8
+Hit 9x^2 + 4x + 9
+Hit 9x^2 + 5x + 0
+Hit 9x^2 + 5x + 1
+Hit 9x^2 + 5x + 2
+Hit 9x^2 + 5x + 3
+Hit 9x^2 + 5x + 4
+Hit 9x^2 + 5x + 5
+Hit 9x^2 + 5x + 6
+Hit 9x^2 + 5x + 7
+Hit 9x^2 + 5x + 8
+Hit 9x^2 + 5x + 9
+Hit 9x^2 + 6x + 0
+Hit 9x^2 + 6x + 1
+Hit 9x^2 + 6x + 2
+Hit 9x^2 + 6x + 3
+Hit 9x^2 + 6x + 4
+Hit 9x^2 + 6x + 5
+Hit 9x^2 + 6x + 6
+Hit 9x^2 + 6x + 7
+Hit 9x^2 + 6x + 8
+Hit 9x^2 + 6x + 9
+Hit 9x^2 + 7x + 0
+Hit 9x^2 + 7x + 1
+Hit 9x^2 + 7x + 2
+Hit 9x^2 + 7x + 3
+Hit 9x^2 + 7x + 4
+Hit 9x^2 + 7x + 5
+Hit 9x^2 + 7x + 6
+Hit 9x^2 + 7x + 7
+Hit 9x^2 + 7x + 8
+Hit 9x^2 + 7x + 9
+Hit 9x^2 + 8x + 0
+Hit 9x^2 + 8x + 1
+Hit 9x^2 + 8x + 2
+Hit 9x^2 + 8x + 3
+Hit 9x^2 + 8x + 4
+Hit 9x^2 + 8x + 5
+Hit 9x^2 + 8x + 6
+Hit 9x^2 + 8x + 7
+Hit 9x^2 + 8x + 8
+Hit 9x^2 + 8x + 9
+Hit 9x^2 + 9x + 0
+Hit 9x^2 + 9x + 1
+Hit 9x^2 + 9x + 2
+Hit 9x^2 + 9x + 3
+Hit 9x^2 + 9x + 4
+Hit 9x^2 + 9x + 5
+Hit 9x^2 + 9x + 6
+Hit 9x^2 + 9x + 7
+Hit 9x^2 + 9x + 8
+Hit 9x^2 + 9x + 9
+Hit 835/1000 tasks.
+Got 25 new productions.
+Grammar entropy: 3.921303307188899 nats.
+      p:   0.03
+(C (C I)):  -6.45
+((((I I) I) B) (+ 1)):  -5.68
+((B (S (C +))) (((B (I (S B))) ((((S B) ((C B) I)) C) (I (I B)))) (+ ((+ 1) 1)))):  -5.56
+(B ((I (I I)) (+ (I 1)))):  -5.38
+(I (B (+ 1))):  -5.37
+(B (+ ((I (I I)) 1))):  -5.13
+(((B C) C) (B ((B I) (+ 1)))):  -5.02
+(((B (B (S (C +)))) S) +):  -4.71
+((B (S +)) (((I I) S) ((I I) (C +)))):  -4.71
+((B (S +)) (S +)):  -4.66
+((B (S (C +))) ((I B) (+ 1))):  -4.52
+((B (S +)) (S ((B (S +)) *))):  -4.27
+      I:  -4.18
+((((I S) (C S)) (B B)) (B ((I (C *)) (I ((+ ((+ 1) 1)) 1))))):  -4.18
+((S B) (B ((I (C *)) (I ((+ ((+ 1) 1)) 1))))):  -3.61
+((B (S +)) (((B (B (S (C +)))) S) *)):  -3.52
+(((I (S B)) (B (S +))) (((B (B (S (C +)))) S) *)):  -3.31
+((B (S *)) (S ((B (S +)) *))):  -2.97
+(((B S) (B *)) ((I (C *)) (I ((+ ((+ 1) 1)) 1)))):  -2.80
+((S B) (((B (I (S B))) ((((S B) ((C B) I)) C) (I (I B)))) (+ 1))):  -2.51
+      B:  -2.33
+((I I) C):  -2.31
+      +:  -2.19
+(((B (B (S (C +)))) S) ((B (S *)) *)):  -2.02
+      C:  -1.86
+  (I +):  -1.78
+((((I S) (C S)) (B B)) (B ((S +) I))):  -1.77
+  (* 0):  -1.56
+      *:  -1.50
+(((B (I (S B))) ((((S B) ((C B) I)) C) (I (I B)))) ((((B (B (S (C +)))) S) *) ((I (C *)) (I ((+ ((+ 1) 1)) 1))))):  -1.33
+      S:  -1.25
+      1:  -1.05
+      0:  -0.64
+
+
+EM Planning Iteration: 2
+Frontier size: 100
+Hit 0x^2 + 0x + 0
+Hit 0x^2 + 0x + 1
+Hit 0x^2 + 0x + 2
+Hit 0x^2 + 0x + 3
+Hit 0x^2 + 0x + 4
+Hit 0x^2 + 0x + 5
+Hit 0x^2 + 0x + 6
+Hit 0x^2 + 0x + 7
+Hit 0x^2 + 0x + 8
+Hit 0x^2 + 0x + 9
+Hit 0x^2 + 1x + 0
+Hit 0x^2 + 1x + 1
+Hit 0x^2 + 1x + 2
+Hit 0x^2 + 1x + 3
+Hit 0x^2 + 1x + 4
+Hit 0x^2 + 1x + 5
+Hit 0x^2 + 1x + 6
+Hit 0x^2 + 1x + 7
+Hit 0x^2 + 1x + 8
+Hit 0x^2 + 1x + 9
+Hit 0x^2 + 2x + 0
+Hit 0x^2 + 2x + 1
+Hit 0x^2 + 2x + 2
+Hit 0x^2 + 2x + 3
+Hit 0x^2 + 2x + 4
+Hit 0x^2 + 2x + 5
+Hit 0x^2 + 2x + 6
+Hit 0x^2 + 2x + 7
+Hit 0x^2 + 2x + 8
+Hit 0x^2 + 2x + 9
+Hit 0x^2 + 3x + 0
+Hit 0x^2 + 3x + 1
+Hit 0x^2 + 3x + 2
+Hit 0x^2 + 3x + 3
+Hit 0x^2 + 3x + 4
+Hit 0x^2 + 3x + 5
+Hit 0x^2 + 3x + 6
+Hit 0x^2 + 3x + 7
+Hit 0x^2 + 3x + 8
+Hit 0x^2 + 3x + 9
+Hit 0x^2 + 4x + 0
+Hit 0x^2 + 4x + 1
+Hit 0x^2 + 4x + 2
+Hit 0x^2 + 4x + 3
+Hit 0x^2 + 4x + 4
+Hit 0x^2 + 4x + 5
+Hit 0x^2 + 4x + 6
+Hit 0x^2 + 4x + 7
+Hit 0x^2 + 4x + 8
+Hit 0x^2 + 4x + 9
+Hit 0x^2 + 5x + 0
+Hit 0x^2 + 5x + 1
+Hit 0x^2 + 5x + 2
+Hit 0x^2 + 5x + 3
+Hit 0x^2 + 5x + 4
+Hit 0x^2 + 5x + 5
+Hit 0x^2 + 5x + 6
+Hit 0x^2 + 5x + 7
+Hit 0x^2 + 5x + 8
+Hit 0x^2 + 5x + 9
+Hit 0x^2 + 6x + 0
+Hit 0x^2 + 6x + 1
+Hit 0x^2 + 6x + 2
+Hit 0x^2 + 6x + 3
+Hit 0x^2 + 6x + 4
+Hit 0x^2 + 6x + 5
+Hit 0x^2 + 6x + 6
+Hit 0x^2 + 6x + 7
+Hit 0x^2 + 6x + 8
+Hit 0x^2 + 6x + 9
+Hit 0x^2 + 7x + 0
+Hit 0x^2 + 7x + 1
+Hit 0x^2 + 7x + 2
+Hit 0x^2 + 7x + 3
+Hit 0x^2 + 7x + 4
+Hit 0x^2 + 7x + 5
+Hit 0x^2 + 7x + 6
+Hit 0x^2 + 7x + 7
+Hit 0x^2 + 7x + 8
+Hit 0x^2 + 7x + 9
+Hit 0x^2 + 8x + 0
+Hit 0x^2 + 8x + 1
+Hit 0x^2 + 8x + 2
+Hit 0x^2 + 8x + 3
+Hit 0x^2 + 8x + 4
+Hit 0x^2 + 8x + 5
+Hit 0x^2 + 8x + 6
+Hit 0x^2 + 8x + 7
+Hit 0x^2 + 8x + 8
+Hit 0x^2 + 8x + 9
+Hit 0x^2 + 9x + 0
+Hit 0x^2 + 9x + 1
+Hit 0x^2 + 9x + 2
+Hit 0x^2 + 9x + 3
+Hit 0x^2 + 9x + 4
+Hit 0x^2 + 9x + 5
+Hit 0x^2 + 9x + 6
+Hit 0x^2 + 9x + 7
+Hit 0x^2 + 9x + 8
+Hit 0x^2 + 9x + 9
+Hit 1x^2 + 0x + 0
+Hit 1x^2 + 0x + 1
+Hit 1x^2 + 0x + 2
+Hit 1x^2 + 0x + 3
+Hit 1x^2 + 0x + 4
+Hit 1x^2 + 0x + 5
+Hit 1x^2 + 0x + 6
+Hit 1x^2 + 0x + 7
+Hit 1x^2 + 0x + 8
+Hit 1x^2 + 0x + 9
+Hit 1x^2 + 1x + 0
+Hit 1x^2 + 1x + 1
+Hit 1x^2 + 1x + 2
+Hit 1x^2 + 1x + 3
+Hit 1x^2 + 1x + 4
+Hit 1x^2 + 1x + 5
+Hit 1x^2 + 1x + 6
+Hit 1x^2 + 1x + 7
+Hit 1x^2 + 1x + 8
+Hit 1x^2 + 1x + 9
+Hit 1x^2 + 2x + 0
+Hit 1x^2 + 2x + 1
+Hit 1x^2 + 2x + 2
+Hit 1x^2 + 2x + 3
+Hit 1x^2 + 2x + 4
+Hit 1x^2 + 2x + 5
+Hit 1x^2 + 2x + 6
+Hit 1x^2 + 2x + 7
+Hit 1x^2 + 2x + 8
+Hit 1x^2 + 2x + 9
+Hit 1x^2 + 3x + 0
+Hit 1x^2 + 3x + 1
+Hit 1x^2 + 3x + 2
+Hit 1x^2 + 3x + 3
+Hit 1x^2 + 3x + 4
+Hit 1x^2 + 3x + 5
+Hit 1x^2 + 3x + 6
+Hit 1x^2 + 3x + 7
+Hit 1x^2 + 3x + 8
+Hit 1x^2 + 3x + 9
+Hit 1x^2 + 4x + 0
+Hit 1x^2 + 4x + 1
+Hit 1x^2 + 4x + 2
+Hit 1x^2 + 4x + 3
+Hit 1x^2 + 4x + 4
+Hit 1x^2 + 4x + 5
+Hit 1x^2 + 4x + 6
+Hit 1x^2 + 4x + 7
+Hit 1x^2 + 4x + 8
+Hit 1x^2 + 4x + 9
+Hit 1x^2 + 5x + 0
+Hit 1x^2 + 5x + 1
+Hit 1x^2 + 5x + 2
+Hit 1x^2 + 5x + 3
+Hit 1x^2 + 5x + 4
+Hit 1x^2 + 5x + 5
+Hit 1x^2 + 5x + 6
+Hit 1x^2 + 5x + 7
+Hit 1x^2 + 5x + 8
+Hit 1x^2 + 5x + 9
+Hit 1x^2 + 6x + 0
+Hit 1x^2 + 6x + 1
+Hit 1x^2 + 6x + 2
+Hit 1x^2 + 6x + 3
+Hit 1x^2 + 6x + 4
+Hit 1x^2 + 6x + 5
+Hit 1x^2 + 6x + 6
+Hit 1x^2 + 6x + 7
+Hit 1x^2 + 6x + 8
+Hit 1x^2 + 6x + 9
+Hit 1x^2 + 7x + 0
+Hit 1x^2 + 7x + 1
+Hit 1x^2 + 7x + 2
+Hit 1x^2 + 7x + 3
+Hit 1x^2 + 7x + 4
+Hit 1x^2 + 7x + 5
+Hit 1x^2 + 7x + 6
+Hit 1x^2 + 7x + 7
+Hit 1x^2 + 7x + 8
+Hit 1x^2 + 7x + 9
+Hit 1x^2 + 8x + 0
+Hit 1x^2 + 8x + 1
+Hit 1x^2 + 8x + 2
+Hit 1x^2 + 8x + 3
+Hit 1x^2 + 8x + 4
+Hit 1x^2 + 8x + 5
+Hit 1x^2 + 8x + 6
+Hit 1x^2 + 8x + 7
+Hit 1x^2 + 8x + 8
+Hit 1x^2 + 8x + 9
+Hit 1x^2 + 9x + 0
+Hit 1x^2 + 9x + 1
+Hit 1x^2 + 9x + 2
+Hit 1x^2 + 9x + 3
+Hit 1x^2 + 9x + 4
+Hit 1x^2 + 9x + 5
+Hit 1x^2 + 9x + 6
+Hit 1x^2 + 9x + 7
+Hit 1x^2 + 9x + 8
+Hit 1x^2 + 9x + 9
+Hit 2x^2 + 0x + 0
+Hit 2x^2 + 0x + 1
+Hit 2x^2 + 0x + 2
+Hit 2x^2 + 0x + 3
+Hit 2x^2 + 0x + 4
+Hit 2x^2 + 0x + 5
+Hit 2x^2 + 0x + 6
+Hit 2x^2 + 0x + 7
+Hit 2x^2 + 0x + 8
+Hit 2x^2 + 0x + 9
+Hit 2x^2 + 1x + 0
+Hit 2x^2 + 1x + 1
+Hit 2x^2 + 1x + 2
+Hit 2x^2 + 1x + 3
+Hit 2x^2 + 1x + 4
+Hit 2x^2 + 1x + 5
+Hit 2x^2 + 1x + 6
+Hit 2x^2 + 1x + 7
+Hit 2x^2 + 1x + 8
+Hit 2x^2 + 1x + 9
+Hit 2x^2 + 2x + 0
+Hit 2x^2 + 2x + 1
+Hit 2x^2 + 2x + 2
+Hit 2x^2 + 2x + 3
+Hit 2x^2 + 2x + 4
+Hit 2x^2 + 2x + 5
+Hit 2x^2 + 2x + 6
+Hit 2x^2 + 2x + 7
+Hit 2x^2 + 2x + 8
+Hit 2x^2 + 2x + 9
+Hit 2x^2 + 3x + 0
+Hit 2x^2 + 3x + 1
+Hit 2x^2 + 3x + 2
+Hit 2x^2 + 3x + 3
+Hit 2x^2 + 3x + 4
+Hit 2x^2 + 3x + 5
+Hit 2x^2 + 3x + 6
+Hit 2x^2 + 3x + 7
+Hit 2x^2 + 3x + 8
+Hit 2x^2 + 3x + 9
+Hit 2x^2 + 4x + 0
+Hit 2x^2 + 4x + 1
+Hit 2x^2 + 4x + 2
+Hit 2x^2 + 4x + 3
+Hit 2x^2 + 4x + 4
+Hit 2x^2 + 4x + 5
+Hit 2x^2 + 4x + 6
+Hit 2x^2 + 4x + 7
+Hit 2x^2 + 4x + 8
+Hit 2x^2 + 4x + 9
+Hit 2x^2 + 5x + 0
+Hit 2x^2 + 5x + 1
+Hit 2x^2 + 5x + 2
+Hit 2x^2 + 5x + 3
+Hit 2x^2 + 5x + 4
+Hit 2x^2 + 5x + 5
+Hit 2x^2 + 5x + 6
+Hit 2x^2 + 5x + 7
+Hit 2x^2 + 5x + 8
+Hit 2x^2 + 5x + 9
+Hit 2x^2 + 6x + 0
+Hit 2x^2 + 6x + 1
+Hit 2x^2 + 6x + 2
+Hit 2x^2 + 6x + 3
+Hit 2x^2 + 6x + 4
+Hit 2x^2 + 6x + 5
+Hit 2x^2 + 6x + 6
+Hit 2x^2 + 6x + 7
+Hit 2x^2 + 6x + 8
+Hit 2x^2 + 6x + 9
+Hit 2x^2 + 7x + 0
+Hit 2x^2 + 7x + 1
+Hit 2x^2 + 7x + 2
+Hit 2x^2 + 7x + 3
+Hit 2x^2 + 7x + 4
+Hit 2x^2 + 7x + 5
+Hit 2x^2 + 7x + 6
+Hit 2x^2 + 7x + 7
+Hit 2x^2 + 7x + 8
+Hit 2x^2 + 7x + 9
+Hit 2x^2 + 8x + 0
+Hit 2x^2 + 8x + 1
+Hit 2x^2 + 8x + 2
+Hit 2x^2 + 8x + 3
+Hit 2x^2 + 8x + 4
+Hit 2x^2 + 8x + 5
+Hit 2x^2 + 8x + 6
+Hit 2x^2 + 8x + 7
+Hit 2x^2 + 8x + 8
+Hit 2x^2 + 8x + 9
+Hit 2x^2 + 9x + 0
+Hit 2x^2 + 9x + 1
+Hit 2x^2 + 9x + 2
+Hit 2x^2 + 9x + 3
+Hit 2x^2 + 9x + 4
+Hit 2x^2 + 9x + 5
+Hit 2x^2 + 9x + 6
+Hit 2x^2 + 9x + 7
+Hit 2x^2 + 9x + 8
+Hit 2x^2 + 9x + 9
+Hit 3x^2 + 0x + 0
+Hit 3x^2 + 0x + 1
+Hit 3x^2 + 0x + 2
+Hit 3x^2 + 0x + 3
+Hit 3x^2 + 0x + 4
+Hit 3x^2 + 0x + 5
+Hit 3x^2 + 0x + 6
+Hit 3x^2 + 0x + 7
+Hit 3x^2 + 0x + 8
+Hit 3x^2 + 0x + 9
+Hit 3x^2 + 1x + 0
+Hit 3x^2 + 1x + 1
+Hit 3x^2 + 1x + 2
+Hit 3x^2 + 1x + 3
+Hit 3x^2 + 1x + 4
+Hit 3x^2 + 1x + 5
+Hit 3x^2 + 1x + 6
+Hit 3x^2 + 1x + 7
+Hit 3x^2 + 1x + 8
+Hit 3x^2 + 1x + 9
+Hit 3x^2 + 2x + 0
+Hit 3x^2 + 2x + 1
+Hit 3x^2 + 2x + 2
+Hit 3x^2 + 2x + 3
+Hit 3x^2 + 2x + 4
+Hit 3x^2 + 2x + 5
+Hit 3x^2 + 2x + 6
+Hit 3x^2 + 2x + 7
+Hit 3x^2 + 2x + 8
+Hit 3x^2 + 2x + 9
+Hit 3x^2 + 3x + 0
+Hit 3x^2 + 3x + 1
+Hit 3x^2 + 3x + 2
+Hit 3x^2 + 3x + 3
+Hit 3x^2 + 3x + 4
+Hit 3x^2 + 3x + 5
+Hit 3x^2 + 3x + 6
+Hit 3x^2 + 3x + 7
+Hit 3x^2 + 3x + 8
+Hit 3x^2 + 3x + 9
+Hit 3x^2 + 4x + 0
+Hit 3x^2 + 4x + 1
+Hit 3x^2 + 4x + 2
+Hit 3x^2 + 4x + 3
+Hit 3x^2 + 4x + 4
+Hit 3x^2 + 4x + 5
+Hit 3x^2 + 4x + 6
+Hit 3x^2 + 4x + 7
+Hit 3x^2 + 4x + 8
+Hit 3x^2 + 4x + 9
+Hit 3x^2 + 5x + 0
+Hit 3x^2 + 5x + 1
+Hit 3x^2 + 5x + 2
+Hit 3x^2 + 5x + 3
+Hit 3x^2 + 5x + 4
+Hit 3x^2 + 5x + 5
+Hit 3x^2 + 5x + 6
+Hit 3x^2 + 5x + 7
+Hit 3x^2 + 5x + 8
+Hit 3x^2 + 5x + 9
+Hit 3x^2 + 6x + 0
+Hit 3x^2 + 6x + 1
+Hit 3x^2 + 6x + 2
+Hit 3x^2 + 6x + 3
+Hit 3x^2 + 6x + 4
+Hit 3x^2 + 6x + 5
+Hit 3x^2 + 6x + 6
+Hit 3x^2 + 6x + 7
+Hit 3x^2 + 6x + 8
+Hit 3x^2 + 6x + 9
+Hit 3x^2 + 7x + 0
+Hit 3x^2 + 7x + 1
+Hit 3x^2 + 7x + 2
+Hit 3x^2 + 7x + 3
+Hit 3x^2 + 7x + 4
+Hit 3x^2 + 7x + 5
+Hit 3x^2 + 7x + 6
+Hit 3x^2 + 7x + 7
+Hit 3x^2 + 7x + 8
+Hit 3x^2 + 7x + 9
+Hit 3x^2 + 8x + 0
+Hit 3x^2 + 8x + 1
+Hit 3x^2 + 8x + 2
+Hit 3x^2 + 8x + 3
+Hit 3x^2 + 8x + 4
+Hit 3x^2 + 8x + 5
+Hit 3x^2 + 8x + 6
+Hit 3x^2 + 8x + 7
+Hit 3x^2 + 8x + 8
+Hit 3x^2 + 8x + 9
+Hit 3x^2 + 9x + 0
+Hit 3x^2 + 9x + 1
+Hit 3x^2 + 9x + 2
+Hit 3x^2 + 9x + 3
+Hit 3x^2 + 9x + 4
+Hit 3x^2 + 9x + 5
+Hit 3x^2 + 9x + 6
+Hit 3x^2 + 9x + 7
+Hit 3x^2 + 9x + 8
+Hit 3x^2 + 9x + 9
+Hit 4x^2 + 0x + 0
+Hit 4x^2 + 0x + 1
+Hit 4x^2 + 0x + 2
+Hit 4x^2 + 0x + 3
+Hit 4x^2 + 0x + 4
+Hit 4x^2 + 0x + 5
+Hit 4x^2 + 0x + 6
+Hit 4x^2 + 0x + 7
+Hit 4x^2 + 0x + 8
+Hit 4x^2 + 0x + 9
+Hit 4x^2 + 1x + 0
+Hit 4x^2 + 1x + 1
+Hit 4x^2 + 1x + 2
+Hit 4x^2 + 1x + 3
+Hit 4x^2 + 1x + 4
+Hit 4x^2 + 1x + 5
+Hit 4x^2 + 1x + 6
+Hit 4x^2 + 1x + 7
+Hit 4x^2 + 1x + 8
+Hit 4x^2 + 1x + 9
+Hit 4x^2 + 2x + 0
+Hit 4x^2 + 2x + 1
+Hit 4x^2 + 2x + 2
+Hit 4x^2 + 2x + 3
+Hit 4x^2 + 2x + 4
+Hit 4x^2 + 2x + 5
+Hit 4x^2 + 2x + 6
+Hit 4x^2 + 2x + 7
+Hit 4x^2 + 2x + 8
+Hit 4x^2 + 2x + 9
+Hit 4x^2 + 3x + 0
+Hit 4x^2 + 3x + 1
+Hit 4x^2 + 3x + 2
+Hit 4x^2 + 3x + 3
+Hit 4x^2 + 3x + 4
+Hit 4x^2 + 3x + 5
+Hit 4x^2 + 3x + 6
+Hit 4x^2 + 3x + 7
+Hit 4x^2 + 3x + 8
+Hit 4x^2 + 3x + 9
+Hit 4x^2 + 4x + 0
+Hit 4x^2 + 4x + 1
+Hit 4x^2 + 4x + 2
+Hit 4x^2 + 4x + 3
+Hit 4x^2 + 4x + 4
+Hit 4x^2 + 4x + 5
+Hit 4x^2 + 4x + 6
+Hit 4x^2 + 4x + 7
+Hit 4x^2 + 4x + 8
+Hit 4x^2 + 4x + 9
+Hit 4x^2 + 5x + 0
+Hit 4x^2 + 5x + 1
+Hit 4x^2 + 5x + 2
+Hit 4x^2 + 5x + 3
+Hit 4x^2 + 5x + 4
+Hit 4x^2 + 5x + 5
+Hit 4x^2 + 5x + 6
+Hit 4x^2 + 5x + 7
+Hit 4x^2 + 5x + 8
+Hit 4x^2 + 5x + 9
+Hit 4x^2 + 6x + 0
+Hit 4x^2 + 6x + 1
+Hit 4x^2 + 6x + 2
+Hit 4x^2 + 6x + 3
+Hit 4x^2 + 6x + 4
+Hit 4x^2 + 6x + 5
+Hit 4x^2 + 6x + 6
+Hit 4x^2 + 6x + 7
+Hit 4x^2 + 6x + 8
+Hit 4x^2 + 6x + 9
+Hit 4x^2 + 7x + 0
+Hit 4x^2 + 7x + 1
+Hit 4x^2 + 7x + 2
+Hit 4x^2 + 7x + 3
+Hit 4x^2 + 7x + 4
+Hit 4x^2 + 7x + 5
+Hit 4x^2 + 7x + 6
+Hit 4x^2 + 7x + 7
+Hit 4x^2 + 7x + 8
+Hit 4x^2 + 7x + 9
+Hit 4x^2 + 8x + 0
+Hit 4x^2 + 8x + 1
+Hit 4x^2 + 8x + 2
+Hit 4x^2 + 8x + 3
+Hit 4x^2 + 8x + 4
+Hit 4x^2 + 8x + 5
+Hit 4x^2 + 8x + 6
+Hit 4x^2 + 8x + 7
+Hit 4x^2 + 8x + 8
+Hit 4x^2 + 8x + 9
+Hit 4x^2 + 9x + 0
+Hit 4x^2 + 9x + 1
+Hit 4x^2 + 9x + 2
+Hit 4x^2 + 9x + 3
+Hit 4x^2 + 9x + 4
+Hit 4x^2 + 9x + 5
+Hit 4x^2 + 9x + 6
+Hit 4x^2 + 9x + 7
+Hit 4x^2 + 9x + 8
+Hit 4x^2 + 9x + 9
+Hit 5x^2 + 0x + 0
+Hit 5x^2 + 0x + 1
+Hit 5x^2 + 0x + 2
+Hit 5x^2 + 0x + 3
+Hit 5x^2 + 0x + 4
+Hit 5x^2 + 0x + 5
+Hit 5x^2 + 0x + 6
+Hit 5x^2 + 0x + 7
+Hit 5x^2 + 0x + 8
+Hit 5x^2 + 0x + 9
+Hit 5x^2 + 1x + 0
+Hit 5x^2 + 1x + 1
+Hit 5x^2 + 1x + 2
+Hit 5x^2 + 1x + 3
+Hit 5x^2 + 1x + 4
+Hit 5x^2 + 1x + 5
+Hit 5x^2 + 1x + 6
+Hit 5x^2 + 1x + 7
+Hit 5x^2 + 1x + 8
+Hit 5x^2 + 1x + 9
+Hit 5x^2 + 2x + 0
+Hit 5x^2 + 2x + 1
+Hit 5x^2 + 2x + 2
+Hit 5x^2 + 2x + 3
+Hit 5x^2 + 2x + 4
+Hit 5x^2 + 2x + 5
+Hit 5x^2 + 2x + 6
+Hit 5x^2 + 2x + 7
+Hit 5x^2 + 2x + 8
+Hit 5x^2 + 2x + 9
+Hit 5x^2 + 3x + 0
+Hit 5x^2 + 3x + 1
+Hit 5x^2 + 3x + 2
+Hit 5x^2 + 3x + 3
+Hit 5x^2 + 3x + 4
+Hit 5x^2 + 3x + 5
+Hit 5x^2 + 3x + 6
+Hit 5x^2 + 3x + 7
+Hit 5x^2 + 3x + 8
+Hit 5x^2 + 3x + 9
+Hit 5x^2 + 4x + 0
+Hit 5x^2 + 4x + 1
+Hit 5x^2 + 4x + 2
+Hit 5x^2 + 4x + 3
+Hit 5x^2 + 4x + 4
+Hit 5x^2 + 4x + 5
+Hit 5x^2 + 4x + 6
+Hit 5x^2 + 4x + 7
+Hit 5x^2 + 4x + 8
+Hit 5x^2 + 4x + 9
+Hit 5x^2 + 5x + 0
+Hit 5x^2 + 5x + 1
+Hit 5x^2 + 5x + 2
+Hit 5x^2 + 5x + 3
+Hit 5x^2 + 5x + 4
+Hit 5x^2 + 5x + 5
+Hit 5x^2 + 5x + 6
+Hit 5x^2 + 5x + 7
+Hit 5x^2 + 5x + 8
+Hit 5x^2 + 5x + 9
+Hit 5x^2 + 6x + 0
+Hit 5x^2 + 6x + 1
+Hit 5x^2 + 6x + 2
+Hit 5x^2 + 6x + 3
+Hit 5x^2 + 6x + 4
+Hit 5x^2 + 6x + 5
+Hit 5x^2 + 6x + 6
+Hit 5x^2 + 6x + 7
+Hit 5x^2 + 6x + 8
+Hit 5x^2 + 6x + 9
+Hit 5x^2 + 7x + 0
+Hit 5x^2 + 7x + 1
+Hit 5x^2 + 7x + 2
+Hit 5x^2 + 7x + 3
+Hit 5x^2 + 7x + 4
+Hit 5x^2 + 7x + 5
+Hit 5x^2 + 7x + 6
+Hit 5x^2 + 7x + 7
+Hit 5x^2 + 7x + 8
+Hit 5x^2 + 7x + 9
+Hit 5x^2 + 8x + 0
+Hit 5x^2 + 8x + 1
+Hit 5x^2 + 8x + 2
+Hit 5x^2 + 8x + 3
+Hit 5x^2 + 8x + 4
+Hit 5x^2 + 8x + 5
+Hit 5x^2 + 8x + 6
+Hit 5x^2 + 8x + 7
+Hit 5x^2 + 8x + 8
+Hit 5x^2 + 8x + 9
+Hit 5x^2 + 9x + 0
+Hit 5x^2 + 9x + 1
+Hit 5x^2 + 9x + 2
+Hit 5x^2 + 9x + 3
+Hit 5x^2 + 9x + 4
+Hit 5x^2 + 9x + 5
+Hit 5x^2 + 9x + 6
+Hit 5x^2 + 9x + 7
+Hit 5x^2 + 9x + 8
+Hit 5x^2 + 9x + 9
+Hit 6x^2 + 0x + 0
+Hit 6x^2 + 0x + 1
+Hit 6x^2 + 0x + 2
+Hit 6x^2 + 0x + 3
+Hit 6x^2 + 0x + 4
+Hit 6x^2 + 0x + 5
+Hit 6x^2 + 0x + 6
+Hit 6x^2 + 0x + 7
+Hit 6x^2 + 0x + 8
+Hit 6x^2 + 0x + 9
+Hit 6x^2 + 1x + 0
+Hit 6x^2 + 1x + 1
+Hit 6x^2 + 1x + 2
+Hit 6x^2 + 1x + 3
+Hit 6x^2 + 1x + 4
+Hit 6x^2 + 1x + 5
+Hit 6x^2 + 1x + 6
+Hit 6x^2 + 1x + 7
+Hit 6x^2 + 1x + 8
+Hit 6x^2 + 1x + 9
+Hit 6x^2 + 2x + 0
+Hit 6x^2 + 2x + 1
+Hit 6x^2 + 2x + 2
+Hit 6x^2 + 2x + 3
+Hit 6x^2 + 2x + 4
+Hit 6x^2 + 2x + 5
+Hit 6x^2 + 2x + 6
+Hit 6x^2 + 2x + 7
+Hit 6x^2 + 2x + 8
+Hit 6x^2 + 2x + 9
+Hit 6x^2 + 3x + 0
+Hit 6x^2 + 3x + 1
+Hit 6x^2 + 3x + 2
+Hit 6x^2 + 3x + 3
+Hit 6x^2 + 3x + 4
+Hit 6x^2 + 3x + 5
+Hit 6x^2 + 3x + 6
+Hit 6x^2 + 3x + 7
+Hit 6x^2 + 3x + 8
+Hit 6x^2 + 3x + 9
+Hit 6x^2 + 4x + 0
+Hit 6x^2 + 4x + 1
+Hit 6x^2 + 4x + 2
+Hit 6x^2 + 4x + 3
+Hit 6x^2 + 4x + 4
+Hit 6x^2 + 4x + 5
+Hit 6x^2 + 4x + 6
+Hit 6x^2 + 4x + 7
+Hit 6x^2 + 4x + 8
+Hit 6x^2 + 4x + 9
+Hit 6x^2 + 5x + 0
+Hit 6x^2 + 5x + 1
+Hit 6x^2 + 5x + 2
+Hit 6x^2 + 5x + 3
+Hit 6x^2 + 5x + 4
+Hit 6x^2 + 5x + 5
+Hit 6x^2 + 5x + 6
+Hit 6x^2 + 5x + 7
+Hit 6x^2 + 5x + 8
+Hit 6x^2 + 5x + 9
+Hit 6x^2 + 6x + 0
+Hit 6x^2 + 6x + 1
+Hit 6x^2 + 6x + 2
+Hit 6x^2 + 6x + 3
+Hit 6x^2 + 6x + 4
+Hit 6x^2 + 6x + 5
+Hit 6x^2 + 6x + 6
+Hit 6x^2 + 6x + 7
+Hit 6x^2 + 6x + 8
+Hit 6x^2 + 6x + 9
+Hit 6x^2 + 7x + 0
+Hit 6x^2 + 7x + 1
+Hit 6x^2 + 7x + 2
+Hit 6x^2 + 7x + 3
+Hit 6x^2 + 7x + 4
+Hit 6x^2 + 7x + 5
+Hit 6x^2 + 7x + 6
+Hit 6x^2 + 7x + 7
+Hit 6x^2 + 7x + 8
+Hit 6x^2 + 7x + 9
+Hit 6x^2 + 8x + 0
+Hit 6x^2 + 8x + 1
+Hit 6x^2 + 8x + 2
+Hit 6x^2 + 8x + 3
+Hit 6x^2 + 8x + 4
+Hit 6x^2 + 8x + 5
+Hit 6x^2 + 8x + 6
+Hit 6x^2 + 8x + 7
+Hit 6x^2 + 8x + 8
+Hit 6x^2 + 8x + 9
+Hit 6x^2 + 9x + 0
+Hit 6x^2 + 9x + 1
+Hit 6x^2 + 9x + 2
+Hit 6x^2 + 9x + 3
+Hit 6x^2 + 9x + 4
+Hit 6x^2 + 9x + 5
+Hit 6x^2 + 9x + 6
+Hit 6x^2 + 9x + 7
+Hit 6x^2 + 9x + 8
+Hit 6x^2 + 9x + 9
+Hit 7x^2 + 0x + 0
+Hit 7x^2 + 0x + 1
+Hit 7x^2 + 0x + 2
+Hit 7x^2 + 0x + 3
+Hit 7x^2 + 0x + 4
+Hit 7x^2 + 0x + 5
+Hit 7x^2 + 0x + 6
+Hit 7x^2 + 0x + 7
+Hit 7x^2 + 0x + 8
+Hit 7x^2 + 0x + 9
+Hit 7x^2 + 1x + 0
+Hit 7x^2 + 1x + 1
+Hit 7x^2 + 1x + 2
+Hit 7x^2 + 1x + 3
+Hit 7x^2 + 1x + 4
+Hit 7x^2 + 1x + 5
+Hit 7x^2 + 1x + 6
+Hit 7x^2 + 1x + 7
+Hit 7x^2 + 1x + 8
+Hit 7x^2 + 1x + 9
+Hit 7x^2 + 2x + 0
+Hit 7x^2 + 2x + 1
+Hit 7x^2 + 2x + 2
+Hit 7x^2 + 2x + 3
+Hit 7x^2 + 2x + 4
+Hit 7x^2 + 2x + 5
+Hit 7x^2 + 2x + 6
+Hit 7x^2 + 2x + 7
+Hit 7x^2 + 2x + 8
+Hit 7x^2 + 2x + 9
+Hit 7x^2 + 3x + 0
+Hit 7x^2 + 3x + 1
+Hit 7x^2 + 3x + 2
+Hit 7x^2 + 3x + 3
+Hit 7x^2 + 3x + 4
+Hit 7x^2 + 3x + 5
+Hit 7x^2 + 3x + 6
+Hit 7x^2 + 3x + 7
+Hit 7x^2 + 3x + 8
+Hit 7x^2 + 3x + 9
+Hit 7x^2 + 4x + 0
+Hit 7x^2 + 4x + 1
+Hit 7x^2 + 4x + 2
+Hit 7x^2 + 4x + 3
+Hit 7x^2 + 4x + 4
+Hit 7x^2 + 4x + 5
+Hit 7x^2 + 4x + 6
+Hit 7x^2 + 4x + 7
+Hit 7x^2 + 4x + 8
+Hit 7x^2 + 4x + 9
+Hit 7x^2 + 5x + 0
+Hit 7x^2 + 5x + 1
+Hit 7x^2 + 5x + 2
+Hit 7x^2 + 5x + 3
+Hit 7x^2 + 5x + 4
+Hit 7x^2 + 5x + 5
+Hit 7x^2 + 5x + 6
+Hit 7x^2 + 5x + 7
+Hit 7x^2 + 5x + 8
+Hit 7x^2 + 5x + 9
+Hit 7x^2 + 6x + 0
+Hit 7x^2 + 6x + 1
+Hit 7x^2 + 6x + 2
+Hit 7x^2 + 6x + 3
+Hit 7x^2 + 6x + 4
+Hit 7x^2 + 6x + 5
+Hit 7x^2 + 6x + 6
+Hit 7x^2 + 6x + 7
+Hit 7x^2 + 6x + 8
+Hit 7x^2 + 6x + 9
+Hit 7x^2 + 7x + 0
+Hit 7x^2 + 7x + 1
+Hit 7x^2 + 7x + 2
+Hit 7x^2 + 7x + 3
+Hit 7x^2 + 7x + 4
+Hit 7x^2 + 7x + 5
+Hit 7x^2 + 7x + 6
+Hit 7x^2 + 7x + 7
+Hit 7x^2 + 7x + 8
+Hit 7x^2 + 7x + 9
+Hit 7x^2 + 8x + 0
+Hit 7x^2 + 8x + 1
+Hit 7x^2 + 8x + 2
+Hit 7x^2 + 8x + 3
+Hit 7x^2 + 8x + 4
+Hit 7x^2 + 8x + 5
+Hit 7x^2 + 8x + 6
+Hit 7x^2 + 8x + 7
+Hit 7x^2 + 8x + 8
+Hit 7x^2 + 8x + 9
+Hit 7x^2 + 9x + 0
+Hit 7x^2 + 9x + 1
+Hit 7x^2 + 9x + 2
+Hit 7x^2 + 9x + 3
+Hit 7x^2 + 9x + 4
+Hit 7x^2 + 9x + 5
+Hit 7x^2 + 9x + 6
+Hit 7x^2 + 9x + 7
+Hit 7x^2 + 9x + 8
+Hit 7x^2 + 9x + 9
+Hit 8x^2 + 0x + 0
+Hit 8x^2 + 0x + 1
+Hit 8x^2 + 0x + 2
+Hit 8x^2 + 0x + 3
+Hit 8x^2 + 0x + 4
+Hit 8x^2 + 0x + 5
+Hit 8x^2 + 0x + 6
+Hit 8x^2 + 0x + 7
+Hit 8x^2 + 0x + 8
+Hit 8x^2 + 0x + 9
+Hit 8x^2 + 1x + 0
+Hit 8x^2 + 1x + 1
+Hit 8x^2 + 1x + 2
+Hit 8x^2 + 1x + 3
+Hit 8x^2 + 1x + 4
+Hit 8x^2 + 1x + 5
+Hit 8x^2 + 1x + 6
+Hit 8x^2 + 1x + 7
+Hit 8x^2 + 1x + 8
+Hit 8x^2 + 1x + 9
+Hit 8x^2 + 2x + 0
+Hit 8x^2 + 2x + 1
+Hit 8x^2 + 2x + 2
+Hit 8x^2 + 2x + 3
+Hit 8x^2 + 2x + 4
+Hit 8x^2 + 2x + 5
+Hit 8x^2 + 2x + 6
+Hit 8x^2 + 2x + 7
+Hit 8x^2 + 2x + 8
+Hit 8x^2 + 2x + 9
+Hit 8x^2 + 3x + 0
+Hit 8x^2 + 3x + 1
+Hit 8x^2 + 3x + 2
+Hit 8x^2 + 3x + 3
+Hit 8x^2 + 3x + 4
+Hit 8x^2 + 3x + 5
+Hit 8x^2 + 3x + 6
+Hit 8x^2 + 3x + 7
+Hit 8x^2 + 3x + 8
+Hit 8x^2 + 3x + 9
+Hit 8x^2 + 4x + 0
+Hit 8x^2 + 4x + 1
+Hit 8x^2 + 4x + 2
+Hit 8x^2 + 4x + 3
+Hit 8x^2 + 4x + 4
+Hit 8x^2 + 4x + 5
+Hit 8x^2 + 4x + 6
+Hit 8x^2 + 4x + 7
+Hit 8x^2 + 4x + 8
+Hit 8x^2 + 4x + 9
+Hit 8x^2 + 5x + 0
+Hit 8x^2 + 5x + 1
+Hit 8x^2 + 5x + 2
+Hit 8x^2 + 5x + 3
+Hit 8x^2 + 5x + 4
+Hit 8x^2 + 5x + 5
+Hit 8x^2 + 5x + 6
+Hit 8x^2 + 5x + 7
+Hit 8x^2 + 5x + 8
+Hit 8x^2 + 5x + 9
+Hit 8x^2 + 6x + 0
+Hit 8x^2 + 6x + 1
+Hit 8x^2 + 6x + 2
+Hit 8x^2 + 6x + 3
+Hit 8x^2 + 6x + 4
+Hit 8x^2 + 6x + 5
+Hit 8x^2 + 6x + 6
+Hit 8x^2 + 6x + 7
+Hit 8x^2 + 6x + 8
+Hit 8x^2 + 6x + 9
+Hit 8x^2 + 7x + 0
+Hit 8x^2 + 7x + 1
+Hit 8x^2 + 7x + 2
+Hit 8x^2 + 7x + 3
+Hit 8x^2 + 7x + 4
+Hit 8x^2 + 7x + 5
+Hit 8x^2 + 7x + 6
+Hit 8x^2 + 7x + 7
+Hit 8x^2 + 7x + 8
+Hit 8x^2 + 7x + 9
+Hit 8x^2 + 8x + 0
+Hit 8x^2 + 8x + 1
+Hit 8x^2 + 8x + 2
+Hit 8x^2 + 8x + 3
+Hit 8x^2 + 8x + 4
+Hit 8x^2 + 8x + 5
+Hit 8x^2 + 8x + 6
+Hit 8x^2 + 8x + 7
+Hit 8x^2 + 8x + 8
+Hit 8x^2 + 8x + 9
+Hit 8x^2 + 9x + 0
+Hit 8x^2 + 9x + 1
+Hit 8x^2 + 9x + 2
+Hit 8x^2 + 9x + 3
+Hit 8x^2 + 9x + 4
+Hit 8x^2 + 9x + 5
+Hit 8x^2 + 9x + 6
+Hit 8x^2 + 9x + 7
+Hit 8x^2 + 9x + 8
+Hit 8x^2 + 9x + 9
+Hit 9x^2 + 0x + 0
+Hit 9x^2 + 0x + 1
+Hit 9x^2 + 0x + 2
+Hit 9x^2 + 0x + 3
+Hit 9x^2 + 0x + 4
+Hit 9x^2 + 0x + 5
+Hit 9x^2 + 0x + 6
+Hit 9x^2 + 0x + 7
+Hit 9x^2 + 0x + 8
+Hit 9x^2 + 0x + 9
+Hit 9x^2 + 1x + 0
+Hit 9x^2 + 1x + 1
+Hit 9x^2 + 1x + 2
+Hit 9x^2 + 1x + 3
+Hit 9x^2 + 1x + 4
+Hit 9x^2 + 1x + 5
+Hit 9x^2 + 1x + 6
+Hit 9x^2 + 1x + 7
+Hit 9x^2 + 1x + 8
+Hit 9x^2 + 1x + 9
+Hit 9x^2 + 2x + 0
+Hit 9x^2 + 2x + 1
+Hit 9x^2 + 2x + 2
+Hit 9x^2 + 2x + 3
+Hit 9x^2 + 2x + 4
+Hit 9x^2 + 2x + 5
+Hit 9x^2 + 2x + 6
+Hit 9x^2 + 2x + 7
+Hit 9x^2 + 2x + 8
+Hit 9x^2 + 2x + 9
+Hit 9x^2 + 3x + 0
+Hit 9x^2 + 3x + 1
+Hit 9x^2 + 3x + 2
+Hit 9x^2 + 3x + 3
+Hit 9x^2 + 3x + 4
+Hit 9x^2 + 3x + 5
+Hit 9x^2 + 3x + 6
+Hit 9x^2 + 3x + 7
+Hit 9x^2 + 3x + 8
+Hit 9x^2 + 3x + 9
+Hit 9x^2 + 4x + 0
+Hit 9x^2 + 4x + 1
+Hit 9x^2 + 4x + 2
+Hit 9x^2 + 4x + 3
+Hit 9x^2 + 4x + 4
+Hit 9x^2 + 4x + 5
+Hit 9x^2 + 4x + 6
+Hit 9x^2 + 4x + 7
+Hit 9x^2 + 4x + 8
+Hit 9x^2 + 4x + 9
+Hit 9x^2 + 5x + 0
+Hit 9x^2 + 5x + 1
+Hit 9x^2 + 5x + 2
+Hit 9x^2 + 5x + 3
+Hit 9x^2 + 5x + 4
+Hit 9x^2 + 5x + 5
+Hit 9x^2 + 5x + 6
+Hit 9x^2 + 5x + 7
+Hit 9x^2 + 5x + 8
+Hit 9x^2 + 5x + 9
+Hit 9x^2 + 6x + 0
+Hit 9x^2 + 6x + 1
+Hit 9x^2 + 6x + 2
+Hit 9x^2 + 6x + 3
+Hit 9x^2 + 6x + 4
+Hit 9x^2 + 6x + 5
+Hit 9x^2 + 6x + 6
+Hit 9x^2 + 6x + 7
+Hit 9x^2 + 6x + 8
+Hit 9x^2 + 6x + 9
+Hit 9x^2 + 7x + 0
+Hit 9x^2 + 7x + 1
+Hit 9x^2 + 7x + 2
+Hit 9x^2 + 7x + 3
+Hit 9x^2 + 7x + 4
+Hit 9x^2 + 7x + 5
+Hit 9x^2 + 7x + 6
+Hit 9x^2 + 7x + 7
+Hit 9x^2 + 7x + 8
+Hit 9x^2 + 7x + 9
+Hit 9x^2 + 8x + 0
+Hit 9x^2 + 8x + 1
+Hit 9x^2 + 8x + 2
+Hit 9x^2 + 8x + 3
+Hit 9x^2 + 8x + 4
+Hit 9x^2 + 8x + 5
+Hit 9x^2 + 8x + 6
+Hit 9x^2 + 8x + 7
+Hit 9x^2 + 8x + 8
+Hit 9x^2 + 8x + 9
+Hit 9x^2 + 9x + 0
+Hit 9x^2 + 9x + 1
+Hit 9x^2 + 9x + 2
+Hit 9x^2 + 9x + 3
+Hit 9x^2 + 9x + 4
+Hit 9x^2 + 9x + 5
+Hit 9x^2 + 9x + 6
+Hit 9x^2 + 9x + 7
+Hit 9x^2 + 9x + 8
+Hit 9x^2 + 9x + 9
+Hit 1000/1000 tasks.
+Got 31 new productions.
+Grammar entropy: 3.8059608042441835 nats.
+      p:   0.04
+      I:  -6.46
+(((B S) (B *)) (((B (S *)) *) 1)):  -5.92
+(((I S) (C S)) (B *)):  -5.76
+((I B) ((((B (B (S (C +)))) S) *) ((I (C *)) (I ((+ ((+ 1) 1)) 1))))):  -5.59
+((((I I) I) B) ((((B (B (S (C +)))) S) *) ((I (C *)) (I ((+ ((+ 1) 1)) 1))))):  -5.58
+((I (I B)) ((((B (B (S (C +)))) S) *) ((I (C *)) (I ((+ ((+ 1) 1)) 1))))):  -5.57
+(B ((((B (B (S (C +)))) S) *) ((I (C *)) (I ((+ ((+ 1) 1)) 1))))):  -5.56
+(((((S B) ((C B) I)) C) (I (I B))) ((((B (B (S (C +)))) S) *) ((I (C *)) (I ((+ ((+ 1) 1)) 1))))):  -5.55
+((C B) ((((B (B (S (C +)))) S) *) ((I (C *)) (I ((+ ((+ 1) 1)) 1))))):  -5.49
+((S B) (((B S) (B *)) ((I (C *)) (I ((+ ((+ 1) 1)) 1))))):  -5.48
+(I (((B (I (S B))) ((((S B) ((C B) I)) C) (I (I B)))) ((((B (B (S (C +)))) S) *) ((I (C *)) (I ((+ ((+ 1) 1)) 1)))))):  -5.38
+((S B) (((I (S B)) (B (S +))) (((B (B (S (C +)))) S) *))):  -5.38
+((S B) (B ((I (C *)) (I ((+ ((+ 1) 1)) 1))))):  -5.36
+((I S) ((B (S *)) *)):  -5.35
+((B (S (C +))) (((B (I (S B))) ((((S B) ((C B) I)) C) (I (I B)))) (+ ((+ 1) 1)))):  -5.31
+((B (S +)) (((B (B (S (C +)))) S) *)):  -5.24
+((B (S +)) (S ((B (S +)) *))):  -5.07
+((S (C I)) ((B (I (S B))) ((((S B) ((C B) I)) C) (I (I B))))):  -4.90
+((I (S B)) ((((I S) (C S)) (B B)) (B ((S +) I)))):  -4.79
+((((I S) (C S)) (B B)) (B ((I (C *)) (I ((+ ((+ 1) 1)) 1))))):  -4.49
+((I (S B)) (((I (S B)) (B (S +))) (((B (B (S (C +)))) S) *))):  -4.44
+((B (S +)) (((B (B (S (C +)))) S) ((B (S *)) *))):  -4.42
+(((B (I (S B))) ((B C) C)) (((B (I (S B))) ((((S B) ((C B) I)) C) (I (I B)))) ((((B (B (S (C +)))) S) *) ((I (C *)) (I ((+ ((+ 1) 1)) 1)))))):  -4.36
+((B (S +)) (((B (I (S B))) ((((S B) ((C B) I)) C) (I (I B)))) ((((B (B (S (C +)))) S) *) ((I (C *)) (I ((+ ((+ 1) 1)) 1)))))):  -4.31
+((((I S) (C S)) (B B)) (((B (B (S (C +)))) S) ((B (S *)) *))):  -4.20
+(S ((B (S *)) *)):  -4.07
+((((I S) (C S)) (B B)) ((B (S *)) (S ((B (S +)) *)))):  -4.04
+((S B) (((B (I (S B))) ((((S B) ((C B) I)) C) (I (I B)))) (+ 1))):  -4.02
+(((I (S B)) (B (S +))) (((B (B (S (C +)))) S) ((B (S *)) *))):  -3.76
+(((I I) C) (C I)):  -3.30
+((B (S *)) ((((I S) (C S)) (B B)) (B ((S +) I)))):  -2.95
+      C:  -2.15
+      S:  -1.82
+      +:  -1.64
+      1:  -1.01
+      B:  -0.97
+      *:  -0.65
+(((I (S B)) (B (S +))) (((B (I (S B))) ((((S B) ((C B) I)) C) (I (I B)))) ((((B (B (S (C +)))) S) *) ((I (C *)) (I ((+ ((+ 1) 1)) 1)))))):  -0.49
+      0:  -0.05
+
