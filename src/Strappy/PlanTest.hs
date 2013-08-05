@@ -44,7 +44,7 @@ polyPlan = do
   let tasks = [ makePolyTask a b c | a <- [0..9], b <- [0..9], c <- [0..9] ]
   loopM seed [0..5] $ \grammar step -> do
     putStrLn $ "EM Planning Iteration: " ++ show step
-    grammar' <- doEMPlan ("polyplan_"++show step) tasks (\_ _ -> False) 1.5 1.0 frontierSize numberOfPlansPerTask maximumPlanLength grammar
+    (grammar', _) <- doEMPlan (Just $ "polyplan_"++show step) tasks 1.5 1.0 frontierSize numberOfPlansPerTask maximumPlanLength grammar
     saveGrammar ("polyplan_grammar_"++show step) grammar'
     return grammar'
   return ()

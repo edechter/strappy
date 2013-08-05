@@ -6,6 +6,7 @@ import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Random
 import Control.Monad.Maybe
+import Debug.Trace
 
 flipCoin :: (Num a, Ord a, Random a, MonadRandom m) => a -> m Bool
 flipCoin p = do r <- getRandomR (0, 1)
@@ -37,16 +38,17 @@ sampleMultinomialLogProbNogen dist rnd =
   let logZ = logSumExpList $ map snd dist
       dist' = map (\(thing, ll) -> (thing, exp (ll - logZ))) dist
   in sampleMultinomialNogen dist' rnd
-          
+
+-- | Is the number either NaN or infinite?
+isInvalidNum :: Double -> Bool
+isInvalidNum x = isNaN x || isInfinite x
+
 logSumExpList :: [Double] -> Double
 logSumExpList = foldl1 logSumExp
-           
 
 logSumExp :: Double -> Double -> Double
-logSumExp x y | isNaN x = y
-logSumExp x y | isNaN y = x
-logSumExp x y | isInfinite y = x
-logSumExp x y | isInfinite x = y
+logSumExp x y | isInvalidNum x = y
+logSumExp x y | isInvalidNum y = x
 logSumExp x y | x > y = x + log (1 + exp (y-x))
 logSumExp x y = y + log (1 + exp (x-y))
 
