@@ -314,8 +314,6 @@ cFoldl = mkTerm "foldl" ((t ->- t1 ->- t) ->- t ->- tList t1 ->- t) $
 cInts =  [ cInt2Expr i | i <- [-10..10]]
 cDoubles =  [ cDouble2Expr i | i <- [-10..10]]
 
-listExprs = [cCons, cAppend, cMap, cEmpty, cSingle, cRep, cFoldl]
-
 -- | A basic collection of expressions
 basicExprs :: [Expr]
 basicExprs = [cI, 
@@ -391,10 +389,10 @@ basicExprDistr = Map.adjust (const (-5)) cBottom
 
 
 basicGrammar :: Grammar
-basicGrammar = normalizeGrammar $ Grammar (log 0.35) basicExprDistr
+basicGrammar = normalizeGrammar $ Grammar 3 basicExprDistr
 
 extendedGrammar :: Grammar
-extendedGrammar = normalizeGrammar $ Grammar (log 0.35) $ Map.fromList $
+extendedGrammar = normalizeGrammar $ Grammar 3 $ Map.fromList $
                   [(e, 1) | e <- basicExprs] ++ [ (cK <> cI, 1), (cK <> (cInts!!2), 1) ]
 
 -- | Helpers 

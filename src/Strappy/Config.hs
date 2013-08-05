@@ -25,7 +25,7 @@ sampleByEnumeration = True
 
 -- | Max size of the frontier enumerated, or sampled, during the "E" step
 frontierSize :: Int
-frontierSize = 100
+frontierSize = 20000
 
 -- | Maximum number of samples drawn from the grammar
 frontierSamples :: Int
@@ -33,11 +33,11 @@ frontierSamples = 60000
 
 -- | Number of plans sampled for each task
 numberOfPlansPerTask :: Int
-numberOfPlansPerTask = 5
+numberOfPlansPerTask = 10
 
 -- | Length of each plan sampled
 maximumPlanLength :: Int
-maximumPlanLength = 8
+maximumPlanLength = 3
 
 -- | How much stochasticity should there be in the planning?
 --   beta = 1/T

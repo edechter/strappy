@@ -8,11 +8,10 @@ import Strappy.Library
 import Strappy.Type
 import Strappy.Task
 import Strappy.Utils
-
-import Strappy.Library
+  
+import Strappy.Library 
 import Strappy.LPCompress
 import Strappy.Config
-
 
 
 import Control.Monad
@@ -31,8 +30,6 @@ data PlanTask = PlanTask { ptName :: String,
                            ptType :: Type, -- ^ Type of plan objects, such as lists of actions
                            ptSeed :: Expr     -- ^ Initial plan, such as an empty list, or the identity function
                          }
-
-
 
 mcmcPlan :: MonadRandom m =>
             Expr -> -- ^ Initial plan, such as the empty list, or the identity function
@@ -69,7 +66,7 @@ mcmcPlan e0 dist likelihood len randstream =
                   then mcmc (e <> prefix) (e:prefixList) (eW+prefixLL) (prefixRecipLike - eLike) (len+1) (tail randNums)
                   else return (0, [], False, [])
                 let partitionFunction = logSumExp suffixLogPartition prefixRecipLike
-                let epsilon = 0.1 -- tolerance for deciding if a plan has hit a task
+                let epsilon = 0.01 -- tolerance for deciding if a plan has hit a task
                 let hit = suffixHit || eLike >= 0.0-epsilon
                 return (partitionFunction, (e, partitionFunction):suffixRewards, hit, nub $ newPrograms++suffixNewPrograms)
 
@@ -99,32 +96,47 @@ doEMPlan fname tasks isHarderThan lambda pseudocounts frontierSize numPlans plan
   -- For each task, do greedy stochastic search to get candidate plans
   -- Each task records all of the programs used in successful plans, as well as the associated rewards
   -- These are normalized to get a distribution over plans, which gives weights for the MDL's of the programs
+-- <<<<<<< HEAD
 
-  normalizedRewards <- forM tasks $ \tsk@PlanTask {ptLogLikelihood = likelihood, ptSeed = seed, ptType = tp, ptName = nm} -> do
-    -- Check to see we haven't failed on an easier task.
-    -- If so, we can bail on this one.
-    previousFailures <- readIORef taskFailures
-    if any (isHarderThan tsk) previousFailures
-      then putStrLn ("Skipping task " ++ nm) >> return []
-      else do
-      let frontier = snd $ fromJust $ find ((==tp) . fst) frontiers
-      (logPartitionFunction, programLogRewards, anyHit, anyPartial, newProgs) <- do
-        rnds <- replicateM numPlans $ replicateM planLen $ getRandomR (0, 1)
-        planResults <- flip Parallel.mapM rnds $ mcmcPlan seed frontier likelihood planLen
-        return $ foldl (\ (logZ, rewards, hit, part, newProgs) (logZ', rewards', hit', newProgs') ->
-                         (logSumExp logZ logZ', rewards++rewards', hit||hit', part||(not (null rewards')), nub $ newProgs++newProgs'))
-                       (log 0, [], False, False, []) planResults
-      when anyHit $ do
-        when verbose $ putStrLn $ "Hit " ++ nm
-        modifyIORef numHitRef (+1)
-      when (not anyPartial) $ modifyIORef taskFailures (tsk:)
-      when (verbose && (not anyHit) && (not anyPartial)) $ putStrLn $ "Missed " ++ nm
-      when ((not anyHit) && anyPartial) $ do
-        when verbose $ putStrLn $ "Got partial credit for " ++ nm
-        modifyIORef numPartialRef (+1)
-      modifyIORef programsPerTask $ \progs -> progs ++ [(nm, newProgs)]
-      -- normalize rewards
-      return $ map (\(e, r) -> (e, exp (r - logPartitionFunction))) programLogRewards
+--  normalizedRewards <- forM tasks $ \tsk@PlanTask {ptLogLikelihood = likelihood, ptSeed = seed, ptType = tp, ptName = nm} -> do
+--    -- Check to see we haven't failed on an easier task.
+--    -- If so, we can bail on this one.
+--    previousFailures <- readIORef taskFailures
+--    if any (isHarderThan tsk) previousFailures
+--      then putStrLn ("Skipping task " ++ nm) >> return []
+--      else do
+--      let frontier = snd $ fromJust $ find ((==tp) . fst) frontiers
+--      (logPartitionFunction, programLogRewards, anyHit, anyPartial, newProgs) <- do
+--        rnds <- replicateM numPlans $ replicateM planLen $ getRandomR (0, 1)
+--        planResults <- flip Parallel.mapM rnds $ mcmcPlan seed frontier likelihood planLen
+--        return $ foldl (\ (logZ, rewards, hit, part, newProgs) (logZ', rewards', hit', newProgs') ->
+--                         (logSumExp logZ logZ', rewards++rewards', hit||hit', part||(not (null rewards')), nub $ newProgs++newProgs'))
+--                       (log 0, [], False, False, []) planResults
+--      when anyHit $ do
+--        when verbose $ putStrLn $ "Hit " ++ nm
+--        modifyIORef numHitRef (+1)
+--      when (not anyPartial) $ modifyIORef taskFailures (tsk:)
+--      when (verbose && (not anyHit) && (not anyPartial)) $ putStrLn $ "Missed " ++ nm
+--      when ((not anyHit) && anyPartial) $ do
+--        when verbose $ putStrLn $ "Got partial credit for " ++ nm
+--        modifyIORef numPartialRef (+1)
+--      modifyIORef programsPerTask $ \progs -> progs ++ [(nm, newProgs)]
+--      -- normalize rewards
+--      return $ map (\(e, r) -> (e, exp (r - logPartitionFunction))) programLogRewards
+-- =======
+  normalizedRewards <- forM tasks $ \PlanTask {ptLogLikelihood = likelihood, ptSeed = seed, ptType = tp, ptName = nm} -> do
+    let frontier = snd $ fromJust $ find ((==tp) . fst) frontiers
+    (logPartitionFunction, programLogRewards, anyHit) <-
+      foldM (\ (logZ, rewards, hit) _ -> mcmcPlan seed frontier likelihood planLen >>=
+                                 \(logZ', rewards', hit') -> return (logSumExp logZ logZ', rewards++rewards', hit||hit'))
+            (log 0.0, [], False) [1..numPlans]
+    when anyHit $ do
+      when verbose $ putStrLn $ "Hit " ++ nm
+      modifyIORef numHitRef (+1)
+    when (verbose && (not anyHit)) $ putStrLn $ "Missed " ++ nm
+    -- normalize rewards
+    return $ map (\(e, r) -> (e, exp (r - logPartitionFunction))) programLogRewards
+-- >>>>>>> parent of a93e2f8... Changes to allow IO parallelism.
   numHit <- readIORef numHitRef
   putStrLn $ "Hit " ++ show numHit ++ "/" ++ show (length tasks) ++ " tasks."
   -- Show number of unique programs
