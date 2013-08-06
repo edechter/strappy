@@ -66,7 +66,7 @@ planLikelihood :: SharedCache -> [(Double, Bool)] -> IO Double
 planLikelihood _ plan | length plan > 8 = return (log 0)
 planLikelihood cache plan = do
   (ht, stabilities) <- cachedPerturb cache [0.9, 1.3, 1.7] plan
-  let ll = ((ht - gnd_height) * (sum stabilities) - log (genericLength plan))/5.0
+  let ll = ((ht - gnd_height) * (sum stabilities) {- - log (genericLength plan)-})/5.0
   if isNaN ht || isInfinite ht
     then return (log 0)
     else return $ trace ("LL: " ++ show ll ++ "\n\t" ++ show plan) ll
@@ -75,12 +75,16 @@ main = do
   cache <- loadPhysicsCache "physics_cache"
   let seed = Grammar { grApp = log 0.45,
                        grExprDistr = Map.fromList [ (annotateRequested e, 1.0) | e <- towerExprs ] }
+  let compileTower :: Expr -> Maybe [(Double, Bool)]
+      compileTower expr = timeLimitedEval expr
   let num = 0
   let task = makeTowerTask cache
+  let emtask = (maybe (log 0) (unsafePerformIO . planLikelihood cache), "TowerTask")
 --  (seed, num) <- loadNextGrammar -- Replace with above commented out code to start fresh
   loopM seed [num+1..num+21] $ \grammar step -> do
     putStrLn $ "EM Iteration: " ++ show step
-    grammar' <- doEMPlan [task,task,task] (\x y -> False) 0.015 1.0 frontierSize numberOfPlansPerTask maximumPlanLength grammar
-    saveGrammar ("grammar_"++show step) grammar'
-    savePhysicsCache cache "physics_cache"
+    grammar' <- doEMIter ("towerEMlog_" ++ show step) (tList (tPair tBool tDouble)) compileTower [emtask] 0.015 0.1 5000 grammar
+--    (grammar',_) <- doEMPlan (Just $ "towerlog_" ++ show step) [task, task, task] 0.015 1.0 frontierSize numberOfPlansPerTask maximumPlanLength grammar
+    saveGrammar ("towerEMgrammar_"++show step) grammar'
+--    savePhysicsCache cache "physics_cache"
     return grammar'

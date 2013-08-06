@@ -1,7 +1,7 @@
 {-# LANGUAGE TupleSections  #-}
 
---module Strappy.EM where
-module Main where
+module Strappy.EM where
+--module Main where
 
 import Strappy.Sample
 import Strappy.Expr
@@ -115,4 +115,4 @@ polyEM = do
     return grammar'
   return ()
 
-main = polyEM
+--main = polyEM

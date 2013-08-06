@@ -123,7 +123,7 @@ doEMPlan maybeFname tasks lambda pseudocounts frontierSize numPlans planLen gram
   planResults <- forM tasks $ \tsk -> do
     let frontier = snd $ fromJust $ find ((==(ptType tsk)) . fst) frontiers
     rnds <- replicateM numPlans $ replicateM planLen $ getRandomR (0, 1)
-    results <- flip mapM rnds $ mcmcPlan tsk frontier planLen
+    results <- flip Parallel.mapM rnds $ mcmcPlan tsk frontier planLen
     let planResult = foldl1 mergePlanResults results
     let anyHit = (\(_, ll, _) -> ll >= -0.01) $ prBestPlan planResult
     let anyPartial = (\(_, ll, _) -> not (isInvalidNum ll)) $ prBestPlan planResult

@@ -33,11 +33,11 @@ frontierSamples = 60000
 
 -- | Number of plans sampled for each task
 numberOfPlansPerTask :: Int
-numberOfPlansPerTask = 30
+numberOfPlansPerTask = 60
 
 -- | Length of each plan sampled
 maximumPlanLength :: Int
-maximumPlanLength = 6
+maximumPlanLength = 5
 
 -- | How much stochasticity should there be in the planning?
 --   beta = 1/T
