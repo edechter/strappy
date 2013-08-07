@@ -76,7 +76,7 @@ mcmcPlan (PlanTask { ptLogLikelihood = likelihood, ptSeed = e0 }) dist len rands
                                  like <- expectedLikelihood likelihood 10 e'
                                  return ((e, e', like, w), like + w)) dist
           -- Record new programs
-          let newPrograms = Set.fromList $ map (\((_, e, _, _), _) -> e) reweighted
+          let newPrograms = Set.empty --Set.fromList $ map (\((_, e, _, _), _) -> e) reweighted
           -- Failure: all of the likelihoods are zero
           if all (isInvalidNum . snd) reweighted
             then return $ emptyPlanResult { prUniqueProgs = newPrograms }
