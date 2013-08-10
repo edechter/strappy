@@ -4,22 +4,15 @@
 module Strappy.Expr where
 
 
-import Debug.Trace
 import Unsafe.Coerce (unsafeCoerce) 
-import GHC.Prim
 import Control.Monad
-import Control.Monad.Trans
 import Control.Monad.Identity
 import Data.Hashable
 import Text.Printf
 import Control.Exception
-import Data.IORef
-import System.IO.Error
 import System.IO.Unsafe
-import Data.Array.MArray
-import Data.Array.IO
 import Control.Concurrent.Timeout
-import Control.Monad.Random
+import Control.DeepSeq (deepseq)
 
 import Strappy.Type
 import Strappy.Config
@@ -40,6 +33,7 @@ data Expr = forall a.
                  eLogLikelihood :: Maybe Double }
              
 -- | smart constructor for terms
+mkTerm :: forall a. String -> Type -> a -> Expr
 mkTerm name tp thing = Term { eName = name,
                               eType = tp, 
                               eReqType = Nothing,
@@ -47,6 +41,7 @@ mkTerm name tp thing = Term { eName = name,
                               eThing = thing }
 
 -- | smart constructor for applications
+(<>) :: Expr -> Expr -> Expr
 a <> b = App { eLeft = a, 
                eRight = b, 
                eType = tp, 
@@ -54,6 +49,7 @@ a <> b = App { eLeft = a,
                eReqType = Nothing }
          where tp = runIdentity . runTI $ typeOfApp a b
 
+(<.>) :: Monad m => TypeInference m Expr -> TypeInference m Expr -> TypeInference m Expr
 ma <.> mb = do a <- ma
                b <- mb
                ta <- instantiateType (eType a)
@@ -61,7 +57,7 @@ ma <.> mb = do a <- ma
                let a' = a{eType=ta}
                    b' = b{eType=tb}
                tp <- typeOfApp a' b'
-               return $ App {eLeft = a', eRight = b', eType = tp, eLogLikelihood = Nothing, eReqType = Nothing}
+               return App{eLeft = a', eRight = b', eType = tp, eLogLikelihood = Nothing, eReqType = Nothing}
  
 
 instance Show Expr where
@@ -69,10 +65,10 @@ instance Show Expr where
     show App{eLeft=el, eRight=er} = "(" ++ show el ++ " " ++  show er ++ ")"
 
 showExprLong :: Expr -> String
-showExprLong Term{eName=n, eType=t, eReqType=rt} = printf "%7s, type: %50s, reqType: %50s" 
-                                                n (show t) (show rt)  
-showExprLong App{eLeft=l, eRight=r, eType=t, eReqType=rt }
-    = printf ("app, type: %7s, reqType: %7s\n--"++showExprLong l ++ "\n--" ++ showExprLong r ++ "\n")  (show t)  (show rt)
+showExprLong Term{eName=n, eType=tp, eReqType=rt} = printf "%7s, type: %50s, reqType: %50s" 
+                                                n (show tp) (show rt)  
+showExprLong App{eLeft=l, eRight=r, eType=tp, eReqType=rt }
+    = printf ("app, type: %7s, reqType: %7s\n--"++showExprLong l ++ "\n--" ++ showExprLong r ++ "\n")  (show tp)  (show rt)
 
 instance Eq Expr where
     e1 == e2 = show e1 == show e2
@@ -98,15 +94,15 @@ intToExpr d = showableToExpr d tInt
 
 typeOfApp :: Monad m => Expr -> Expr -> TypeInference m Type
 typeOfApp e_left e_right 
-    = do t <- mkTVar
-         unify (eType e_left) (eType e_right ->- t)
-         applySub t
+    = do tp <- mkTVar
+         unify (eType e_left) (eType e_right ->- tp)
+         applySub tp
 
 eval :: Expr -> a
 -- | Evaluates an Expression of type a into a Haskell object of that
 -- corresponding type.
 eval Term{eThing=f} = unsafeCoerce f
-eval App{eLeft=el, eRight=er} = (eval el) (eval er)
+eval App{eLeft=el, eRight=er} = eval el (eval er)
 
 
 
@@ -114,20 +110,20 @@ isTerm :: Expr -> Bool
 isTerm Term{} = True
 isTerm _ = False
 
+cBottom :: Expr
 cBottom = mkTerm "_|_" (TVar 0) (error "cBottom: this should never be called!") 
 
 timeLimitedEval :: Show a => Expr -> Maybe a
 timeLimitedEval expr = unsafePerformIO $
-                       flip Control.Exception.catch (\e -> return $ const Nothing (e :: SomeException)) $ do
-                       res <- timeout maxEvalTime $ do
-                         -- Hack to force Haskell to evaluate the expression:
-                         -- Convert the (eval expr) in to a string,
-                         -- then force each character of the string by putting it in to an unboxed array
-                         let val = eval expr
-                         let strVal = show val
-                         a <- ((newListArray (1::Int,length strVal) strVal) :: IO (IOUArray Int Char))
-                         return val
-                       return res
+                       handle (\(_ :: SomeException) -> return Nothing) $ 
+                         timeout maxEvalTime $ do
+                           -- Hack to force Haskell to evaluate the expression:
+                           -- Convert the (eval expr) in to a string,
+                           -- then force each character of the string by putting it in to an unboxed array
+                           let val = eval expr
+                           let strVal = show val
+                           -- a <- (newListArray (1::Int,length strVal) strVal) :: IO (IOUArray Int Char)
+                           strVal `deepseq` return val
 
 
 -- | Runs type inference on the given program, returning its type
@@ -149,8 +145,7 @@ exprFoldM f a e@(Term {}) = f a e
 exprFoldM f a e@(App { eLeft = l, eRight = r}) = do
   a'   <- f a e
   a''  <- exprFoldM f a' l
-  a''' <- exprFoldM f a'' r
-  return a'''
+  exprFoldM f a'' r
 
 -- | Returns number of characters in an expression
 -- | Does not count both opening and closing parens (these are redundant; see, for example, Unlambda)
@@ -219,7 +214,7 @@ cDouble2Expr i = mkTerm (show i) tDouble i
 -- ?d matches deterministic computations (no holes)
 matchExpr :: Expr -> -- ^ Pattern
              ([Expr] -> Expr) -> -- ^ Callback 
-             (Expr -> Expr) -- ^ Performs matching
+             Expr -> Expr -- ^ Performs matching
 matchExpr pat proc e =
   maybe e proc $ match pat e
   where match (Term { eName = "?" }) t = return [t]
@@ -255,3 +250,7 @@ class Expressable a where
 
 instance (Show a, Typeable a) => Expressable a where
        toExpr v = mkTerm (show v) (typeOf v) v 
+
+
+
+
