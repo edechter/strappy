@@ -1,7 +1,6 @@
 {-# LANGUAGE TupleSections  #-}
 
 module Strappy.EM where
---module Main where
 
 import Strappy.Sample
 import Strappy.Expr
@@ -90,29 +89,3 @@ saveBest fname fronts =
       str = flip map bestprogs $ \(nm, result) ->
                                  maybe ("Missed "++nm) (\(e, (w,ll)) -> nm ++ "\t" ++ show e ++ "\t" ++ show ll) result
   in writeFile fname (unlines str)
-
--- Polynomial regression test for EM
-polyEM :: IO ()
-polyEM = do
-  [lambda, pseudocounts, fSize, prefix] <- getArgs
-  -- Seed grammar
-  let seed = Grammar { grApp = log 0.35,
-                       grExprDistr = Map.fromList [ (annotateRequested e, 1.0) | e <- polyExprs ] }
-  let compilePoly :: Expr -> Maybe [Int]
-      compilePoly e = let points = map (\x -> timeLimitedEval $ e <> cInt2Expr x) [0..9] in
-                      if all isJust points then Just (map fromJust points) else Nothing
-  -- Make nth order polynomial task with fixed coefficients
-  let mkNthDet :: (Int -> Int) -> (Maybe [Int] -> Double)
-      mkNthDet poly = let points = map poly [0..9] in
-                      maybe 0 (exp . fromIntegral . negate . sum . map (\x->x*x) . zipWith (-) points)
-  let dets = [ (mkNthDet (\a -> x * a * a + y * a + z), 
-                show x ++ "x^2+" ++ show y ++ "x+" ++ show z) | x <- [0..9], y <- [0..9], z <- [0..9] ]
-  loopM seed [0..20] $ \grammar step -> do
-    putStrLn $ "EM Iteration: " ++ show step
-    grammar' <- doEMIter (prefix++"_"++show step) (tInt ->- tInt) compilePoly dets
-                         (read lambda) (read pseudocounts) (read fSize) grammar
-    saveGrammar (prefix++"poly_grammar_" ++ show step) grammar'
-    return grammar'
-  return ()
-
---main = polyEM

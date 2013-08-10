@@ -19,41 +19,14 @@ import System.IO.Unsafe
 import Data.Maybe
 import Debug.Trace
 
+import System.Environment
+
 makeTowerTask :: SharedCache -> PlanTask
 makeTowerTask cache =
   PlanTask { ptName = "TowerTask",
              ptType = tList (tPair tDouble tBool),
              ptSeed = cEmpty,
              ptLogLikelihood = towerLikelihood cache
-           }
-
-makeReflectTask :: PlanTask
-makeReflectTask =
-  PlanTask { ptName = "ReflectTask",
-             ptType = (tList (tPair tDouble tBool)) ->- (tList (tPair tDouble tBool)),
-             ptSeed = cI,
-             ptLogLikelihood = \e -> let ts = [[(0.5, True),(0.5, False)],
-                                               [(1.0, True),(0.0, False),(0.0, True)],
-                                               [(1.0, True),(0.3, False),(0.0, True),(1.0, False),(3.0, False),(-1.0, True)]]
-                                         rs = map (map (\(x,o) -> (-x,o))) ts
-                                         eTs = mapM (\t -> timeLimitedEval $ e <> mkTerm "notahole" undefined t) ts
-                                     in case eTs of
-                                       Just eTs' | eTs' == rs -> return 0.0
-                                       _ -> return (log 0.0)
-           }
-makeFlipTask :: PlanTask
-makeFlipTask =
-  PlanTask { ptName = "FlipTask",
-             ptType = (tList (tPair tDouble tBool)) ->- (tList (tPair tDouble tBool)),
-             ptSeed = cI,
-             ptLogLikelihood = \e -> let ts = [[(0.5, True),(0.5, False)],
-                                               [(1.0, True),(0.0, False),(0.0, True)],
-                                               [(1.0, True),(0.3, False),(0.0, True),(1.0, False),(3.0, False),(-1.0, True)]]
-                                         rs = map reverse ts
-                                         eTs = mapM (\t -> timeLimitedEval $ e <> mkTerm "notahole" undefined t) ts
-                                     in case eTs of
-                                       Just eTs' | eTs' == rs -> return 0.0
-                                       _ -> return (log 0.0)
            }
 
 towerLikelihood :: SharedCache -> Expr -> IO Double
@@ -77,14 +50,13 @@ main = do
                        grExprDistr = Map.fromList [ (annotateRequested e, 1.0) | e <- towerExprs ] }
   let compileTower :: Expr -> Maybe [(Double, Bool)]
       compileTower expr = timeLimitedEval expr
-  let num = 0
   let task = makeTowerTask cache
   let emtask = (maybe (log 0) (unsafePerformIO . planLikelihood cache), "TowerTask")
---  (seed, num) <- loadNextGrammar -- Replace with above commented out code to start fresh
-  loopM seed [num+1..num+21] $ \grammar step -> do
+  [lambda, pseudocounts, fSize, plansPerTask, maxPlanLen, prefix] <- getArgs
+  loopM seed [1..10] $ \grammar step -> do
     putStrLn $ "EM Planning Iteration: " ++ show step
-    grammar' <- doEMIter ("towerEMlog_" ++ show step) (tList (tPair tBool tDouble)) compileTower [emtask,emtask,emtask] 0.015 0.1 5000 grammar
---    (grammar',_) <- doEMPlan (Just $ "towerlog_" ++ show step) [task, task, task] 0.015 0.5 frontierSize numberOfPlansPerTask maximumPlanLength grammar
-    saveGrammar ("towergrammar_"++show step) grammar'
---    savePhysicsCache cache "physics_cache"
+    (grammar',_) <- doEMPlan (Just $ prefix ++ "/best_" ++ show step) [task]
+                    (read lambda) (read pseudocounts) (read fSize) (read plansPerTask) (read maxPlanLen) grammar
+    saveGrammar (prefix ++ "/grammar_"++show step) grammar'
+    savePhysicsCache cache "physics_cache"
     return grammar'
