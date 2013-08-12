@@ -1,4 +1,5 @@
 #!/bin/bash
+# Works with commit e5e1b8b77be9a6e0b3791b6592a0841084bbbf7f
 
 # Make data directory
 mkdir data
