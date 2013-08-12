@@ -20,6 +20,7 @@ import Data.Maybe
 import Debug.Trace
 
 import System.Environment
+import System.Random
 
 makeTowerTask :: SharedCache -> PlanTask
 makeTowerTask cache =
@@ -52,7 +53,8 @@ main = do
       compileTower expr = timeLimitedEval expr
   let task = makeTowerTask cache
   let emtask = (maybe (log 0) (unsafePerformIO . planLikelihood cache), "TowerTask")
-  [lambda, pseudocounts, fSize, plansPerTask, maxPlanLen, prefix] <- getArgs
+  [rndSeed, lambda, pseudocounts, fSize, plansPerTask, maxPlanLen, prefix] <- getArgs
+  setStdGen $ mkStdGen $ read rndSeed
   loopM seed [1..10] $ \grammar step -> do
     putStrLn $ "EM Planning Iteration: " ++ show step
     (grammar',_) <- doEMPlan (Just $ prefix ++ "/best_" ++ show step) [task]
