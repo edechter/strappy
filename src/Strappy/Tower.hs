@@ -18,6 +18,7 @@ import qualified Data.Map as Map
 import System.IO.Unsafe
 import Data.Maybe
 import Debug.Trace
+import Control.Monad
 
 import System.Environment
 import System.Random
@@ -53,12 +54,19 @@ main = do
       compileTower expr = timeLimitedEval expr
   let task = makeTowerTask cache
   let emtask = (maybe (log 0) (unsafePerformIO . planLikelihood cache), "TowerTask")
-  [rndSeed, lambda, pseudocounts, fSize, plansPerTask, maxPlanLen, prefix] <- getArgs
+  [rndSeed, planOrEm, lambda, pseudocounts, fSize, plansPerTask, maxPlanLen, prefix] <- getArgs
+  let planning = head planOrEm == 'p'
   setStdGen $ mkStdGen $ read rndSeed
   loopM seed [1..10] $ \grammar step -> do
-    putStrLn $ "EM Planning Iteration: " ++ show step
-    (grammar',_) <- doEMPlan (Just $ prefix ++ "/best_" ++ show step) [task]
-                    (read lambda) (read pseudocounts) (read fSize) (read plansPerTask) (read maxPlanLen) grammar
+    if planning
+       then putStrLn $ "EM Planning Iteration: " ++ show step
+       else putStrLn $ "EM Iteration: " ++ show step
+    grammar' <- if planning
+                   then liftM fst $ doEMPlan (Just $ prefix ++ "/best_" ++ show step) [task]
+                                             (read lambda) (read pseudocounts) (read fSize) (read plansPerTask) (read maxPlanLen) grammar
+                   else doEMIter (prefix ++ "/best_" ++ show step) (tList $ tPair tDouble tBool)
+                                 (timeLimitedEval :: Expr -> Maybe [(Double, Bool)]) (replicate 10 emtask)
+                                 (read lambda) (read pseudocounts) (read fSize) grammar
     saveGrammar (prefix ++ "/grammar_"++show step) grammar'
     savePhysicsCache cache "physics_cache"
     return grammar'

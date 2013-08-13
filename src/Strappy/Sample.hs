@@ -69,7 +69,7 @@ sampleExprs :: (MonadPlus m, MonadRandom m) =>
 sampleExprs n library tp =
   liftM (Map.mapWithKey reweight) $ foldM accSample Map.empty [1..frontierSamples]
   where accSample acc _ | Map.size acc >= n = return acc
-        accSample acc _ = do
+        accSample acc x = do
           expr <- safeSample library tp
           return $ Map.insertWith (+) expr 1 acc
         reweight expr cnt =
