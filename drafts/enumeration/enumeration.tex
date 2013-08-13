@@ -1,0 +1,35 @@
+\documentclass{article}
+
+\begin{document}
+
+The EC algorithm requires some means of obtaining many unique programs that have high likelihood under a given grammar.
+We could do this by sampling from the grammar, but doing so can often fail to reveal shared substructures until a very large number of programs have been sampled.
+A breadth-first enumeration tends to reveal more common substructure, but has memory consumption that grows exponentially with the number of enumerated programs.
+This document describes an algorithm for performing memory-efficient (approximate) enumeration.
+
+The general idea is to use the provided grammar to build a binary prefix-free code for parse trees, satisfying
+$$
+- \log P(z|G) \approx \ell (z|G)
+$$
+where $z$ is the parse tree, $G$ is the grammar, and $\ell(\cdot|\cdot)$ is conditional description length.
+Then, we enumerate binary strings in lexicographic order and attempt to decode these strings in to parse trees.
+Upon successful decoding of a binary string, the corresponding program is added to the frontier.
+So, the space complexity of this algorithm is very low: we need to maintain one binary string (whose length grows logarithmically with the size of the frontier) as well as the set of programs we've already enumerated.
+This algorithm can be seen as a form of iterative deepening, and so should have the same time complexity as the breadth-first enumeration algorithm.
+
+The encoding of a parse tree is as follows.
+First, a Huffman encoding tree is constructed from all available productions at the given choice point; that is, all productions whose type unifies with the current requested type.
+Then, the chosen production is encoded using this tree.
+Finally, the encodings for all non-terminals in this production are sequentially appended.
+
+This encoding is best illustrated using an example.
+Say that our library has only one terminal, $I$, having type $\alpha\to\alpha$.
+The requested type for a given program is $\alpha\to\alpha$; suppose that the chosen program is $(I\; I)$ and that the grammar has probability 1/2 of choosing either $I$ or an application.
+
+There's only one possible parse of $(I I)$.
+First, an application is chosen.
+So, construct a Huffman encoding tree for the two productions $S\to S S$ and $S\to I$; say that the code word for $S\to SS$ is 0 and the code for $S\to I$ is 1.
+Then, the first bit is a 0 because the first production used in the parse is that of an application.
+The encoding of $I$ is a 1, so the next two bits are both 1's, giving an encoding of $011$ for $(I\; I)$.
+
+\end{document}
