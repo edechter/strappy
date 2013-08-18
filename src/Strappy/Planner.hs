@@ -75,11 +75,9 @@ mcmcPlan (PlanTask { ptLogLikelihood = likelihood, ptSeed = e0 }) dist len rands
                                  let e' = foldr1 (<>) $ e:prefix
                                  like <- expectedLikelihood likelihood 10 e'
                                  return ((e, e', like, w), like + w)) dist
-          -- Record new programs
-          let newPrograms = Set.empty --Set.fromList $ map (\((_, e, _, _), _) -> e) reweighted
           -- Failure: all of the likelihoods are zero
           if all (isInvalidNum . snd) reweighted
-            then return $ emptyPlanResult { prUniqueProgs = newPrograms }
+            then return $ emptyPlanResult { prUniqueProgs = Set.empty }
             else do let (e, e', eLike, eW) = sampleMultinomialLogProbNogen reweighted (head randNums)
                     -- (possibly) recurse
                     suffixResults <- if length prefix < len
@@ -93,7 +91,7 @@ mcmcPlan (PlanTask { ptLogLikelihood = likelihood, ptSeed = e0 }) dist len rands
                     let prefix' = reverse $ tail $ reverse prefix -- drop last element of prefix, which is ptSeed
                     let myRewards = Map.fromListWith logSumExp [ (expr, -prefixLLs) | expr <- e:prefix' ]
                     let myResult = PlanResult { prRewards = myRewards,
-                                                prUniqueProgs = newPrograms,
+                                                prUniqueProgs = Set.singleton e',
                                                 prBestPlan = myBestPlan }
                     return $ mergePlanResults myResult suffixResults
 

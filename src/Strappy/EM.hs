@@ -25,10 +25,13 @@ import Debug.Trace
 import System.CPUTime
 import System.Environment
 
+data EMTask a = EMTask { etName :: String,
+                         etLogLikelihood :: a -> Double,
+                         etType :: Type }
 
 -- | Performs one iteration of EM on multitask learning
-doEMIter :: String -> -- ^ Prefix for log output
-            Type -- ^ Type of the tasks
+doEMIter :: String -- ^ Prefix for log output
+            -> Type
             -> (Expr -> a) -- ^ Procedure for compiling expressions
             -> [(a -> Double, String)] -- ^ Tasks (functions from compiled expressions to log likelihoods)
             -> Double -- ^ Lambda
@@ -37,7 +40,7 @@ doEMIter :: String -> -- ^ Prefix for log output
             -> Grammar -- ^ Initial grammar
             -> IO Grammar -- ^ Improved grammar
 doEMIter prefix reqTp compile tasks lambda pseudocounts frontierSize grammar = do
-    -- Sample a frontier
+    -- Sample frontiers
   frontier <- (if sampleByEnumeration then sampleBitsM else sampleExprs) frontierSize grammar reqTp
   -- If we're sampling, the number of unique expressions is not given;
   -- display them.

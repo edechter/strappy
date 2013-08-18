@@ -1,5 +1,5 @@
 #!/bin/bash
-# Works with commit e5e1b8b77be9a6e0b3791b6592a0841084bbbf7f
+# Works with commit ???
 
 # Make data directories for each frontier size
 mkdir data1000
@@ -14,6 +14,6 @@ make clean
 make poly
 
 # Run script w/ EM
-./Strappy/Poly 0 1.5 1.0 1000 'experiments/PolyEM/data1000' | tee experiments/PolyEM/data1000/log
-./Strappy/Poly 0 1.5 1.0 5000 'experiments/PolyEM/data5000' | tee experiments/PolyEM/data5000/log
-./Strappy/Poly 0 1.5 1.0 10000 'experiments/PolyEM/data10000' | tee experiments/PolyEM/data10000/log
+./Strappy/Poly 0 e 1.5 1.0 1000 0 0 'experiments/PolyEM/data1000' | tee experiments/PolyEM/data1000/log
+./Strappy/Poly 0 e 1.5 1.0 5000 0 0 'experiments/PolyEM/data5000' | tee experiments/PolyEM/data5000/log
+./Strappy/Poly 0 e 1.5 1.0 10000 0 0 'experiments/PolyEM/data10000' | tee experiments/PolyEM/data10000/log
