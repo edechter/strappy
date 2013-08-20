@@ -1,5 +1,5 @@
 #!/bin/bash
-# Works with commit ???
+# Works with commit dd48bca3f6d1d3fd9279bde4387fcac4ba8c9c48
 
 # Make data directories for each frontier size
 mkdir data100
