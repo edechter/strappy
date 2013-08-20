@@ -89,9 +89,14 @@ mcmcPlan (PlanTask { ptLogLikelihood = likelihood, ptSeed = e0 }) dist len rands
                           map fst reweighted
                     let myBestPlan = (myBestE : prefix, myBestLL, myBestW)
                     let prefix' = reverse $ tail $ reverse prefix -- drop last element of prefix, which is ptSeed
-                    let myRewards = Map.fromListWith logSumExp [ (expr, -prefixLLs) | expr <- e:prefix' ]
+                    let normedReweighted = let reweighted' = map (\((e, _, _, _), w) -> (e, w)) reweighted
+                                               logZ = logSumExpList $ map snd reweighted'
+                                           in map (\(e, w) -> (e, w-logZ)) reweighted'
+                    let myRewards = Map.fromListWith logSumExp $ [ (expr, -prefixLLs) | expr <- prefix' ] ++
+                                                                 [ (expr, -prefixLLs + exprLike)
+                                                                 | (expr, exprLike) <- normedReweighted ]
                     let myResult = PlanResult { prRewards = myRewards,
-                                                prUniqueProgs = Set.singleton e',
+                                                prUniqueProgs = Set.empty, --Set.singleton e',
                                                 prBestPlan = myBestPlan }
                     return $ mergePlanResults myResult suffixResults
 
