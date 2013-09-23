@@ -1,0 +1,115 @@
+\documentclass{article}
+\usepackage{verbatim}
+\begin{document}
+\section{Overview}
+This document summarizes experiments in tower-building via EC.
+In these experiments, a tower is a list of tuples of real numbers and booleans.
+The list corresponds to a sequence of block placements in a 2D world.
+The real number component of the $i$th tuple is the $x$ coordinate of the $i$th block.
+The boolean component of the $i$th tuple is the orientation of the $i$th block (horizontal or vertical).
+The blocks are placed in the sequence specified by the list.
+
+Whether the tower is stable when pushed with varying strengths is measured.
+The ``log likelihood'' of a tower is an increasing function of its stability and its height.
+So, the best towers are those that are tall, stable, and have small description length.
+
+It's interesting to note that we don't have a curriculum of tasks to solve.
+Instead, we hope that the ability of EC to handle partial rewards will serve as an adequate curriculum.
+
+\section{Experiments}
+EC with planning was used to solve the tower task. The parameters were: $\lambda=0.015$, pseudocounts=$0.1$, frontier size = 2000, plans per task = 60, plan length = 5.
+These results may be reproduced using the run.sh script in the TowerPlan directory.
+Decreasing the frontier size to 500 produced qualitatively similar results.
+
+EC built multilevel, arch-like towers.
+After one iteration of the E and C steps, the grammar did not change significantly.
+The final grammar was:
+\begin{verbatim}
+      p:   0.21
+  (I I):  -2.14
+(map I):  -2.10
+      I:  -2.09
+(: ((pair -1.0) False)):  -1.80
+(: ((pair ((*. -1.0) 1.0)) False)):  -1.78
+(: (I ((pair 1.0) False))):  -1.75
+(: (I ((pair 0.0) False))):  -1.72
+(++ (single ((pair 1.0) False))):  -1.71
+(++ (single ((pair -1.0) False))):  -1.67
+(: ((pair -1.0) True)):  -1.56
+(: ((pair 1.0) True)):  -1.47
+(((C (C I)) :) ((pair 0.0) True)):  -1.42
+    fst:  -0.85
+    snd:  -0.82
+     ++:  -0.68
+      ::  -0.64
+    map:  -0.64
+  foldl:  -0.14
+      C:  -0.13
+      S:  -0.12
+ single:  -0.08
+      B:  -0.08
+  False:  -0.06
+   True:  -0.05
+   pair:  -0.02
+    rep:  -0.02
+     +.:  -0.02
+     -.:  -0.02
+     *.:  -0.02
+     /.:  -0.02
+    0.0:  -0.02
+    1.0:  -0.02
+   -1.0:  -0.02
+\end{verbatim}
+
+\section{Analysis}
+Observations about the above grammar:
+\begin{itemize}
+\item{(a)} The lowest-description length productions are all primitives. This could be due to at least three different effects:
+\begin{itemize}
+\item{(i)} The other combinators in the library are very shallow.
+Thus, when estimating the grammar's parameters, a non-neglible fraction of the credit for any of the non-primitive combinators is distributed to the primitive combinators as well.
+This is especially apparent in the \verb=(map I)= case; when \verb=(map I)= occurs in the corpus to be compressed, it is not significantly more compressive to parse it as a single production than as three (application, map, I).
+\item{(ii)} Plans are stochastically sampled, which decreases the potential for sharing as compared to some sort of deterministic enumeration.
+As a result, more complex combinators are penalized because they belong to a very large class of equivalent combinators.
+\item{(iii)} The EM version of EC might be stuck in a local minimum. The most compressive grammar is, unintuitively, a function of the previous grammar; thus, if an early grammar (such as the first grammar) penalizes non-primitive combinators, EC will continue to weight those combinators too highly. (However, this didn't occur for polynomial regression. Why? Fortunately, it is easy to test empirically if this effect is present, as detailed in ``Future Experiments.'')
+\end{itemize}
+\item{(b)} Missed opportunities for compression. Many combinators in the library differ only in one or two leaves (eg, \verb=(: ((pair -1.0) True))= and \verb=(: ((pair 1.0) True)))=.
+Although something like antiunification would resolve these specific instances, it would not solve the more general problem of abstracting out subtrees that perform the same computation.
+If the more compressive combinators are never sampled/enumerated, then we can't solve this problem.
+However, if they are, they still might not be put in to the grammar, for the same reasons given in observation a.iii.
+\item{(c)} Nearly complete lack of higher-order planning primitives, excepting \verb=(map I)=. This is due to the small frontier size.
+I tried having EC learn plan manipulation functions, such as \verb=reverse=, \verb=(map (\(x, o). (-x,o)))= (reflect over $x$ axis), etc, using the same initial grammar as the tower building program had.
+Both with and without planning, EC failed to learn these primitives.
+It is also possible that there is little pressure to learn higher-order primitives because the planning mechanism is able to find high-scoring towers without them.
+However, disabling planning results in qualitatively similar towers and grammars.
+\end{itemize}
+
+\section{Possible Future Experiments}
+ We can test if it is the stochastic nature of our search algorithm that discourages sharing of subtrees by implementing a deterministic planner.
+ We don't want to do best-first enumeratation of plans - otherwise, we might as well just enumerate more programs.
+Instead we might do something like beam search.
+A determinstic planner should be tested both on Towers and Polynomial Regression.
+
+Are we doing planning the right way? Perhaps we're introducing the wrong inductive bias by forcing our programs to be broken up in to segments of type $\alpha\to\alpha$, where $\alpha$  is the target type of the task. This factoring of our programs could be increasing the description length of the programs of interest.\footnote{Although, looking at reasonable higher-order plan operators for the towers task seems to suggest that this is not the case; if anything, we might be introducing the correct inductive bias for this domain.}
+One way of testing this hypothesis is to experiment with means of planning that do not factor the program in any one way.
+There are at least three different ways of incrementally building programs that do not put restrictions on the factoring of the program:
+\begin{itemize}
+\item{Monte Carl Tree Search:} Writing a program can be viewed as playing a game, where each move in the game correspondings to choosing the next production.
+We can therefore adapt Monte Carlo Tree Search to the problem of incremental program writing, with the payout being either the likelihood or the (unnormed) posterior, depending on how strongly we want to regularize the search for programs.
+This has been implemented but not tested.
+\item{MCMC:} We could use MCMC; our proposal distribution would be something along the lines of, ``pick a subtree and redraw it from the grammar.'' I don't like this - I'm afraid it would take forever to mix.
+\item{Genetic Algorithms:} We could use genetic programming techniques instead of the enumeration phase of EC. We'd probably want to do Evolutionary MCMC. I'm hesitant about this idea for the same reason I'm hesitant about MCMC.
+\end{itemize}
+
+As discussed in the previous section, in the EM version of EC, the next grammar is a function of the previous grammar, and not just the programs and their likelihoods.
+This seems intuitively wrong. The original version of EC got this right.
+The previous section explains why this might lead to the observed behavior on Towers.
+If we've observed the programs in the set $\Omega$, then one reasonable way of picking the next grammar is to maximize the lower bound on the log posterior of the grammar:
+\begin{eqnarray*}
+\ln P(G|t) &=& \ln P(G) + \sum_n \ln \sum_e P(t_n|e)P(e|G)\\
+&\geq& \ln P(G) + \sum_n \ln \sum_{e\in \Omega} P(t_n|e)P(e|G)
+\end{eqnarray*}
+One could approximately maximize this quantity by greedily adding productions to the grammar, or by an EM-like procedure.
+If this was the cause of the lack of abstraction in the Tower grammar, then we would see bigger, but more compressive, combinators in the grammar.
+
+\end{document}
