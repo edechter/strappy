@@ -192,6 +192,7 @@ sampleHoles e = return e
 
 -- | Does a monte carlo estimate of the expected likelihood of a probabilistic program
 expectedLikelihood :: (Expr -> IO Double) -> Int -> Expr -> IO Double
+expectedLikelihood ll _ e | countHoles e == 0 = ll e
 expectedLikelihood ll samples e = do
   lls <- replicateM samples (sampleHoles e >>= ll)
   let retval = logSumExpList lls - log (fromIntegral samples)

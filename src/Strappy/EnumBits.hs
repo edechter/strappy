@@ -162,3 +162,4 @@ huffman2alist (PrefixLeaf a) = [(a, [])]
 huffman2alist (PrefixBranch l r) =
 	map (\(x,bs)->(x,Zero:bs)) (huffman2alist l)
 	++ map (\(x,bs)->(x,One:bs)) (huffman2alist r)
+

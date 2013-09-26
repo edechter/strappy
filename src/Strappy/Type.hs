@@ -271,6 +271,10 @@ t1 = TVar 1
 t2 = TVar 2                  
 t3 = TVar 3
 
+-- | "Dependent Types"
+tVecNil a = TCon "Vec" [tGnd "0", a]
+tVecCons a = a ->- TCon "Vec" [t, a] ->- TCon "Vec" [TCon "S" [t], a]
+
 instance Show Type where
   show (TVar id) = show id
   show (TCon "->" [l, r]) = "(" ++ show l ++ " -> " ++ show r ++ ")"

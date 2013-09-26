@@ -37,7 +37,7 @@ numberOfPlansPerTask = 10
 
 -- | Length of each plan sampled
 maximumPlanLength :: Int
-maximumPlanLength = 3
+maximumPlanLength = 5
 
 -- | How much stochasticity should there be in the planning?
 --   beta = 1/T

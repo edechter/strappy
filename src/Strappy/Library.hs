@@ -200,7 +200,6 @@ inoutEstimateGrammar gr@Grammar{grExprDistr=distr, grApp = app} pseudocounts obs
                                      termCounts = termCounts counts'' + weight * probUsedLib, 
                                      useCounts = uc', 
                                      possibleUseCounts = pc' }
-              
           in counts'''
         expectedCounts weight counts expr@(App { eLeft = left,
                                                  eRight = right, 
