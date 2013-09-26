@@ -17,10 +17,12 @@ import Control.Monad
 import Control.Monad.Random
 import qualified Control.Monad.Parallel as Parallel
 import qualified Data.Map as Map
+import qualified Data.Set as Set
 import Data.List
 import Data.Maybe
 import Data.IORef
 import Data.Function
+import Debug.Trace
 
 
 data PlanTask = PlanTask { ptName :: String,
@@ -29,122 +31,142 @@ data PlanTask = PlanTask { ptName :: String,
                            ptSeed :: Expr     -- ^ Initial plan, such as an empty list, or the identity function
                          }
 
-mcmcPlan :: Expr -> -- ^ Initial plan, such as the empty list, or the identity function
+data PlanResult = PlanResult { prRewards :: Map.Map Expr Double, -- Log rewards
+                               prUniqueProgs :: Set.Set Expr, -- Set of all programs encountered in this planning iteration
+                               prBestPlan :: ([Expr], Double, Double) -- Program, log likelihood, log prior
+                             }
+
+mergePlanResults :: PlanResult -> PlanResult -> PlanResult
+mergePlanResults (PlanResult { prRewards = rewards,
+                               prUniqueProgs = progs,
+                               prBestPlan = b@(e, ll, pr) })
+                 (PlanResult { prRewards = rewards',
+                               prUniqueProgs = progs',
+                               prBestPlan = b'@(e', ll', pr') }) =
+  PlanResult { prRewards = Map.unionWith logSumExp rewards rewards',
+               prUniqueProgs = progs `Set.union` progs',
+               prBestPlan =
+                 case compare (ll, pr) (ll', pr') of
+                   GT -> b
+                   _ -> b'
+             }
+
+emptyPlanResult :: PlanResult
+emptyPlanResult = PlanResult { prRewards = Map.empty,
+                               prUniqueProgs = Set.empty,
+                               prBestPlan = (undefined, log 0, log 0) }
+                               
+
+mcmcPlan :: PlanTask ->
             [(Expr, Double)] -> -- ^ Distribution over expressions drawn from the grammar
-            (Expr -> IO Double) -> -- ^ Log Likelihood function
             Int -> -- ^ length of the plan
             [Double] -> -- ^ Random stream in range [0,1) with length >= length of plan
-            IO (Double, [(Expr, Double)],
-                Bool, [([Expr], Double, Double)]) -- ^ log partition function, expressions and log rewards,
-                                                  -- ^ hit task, programs tried (es, p(.|g), p(t|.))
-mcmcPlan e0 dist likelihood len randstream =
-  mcmc e0 [] 0 1 0 randstream
-  where mcmc :: Expr -> [Expr] -> Double -> Double -> Int -> [Double] -> IO (Double, [(Expr, Double)], Bool, [([Expr], Double, Double)])
-        mcmc prefix prefixList prefixLL prefixRecipLike lenSoFar randNums = do
-          -- Reweight by the likelihood
-          let prefixHasHoles = countHoles prefix > 0
+            IO PlanResult
+mcmcPlan (PlanTask { ptLogLikelihood = likelihood, ptSeed = e0 }) dist len randstream =
+  mcmc [e0] 0 0 randstream
+  where mcmc :: [Expr] -> -- ^ Plan so far
+                Double -> -- ^ Prior under the grammar of the plan so far
+                Double -> -- ^ The sum of the log likelihoods of the previous plans
+                [Double] -> -- ^ random stream
+                IO PlanResult
+        mcmc prefix prefixPrior prefixLLs randNums = do
+          -- Reweight frontier by likelihoods
           reweighted <- mapM (\(e, w) -> do
-                                 let e' = e <> prefix
-                                 like <- if prefixHasHoles || countHoles e > 0
-                                         then expectedLikelihood likelihood 10 e'
-                                         else likelihood e'
-                                 return ((e, like, w), like + w)) dist
-          -- Record all of the new programs explored
-          let newPrograms = map (\((e, ll, w), llPlusW) ->
-                                  (e : prefixList, w + prefixLL, ll)) reweighted
+                                 let e' = foldr1 (<>) $ e:prefix
+                                 like <- expectedLikelihood likelihood 10 e'
+                                 return ((e, e', like, w), like + w)) dist
           -- Failure: all of the likelihoods are zero
-          if all (\x -> isNaN x || isInfinite x) (map snd reweighted)
-          then return (0, [], False, [])
-          else
-             do let (e, eLike, eW) = sampleMultinomialLogProbNogen reweighted (head randNums)
-                -- (possibly) recurse
-                (suffixLogPartition, suffixRewards, suffixHit, suffixNewPrograms) <-
-                  if lenSoFar < len - 1
-                  then mcmc (e <> prefix) (e:prefixList) (eW+prefixLL) (prefixRecipLike - eLike) (len+1) (tail randNums)
-                  else return (0, [], False, [])
-                let partitionFunction = logSumExp suffixLogPartition prefixRecipLike
-                let epsilon = 0.01 -- tolerance for deciding if a plan has hit a task
-                let hit = suffixHit || eLike >= 0.0-epsilon
-                return (partitionFunction, (e, partitionFunction):suffixRewards, hit, nub $ newPrograms++suffixNewPrograms)
+          if all (isInvalidNum . snd) reweighted
+            then return $ emptyPlanResult { prUniqueProgs = Set.empty }
+            else do let (e, e', eLike, eW) = sampleMultinomialLogProbNogen reweighted (head randNums)
+                    -- (possibly) recurse
+                    suffixResults <- if length prefix < len
+                                     then mcmc (e:prefix) (eW+prefixPrior) (eLike+prefixLLs) (tail randNums)
+                                     else return emptyPlanResult
+                    -- Calculate the results for this iteration
+                    let (myBestE, _, myBestLL, myBestW) =
+                          maximumBy (\ (_, _, ll, w) (_, _, ll', w') -> compare (ll, w) (ll', w')) $
+                          map fst reweighted
+                    let myBestPlan = (myBestE : prefix, myBestLL, myBestW)
+                    let prefix' = reverse $ tail $ reverse prefix -- drop last element of prefix, which is ptSeed
+                    let normedReweighted = let reweighted' = map (\((e, _, _, _), w) -> (e, w)) reweighted
+                                               logZ = logSumExpList $ map snd reweighted'
+                                           in map (\(e, w) -> (e, w-logZ)) reweighted'
+                    let myRewards = Map.fromListWith logSumExp $ [ (expr, -prefixLLs) | expr <- prefix' ] ++
+                                                                 [ (expr, -prefixLLs + exprLike)
+                                                                 | (expr, exprLike) <- normedReweighted ]
+                    let myResult = PlanResult { prRewards = myRewards,
+                                                prUniqueProgs = Set.empty, --Set.singleton e',
+                                                prBestPlan = myBestPlan }
+                    return $ mergePlanResults myResult suffixResults
 
 
-{-doEMPlan :: Eq a, Ord a, Show a =>
-            [PlanTask a] -- ^ Tasks
-            -> (PlanTask a -> PlanTask a -> Bool) -- ^ Partial order among tasks: is the first task harder than the second task?
-            -> Double -- ^ Lambda
-            -> Double -- ^ pseudocounts
-            -> Int -- ^ frontier size
-            -> Int -- ^ number of plans sampled per task
-            -> Int -- ^ max length of each plan
-            -> Grammar -- ^ Initial grammar
-            -> IO Grammar -- ^ Improved grammar
--}
-doEMPlan fname tasks isHarderThan lambda pseudocounts frontierSize numPlans planLen grammar = do
+doEMPlan :: Maybe String -> -- ^ Filename to save logs to
+            [PlanTask] -> -- ^ Tasks
+            Double -> -- ^ Lambda
+            Double -> -- ^ pseudocounts
+            Int -> -- ^ frontier size
+            Int -> -- ^ number of plans sampled per task
+            Int -> -- ^ max length of each plan
+            Grammar -> -- ^ Initial grammar
+            IO (Grammar, Int) -- ^ Improved grammar, # hit tasks
+doEMPlan maybeFname tasks lambda pseudocounts frontierSize numPlans planLen grammar = do
   -- For each type, sample a frontier of actions
   frontiers <- mapM (\tp -> (if sampleByEnumeration then sampleBitsM else sampleExprs)
                             frontierSize grammar (tp ->- tp)
                             >>= return . (tp,) . Map.toList)
                $ nub $ map ptType tasks
-  putStrLn $ "Frontier size: " ++ (unwords $ map (show . length . snd) frontiers)
+  putStrLn $ "Frontier sizes: " ++ (unwords $ map (show . length . snd) frontiers)
   numHitRef <- newIORef 0
   numPartialRef <- newIORef 0
-  taskFailures <- newIORef [] -- list of all of the tasks we've failed so far
-  programsPerTask <- newIORef []
+  
   -- For each task, do greedy stochastic search to get candidate plans
   -- Each task records all of the programs used in successful plans, as well as the associated rewards
   -- These are normalized to get a distribution over plans, which gives weights for the MDL's of the programs
-  normalizedRewards <- forM tasks $ \tsk@PlanTask {ptLogLikelihood = likelihood, ptSeed = seed, ptType = tp, ptName = nm} -> do
-    -- Check to see we haven't failed on an easier task.
-    -- If so, we can bail on this one.
-    previousFailures <- readIORef taskFailures
-    if any (isHarderThan tsk) previousFailures
-      then putStrLn ("Skipping task " ++ nm) >> return []
-      else do
-      let frontier = snd $ fromJust $ find ((==tp) . fst) frontiers
-      (logPartitionFunction, programLogRewards, anyHit, anyPartial, newProgs) <- do
-        rnds <- replicateM numPlans $ replicateM planLen $ getRandomR (0, 1)
-        planResults <- flip Parallel.mapM rnds $ mcmcPlan seed frontier likelihood planLen
-        return $ foldl (\ (logZ, rewards, hit, part, newProgs) (logZ', rewards', hit', newProgs') ->
-                         (logSumExp logZ logZ', rewards++rewards', hit||hit', part||(not (null rewards')), nub $ newProgs++newProgs'))
-                       (log 0, [], False, False, []) planResults
-      when anyHit $ do
-        when verbose $ putStrLn $ "Hit " ++ nm
-        modifyIORef numHitRef (+1)
-      when (not anyPartial) $ modifyIORef taskFailures (tsk:)
-      when (verbose && (not anyHit) && (not anyPartial)) $ putStrLn $ "Missed " ++ nm
-      when ((not anyHit) && anyPartial) $ do
-        when verbose $ putStrLn $ "Got partial credit for " ++ nm
-        modifyIORef numPartialRef (+1)
-      modifyIORef programsPerTask $ \progs -> progs ++ [(nm, newProgs)]
-      -- normalize rewards
-      return $ map (\(e, r) -> (e, exp (r - logPartitionFunction))) programLogRewards
+  planResults <- forM tasks $ \tsk -> do
+    let frontier = snd $ fromJust $ find ((==(ptType tsk)) . fst) frontiers
+    rnds <- replicateM numPlans $ replicateM planLen $ getRandomR (0, 1)
+    results <- flip Parallel.mapM rnds $ mcmcPlan tsk frontier planLen
+    let planResult = foldl1 mergePlanResults results
+    let anyHit = (\(_, ll, _) -> ll >= -0.01) $ prBestPlan planResult
+    let anyPartial = (\(_, ll, _) -> not (isInvalidNum ll)) $ prBestPlan planResult
+    when anyHit $ do
+      when verbose $ putStrLn $ "Hit " ++ (ptName tsk)
+      modifyIORef numHitRef (+1)
+    when (verbose && (not anyHit) && (not anyPartial)) $ putStrLn $ "Missed " ++ (ptName tsk)
+    when ((not anyHit) && anyPartial) $ do
+      when verbose $ putStrLn $ "Got partial credit for " ++ (ptName tsk)
+      modifyIORef numPartialRef (+1)
+    return planResult
+  
   numHit <- readIORef numHitRef
   putStrLn $ "Hit " ++ show numHit ++ "/" ++ show (length tasks) ++ " tasks."
+  
   -- Show number of unique programs
-  numUnique <- flip liftM (readIORef programsPerTask) $ \progs ->
-    length $ nub $ map (\(x,y,z)->x) $ concat $ map snd progs
+  let numUnique = Set.size $ prUniqueProgs $ foldl1 mergePlanResults planResults
   putStrLn $ "# unique programs tried: " ++ show numUnique
+  
   -- Save out the best program for each task
-  readIORef programsPerTask >>= saveBestPlan fname
+  maybe (return ()) (\fname -> saveBestPlan fname $ zip planResults $ map ptName tasks) maybeFname
+  
+  -- Normalize the frontiers for each task
+  let normalizedRewards = map (\pr -> normalizeDist $ Map.toList $ prRewards pr) planResults
+  
   -- Compress the corpus
-  let normalizedRewards' = Map.toList $ Map.fromListWith (+) $ concat normalizedRewards
+  let normalizedRewards' = Map.toList $ Map.map exp $ Map.fromListWith logSumExp $ concat normalizedRewards
   let grammar' = compressWeightedCorpus lambda pseudocounts grammar normalizedRewards'
   let terminalLen = length $ filter isTerm $ Map.keys $ grExprDistr grammar
   putStrLn $ "Got " ++ show ((length $ lines $ showGrammar $ removeSubProductions grammar') - terminalLen - 1) ++ " new productions."
   putStrLn $ "Grammar entropy: " ++ show (entropyLogDist $ Map.elems $ grExprDistr grammar') ++ " nats."
   when verbose $ putStrLn $ showGrammar $ removeSubProductions grammar'
   putStrLn "" -- newline
-  return grammar'
+  return (grammar', numHit)
 
 
-saveBestPlan :: String -> [(String, [([Expr], Double, Double)])] -> IO ()
+saveBestPlan :: String -> [(PlanResult, String)] -> IO ()
 saveBestPlan fname plans =
-  writeFile fname $ unlines $ flip map plans $ \(nm, progs) ->
-  if null progs
-  then ("Missed " ++ nm)
-  else let compareProgs (_, w, ll) (_, w', ll') =
-             case compare ll ll' of
-               EQ -> compare w w'
-               c -> c
-           (bestPlan, bestW, bestLL) = maximumBy compareProgs progs
-       in nm ++ "\t" ++ show bestPlan ++ "\t" ++ show bestLL
+  writeFile fname $ unlines $ flip map plans $ \(planResult, nm) ->
+  let (e, ll, pr) = prBestPlan planResult
+  in if isInvalidNum ll
+     then nm ++ "\tMissed"
+     else nm ++ "\t" ++ show e ++ "\t" ++ show ll
