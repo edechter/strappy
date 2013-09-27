@@ -25,15 +25,15 @@ sampleByEnumeration = True
 
 -- | Max size of the frontier enumerated, or sampled, during the "E" step
 frontierSize :: Int
-frontierSize = 20000
+frontierSize = 2000
 
 -- | Maximum number of samples drawn from the grammar
 frontierSamples :: Int
-frontierSamples = 60000
+frontierSamples = 600
 
 -- | Number of plans sampled for each task
 numberOfPlansPerTask :: Int
-numberOfPlansPerTask = 10
+numberOfPlansPerTask = 1
 
 -- | Length of each plan sampled
 maximumPlanLength :: Int
@@ -44,7 +44,7 @@ maximumPlanLength = 5
 planningBeta :: Double
 planningBeta = 1
 
--- | Timeout for evaluations
+-- [| Timeout for evaluations
 --   Measured in nanoseconds
 maxEvalTime :: Timeout
 maxEvalTime = fromIntegral 10000

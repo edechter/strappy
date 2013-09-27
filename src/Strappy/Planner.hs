@@ -34,7 +34,7 @@ data PlanTask = PlanTask { ptName :: String,
 data PlanResult = PlanResult { prRewards :: Map.Map Expr Double, -- Log rewards
                                prUniqueProgs :: Set.Set Expr, -- Set of all programs encountered in this planning iteration
                                prBestPlan :: ([Expr], Double, Double) -- Program, log likelihood, log prior
-                             }
+                             } deriving Show
 
 mergePlanResults :: PlanResult -> PlanResult -> PlanResult
 mergePlanResults (PlanResult { prRewards = rewards,

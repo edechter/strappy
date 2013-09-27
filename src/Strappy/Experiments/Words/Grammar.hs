@@ -17,7 +17,7 @@ alphabetExprs :: [Expr]
 alphabetExprs = map cChar2Expr ['a'..'z']
 
 wordsExprs :: [Expr]
-wordsExprs = nub $ basicExprs ++ listExprs ++ alphabetExprs
+wordsExprs = nub $ basicExprs ++ alphabetExprs
 
 wordsGr :: Grammar
 wordsGr = normalizeGrammar $ Grammar (log 0.45) (mkExprDistr wordsExprs) 
