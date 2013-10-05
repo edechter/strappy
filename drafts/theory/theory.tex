@@ -1,0 +1,36 @@
+\documentclass{article}
+\usepackage{amsmath}
+\begin{document}
+
+Consider the problem of learning boolean functions of $N$ variables.
+Suppose we are given an oracle that, when handed such a function, tells us if it is correct or not.
+Then, the size of the space of possible functions is $2^{2^N}$.
+
+Supppose there exists a factorization of the target function, called a \emph{curriculum}.
+The \emph{curriculum} is a set of $C$ boolean functions of arity $d$ such that the target function may be written only in terms of up to $d$ members of the set consisting of the union of the $N$ variables and the $C$ curriculum functions.
+
+Now we'll calculate an upper bound on the work required to identify any such factorizations.
+First, there must be at least one curriculum function that is only a set of the $N$ variables.
+There are $\binom{N}{d}$ ways of choosing the input variables and $2^{2^d}$ ways of constructing functions from those variables, so there are $\binom{N}{d}2^{2^d}$ different functions to consider.
+If we are given corresponding oracles for all $C$ members of the curriculum, then we will need at most $C\binom{N}{d}2^{2^d}$ queries to such oracles.
+Similarly, the curriculum function which is a function of $d$ members of the $N$ variables and the previous curriculum function requires at most $(C-1)\binom{N+1}{d}2^{2^d}$ queries.
+Continuing this reasoning, we get the following upper bound on the number of oracle queries required to identify the function of interest given the curriculum:
+$$
+\binom{N+C}{d}2^{2^d} + \sum_{j=0}^{C-1} (C-j) \binom{N+j}{d} 2^{2^d}
+$$
+where the first term comes from the oracle queries required to reconstruct the taraget function after learning the curriculum.
+
+This analysis applies in the case where we don't know what order to learn the curriculum in. This might be unrealistic for human learners.
+However, it is the setting EC uses.
+
+One problem with the previous analysis is that it does not reflect the fact that there are multiple factorizations, and for each of them, the value of $d$ is a function of $C$.
+One nice property of the analysis is that it gives us an upper bound on what $d$ should be given $C$: it should be less than the value which makes the bound equal to $2^{2^N}$, because otherwise, the curriculum doesn't help us.
+
+We'd like to show that the reduction in the search space, for certain classes of factorizations, is large (exponential?) in $C$.
+One approach would be to analyze the change in $d$ when $C$ is decreased by one.
+If $C'=C-1$ then $d\leq d'\leq 2d-1$.
+But, most of the nodes don't have their degree changed, so it seems that we ought to change out analysis to reflect that fact.
+
+Another (probably more difficult) problem to analyze is that of discovering the curriculum as one learns.
+This is closer to what EC does.
+\end{document}
