@@ -19,6 +19,7 @@ import qualified Data.Set as Set
 import Data.IORef
 import Data.Maybe
 import Data.List
+import Data.Function
 
 type Beam k a = MinQueue.MinQueue (k, a)
 
@@ -91,15 +92,17 @@ doEMBeam maybeFname tasks lambda pseudocounts frontierSize beamSize planLen gram
   
   -- Each task records all of the programs used in successful plans, as well as the associated rewards
   -- These are normalized to get a distribution over plans, which gives weights for the MDL's of the programs
-  aggregateRewards <- forM tasks $ \tsk -> do
+  aggregateRewards <- loopM Map.empty tasks $ \acc tsk -> do
     let frontier = snd $ fromJust $ find ((==(ptType tsk)) . fst) frontiers
     (rewards, hits) <- beamPlan tsk beamSize frontier planLen
     let anyHit = not (Set.null hits)
     when anyHit $ do
       when verbose $ putStrLn $ "Hit " ++ (ptName tsk)
+      let (bestPlan, bestLL) = maximumBy (compare `on` snd) (Set.toList hits)
+      putStrLn $ show bestPlan ++ "\t\t" ++ show bestLL
       modifyIORef numHitRef (+1)
     when (verbose && (not anyHit)) $ putStrLn $ "Missed " ++ (ptName tsk)
-    return $ Map.toList rewards
+    return $ Map.unionWith logSumExp acc rewards
   
   numHit <- readIORef numHitRef
   putStrLn $ "Hit " ++ show numHit ++ "/" ++ show (length tasks) ++ " tasks."
@@ -109,7 +112,7 @@ doEMBeam maybeFname tasks lambda pseudocounts frontierSize beamSize planLen gram
   -- maybe (return ()) (\fname -> saveBestPlan fname $ zip planResults $ map ptName tasks) maybeFname
 
   -- Compress the corpus
-  let rewards = Map.toList $ Map.map exp $ Map.fromListWith logSumExp $ concat aggregateRewards
+  let rewards = Map.toList $ Map.map exp $ aggregateRewards
   let grammar' = compressWeightedCorpus lambda pseudocounts grammar rewards
   let terminalLen = length $ filter isTerm $ Map.keys $ grExprDistr grammar
   putStrLn $ "Got " ++ show ((length $ lines $ showGrammar $ removeSubProductions grammar') - terminalLen - 1) ++ " new productions."
