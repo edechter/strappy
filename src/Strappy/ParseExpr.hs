@@ -31,6 +31,7 @@ parseExpr' exprs s = P.parse (exprParser exprs) "input combinatory expression" s
 parseExpr :: [Expr] -> String -> Expr
 parseExpr exprs = fromRight . (parseExpr' exprs)
     where fromRight (Right x) = run x
+          fromRight (Left err) = error $ show err
 
 p = P.try (integer lexer <* P.eof ) <|> p `P.chainl1` (whiteSpace lexer *> return (+)) 
 
@@ -62,11 +63,21 @@ mkDummy str = Term str (TVar 100) undefined undefined undefined
 x = mkDummy "x"
 y = mkDummy "y"
 z = mkDummy "z"
+v = mkDummy "v"
+u = mkDummy "u"
+
 f = mkDummy "f"
 g = mkDummy "g"
+h = mkDummy "h"
+j = mkDummy "j"
+k = mkDummy "k"
+
 
 dummies :: [Expr]
 dummies = [x, y, z, f, g]
+
+functionDummies = [f, g, h, j, k]
+varDummies = [x, y, z, v, u]
 
 isDummy :: Expr -> Bool
 isDummy e = e `elem` dummies
@@ -81,7 +92,9 @@ run = runIdentity . runTI
 simplify :: Expr -> Expr
 simplify e | (not (containsDummy e)) && (eType e == tInt) = intToExpr (eval e :: Int)
 
-simplify t@Term{} = trace "2" $ t
+simplify t@Term{} = t
+simplify App{eLeft = App{eLeft=c, eRight=f}, eRight=g} | c == cPlus && f == g  = simplify $ run $ (r cTimes <.> r (intToExpr 2)) <.> (r g)
+
 simplify App{eLeft = App{eLeft=App{eLeft=c, eRight=f}, eRight=g}, eRight=x} | c == cS = simplify $ run $ (r f <.> r x) <.> (r g <.> r x)
                                                                             | c == cC = simplify $ run $ (r f <.> r x) <.> r g
                                                                             | c == cB = simplify $ run $ r f <.> (r g <.> r x)
@@ -91,5 +104,18 @@ simplify e@App{eLeft=l, eRight=w} = let x = run $ r (simplify l) <.> (r (simplif
                                     in if x == e then x else simplify x
 
 
+firstArgumentType :: Type -> Maybe Type
+firstArgumentType (TCon "->" [a, b]) = Just a
+firstArgumentType _ =  Nothing
+
+simplifyWithDummies :: Expr -> Expr
+simplifyWithDummies e = go e varDummies functionDummies
+  where 
+      go e vDummies fDummies = 
+        let out = firstArgumentType (eType e)
+        in case out of 
+          Just (TCon "->" [a,b]) -> go (simplify $ run $ r e <.> r (head fDummies)) vDummies (tail fDummies)
+          Just _ -> go (simplify $ run $ r e <.> r (head vDummies)) (tail vDummies) fDummies
+          Nothing -> simplify e
 
 
