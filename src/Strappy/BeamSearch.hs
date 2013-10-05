@@ -20,6 +20,7 @@ import Data.IORef
 import Data.Maybe
 import Data.List
 import Data.Function
+import Control.DeepSeq (deepseq)
 
 type Beam k a = MinQueue.MinQueue (k, a)
 
@@ -41,15 +42,19 @@ beamPlan :: PlanTask ->
             Int -> -- ^ length of the plan
 			IO (Map.Map Expr Double, Set.Set ([Expr], Double)) -- ^ Log rewards for each expression, programs hitting task
 beamPlan pt beamSize dist planLen = do
-    (logRewards, logZ, hits) <- bs [([], 0.0)] planLen
+    (logRewards, logZ, hits) <- bs [([], 0.0)] planLen Map.empty (log 0.0) Set.empty
     return (Map.map (\x -> x-logZ) logRewards, hits)
     where bs :: [([Expr], Double)] -> -- ^ Incoming plans to be extended
 				Int -> -- ^ Remaining plan length
+				Map.Map Expr Double -> -- ^ Old log rewards
+				Double -> -- ^ Old log Z
+				Set.Set ([Expr], Double) -> -- ^ Old hits
 				IO (Map.Map Expr Double, Double, Set.Set ([Expr], Double)) -- ^ Log rewards, log partition function, hits
-          bs _ 0 = return (Map.empty, 0.0, Set.empty)
-          bs partialPlans pLen = do
+          bs _ 0 rewards logZ hits = return (rewards, logZ, hits)
+          bs partialPlans pLen oldRewards oldLogZ oldHits = do
 		  	-- Obtain new plans
 		  	let newPlans = [ (e:p, eLL+pLL) | (p, pLL) <- partialPlans, (e, eLL) <- dist ]
+		  	putStrLn $ "# new plans:" ++ show (length newPlans)
 		  	-- Score those plans
 		  	scoredPlans <- mapM (\(p, pLL) -> ptLogLikelihood pt (foldr1 (<>) $ p++[ptSeed pt]) >>= \ll ->
 		  									  return (ll+pLL, (p, pLL))) newPlans
@@ -65,11 +70,12 @@ beamPlan pt beamSize dist planLen = do
 		  	let newBeam =
 		  		map snd $ MinQueue.toList $
 		  		foldl (\beam (planScore, plan) -> insertIntoBeam beamSize beam planScore plan) MinQueue.empty scoredPlans
+		  	-- Merge old with new
+		  	let newLogZ = logSumExp myLogZ oldLogZ
+		  	let newRewards = Map.unionWith logSumExp myRewards oldRewards
+		  	let newHits = Set.union oldHits myHits
 		  	-- Recurse
-		  	(laterRewards, laterZ, laterHits) <- bs newBeam (pLen-1)
-		  	return (Map.unionWith logSumExp laterRewards myRewards,
-		  			logSumExp laterZ myLogZ,
-		  			Set.union laterHits myHits)
+		  	bs newBeam (pLen-1) newRewards newLogZ newHits
 
 doEMBeam :: Maybe String -> -- ^ Filename to save logs to
             [PlanTask] -> -- ^ Tasks
@@ -102,7 +108,11 @@ doEMBeam maybeFname tasks lambda pseudocounts frontierSize beamSize planLen gram
       putStrLn $ show bestPlan ++ "\t\t" ++ show bestLL
       modifyIORef numHitRef (+1)
     when (verbose && (not anyHit)) $ putStrLn $ "Missed " ++ (ptName tsk)
-    return $ Map.unionWith logSumExp acc rewards
+    -- Hack to force Haskell to not use lazy evaluation
+    let newAcc = Map.unionWith logSumExp acc rewards
+    let strictHack = show newAcc ++ show hits
+    --putStrLn $ show $ Map.size acc
+    return $ strictHack `deepseq` newAcc
   
   numHit <- readIORef numHitRef
   putStrLn $ "Hit " ++ show numHit ++ "/" ++ show (length tasks) ++ " tasks."
