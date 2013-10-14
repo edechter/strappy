@@ -9,6 +9,7 @@ import Strappy.Library
 import Strappy.Config
 import Strappy.Utils
 import Strappy.EM
+import Strappy.BeamSearch
 
 import Physics.PhysicsCache
 import Physics.BlockClient
@@ -62,7 +63,7 @@ main = do
        then putStrLn $ "EM Planning Iteration: " ++ show step
        else putStrLn $ "EM Iteration: " ++ show step
     grammar' <- if planning
-                   then liftM fst $ doEMPlan (Just $ prefix ++ "/best_" ++ show step) [task]
+                   then liftM fst $ doEMBeam (Just $ prefix ++ "/best_" ++ show step) [task]
                                              (read lambda) (read pseudocounts) (read fSize) (read plansPerTask) (read maxPlanLen) grammar
                    else doEMIter (prefix ++ "/best_" ++ show step) (tList $ tPair tDouble tBool)
                                  (timeLimitedEval :: Expr -> Maybe [(Double, Bool)]) (replicate 10 emtask)

@@ -7,6 +7,7 @@ import Control.Monad.Trans
 import Control.Monad.Random
 import Control.Monad.Maybe
 import Debug.Trace
+import Data.Array.IO 
 
 flipCoin :: (Num a, Ord a, Random a, MonadRandom m) => a -> m Bool
 flipCoin p = do r <- getRandomR (0, 1)
@@ -84,10 +85,22 @@ safeFromJust :: String -> Maybe a -> a
 safeFromJust str Nothing = error str
 safeFromJust _ (Just x) = x
 
+-- | Substitutes one value in a list for another
+substituteInList :: Eq a => [a] -> a -> a -> [a]
+substituteInList [] _ _ = []
+substituteInList (x:xs) y z | x == y = z:xs
+substituteInList (x:xs) y z = x : substituteInList xs y z
+
 
 unwordsBy :: String -> [String] -> String
 unwordsBy sep [x] = x
 unwordsBy sep (x:xs) = x ++ sep ++ unwordsBy sep xs
+
+forceShowHack :: Show a => a -> IO ()
+forceShowHack x = do
+  let strVal = show x
+  a <- (newListArray (1::Int,length strVal) strVal) :: IO (IOUArray Int Char)
+  return ()
 
 instance (MonadRandom m) => MonadRandom (MaybeT m) where
   getRandom = lift getRandom

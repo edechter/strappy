@@ -121,9 +121,11 @@ timeLimitedEval expr = unsafePerformIO $
                            -- Convert the (eval expr) in to a string,
                            -- then force each character of the string by putting it in to an unboxed array
                            let val = eval expr
-                           let strVal = show val
+                           forceShowHack val
+                           --let strVal = show val
                            -- a <- (newListArray (1::Int,length strVal) strVal) :: IO (IOUArray Int Char)
-                           strVal `deepseq` return val
+                           -- strVal `deepseq` return val
+                           return val
 
 
 -- | Runs type inference on the given program, returning its type

@@ -13,6 +13,7 @@ import Strappy.Library
 import Strappy.Config
 
 import qualified Data.PQueue.Min as MinQueue
+import qualified Control.Monad.Parallel as Parallel
 import Control.Monad.List
 import qualified Data.Map as Map
 import qualified Data.Set as Set
@@ -25,10 +26,10 @@ import Control.DeepSeq (deepseq)
 type Beam k a = MinQueue.MinQueue (k, a)
 
 insertIntoBeam :: (Ord k, Ord a) =>
-				  Int -> -- ^ Beam size
-				  Beam k a -> -- ^ Beam
-				  k -> a -> -- ^ New thing
-				  Beam k a -- ^ New beam
+				          Int -> -- ^ Beam size
+				          Beam k a -> -- ^ Beam
+				          k -> a -> -- ^ New thing
+				          Beam k a -- ^ New beam
 insertIntoBeam bsize beam key val | MinQueue.size beam < bsize =
 	MinQueue.insert (key, val) beam
 insertIntoBeam _ beam key val =
@@ -37,10 +38,10 @@ insertIntoBeam _ beam key val =
 	else beam
 
 beamPlan :: PlanTask ->
-			Int -> -- ^ Beam size
-			[(Expr, Double)] -> -- ^ (Log) Distribution over expressions drawn from the grammar
+			      Int -> -- ^ Beam size
+			      [(Expr, Double)] -> -- ^ (Log) Distribution over expressions drawn from the grammar
             Int -> -- ^ length of the plan
-			IO (Map.Map Expr Double, Set.Set ([Expr], Double)) -- ^ Log rewards for each expression, programs hitting task
+			      IO (Map.Map Expr Double, Set.Set ([Expr], Double)) -- ^ Log rewards for each expression, programs hitting task
 beamPlan pt beamSize dist planLen = do
     (logRewards, logZ, hits) <- bs [([], 0.0)] planLen Map.empty (log 0.0) Set.empty
     return (Map.map (\x -> x-logZ) logRewards, hits)
@@ -54,10 +55,9 @@ beamPlan pt beamSize dist planLen = do
           bs partialPlans pLen oldRewards oldLogZ oldHits = do
 		  	-- Obtain new plans
 		  	let newPlans = [ (e:p, eLL+pLL) | (p, pLL) <- partialPlans, (e, eLL) <- dist ]
-		  	putStrLn $ "# new plans:" ++ show (length newPlans)
-		  	-- Score those plans
-		  	scoredPlans <- mapM (\(p, pLL) -> ptLogLikelihood pt (foldr1 (<>) $ p++[ptSeed pt]) >>= \ll ->
-		  									  return (ll+pLL, (p, pLL))) newPlans
+		  	-- Score those plans in parallel
+		  	scoredPlans <- {-Parallel.-} mapM (\(p, pLL) -> ptLogLikelihood pt (foldr1 (<>) $ p++[ptSeed pt]) >>= \ll ->
+		  									                           return (ll+pLL, (p, pLL))) newPlans
 		  	-- See if any of the plans hit the task
 		  	let myHits = Set.fromList [ (p, pLL) | (a, (p, pLL)) <- scoredPlans,
 		  											a-pLL > -0.1 ]
@@ -110,9 +110,8 @@ doEMBeam maybeFname tasks lambda pseudocounts frontierSize beamSize planLen gram
     when (verbose && (not anyHit)) $ putStrLn $ "Missed " ++ (ptName tsk)
     -- Hack to force Haskell to not use lazy evaluation
     let newAcc = Map.unionWith logSumExp acc rewards
-    let strictHack = show newAcc ++ show hits
-    --putStrLn $ show $ Map.size acc
-    return $ strictHack `deepseq` newAcc
+    forceShowHack newAcc
+    return newAcc
   
   numHit <- readIORef numHitRef
   putStrLn $ "Hit " ++ show numHit ++ "/" ++ show (length tasks) ++ " tasks."
