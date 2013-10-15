@@ -1,9 +1,20 @@
 
-module Strappy.UGM where
+--module Strappy.UGM where
+module Main where
 
+
+import Strappy.EM
+import Strappy.Type
+import Strappy.Expr
 import Strappy.Utils
+import Strappy.Library
 
-import qualified Data.Set as Set
+import Data.Maybe
+import qualified Data.Map as Map
+import Data.List
+import System.Environment
+import System.Random
+
 
 data Vertex = Visible Int | Latent Int
     deriving(Eq, Show)
@@ -100,10 +111,14 @@ ugmRename2Disjoint u1@(UGM vs1 es1) u2@(UGM vs2 es2) =
 
 -- | Test cases
 ugmLatentify :: UGM -> UGM
-ugmLatentify (UGM [Visible x] _) = UGM [Latent x] []
+ugmLatentify (UGM vs es) =
+    let l (Visible x) = Latent x
+        l x = x
+        e (UEdge v v') = mkUEdge (l v) (l v')
+    in UGM (map l vs) (map e es)
 
 ugmChain :: [UGM] -> UGM
-ugmChain = foldl ugmUnionHeadTail nullUGM
+ugmChain = foldl1 ugmUnionHeadTail
 
 ugmRing :: [UGM] -> UGM
 ugmRing vs = ugmUnionHeadTail (foldr1 ugmUnion vs) (ugmChain vs)
@@ -120,3 +135,70 @@ ugmMRF vss = ugmUnionCorrespondence (foldr1 ugmUnion $ concat vss) $
 
 isingRow start end = [ singletonUGM (Visible x) | x <- [start..end] ]
 isingWorld = [ isingRow (start*3-2) (start*3) | start <- [1..3] ]
+
+
+{-makeUGMTask :: Eq b, Show b =>
+               String -> -- ^ Name
+               Type -> -- ^ Desired type
+               [(a, b)] -> -- ^ Test cases
+               EMTask-}
+makeUGMTask nm tp tests =
+    EMTask { etName = nm,
+             etType = tp,
+             etLogLikelihood = \e -> 
+                let results = map (\(a, _) -> timeLimitedEval $ e <> (mkTerm undefined undefined a)) tests
+                in if all isJust results && map fromJust results == map snd tests
+                   then 0.0
+                   else log 0.0
+            }
+
+-- | Combinators for UGM
+tUGM = tGnd "UGM"
+cUnion = mkTerm "union" (tUGM ->- tUGM ->- tUGM) $ ugmUnion
+cUnionC = mkTerm "unionC" (tUGM ->- tUGM ->- tUGM) $ ugmUnionCorrespondence
+cUnionHT = mkTerm "unionHT" (tUGM ->- tUGM ->- tUGM) $ ugmUnionHeadTail
+cUnionD = mkTerm "unionD" (tUGM ->- tUGM ->- tUGM) $ ugmUnionDisjoint
+cLatentify = mkTerm "latentify" (tUGM ->- tUGM) $ ugmLatentify
+
+-- | Initial combinators
+ugmLib = [cI, 
+          cS, 
+          cB,
+          cC,
+--              cK,
+          cFoldl1,
+          cFoldr1,
+          cConcat,
+          cMap,
+          cUnion, cUnionC, cUnionD, cUnionHT, cLatentify ]
+
+-- | UGM tasks
+chainTask :: EMTask
+chainTask = makeUGMTask "chain" (tList tUGM ->- tUGM)
+            [(isingRow 1 3, ugmChain (isingRow 1 3)),
+             (isingRow 2 4, ugmChain (isingRow 2 4))]
+ringTask :: EMTask
+ringTask = makeUGMTask "ring" (tList tUGM ->- tUGM)
+            [(isingRow 1 3, ugmRing (isingRow 1 3)),
+             (isingRow 2 4, ugmRing (isingRow 2 4))]
+isingTask :: EMTask
+isingTask = makeUGMTask "ising" ((tList (tList tUGM)) ->- tUGM)
+            [(isingWorld, ugmIsing isingWorld)]
+hmmTask :: EMTask
+hmmTask = makeUGMTask "hmm" (tList tUGM ->- tUGM)
+            [(isingRow 1 3, ugmHMM (isingRow 1 3)),
+             (isingRow 2 4, ugmHMM (isingRow 2 4))]
+main = do
+  [rndSeed, lambda, pseudocounts, fSize, prefix] <- getArgs
+  setStdGen $ mkStdGen $ read rndSeed
+  -- Seed grammar
+  let seed = Grammar { grApp = log 0.35,
+                       grExprDistr = Map.fromList [ (annotateRequested e, 1.0) | e <- ugmLib ] }
+  let tasks = [ chainTask, ringTask, isingTask, hmmTask ]
+  loopM seed [0..14] $ \grammar step -> do
+    putStrLn $ "EM Iteration: " ++ show step
+    grammar' <- doEMIter (prefix++"/best_"++show step) tasks
+                         (read lambda) (read pseudocounts) (read fSize) grammar
+    saveGrammar (prefix++"/grammar_" ++ show step) grammar'
+    return grammar'
+  return ()

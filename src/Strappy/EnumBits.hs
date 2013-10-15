@@ -38,7 +38,7 @@ data ParseResult = ParseBlacklist | ParseFrontier
 getNextBitstring :: PrefixTree ParseResult -> [Bit] -> [Bit]
 getNextBitstring parses bits =
   let bits' = if all (==One) bits
-              then {-trace ("Enumerated up to length " ++ show (length bits)) $-} replicate (length bits + 1) Zero
+              then trace ("Enumerated up to length " ++ show (length bits)) $ replicate (length bits + 1) Zero
               else bitSucc bits
   in if isPrefixOfProgram parses bits'
      then getNextBitstring parses bits'

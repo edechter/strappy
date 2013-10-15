@@ -25,33 +25,32 @@ import Debug.Trace
 import System.CPUTime
 import System.Environment
 
-data EMTask a = EMTask { etName :: String,
-                         etLogLikelihood :: a -> Double,
-                         etType :: Type }
+data EMTask = EMTask { etName :: String,
+                       etLogLikelihood :: Expr -> Double,
+                       etType :: Type }
 
 -- | Performs one iteration of EM on multitask learning
 doEMIter :: String -- ^ Prefix for log output
-            -> Type
-            -> (Expr -> a) -- ^ Procedure for compiling expressions
-            -> [(a -> Double, String)] -- ^ Tasks (functions from compiled expressions to log likelihoods)
+            -> [EMTask] -- ^ Tasks (functions from compiled expressions to log likelihoods)
             -> Double -- ^ Lambda
             -> Double -- ^ pseudocounts
             -> Int -- ^ frontier size
             -> Grammar -- ^ Initial grammar
             -> IO Grammar -- ^ Improved grammar
-doEMIter prefix reqTp compile tasks lambda pseudocounts frontierSize grammar = do
+doEMIter prefix tasks lambda pseudocounts frontierSize grammar = do
     -- Sample frontiers
-  frontier <- (if sampleByEnumeration then sampleBitsM else sampleExprs) frontierSize grammar reqTp
+  let sampler = if sampleByEnumeration then sampleBitsM else sampleExprs
+  frontiers <- mapM (\tp -> sampler frontierSize grammar tp >>= return . (tp,)) $ nub (map etType tasks)
+  let lookupFrontier tp = fromJust $ lookup tp frontiers
   -- If we're sampling, the number of unique expressions is not given;
   -- display them.
   unless sampleByEnumeration $
-    putStrLn $ "Frontier size: " ++ show (Map.size frontier)
-  putStrLn $ "Frontier entropy: " ++ show (entropyLogDist (Map.elems frontier))
-  -- Compile each program
-  let compFrontier = Map.mapWithKey (\e w -> (compile e, w)) frontier
+    putStrLn $ "Frontier sizes: " ++ show (map (Map.size . snd) frontiers)
+  putStrLn $ "Frontier entropies: " ++ show (map (entropyLogDist . Map.elems . snd) frontiers)
   -- For each task, compute the P(t|e) terms
-  let rewardedFrontiers = flip map tasks $ \ (tsk, tskNm) ->
-        (tskNm, Map.mapWithKey (\expr (cExpr, w) -> (w, log $ tsk cExpr)) compFrontier)
+  let rewardedFrontiers = flip map tasks $ \ tsk ->
+        (etName tsk,
+          Map.mapWithKey (\expr w -> (w, etLogLikelihood tsk expr)) (lookupFrontier $ etType tsk))
   -- For each task, weight the corresponding frontier by P(e|g)
   let weightedFrontiers = flip map rewardedFrontiers $ Map.map (uncurry (+)) . snd
   -- Normalize frontiers
