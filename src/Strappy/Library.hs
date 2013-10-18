@@ -311,6 +311,8 @@ cRep = mkTerm "rep" (tInt ->- t ->- tList t) $
 cConcat = mkTerm "concat" (tList (tList t) ->- tList t) concat
 cFoldl = mkTerm "foldl" ((t ->- t1 ->- t) ->- t ->- tList t1 ->- t) $ 
          List.foldl'
+cFoldr = mkTerm "foldr" ((t1 ->- t2 ->- t2) ->- t2 ->- tList t1 ->- t2) $ 
+         List.foldr
 cFoldl1 = mkTerm "foldl1" ((t ->- t ->- t) ->- tList t ->- t) $ foldl1
 cFoldr1 = mkTerm "foldr1" ((t ->- t ->- t) ->- tList t ->- t) $ foldr1
 cInts =  [ cInt2Expr i | i <- [-10..10]]
