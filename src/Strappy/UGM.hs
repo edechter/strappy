@@ -177,7 +177,8 @@ ugmLib = [cI,
           cFoldr,
           cConcat,
           cMap,
-          cUnion, cUnionC, cUnionD, cUnionHT, {-cLatentify,-} cLatent, cNull ]
+          cSingle,
+          cUnion, cUnionC, cUnionD, cUnionHT, cLatentify, cLatent, cNull ]
 
 -- | UGM tasks
 chainTask :: EMTask

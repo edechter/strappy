@@ -225,6 +225,12 @@ inoutEstimateGrammar gr@Grammar{grExprDistr=distr, grApp = app} pseudocounts obs
                                     _ -> error "Should never occur: expr not in uses or possible uses") distr
 
 
+-- Removes new non-terminals and puts a uniform distribution over the productions
+blankLibrary :: Grammar -> Grammar
+blankLibrary (Grammar {grExprDistr = distr}) =
+  let leaves = filter isTerm $ Map.keys distr
+  in Grammar { grExprDistr = Map.fromList [ (l, 0.0) | l <- leaves ],
+               grApp = log 0.45}
 
 ---------------------------------------------------------------------      
 
