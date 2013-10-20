@@ -32,9 +32,9 @@ requestLocalConstruction :: [(Double, Double, Double)] ->
                             IO (Double, [Double])
 requestLocalConstruction [] str = return (log 0, replicate (length str) 0.0)
 requestLocalConstruction plan shoves = do
-  putStrLn $ "About to run simulator...\t" ++ show plan
+  --putStrLn $ "About to run simulator...\t" ++ show plan
   response <- readProcess "./simulator/console.py" [show plan ++ "|" ++ show shoves] ""
-  putStrLn $ show plan ++ "  -->  " ++ response
+  --putStrLn $ show plan ++ "  -->  " ++ response
   if head response /= '[' -- failure to build tower
     then return (log 0, replicate (length shoves) 0.0)
     else do let (ht:percentStable) = read response

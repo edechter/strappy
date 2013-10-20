@@ -8,12 +8,15 @@ import Strappy.Type
 import Strappy.Expr
 import Strappy.Utils
 import Strappy.Library
+import Strappy.BeamSearch
+import Strappy.Planner
 
 import Data.Maybe
 import qualified Data.Map as Map
 import Data.List
 import System.Environment
 import System.Random
+import Control.Monad
 
 
 data Vertex = Visible Int | Latent Int
@@ -211,16 +214,23 @@ latentCommonTask = makeUGMTask "latentCommon" (tList tUGM ->- tUGM)
                (isingRow 1 5, ugmLatentCommon (isingRow 1 5))]
 
 main = do
-  [rndSeed, lambda, pseudocounts, fSize, prefix] <- getArgs
+  [rndSeed, planOrEM, lambda, pseudocounts, fSize, beamSize, planLen, prefix] <- getArgs
   setStdGen $ mkStdGen $ read rndSeed
+  let planning = head planOrEM == 'p'
   -- Seed grammar
   let seed = Grammar { grApp = log 0.35,
                        grExprDistr = Map.fromList [ (annotateRequested e, 1.0) | e <- ugmLib ] }
   let tasks = [ independentTask, latentTask, latentCommonTask, chainTask, ringTask, isingTask, hmmTask ]
+  let planTasks = map convert2planTask tasks
   loopM seed [0..14] $ \grammar step -> do
-    putStrLn $ "EM Iteration: " ++ show step
-    grammar' <- doEMIter (prefix++"/best_"++show step) tasks
-                         (read lambda) (read pseudocounts) (read fSize) grammar
+    if planning
+       then putStrLn $ "EM Planning Iteration: " ++ show step
+       else putStrLn $ "EM Iteration: " ++ show step
+    grammar' <- if planning
+                then liftM fst $ doEMBeam Nothing planTasks (read lambda) (read pseudocounts)
+                                          (read fSize) (read beamSize) (read planLen) grammar
+                else doEMIter (prefix++"/best_"++show step) tasks
+                              (read lambda) (read pseudocounts) (read fSize) grammar
     saveGrammar (prefix++"/grammar_" ++ show step) grammar'
     return grammar'
   return ()

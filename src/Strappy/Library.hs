@@ -268,6 +268,13 @@ cFst = mkTerm "fst" (tPair t1 t2 ->- t1) fst
 cSnd :: Expr
 cSnd = mkTerm "snd" (tPair t1 t2 ->- t2) snd
 
+cOnFst :: Expr
+cOnFst = mkTerm "onFst" ((t1 ->- t2) ->- (tPair t1 t) ->- (tPair t2 t)) $
+         \f (a,b) -> (f a, b)
+cOnSnd :: Expr
+cOnSnd = mkTerm "onSnd" ((t1 ->- t2) ->- (tPair t t1) ->- (tPair t t2)) $
+         \f (a,b) -> (a, f b)
+
 -- | Integer arithmetic
 cPlus :: Expr
 cPlus = mkTerm "+" (tInt ->- tInt ->- tInt) $
@@ -323,6 +330,9 @@ cFoldl1 = mkTerm "foldl1" ((t ->- t ->- t) ->- tList t ->- t) $ foldl1
 cFoldr1 = mkTerm "foldr1" ((t ->- t ->- t) ->- tList t ->- t) $ foldr1
 cInts =  [ cInt2Expr i | i <- [-10..10]]
 cDoubles =  [ cDouble2Expr i | i <- [-10..10]]
+
+-- | Bools
+cNand = mkTerm "nand" (tBool ->- tBool ->- tBool) $ \ x y -> not (x && y)
 
 -- | A basic collection of expressions
 basicExprs :: [Expr]
@@ -380,7 +390,8 @@ towerExprs = [cI,
               cMap,
               cFoldl,
               cSingle,
-              cRep,
+              cOnFst, cOnSnd,
+              cNand,
               cPair, cFst, cSnd--,
 --              cHole
               ] ++ [ cDouble2Expr 0, cDouble2Expr 1, cDouble2Expr (-1) ]

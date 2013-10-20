@@ -11,6 +11,7 @@ import Strappy.Utils
 import Strappy.Library
 import Strappy.LPCompress
 import Strappy.Config
+import Strappy.EM
 
 
 import Control.Monad
@@ -30,6 +31,11 @@ data PlanTask = PlanTask { ptName :: String,
                            ptType :: Type, -- ^ Type of plan objects, such as lists of actions
                            ptSeed :: Expr     -- ^ Initial plan, such as an empty list, or the identity function
                          }
+
+convert2planTask :: EMTask -> PlanTask
+convert2planTask (EMTask { etName = nm, etLogLikelihood = ll, etType = tp}) =
+  PlanTask { ptName = nm, ptLogLikelihood = return . ll, ptType = tp,
+             ptSeed = error "convert2planTask: Seed undefined."}
 
 data PlanResult = PlanResult { prRewards :: Map.Map Expr Double, -- Log rewards
                                prUniqueProgs :: Set.Set Expr, -- Set of all programs encountered in this planning iteration

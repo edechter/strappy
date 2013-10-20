@@ -26,56 +26,64 @@ import Control.DeepSeq (deepseq)
 type Beam k a = MinQueue.MinQueue (k, a)
 
 insertIntoBeam :: (Ord k, Ord a) =>
-				          Int -> -- ^ Beam size
-				          Beam k a -> -- ^ Beam
-				          k -> a -> -- ^ New thing
-				          Beam k a -- ^ New beam
+                  Int -> -- ^ Beam size
+                  Beam k a -> -- ^ Beam
+                  k -> a -> -- ^ New thing
+                  Beam k a -- ^ New beam
 insertIntoBeam bsize beam key val | MinQueue.size beam < bsize =
-	MinQueue.insert (key, val) beam
+  MinQueue.insert (key, val) beam
 insertIntoBeam _ beam key val =
-	if key > fst (MinQueue.findMin beam) -- We're at least as important as least important member of beam
-	then MinQueue.insert (key, val) $ MinQueue.deleteMin beam
-	else beam
+  if key > fst (MinQueue.findMin beam) -- We're at least as important as least important member of beam
+  then MinQueue.insert (key, val) $ MinQueue.deleteMin beam
+  else beam
 
 beamPlan :: PlanTask ->
-			      Int -> -- ^ Beam size
-			      [(Expr, Double)] -> -- ^ (Log) Distribution over expressions drawn from the grammar
+            Int -> -- ^ Beam size
+            [(Expr, Double)] -> -- ^ (Log) Distribution over seed expressions drawn from the grammar
+            [(Expr, Double)] -> -- ^ (Log) Distribution over transition expressions drawn from the grammar
             Int -> -- ^ length of the plan
-			      IO (Map.Map Expr Double, Set.Set ([Expr], Double)) -- ^ Log rewards for each expression, programs hitting task
-beamPlan pt beamSize dist planLen = do
-    (logRewards, logZ, hits) <- bs [([], 0.0)] planLen Map.empty (log 0.0) Set.empty
+            IO (Map.Map Expr Double, Set.Set ([Expr], Double)) -- ^ Log rewards for each expression, programs hitting task
+beamPlan pt beamSize seedDist dist planLen = do
+    seedRewards <- forM seedDist $ \(e, pLL) -> ptLogLikelihood pt e >>=
+                                                \ll -> return (ll, (e, pLL))
+    let seedPlans = map snd $ MinQueue.toList $
+                    foldl (\beam (ll, (e, pLL)) -> insertIntoBeam beamSize beam (ll+pLL, pLL) ([e],pLL)) MinQueue.empty seedRewards
+    let seedRewards' = filter (not . isInvalidNum . fst) seedRewards
+    let seedRewards'' = Map.fromList $ map (\ (ll, (e, pLL)) -> (e, ll+pLL)) seedRewards'
+    let seedLogZ = logSumExpList $ map (snd . snd) seedRewards
+    let seedHits = Set.fromList [([e], pLL) | (ll, (e, pLL)) <- seedRewards, ll > -0.1 ]
+    (logRewards, logZ, hits) <- bs seedPlans planLen seedRewards'' seedLogZ seedHits
     return (Map.map (\x -> x-logZ) logRewards, hits)
     where bs :: [([Expr], Double)] -> -- ^ Incoming plans to be extended
-				Int -> -- ^ Remaining plan length
-				Map.Map Expr Double -> -- ^ Old log rewards
-				Double -> -- ^ Old log Z
-				Set.Set ([Expr], Double) -> -- ^ Old hits
-				IO (Map.Map Expr Double, Double, Set.Set ([Expr], Double)) -- ^ Log rewards, log partition function, hits
+                Int -> -- ^ Remaining plan length
+                Map.Map Expr Double -> -- ^ Old log rewards
+                Double -> -- ^ Old log Z
+                Set.Set ([Expr], Double) -> -- ^ Old hits
+                IO (Map.Map Expr Double, Double, Set.Set ([Expr], Double)) -- ^ Log rewards, log partition function, hits
           bs _ 0 rewards logZ hits = return (rewards, logZ, hits)
           bs partialPlans pLen oldRewards oldLogZ oldHits = do
-		  	-- Obtain new plans
-		  	let newPlans = [ (e:p, eLL+pLL) | (p, pLL) <- partialPlans, (e, eLL) <- dist ]
-		  	-- Score those plans in parallel
-		  	scoredPlans <- {-Parallel.-} mapM (\(p, pLL) -> ptLogLikelihood pt (foldr1 (<>) $ p++[ptSeed pt]) >>= \ll ->
-		  									                           return (ll+pLL, (p, pLL))) newPlans
-		  	-- See if any of the plans hit the task
-		  	let myHits = Set.fromList [ (p, pLL) | (a, (p, pLL)) <- scoredPlans,
-		  											a-pLL > -0.1 ]
-		  	-- Calculate contribution to log Z from these new plans
-		  	let myLogZ = logSumExpList $ map fst scoredPlans
-		  	-- Calculate contribution to rewards
-		  	let myRewards = Map.fromListWith logSumExp $
-		  					concatMap (\(logReward, (p, _)) -> map (,logReward) p) scoredPlans
-		  	-- Calculate new beam
-		  	let newBeam =
-		  		map snd $ MinQueue.toList $
-		  		foldl (\beam (planScore, plan) -> insertIntoBeam beamSize beam planScore plan) MinQueue.empty scoredPlans
-		  	-- Merge old with new
-		  	let newLogZ = logSumExp myLogZ oldLogZ
-		  	let newRewards = Map.unionWith logSumExp myRewards oldRewards
-		  	let newHits = Set.union oldHits myHits
-		  	-- Recurse
-		  	bs newBeam (pLen-1) newRewards newLogZ newHits
+            -- Obtain new plans
+            let newPlans = [ (e:p, eLL+pLL) | (p, pLL) <- partialPlans, (e, eLL) <- dist ]
+            -- Score those plans in parallel
+            scoredPlans <- {-Parallel.-} mapM (\(p, pLL) -> ptLogLikelihood pt (foldr1 (<>) p) >>= \ll ->
+                                                       return (ll+pLL, (p, pLL))) newPlans
+            -- See if any of the plans hit the task
+            let myHits = Set.fromList [ (p, pLL) | (a, (p, pLL)) <- scoredPlans,
+                                a-pLL > -0.1 ]
+            -- Calculate contribution to log Z from these new plans
+            let myLogZ = logSumExpList $ map fst scoredPlans
+            -- Calculate contribution to rewards
+            let myRewards = Map.fromListWith logSumExp $ filter (not . isInvalidNum . snd) $
+                    concatMap (\(logReward, (p, _)) -> map (,logReward) p) scoredPlans
+            -- Calculate new beam
+            let newBeam = map snd $ MinQueue.toList $
+                          foldl (\beam (planScore, plan@(p, pLL)) -> insertIntoBeam beamSize beam (planScore, pLL) plan) MinQueue.empty scoredPlans
+            -- Merge old with new
+            let newLogZ = logSumExp myLogZ oldLogZ
+            let newRewards = Map.unionWith logSumExp myRewards oldRewards
+            let newHits = Set.union oldHits myHits
+            -- Recurse
+            bs newBeam (pLen-1) newRewards newLogZ newHits
 
 doEMBeam :: Maybe String -> -- ^ Filename to save logs to
             [PlanTask] -> -- ^ Tasks
@@ -88,19 +96,25 @@ doEMBeam :: Maybe String -> -- ^ Filename to save logs to
             IO (Grammar, Int) -- ^ Improved grammar, # hit tasks
 doEMBeam maybeFname tasks lambda pseudocounts frontierSize beamSize planLen grammar = do
   -- For each type, sample a frontier of actions
-  frontiers <- mapM (\tp -> (if sampleByEnumeration then sampleBitsM else sampleExprs)
+  actionFrontiers <- mapM (\tp -> (if sampleByEnumeration then sampleBitsM else sampleExprs)
                             frontierSize grammar (tp ->- tp)
                             >>= return . (tp,) . Map.toList)
-               $ nub $ map ptType tasks
-  putStrLn $ "Frontier sizes: " ++ (unwords $ map (show . length . snd) frontiers)
+                     $ nub $ map ptType tasks
+  seedFrontiers <- mapM (\tp -> (if sampleByEnumeration then sampleBitsM else sampleExprs)
+                            frontierSize grammar tp
+                            >>= return . (tp,) . Map.toList)
+                   $ nub $ map ptType tasks
+  putStrLn $ "Action frontier sizes: " ++ (unwords $ map (show . length . snd) actionFrontiers)
+  putStrLn $ "Seed frontier sizes: " ++ (unwords $ map (show . length . snd) seedFrontiers)
   numHitRef <- newIORef 0
   numPartialRef <- newIORef 0
   
   -- Each task records all of the programs used in successful plans, as well as the associated rewards
   -- These are normalized to get a distribution over plans, which gives weights for the MDL's of the programs
   aggregateRewards <- loopM Map.empty tasks $ \acc tsk -> do
-    let frontier = snd $ fromJust $ find ((==(ptType tsk)) . fst) frontiers
-    (rewards, hits) <- beamPlan tsk beamSize frontier planLen
+    let actionFrontier = snd $ fromJust $ find ((==(ptType tsk)) . fst) actionFrontiers
+    let seedFrontier = snd $ fromJust $ find ((==(ptType tsk)) . fst) seedFrontiers
+    (rewards, hits) <- beamPlan tsk beamSize seedFrontier actionFrontier planLen
     let anyHit = not (Set.null hits)
     when anyHit $ do
       when verbose $ putStrLn $ "Hit " ++ (ptName tsk)
