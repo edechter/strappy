@@ -322,6 +322,7 @@ cSingle = mkTerm "single" (t ->- tList t) $
 cRep = mkTerm "rep" (tInt ->- t ->- tList t) $
        replicate
 cConcat = mkTerm "concat" (tList (tList t) ->- tList t) concat
+cReverse = mkTerm "reverse" (tList t ->- tList t) reverse
 cFoldl = mkTerm "foldl" ((t ->- t1 ->- t) ->- t ->- tList t1 ->- t) $ 
          List.foldl'
 cFoldr = mkTerm "foldr" ((t1 ->- t2 ->- t2) ->- t2 ->- tList t1 ->- t2) $ 
@@ -380,7 +381,8 @@ towerExprs :: [Expr]
 towerExprs = [cI, 
               cS, 
               cB, 
-              cC, 
+              cC,
+              cK,
               cFPlus,
               cFMinus,
               cFTimes,
@@ -388,7 +390,7 @@ towerExprs = [cI,
               cCons,
               cAppend,
               cMap,
-              cFoldl,
+              cReverse,
               cSingle,
               cOnFst, cOnSnd,
               cNand,

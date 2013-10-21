@@ -66,6 +66,49 @@ line spaces precede the abstract. The abstract must be limited to one
 paragraph.
 \end{abstract}
 
+\section{Introduction}
+
+Motivation: Many approaches to constructive machine learning use structured representations, such as graphs, grammars, Horn clauses, relations, ..., ???. All of these may be thought of as a program - programs are at least as expressive as these other representations.
+
+% TODO: Sequential EC? SEC? What is a good name for this?
+The space of programs is enormous and inherently unpredictable \cite{PACunpredictability}.
+We introduce a new algorithm, SEC, for searching the space of programs.
+Two main ideas underly SEC:
+\begin{itemize}
+\item \emph{Learning to search}: Programs admit compositionality and reuse of subprograms. SEC exploits this compositionality to learn a library of program fragments, which it then reuses when performing further searches for programs.
+In a multitask setting, this permits bootstrap learning of more complicated programs after the synthesis of simpler programs.
+\item \emph{Incremental Program Synthesis}: In many search problems, there is a natural means of assigning partial credit for partially-correct solutions. SEC uses this partial credit to select promising programs and modify them, creating complicated programs step-by-step.
+Rather than using a mutation operator, as in genetic programming, or Metropolis-Hastings proposals, as in \cite{MHprogramInduction}, SEC uses function composition to combine smaller programs in to larger ones.
+\end{itemize}
+
+The SEC algorithm comes from a generative model over compositions of functions drawn from a stochastic grammar over programs.
+We describe this model, as well as how we perform inference, in ...
+
+SEC treats planning as an inference problem.
+
+\section{The SEC Algorithm}
+\subsection{Generative Model}
+\subsection{Inference}
+\subsection{Program Representation}
+
+\section{Application to Structure Learning}
+
+\subsection{Graph Combinators}
+
+\subsection{Learning Graphical Models}
+
+\section{Building Towers in Blocks World}
+
+\subsection{The Blocks World Domain}
+
+\subsection{Learned Tower programs}
+
+\section{Discussion}
+
+\subsection{Relation to Prior Work}
+
+\subsection{Limitations of SEC}
+
 \section{Submission of papers to NIPS 2013}
 
 NIPS requires electronic submissions.  The electronic submission site is  
