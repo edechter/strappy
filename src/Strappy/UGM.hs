@@ -160,14 +160,26 @@ ugmEC = foldl1 ugmUnion .
 isingRow start end = [ singletonUGM (Visible x) | x <- [start..end] ]
 isingWorld len = [ isingRow (start*len-len+1) (start*len) | start <- [1..len] ]
 
+partialCredit :: UGM -> UGM -> Double
+partialCredit (UGM vs es) (UGM vs' es') =
+  let vs1 = sort vs
+      vs2 = sort vs'
+      es1 = sort es
+      es2 = sort es'
+  in if vs1 == vs2
+     then if es1 == es2
+          then 1.0
+          else 0.5
+      else 0.0
+
 makeUGMTask nm tp tests =
     EMTask { etName = nm,
              etType = tp,
              etLogLikelihood = \e -> 
                 let results = map (\(a, _) -> timeLimitedEval $ e <> (mkTerm undefined undefined a)) tests
                 in if all isJust results
-                   then let numHits = length $ filter (\(Just x, (_,y)) -> x == y) $ zip results tests
-                            fractionHit = fromIntegral numHits / genericLength tests
+                   then let numPoints = foldl (\acc (Just x, (_, y)) -> acc + partialCredit x y) 0.0 $ zip results tests
+                            fractionHit = numPoints / genericLength tests
                         in 5.0 * log fractionHit
                    else log 0.0
             }
@@ -252,7 +264,8 @@ ecTask = makeUGMTask "EC" (tList tUGM ->- tUGM)
                (isingRow 1 5, ugmEC (isingRow 1 5))]
 
 main = do
-  [rndSeed, planOrEM, lambda, pseudocounts, fSize, beamSize, planLen, prefix] <- getArgs
+  args@[rndSeed, planOrEM, lambda, pseudocounts, fSize, beamSize, planLen, prefix] <- getArgs
+  putStrLn $ "UGM run with: " ++ unwords args
   setStdGen $ mkStdGen $ read rndSeed
   let planning = head planOrEM == 'p'
   -- Seed grammar

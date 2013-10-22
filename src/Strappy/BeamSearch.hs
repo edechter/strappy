@@ -51,7 +51,7 @@ beamPlan pt beamSize seedDist dist planLen = do
     let seedRewards' = filter (not . isInvalidNum . fst) seedRewards
     let seedRewards'' = Map.fromList $ map (\ (ll, (e, pLL)) -> (e, ll+pLL)) seedRewards'
     let seedLogZ = logSumExpList $ map (\ (ll, (_, pLL)) -> ll + pLL) seedRewards
-    let seedHits = Set.fromList [([e], pLL) | (ll, (e, pLL)) <- seedRewards, ll > -0.1 ]
+    let seedHits = Set.fromList [([e], pLL+ll) | (ll, (e, pLL)) <- seedRewards, ll > -0.1 ]
     (logRewards, logZ, hits) <- bs seedPlans planLen seedRewards'' seedLogZ seedHits
     return (Map.map (\x -> x-logZ) logRewards, hits)
     where bs :: [([Expr], Double)] -> -- ^ Incoming plans to be extended
@@ -68,7 +68,7 @@ beamPlan pt beamSize seedDist dist planLen = do
             scoredPlans <- {-Parallel.-} mapM (\(p, pLL) -> ptLogLikelihood pt (foldr1 (<>) p) >>= \ll ->
                                                        return (ll+pLL, (p, pLL))) newPlans
             -- See if any of the plans hit the task
-            let myHits = Set.fromList [ (p, pLL) | (a, (p, pLL)) <- scoredPlans,
+            let myHits = Set.fromList [ (p, a) | (a, (p, pLL)) <- scoredPlans,
                                 a-pLL > -0.1 ]
             -- Calculate contribution to log Z from these new plans
             let myLogZ = logSumExpList $ map fst scoredPlans
@@ -82,6 +82,10 @@ beamPlan pt beamSize seedDist dist planLen = do
             let newLogZ = logSumExp myLogZ oldLogZ
             let newRewards = Map.unionWith logSumExp myRewards oldRewards
             let newHits = Set.union oldHits myHits
+            -- A (possibly futile) attempt to reduce memory consumption
+            --forceShowHack newRewards
+            --forceShowHack newLogZ
+            --forceShowHack newHits
             -- Recurse
             bs newBeam (pLen-1) newRewards newLogZ newHits
 
@@ -121,7 +125,11 @@ doEMBeam maybeFname tasks lambda pseudocounts frontierSize beamSize planLen gram
       let (bestPlan, bestLL) = maximumBy (compare `on` snd) (Set.toList hits)
       putStrLn $ show bestPlan ++ "\t\t" ++ show bestLL
       modifyIORef numHitRef (+1)
-    when (verbose && (not anyHit)) $ putStrLn $ "Missed " ++ (ptName tsk)
+    when (verbose && (not anyHit)) $ do
+      if Map.null rewards
+      then putStrLn $ "Missed " ++ (ptName tsk)
+      else do putStrLn $ "Got partial credit for " ++ (ptName tsk)
+              putStrLn $ show $ fst $ maximumBy (compare `on` snd) $ Map.toList rewards
     -- Hack to force Haskell to not use lazy evaluation
     let newAcc = Map.unionWith logSumExp acc rewards
     forceShowHack newAcc
