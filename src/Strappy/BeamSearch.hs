@@ -50,7 +50,7 @@ beamPlan pt beamSize seedDist dist planLen = do
                     foldl (\beam (ll, (e, pLL)) -> insertIntoBeam beamSize beam (ll+pLL, pLL) ([e],pLL)) MinQueue.empty seedRewards
     let seedRewards' = filter (not . isInvalidNum . fst) seedRewards
     let seedRewards'' = Map.fromList $ map (\ (ll, (e, pLL)) -> (e, ll+pLL)) seedRewards'
-    let seedLogZ = logSumExpList $ map (snd . snd) seedRewards
+    let seedLogZ = logSumExpList $ map (\ (ll, (_, pLL)) -> ll + pLL) seedRewards
     let seedHits = Set.fromList [([e], pLL) | (ll, (e, pLL)) <- seedRewards, ll > -0.1 ]
     (logRewards, logZ, hits) <- bs seedPlans planLen seedRewards'' seedLogZ seedHits
     return (Map.map (\x -> x-logZ) logRewards, hits)
@@ -77,7 +77,7 @@ beamPlan pt beamSize seedDist dist planLen = do
                     concatMap (\(logReward, (p, _)) -> map (,logReward) p) scoredPlans
             -- Calculate new beam
             let newBeam = map snd $ MinQueue.toList $
-                          foldl (\beam (planScore, plan@(p, pLL)) -> insertIntoBeam beamSize beam (planScore, pLL) plan) MinQueue.empty scoredPlans
+                          foldl (\beam (planScore, plan@(_, pLL)) -> insertIntoBeam beamSize beam (planScore, pLL) plan) MinQueue.empty scoredPlans
             -- Merge old with new
             let newLogZ = logSumExp myLogZ oldLogZ
             let newRewards = Map.unionWith logSumExp myRewards oldRewards

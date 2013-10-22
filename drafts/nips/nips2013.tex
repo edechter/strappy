@@ -6,7 +6,7 @@
 %\documentstyle[nips13submit_09,times,art10]{article} % For LaTeX 2.09
 
 
-\title{Learning Programs through Bayesian Inference and Planning}
+\title{Incremental Construction of Programs in a Multitask Setting}
 
 \begin{comment}
 \author{
@@ -68,11 +68,10 @@ paragraph.
 
 \section{Introduction}
 
-Motivation: Many approaches to constructive machine learning use structured representations, such as graphs, grammars, Horn clauses, relations, ..., ???. All of these may be thought of as a program - programs are at least as expressive as these other representations.
+Motivation: Many approaches to constructive machine learning use structured representations, such as graphs, grammars, Horn clauses. All of these may be thought of as a program - programs are at least as expressive as these other representations.
 
-% TODO: Sequential EC? SEC? What is a good name for this?
 The space of programs is enormous and inherently unpredictable \cite{PACunpredictability}.
-We introduce a new algorithm, SEC, for searching the space of programs.
+We introduce a new algorithm, SEC, (TODO: Sequential EC? SEC? What is a good name for this?) for searching the space of programs.
 Two main ideas underly SEC:
 \begin{itemize}
 \item \emph{Learning to search}: Programs admit compositionality and reuse of subprograms. SEC exploits this compositionality to learn a library of program fragments, which it then reuses when performing further searches for programs.
@@ -81,33 +80,62 @@ In a multitask setting, this permits bootstrap learning of more complicated prog
 Rather than using a mutation operator, as in genetic programming, or Metropolis-Hastings proposals, as in \cite{MHprogramInduction}, SEC uses function composition to combine smaller programs in to larger ones.
 \end{itemize}
 
-The SEC algorithm comes from a generative model over compositions of functions drawn from a stochastic grammar over programs.
-We describe this model, as well as how we perform inference, in ...
+Applications: graphical model structure, towers
 
-SEC treats planning as an inference problem.
+The SEC algorithm is motivated by a generative model over compositions of functions drawn from a stochastic grammar over programs.
+
+SEC treats inference as a planning problem
 
 \section{The SEC Algorithm}
 \subsection{Generative Model}
+Write down the generative model. Connect to EC and Percy Liang's work. Discuss ``programs as plans.''
 \subsection{Inference}
+Write down EM updates. Interpret them as a form of compression solved via a weighted Neville-Manning variant.
+
+Discuss bootstrap learning: the right curriculum allows us to build more complicated programs.
+Make some analogy involving how humans learn to paint, write poetry, bake, compose music, play with blocks, or design statistical models.
+
 \subsection{Program Representation}
+Discuss combinatory logic and the adaptor-grammar-esque distribution we use.
 
 \section{Application to Structure Learning}
+Learning the structure of graphical models is a difficult problem - not only for machines, but also for humans, where expert knowledge is often required.
+In practice, the sorts of graphical models that humans design, such as Hidden Markov Models, phylogenetic trees, topic models, and Ising models, exhibit certain symmetries and recursive structures that are amenable to synthesis by programs.
+Could an algorithm, such as SEC, automatically learn these structures?
 
 \subsection{Graph Combinators}
 
+Diagrams illustrating the graph combinators. An example program that makes an Ising model.
+
 \subsection{Learning Graphical Models}
+
+Show the actual results for our test cases: ``density estimation of the space of interesting graphical models.''
+In future work, could be used as high-level moves in the search for a good structure.
+Connect to, eg, Charles Kemp's work.
 
 \section{Building Towers in Blocks World}
 
+How could an agent, endowed with little prior knowledge, learn to build tall, robust towers out of toy blocks?
+Although the space of possible towers is large enough to make exhaustive search intractible, the useful towers lie within a much smaller space.
+Most useful towers use compositions of stereotyped structures, such as arches.
+
 \subsection{The Blocks World Domain}
 
+Tower representation, objective function
+
 \subsection{Learned Tower programs}
+
+Picture of tower. Grammar that produced that tower. Note lack of abstraction in grammar; speculate as to reasons.
 
 \section{Discussion}
 
 \subsection{Relation to Prior Work}
 
+MH sampling of programs, ILP, Kitzelman, graph grammars
+
 \subsection{Limitations of SEC}
+
+Does not look at data. Does everything top-down. Blind to the utility of trying one program versus another (no active learning)
 
 \section{Submission of papers to NIPS 2013}
 
