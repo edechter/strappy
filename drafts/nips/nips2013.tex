@@ -3,6 +3,9 @@
 \usepackage{hyperref}
 \usepackage{url}
 \usepackage{verbatim}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{listings}
 %\documentstyle[nips13submit_09,times,art10]{article} % For LaTeX 2.09
 
 
@@ -59,14 +62,80 @@ Address \\
 \maketitle
 
 \begin{abstract}
-The abstract paragraph should be indented 1/2~inch (3~picas) on both left and
-right-hand margins. Use 10~point type, with a vertical spacing of 11~points.
-The word \textbf{Abstract} must be centered, bold, and in point size 12. Two
-line spaces precede the abstract. The abstract must be limited to one
-paragraph.
+How can machine learning techniques be used to solve problems whose solutions are best represented as computer programs? For example, suppose a researcher wants to design a probabilistic graphical model for a novel domain. On the one hand, designing a good model requires a great deal of domain-specific knowledge and expertise, which may be hard to come by. On the other hand, searching the space of probabilistic models automatically is notoriously difficult. However, when researchers do set out to design graphical models, they draw on abstractions such as trees, chains, grids and plates to constrain and direct the kinds of models they produce. Thus, if we want to produce machine learning tools that aid in this task, we want tools that can learn these kinds of relevant abstractions. One natural way to think of these abstractions is as programs that take sets of random variables and produce graphical models that relate them. In this work, we describe the SEC algorithm, which attempts to learn distributions over such programs by incrementally finding program components that commonly help solve problems in a given domain. We discuss the behavior of the SEC algorithm for the task of graphical model structure learning. We also describe SEC's behavior on the dissimilar problem of automatically constructing tall and physically stable towers of blocks. 
 \end{abstract}
 
 \section{Introduction}
+
+The vast majority of research in machine learning is focused on utilizing large amounts of noisy data living in high-dimensional, real-valued vector spaces. Such research has been immensely successful, and this has enabled automatic and accurate modelling on a scale that was previously infeasible. However, when we want to build a car, draw a painting, or design the machine learning models to which we apply our new algorithms and techniques, we face problems that current machine learning tools are unable to handle. The highly structured objects that humans produce seems to require a different representation than the ones which machine learning algorithms have most successfully employed. 
+
+To address this problem, many structured representations have been proposed in the machine learning and AI literatures: learning over graphs \cite{}, grammars\cite{}, Horn clauses\cite{}, relations{}, etc., has been investigated. These are representations that attempt to bridge the gap between the tractablity of learning and reasoning in smooth continuous spaces and the expressivity of general purpose programming languages. 
+
+However, many of the most natural representations of structured domains are best described as programs, are difficult to fit into more restrictive representations.  To take an example directly from the machine learning literature, consider the plate notation~\cite{DBLP:journals/jair/Buntine94} commonly used to describe graphical models over collections of variables. A typical example is shown in Figure~\ref{fig:lda_plate}~\cite{DBLP:journals/jmlr/BleiNJ03}. The goal of plate notation is precisely to express the notion of a ``for loop'' within the graphical model representation. The reason this is a convenient tool is that researchs onceptualize their models as generative programs, not graphs; see the equivalent of the LDA graphical model in the pseudo-code in Figure~\ref{fig:lda_code}. In fact, the field of probabilistic programming, which has gained recent popularity, is spurred on by exactly the motivation that our models are most naturally expressed as programs. 
+
+In this paper, we describe our approach to learning over structured representations as a search over the space of programs in a functional programming language. We characterize learning in this space as incrementally developing a weighted library of program abstractions, i.e. a collection of subroutines, that are commonly used to solve problems in a given domain. The SEC algorithm (for Sequential Exploration-Compression), which we present here, takes a set of related tasks and produces a distribution over programs that solve those tasks; as it refines this distribution, SEC is able to search the space of programs more efficiently and solve more tasks. 
+
+We will present here two domains of interest. First, continuing with the example above, we will describe how SEC can learn to efficiently explore the space of relevant graphical models for a given problem. Second, we will examine SEC's performance on a completely different type of task, in which we want to an algorithm to build tall and physically stable block towers. 
+
+\lstset{
+	basicstyle=\scriptsize\ttfamily,
+    commentstyle=\color{white!40!black},
+    escapechar=+,
+    escapebegin=\color{white!40!black},
+    escapeend={},
+    keywordstyle=\bfseries\color{Periwinkle},
+    numbers=left,
+    numberstyle=\sffamily\tiny\color{gray},
+}
+
+
+\begin{figure}[h]
+\centering
+\begin{subfigure}{.5\textwidth}
+  \centering
+\includegraphics[width=.7\linewidth]{./figures/lda_plate_blei.pdf}
+  \caption{An example of a typical plate notation use. \label{fig:lda_plate}}
+
+\end{subfigure}%
+\begin{subfigure}{.4\textwidth}
+	\begin{lstlisting}[frame=single, numbers=none, xleftmargin=0pt]
+	for +$k$+ = 1:NumTopics
+	  +$\beta$+[k] +$\sim$+ Dirichlet(+$\eta$+)
+	for m = 1:NumDocuments
+	  +$\theta$+[m] +$\sim$+ Dirichlet(+$\alpha$+) 
+	  for n = 1:NumWords 
+	    z +$\sim$+ Categorical(+$\theta$+[m])
+	   w +$\sim$+ Categorical(+$\beta$+[z])
+	\end{lstlisting}
+  \caption{The same model as a program.}
+  \label{fig:lda_code}
+\end{subfigure}
+\caption{The popular Latent Dirichlet Allocation model in two forms.}
+\label{fig:lda}
+\end{figure}
+
+% \begin{figure}[h]
+% \begin{center}
+
+% \end{center}
+% \caption{A typical example of a graphical model in plate notation. }
+% \end{figure}
+
+% \begin{figure}[h]
+% \begin{verbatim}
+
+% for k = 1:NumTopics
+% 	beta[k]  ~ Dirichlet(eta)
+% for m = 1:NumDocuments
+% 	theta[m] ~ Dirichlet(alpha) 
+% 	for n = 1:NumWords
+% 		z ~ Categorical(theta[m])
+% 		w[n, m] ~ Categorical(beta[z])
+
+% \end{verbatim}
+% \end{figure}
+
+Here, we present an approach to learning 
 
 Motivation: Many approaches to constructive machine learning use structured representations, such as graphs, grammars, Horn clauses, relations, ..., ???. All of these may be thought of as a program - programs are at least as expressive as these other representations.
 
@@ -319,181 +388,184 @@ either in black/white or in color.
 \caption{Sample figure caption.}
 \end{figure}
 
-\subsection{Tables}
+% \subsection{Tables}
 
-All tables must be centered, neat, clean and legible. Do not use hand-drawn
-tables. The table number and title always appear before the table. See
-Table~\ref{sample-table}.
+% All tables must be centered, neat, clean and legible. Do not use hand-drawn
+% tables. The table number and title always appear before the table. See
+% Table~\ref{sample-table}.
 
-Place one line space before the table title, one line space after the table
-title, and one line space after the table. The table title must be lower case
-(except for first word and proper nouns); tables are numbered consecutively.
+% Place one line space before the table title, one line space after the table
+% title, and one line space after the table. The table title must be lower case
+% (except for first word and proper nouns); tables are numbered consecutively.
 
-\begin{table}[t]
-\caption{Sample table title}
-\label{sample-table}
-\begin{center}
-\begin{tabular}{ll}
-\multicolumn{1}{c}{\bf PART}  &\multicolumn{1}{c}{\bf DESCRIPTION}
-\\ \hline \\
-Dendrite         &Input terminal \\
-Axon             &Output terminal \\
-Soma             &Cell body (contains cell nucleus) \\
-\end{tabular}
-\end{center}
-\end{table}
+% \begin{table}[t]
+% \caption{Sample table title}
+% \label{sample-table}
+% \begin{center}
+% \begin{tabular}{ll}
+% \multicolumn{1}{c}{\bf PART}  &\multicolumn{1}{c}{\bf DESCRIPTION}
+% \\ \hline \\
+% Dendrite         &Input terminal \\
+% Axon             &Output terminal \\
+% Soma             &Cell body (contains cell nucleus) \\
+% \end{tabular}
+% \end{center}
+% \end{table}
 
-\section{Final instructions}
-Do not change any aspects of the formatting parameters in the style files.
-In particular, do not modify the width or length of the rectangle the text
-should fit into, and do not change font sizes (except perhaps in the
-\textbf{References} section; see below). Please note that pages should be
-numbered.
+% \section{Final instructions}
+% Do not change any aspects of the formatting parameters in the style files.
+% In particular, do not modify the width or length of the rectangle the text
+% should fit into, and do not change font sizes (except perhaps in the
+% \textbf{References} section; see below). Please note that pages should be
+% numbered.
 
-\section{Preparing PostScript or PDF files}
+% \section{Preparing PostScript or PDF files}
 
-Please prepare PostScript or PDF files with paper size ``US Letter'', and
-not, for example, ``A4''. The -t
-letter option on dvips will produce US Letter files.
+% Please prepare PostScript or PDF files with paper size ``US Letter'', and
+% not, for example, ``A4''. The -t
+% letter option on dvips will produce US Letter files.
 
-Fonts were the main cause of problems in the past years. Your PDF file must
-only contain Type 1 or Embedded TrueType fonts. Here are a few instructions
-to achieve this.
+% Fonts were the main cause of problems in the past years. Your PDF file must
+% only contain Type 1 or Embedded TrueType fonts. Here are a few instructions
+% to achieve this.
 
-\begin{itemize}
+% \begin{itemize}
 
-\item You can check which fonts a PDF files uses.  In Acrobat Reader,
-select the menu Files$>$Document Properties$>$Fonts and select Show All Fonts. You can
-also use the program \verb+pdffonts+ which comes with \verb+xpdf+ and is
-available out-of-the-box on most Linux machines.
+% \item You can check which fonts a PDF files uses.  In Acrobat Reader,
+% select the menu Files$>$Document Properties$>$Fonts and select Show All Fonts. You can
+% also use the program \verb+pdffonts+ which comes with \verb+xpdf+ and is
+% available out-of-the-box on most Linux machines.
 
-\item The IEEE has recommendations for generating PDF files whose fonts
-are also acceptable for NIPS. Please see
-\url{http://www.emfield.org/icuwb2010/downloads/IEEE-PDF-SpecV32.pdf}
+% \item The IEEE has recommendations for generating PDF files whose fonts
+% are also acceptable for NIPS. Please see
+% \url{http://www.emfield.org/icuwb2010/downloads/IEEE-PDF-SpecV32.pdf}
 
-\item LaTeX users:
+% \item LaTeX users:
 
-\begin{itemize}
+% \begin{itemize}
 
-\item Consider directly generating PDF files using \verb+pdflatex+
-(especially if you are a MiKTeX user). 
-PDF figures must be substituted for EPS figures, however.
+% \item Consider directly generating PDF files using \verb+pdflatex+
+% (especially if you are a MiKTeX user). 
+% PDF figures must be substituted for EPS figures, however.
 
-\item Otherwise, please generate your PostScript and PDF files with the following commands:
-\begin{verbatim} 
-dvips mypaper.dvi -t letter -Ppdf -G0 -o mypaper.ps
-ps2pdf mypaper.ps mypaper.pdf
-\end{verbatim}
+% \item Otherwise, please generate your PostScript and PDF files with the following commands:
+% \begin{verbatim} 
+% dvips mypaper.dvi -t letter -Ppdf -G0 -o mypaper.ps
+% ps2pdf mypaper.ps mypaper.pdf
+% \end{verbatim}
 
-Check that the PDF files only contains Type 1 fonts. 
-%For the final version, please send us both the Postscript file and
-%the PDF file. 
+% Check that the PDF files only contains Type 1 fonts. 
+% %For the final version, please send us both the Postscript file and
+% %the PDF file. 
 
-\item xfig "patterned" shapes are implemented with 
-bitmap fonts.  Use "solid" shapes instead. 
-\item The \verb+\bbold+ package almost always uses bitmap
-fonts.  You can try the equivalent AMS Fonts with command
-\begin{verbatim}
-\usepackage[psamsfonts]{amssymb}
-\end{verbatim}
- or use the following workaround for reals, natural and complex: 
-\begin{verbatim}
-\newcommand{\RR}{I\!\!R} %real numbers
-\newcommand{\Nat}{I\!\!N} %natural numbers 
-\newcommand{\CC}{I\!\!\!\!C} %complex numbers
-\end{verbatim}
+% \item xfig "patterned" shapes are implemented with 
+% bitmap fonts.  Use "solid" shapes instead. 
+% \item The \verb+\bbold+ package almost always uses bitmap
+% fonts.  You can try the equivalent AMS Fonts with command
+% \begin{verbatim}
+% \usepackage[psamsfonts]{amssymb}
+% \end{verbatim}
+%  or use the following workaround for reals, natural and complex: 
+% \begin{verbatim}
+% \newcommand{\RR}{I\!\!R} %real numbers
+% \newcommand{\Nat}{I\!\!N} %natural numbers 
+% \newcommand{\CC}{I\!\!\!\!C} %complex numbers
+% \end{verbatim}
 
-\item Sometimes the problematic fonts are used in figures
-included in LaTeX files. The ghostscript program \verb+eps2eps+ is the simplest
-way to clean such figures. For black and white figures, slightly better
-results can be achieved with program \verb+potrace+.
-\end{itemize}
-\item MSWord and Windows users (via PDF file):
-\begin{itemize}
-\item Install the Microsoft Save as PDF Office 2007 Add-in from
-\url{http://www.microsoft.com/downloads/details.aspx?displaylang=en\&familyid=4d951911-3e7e-4ae6-b059-a2e79ed87041}
-\item Select ``Save or Publish to PDF'' from the Office or File menu
-\end{itemize}
-\item MSWord and Mac OS X users (via PDF file):
-\begin{itemize}
-\item From the print menu, click the PDF drop-down box, and select ``Save
-as PDF...''
-\end{itemize}
-\item MSWord and Windows users (via PS file):
-\begin{itemize}
-\item To create a new printer
-on your computer, install the AdobePS printer driver and the Adobe Distiller PPD file from
-\url{http://www.adobe.com/support/downloads/detail.jsp?ftpID=204} {\it Note:} You must reboot your PC after installing the
-AdobePS driver for it to take effect.
-\item To produce the ps file, select ``Print'' from the MS app, choose
-the installed AdobePS printer, click on ``Properties'', click on ``Advanced.''
-\item Set ``TrueType Font'' to be ``Download as Softfont''
-\item Open the ``PostScript Options'' folder
-\item Select ``PostScript Output Option'' to be ``Optimize for Portability''
-\item Select ``TrueType Font Download Option'' to be ``Outline''
-\item Select ``Send PostScript Error Handler'' to be ``No''
-\item Click ``OK'' three times, print your file.
-\item Now, use Adobe Acrobat Distiller or ps2pdf to create a PDF file from
-the PS file. In Acrobat, check the option ``Embed all fonts'' if
-applicable.
-\end{itemize}
+% \item Sometimes the problematic fonts are used in figures
+% included in LaTeX files. The ghostscript program \verb+eps2eps+ is the simplest
+% way to clean such figures. For black and white figures, slightly better
+% results can be achieved with program \verb+potrace+.
+% \end{itemize}
+% \item MSWord and Windows users (via PDF file):
+% \begin{itemize}
+% \item Install the Microsoft Save as PDF Office 2007 Add-in from
+% \url{http://www.microsoft.com/downloads/details.aspx?displaylang=en\&familyid=4d951911-3e7e-4ae6-b059-a2e79ed87041}
+% \item Select ``Save or Publish to PDF'' from the Office or File menu
+% \end{itemize}
+% \item MSWord and Mac OS X users (via PDF file):
+% \begin{itemize}
+% \item From the print menu, click the PDF drop-down box, and select ``Save
+% as PDF...''
+% \end{itemize}
+% \item MSWord and Windows users (via PS file):
+% \begin{itemize}
+% \item To create a new printer
+% on your computer, install the AdobePS printer driver and the Adobe Distiller PPD file from
+% \url{http://www.adobe.com/support/downloads/detail.jsp?ftpID=204} {\it Note:} You must reboot your PC after installing the
+% AdobePS driver for it to take effect.
+% \item To produce the ps file, select ``Print'' from the MS app, choose
+% the installed AdobePS printer, click on ``Properties'', click on ``Advanced.''
+% \item Set ``TrueType Font'' to be ``Download as Softfont''
+% \item Open the ``PostScript Options'' folder
+% \item Select ``PostScript Output Option'' to be ``Optimize for Portability''
+% \item Select ``TrueType Font Download Option'' to be ``Outline''
+% \item Select ``Send PostScript Error Handler'' to be ``No''
+% \item Click ``OK'' three times, print your file.
+% \item Now, use Adobe Acrobat Distiller or ps2pdf to create a PDF file from
+% the PS file. In Acrobat, check the option ``Embed all fonts'' if
+% applicable.
+% \end{itemize}
 
-\end{itemize}
-If your file contains Type 3 fonts or non embedded TrueType fonts, we will
-ask you to fix it. 
+% \end{itemize}
+% If your file contains Type 3 fonts or non embedded TrueType fonts, we will
+% ask you to fix it. 
 
-\subsection{Margins in LaTeX}
+% \subsection{Margins in LaTeX}
  
-Most of the margin problems come from figures positioned by hand using
-\verb+\special+ or other commands. We suggest using the command
-\verb+\includegraphics+
-from the graphicx package. Always specify the figure width as a multiple of
-the line width as in the example below using .eps graphics
-\begin{verbatim}
-   \usepackage[dvips]{graphicx} ... 
-   \includegraphics[width=0.8\linewidth]{myfile.eps} 
-\end{verbatim}
-or % Apr 2009 addition
-\begin{verbatim}
-   \usepackage[pdftex]{graphicx} ... 
-   \includegraphics[width=0.8\linewidth]{myfile.pdf} 
-\end{verbatim}
-for .pdf graphics. 
-See section 4.4 in the graphics bundle documentation (\url{http://www.ctan.org/tex-archive/macros/latex/required/graphics/grfguide.ps}) 
+% Most of the margin problems come from figures positioned by hand using
+% \verb+\special+ or other commands. We suggest using the command
+% \verb+\includegraphics+
+% from the graphicx package. Always specify the figure width as a multiple of
+% the line width as in the example below using .eps graphics
+% \begin{verbatim}
+%    \usepackage[dvips]{graphicx} ... 
+%    \includegraphics[width=0.8\linewidth]{myfile.eps} 
+% \end{verbatim}
+% or % Apr 2009 addition
+% \begin{verbatim}
+%    \usepackage[pdftex]{graphicx} ... 
+%    \includegraphics[width=0.8\linewidth]{myfile.pdf} 
+% \end{verbatim}
+% for .pdf graphics. 
+% See section 4.4 in the graphics bundle documentation (\url{http://www.ctan.org/tex-archive/macros/latex/required/graphics/grfguide.ps}) 
  
-A number of width problems arise when LaTeX cannot properly hyphenate a
-line. Please give LaTeX hyphenation hints using the \verb+\-+ command.
+% A number of width problems arise when LaTeX cannot properly hyphenate a
+% line. Please give LaTeX hyphenation hints using the \verb+\-+ command.
 
 
-\subsubsection*{Acknowledgments}
+% \subsubsection*{Acknowledgments}
 
-Use unnumbered third level headings for the acknowledgments. All
-acknowledgments go at the end of the paper. Do not include 
-acknowledgments in the anonymized submission, only in the 
-final paper. 
+% Use unnumbered third level headings for the acknowledgments. All
+% acknowledgments go at the end of the paper. Do not include 
+% acknowledgments in the anonymized submission, only in the 
+% final paper. 
 
-\subsubsection*{References}
+% \subsubsection*{References}
 
-References follow the acknowledgments. Use unnumbered third level heading for
-the references. Any choice of citation style is acceptable as long as you are
-consistent. It is permissible to reduce the font size to `small' (9-point) 
-when listing the references. {\bf Remember that this year you can use
-a ninth page as long as it contains \emph{only} cited references.}
+% References follow the acknowledgments. Use unnumbered third level heading for
+% the references. Any choice of citation style is acceptable as long as you are
+% consistent. It is permissible to reduce the font size to `small' (9-point) 
+% when listing the references. {\bf Remember that this year you can use
+% a ninth page as long as it contains \emph{only} cited references.}
 
-\small{
-[1] Alexander, J.A. \& Mozer, M.C. (1995) Template-based algorithms
-for connectionist rule extraction. In G. Tesauro, D. S. Touretzky
-and T.K. Leen (eds.), {\it Advances in Neural Information Processing
-Systems 7}, pp. 609-616. Cambridge, MA: MIT Press.
+% \small{
+% [1] Alexander, J.A. \& Mozer, M.C. (1995) Template-based algorithms
+% for connectionist rule extraction. In G. Tesauro, D. S. Touretzky
+% and T.K. Leen (eds.), {\it Advances in Neural Information Processing
+% Systems 7}, pp. 609-616. Cambridge, MA: MIT Press.
 
-[2] Bower, J.M. \& Beeman, D. (1995) {\it The Book of GENESIS: Exploring
-Realistic Neural Models with the GEneral NEural SImulation System.}
-New York: TELOS/Springer-Verlag.
+% [2] Bower, J.M. \& Beeman, D. (1995) {\it The Book of GENESIS: Exploring
+% Realistic Neural Models with the GEneral NEural SImulation System.}
+% New York: TELOS/Springer-Verlag.
 
-[3] Hasselmo, M.E., Schnell, E. \& Barkai, E. (1995) Dynamics of learning
-and recall at excitatory recurrent synapses and cholinergic modulation
-in rat hippocampal region CA3. {\it Journal of Neuroscience}
-{\bf 15}(7):5249-5262.
-}
+% [3] Hasselmo, M.E., Schnell, E. \& Barkai, E. (1995) Dynamics of learning
+% and recall at excitatory recurrent synapses and cholinergic modulation
+% in rat hippocampal region CA3. {\it Journal of Neuroscience}
+% {\bf 15}(7):5249-5262.
+% }
+
+\bibliographystyle{plain}
+\bibliography{nips2013}
 
 \end{document}
