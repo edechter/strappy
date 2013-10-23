@@ -183,18 +183,43 @@ Estimation of the production probabilities of $G$ is performed as in \cite{ijcai
 \subsection{Program Representation}
 Discuss combinatory logic and the adaptor-grammar-esque distribution we use.
 
-\section{Application to Structure Learning}
-Learning the structure of graphical models is a difficult problem - not only for machines, but also for humans, where expert knowledge is often required.
-In practice, the sorts of graphical models that humans design, such as Hidden Markov Models, phylogenetic trees, topic models, and Ising models, exhibit certain symmetries and recursive structures that are amenable to synthesis by programs.
-Could an algorithm, such as SEC, automatically learn these structures?
+\section{Learning to Construct Graphical Models}
 
-\section{Application to Graphical Model Structure Learning}
+Learning the structure of graphical models that capture the independencies underlying a dataset is an active area of research\cite{adams-wallach-ghahramani-2010a}\cite{ISI:000240797500002}\cite{ISI:000178037200004}\cite{ISI:A1995RX35400001}. Graphical model structures enforce the conditional independences a modeler believes exists among latent and observed random variables\cite{DBLP:books/daglib/0066829}.
 
-Learning the structure of graphical models that capture the independencies underlying a dataset is an active area of research\cite{adams-wallach-ghahramani-2010a}\cite{ISI:000240797500002}\cite{ISI:000178037200004}\cite{ISI:A1995RX35400001}. Graphical model structures enforce the conditional independences a modeler believes exists among latent and observed random variables\cite{DBLP:books/daglib/0066829}. 
+In practice, the sorts of graphical models that humans design, such as Hidden Markov Models, phylogenetic trees, topic models, and Ising models, exhibit certain symmetries and recursive structures that might be amenable to synthesis by programs.
+We use our algorithm to learn the motifs and design patterns that underly some popular graphical models.
+Concretely, our algorithm induces programs that take as input the visible nodes of an undirected graphical model and introduces new latent nodes and edges.
 
-\subsection{Graph Combinators}
+\subsection{Experiments}
 
-Diagrams illustrating the graph combinators. An example program that makes an Ising model.
+The SEC algorithm was provided a set of related tasks, each of which involved the construction of a program that built undirected graphical models.
+Each program synthesis task included a set of input/output test cases; the likelihood of a task, given a program, was defined as the fraction of test cases passed.
+Example input/output pairs of the target programs are shown in figure (\ref{fig:tasks}).
+
+The initial library of primitive combinators contains four binary operations upon undirected graphical models.
+Each of these operations we introduce, called an \emph{undirected union}, serves to combine two smaller models while also introducing new edges.
+%Using this representation, many models may be expressed in a compositional fashion when combined with higher-order combinators taken from functional programming languages, such as \emph{map} and \emph{fold}.
+The operation of these four undirected unions is diagrammed in figure (\ref{fig:graphcomb}).
+%In this representation of graphs, the vertexes are given unique indexes.
+%Some of the undirected unions exploit these indexes by adding edges as a function of index.
+
+\begin{figure}
+\begin{minipage}[c][8cm][t]{.4\textwidth}
+  \vspace*{\fill}
+  \includegraphics[width=\linewidth]{./figures/tasks.pdf}
+  \caption{Example input/output pairs of learned programs. Each induced program takes as input a list of visible nodes and produces an undirected graphical model.}
+  \label{fig:tasks}
+\end{minipage}%
+\begin{minipage}[c][8cm][t]{.3\textwidth}
+  \vspace*{\fill}
+  \fbox{\includegraphics[width=\linewidth]{./figures/GraphCombinators.pdf}}
+  \caption{The operation of the undirected unions. Union: Computes union of vertexes and edges. UnionC: Adds edges between corresponding vertexes. UnionHT: Adds edge between first (head) vertex and last (tail) vertex. UnionD: Preserves uniqueness of distinctly indexed vertexes.}
+  \label{fig:graphcomb}\par\vfill
+\end{minipage}
+\end{figure}
+
+\subsection{Results}
 
 \subsection{Learning Graphical Models}
 
@@ -202,23 +227,7 @@ Show the actual results for our test cases: ``density estimation of the space of
 In future work, could be used as high-level moves in the search for a good structure.
 Connect to, eg, Charles Kemp's work.
 
-\begin{figure}
-\begin{minipage}[c][8cm][t]{.4\textwidth}
-  \vspace*{\fill}
-  \includegraphics[width=\linewidth]{./figures/tasks.pdf}
-  \caption{test figure one}
-  \label{fig:test1}
-\end{minipage}%
-\begin{minipage}[c][8cm][t]{.3\textwidth}
-  \vspace*{\fill}
-  \fbox{\includegraphics[width=\linewidth]{./figures/GraphCombinators.pdf}}
-  \caption{test figure two}
-  \label{fig:test2}\par\vfill
-  % \includegraphics[width=5cm,height=4.5cm]{im
-  \caption{test figure three}
-  \label{fig:test3}
-\end{minipage}
-\end{figure}
+
 \section{Building Towers in Blocks World}
 
 How could an agent, endowed with little prior knowledge, learn to build tall, robust towers out of toy blocks?
