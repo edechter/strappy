@@ -149,10 +149,10 @@ The SEC algorithm can be expressed as MAP inference in a probabilistic generativ
 \li \id{t_n} $= \rho_n + \epsilon_n$
 \end{codebox}
 
+In short, this generative model assumes that the programs that solve a set of related tasks are themselves constructing by composing program fragments that are drawn from a common stochastic grammar. This grammar is itself drawn from a distribution over grammars that is biased towards grammars with smaller descriptions lengths. 
 
-Write down the generative model. Connect to EC and Percy Liang's work. Discuss ``programs as plans.''
 \subsection{Inference}
-We implement an iterative Expectation-Maximization algorithm that performs MAP estimation of the libraray, $G$, given the tasks, $\{t_n\}$.
+We implement an iterative Expectation-Maximization algorithm that performs MAP estimation of the grammar, $G$, given the tasks, $\{t_n\}$.
 The joint distribution factorizes as
 \begin{equation}
 P(G,\{\rho_n\},\{t_n\}) = \frac{1}{L^N} P(G) \prod_n P(t_n | \rho_n) \prod_i P(e^i_n | G)
