@@ -155,20 +155,21 @@ In short, this generative model assumes that the programs that solve a set of re
 We implement an iterative Expectation-Maximization algorithm that performs MAP estimation of the grammar, $G$, given the tasks, $\{t_n\}$.
 The joint distribution factorizes as
 \begin{equation}
-P(G,\{\rho_n\},\{t_n\}) = \frac{1}{L^N} P(G) \prod_n P(t_n | \rho_n) \prod_i P(e^i_n | G)
+P(G,\{\rho_n\},\{t_n\}) = \frac{1}{L^N} P(G) \prod_n P(t_n | \rho_n) P(\rho_n | G),
 \label{eq:joint}
 \end{equation}
+where $P(\rho_n | G) = \prod_i P(e^i_n | G)$.
 From equation (\ref{eq:joint}), the EM updates are
 \begin{eqnarray}
-q(\rho_n) &\propto& P(t_n | \rho_n) \prod_i P(e^i_n | G^{old})\\
+q(\rho_n) &\propto& P(t_n | \rho_n) P(\rho_n | G^{\text{old}})\\
 \label{eq:qdist}
-G^{new} &=& \operatorname{argmin}_G \left( -\ln P(G) -
+G^{\text{new}} &=& \operatorname{argmin}_G \left( -\ln P(G) -
 \sum_n 
 E_{q_n}
  \left[ \ln P(\rho_n | G) \right] \right)
  \label{eq:gmax}
 \end{eqnarray}
-Exact computation of $q(\cdot)$ in equation (\ref{eq:qdist}) would involve marginalizing over the space of all programs.
+Exact computation of these updates requires summing over the infinite space of programs that can be generated from the grammar. To approximate this, we can attempt to evaluate 
 Instead, we perform a heuristic search over the space of programs, with the goal of finding those programs for which $q(\cdot)$ is high.
 Rather than use mutation and crossover operators, as done in genetic programming, or random resampling of subprograms, as done in recent work in applying Metropolis-Hastings to program learning, we propose that the search moves should themselves be programs drawn from the grammar $G$.
 Concretely, in order to modify a program $e$ to produce new candidate programs, we draw a new function from our grammar, $G$, and apply that new function to $e$.
