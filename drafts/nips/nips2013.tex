@@ -188,6 +188,10 @@ Learning the structure of graphical models is a difficult problem - not only for
 In practice, the sorts of graphical models that humans design, such as Hidden Markov Models, phylogenetic trees, topic models, and Ising models, exhibit certain symmetries and recursive structures that are amenable to synthesis by programs.
 Could an algorithm, such as SEC, automatically learn these structures?
 
+\section{Application to Graphical Model Structure Learning}
+
+Learning the structure of graphical models that capture the independencies underlying a dataset is an active area of research\cite{adams-wallach-ghahramani-2010a}\cite{ISI:000240797500002}\cite{ISI:000178037200004}\cite{ISI:A1995RX35400001}. Graphical model structures enforce the conditional independences a modeler believes exists among latent and observed random variables\cite{DBLP:books/daglib/0066829}. 
+
 \subsection{Graph Combinators}
 
 Diagrams illustrating the graph combinators. An example program that makes an Ising model.
@@ -198,6 +202,23 @@ Show the actual results for our test cases: ``density estimation of the space of
 In future work, could be used as high-level moves in the search for a good structure.
 Connect to, eg, Charles Kemp's work.
 
+\begin{figure}
+\begin{minipage}[c][8cm][t]{.4\textwidth}
+  \vspace*{\fill}
+  \includegraphics[width=\linewidth]{./figures/tasks.pdf}
+  \caption{test figure one}
+  \label{fig:test1}
+\end{minipage}%
+\begin{minipage}[c][8cm][t]{.3\textwidth}
+  \vspace*{\fill}
+  \fbox{\includegraphics[width=\linewidth]{./figures/GraphCombinators.pdf}}
+  \caption{test figure two}
+  \label{fig:test2}\par\vfill
+  % \includegraphics[width=5cm,height=4.5cm]{im
+  \caption{test figure three}
+  \label{fig:test3}
+\end{minipage}
+\end{figure}
 \section{Building Towers in Blocks World}
 
 How could an agent, endowed with little prior knowledge, learn to build tall, robust towers out of toy blocks?
@@ -476,6 +497,6 @@ to achieve this.
 >>>>>>> 0c3d0be073ba9aaf201c99bcf3dc620f5bb9f7cb
 
 \bibliographystyle{plain}
-\bibliography{nips2013}
+\bibliography{eyal_bib}
 
 \end{document}
