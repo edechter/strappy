@@ -9,7 +9,7 @@
 \usepackage{clrscode4e}
 \usepackage{tikz}
 \usepackage{amsmath}
-
+\usepackage{natbib}
 
 %\documentstyle[nips13submit_09,times,art10]{article} % For LaTeX 2.09
 
@@ -120,7 +120,7 @@ One hypothesis is that these motifs and abstractions are best represented as pro
 
 \section{The SEC Algorithm}
 
-The SEC algorithm takes a library of primitives and a set of related tasks to solve; its goal is to produce a set of programs that solve these tasks. Like the EC algorithm~\cite{DBLP:conf/ijcai/DechterMAT13}, of which it an extension, the SEC algorithm maintains a distribution $\mathcal{D}$ over programs. This distribution helps guide its search to relevant parts of of the space of programs. In each iteration, SEC does two things: 
+The SEC algorithm takes a library of primitives and a set of related tasks to solve; its goal is to produce a set of programs that solve these tasks. Like the EC algorithm~\citep{DBLP:conf/ijcai/DechterMAT13}, of which it an extension, the SEC algorithm maintains a distribution $\mathcal{D}$ over programs. This distribution helps guide its search to relevant parts of of the space of programs. In each iteration, SEC does two things: 
 \begin{itemize}
 	\item First, it uses $\mathcal{D}$ to explore the space of programs that are likely to be relevant for the tasks it has been given;
 	\item Second, it compresses the solutions it found and uses this compression generate a new weighted library of primitives that defines an updated $\mathcal{D}$.
@@ -133,7 +133,7 @@ Our generative model assumes that the programs that solve a set of related tasks
 
 \begin{figure}
 \begin{codebox}
-\li \id{G} $\sim$ $P_G(\cdot)$ \Comment{Draw grammar from description-length prior}
+\id{G} $\sim$ $P_G(\cdot)$ \Comment{Draw grammar from description-length prior}
 \li \id{\ell_n} $\sim\mbox{Uniform}(1, L)$ \Comment{Draw number of subprograms in $n^{th}$ program}
 \li \Comment{Draw $\rho_n$, the $n^{th}$ program, by composing its subprograms, $e_n^{i}$}
 \li \id{e_n^{i}} $\sim P_{e|G}(\cdot | G)$
@@ -165,7 +165,7 @@ E_{q_n}
  \label{eq:gmax}
 \end{eqnarray}
 
-Exact computation of these updates requires summing over the infinite space of programs that can be generated from the grammar. To approximate this, we can attempt to evaluate 
+Exact computation of These updates requires summing over the infinite space of programs that can be generated from the grammar. To approximate this, we can attempt to evaluate 
 Instead, we perform a heuristic search over the space of programs, with the goal of finding those programs for which $q(\cdot)$ is high.
 Rather than use mutation and crossover operators, as done in genetic programming, or random resampling of subprograms, as done in recent work in applying Metropolis-Hastings to program learning, we propose that the search moves should themselves be programs drawn from the grammar $G$.
 Concretely, in order to modify a program $e$ to produce new candidate programs, we draw a new function from our grammar, $G$, and apply that new function to $e$.
@@ -183,34 +183,31 @@ Performing the minimization operation in equation (\ref{eq:gmax}) is generally d
 We approximate the description length of the grammar by the number of unique program fragments in the grammar, multiplied by a regularization constant.
 The description length of a program is approximated by the number of (not necessarily unique) program fragments in its smallest parse tree given the grammar.
 A slight generalization of the Neville-Manning algorithm then permits tractible minimization of (\ref{eq:gmax}).
-Estimation of the production probabilities of $G$ is performed as in \cite{ijcai}.
+Estimation of the production probabilities of $G$ is performed as in~\citet{DBLP:conf/ijcai/DechterMAT13}.
 
 \subsection{Program Representation}
 
-Following~\cite{DBLP:conf/ijcai/DechterMAT13} and~\cite{DBLP:conf/icml/LiangJK10}, we use a
+Following~\citet{DBLP:conf/ijcai/DechterMAT13} and~\citet{DBLP:conf/icml/LiangJK10}, we use a
 simply typed combinatory calculus -- a variable-free subset of the
-polymorphic simply-typed lambda calculus~\cite{DBLP:books/daglib/0005958} -- as our
+polymorphic simply-typed lambda calculus~\citep{DBLP:books/daglib/0005958} -- as our
 program representation language. The simplicity the combinatory calculus makes describing a distribution over its expressions particularly simple. A more detailed explanation and discussion of this program representation can be found in the papers cited above. 
 
 \section{Learning to Construct Graphical Models}
 
-Learning the structure of graphical models that capture the independencies underlying a dataset is an active area of research\cite{adams-wallach-ghahramani-2010a}\cite{ISI:000240797500002}\cite{ISI:000178037200004}\cite{ISI:A1995RX35400001}. Graphical model structures enforce the conditional independences a modeler believes exists among latent and observed random variables\cite{DBLP:books/daglib/0066829}.
+Learning the structure of graphical models that capture the independencies underlying a dataset is an active area of research\cite{adams-wallach-ghahramani-2010a}\cite{ISI:000240797500002}\cite{ISI:000178037200004}\cite{DBLP:journals/corr/abs-1302-6815}. Graphical model structures enforce the conditional independences a modeler believes exists among latent and observed random variables\cite{DBLP:books/daglib/0066829}.
 
 In practice, the sorts of graphical models that humans design, such as Hidden Markov Models, phylogenetic trees, topic models, and Ising models, exhibit certain symmetries and recursive structures that might be amenable to synthesis by programs.
 
 \begin{figure}[h]
 % \centering
 \begin{minipage}[t]{.4\textwidth}
-% \vspace{0pt}
-% \begin{subfigure}{.45\textwidth}
-  % \vspace*{\fill}
-  % \centering
+
   \includegraphics[width=\linewidth]{./figures/tasks.pdf}
   \caption{Example input/output pairs of learned programs. Each induced program takes as input a list of observed nodes and produces an undirected graphical model. Here, we show each program with a small number of input nodes, but the learned programs transfer arbitrary length lists of visible nodes into the corresponding graphs. Labeled nodes correspond to observed variables; unlabeled nodes correspond to latent variables.}
   \label{fig:tasks}
 \end{minipage}
+\hspace{0.2in}
 \begin{minipage}[t]{.5\textwidth}
-% \vspace{\fill}
   \includegraphics[width=\linewidth]{./figures/GraphCombinators.pdf}
   \caption{The operation of the undirected unions. Union: computes union of vertexes and edges. UnionC: adds edges between corresponding vertexes. UnionHT: adds edge between first (head) vertex and last (tail) vertex. UnionD: relabels input graph vertices so that they do not overlap and then computes union.}
   \label{fig:graphcomb}\par\vfill
@@ -245,8 +242,32 @@ We ran the SEC algorithm on the set of twelve tasks. The algorithm is parameteri
 With a frontier size of 1000, the algorithm solves 7/12 tasks. With a frontier size of 5000, the algorithm solves 8/12 tasks. In each case, the algorithm returns solutions that partially satisfy the remaining tasks. As an example, we show in Figure~\ref{ref:cylinder} an instance of SEC's solution to the \textsc{Cylinder} task. 
 
 \begin{figure}
-\includegraphics[width=.5\linewidth]{./figures/cylinder.pdf}
-\caption{An example of how the \textsc{Cylinder} task is solved by SEC, with the basis combinators replaced by control flow arrows. The full program is written in the combinatory calculus below the image. \label{ref:cylinder}}
+% \begin{minipage}[b]{.45\textwidth}
+\begin{subfigure}[b]{.45\textwidth}
+\includegraphics[width=\linewidth]{./figures/cylinder.pdf}
+\caption{The program generates a cylinder from nodes by generating two ring -- one latent, one visible -- and connecting them.}
+% \end{minipage}
+\end{subfigure}
+\hspace{0.2in}
+\begin{minipage}[b]{.5\textwidth}
+\begin{subfigure}[t]{\textwidth}
+\includegraphics[width=.5\linewidth]{./figures/cylinderCombinator.pdf}
+\caption{In the combinatory calculus. }
+\vspace{.3in}
+\end{subfigure}
+\begin{subfigure}[b]{\textwidth}
+\begin{lstlisting}[language=haskell, basicstyle=\small, escapechar=+]
++$\lambda$+vs. let vs' = foldr unionC null vs
+          vs'' = unionHT vs' (I vs')   
+          vs''' = flip vs''
+       in unionC vs'' vs'''
+\end{lstlisting}
+\vfill
+\caption{The combinatory calculus expression tranlated into \textsc{Hakell}-like syntax for readability.}
+% \end{minipage}
+\end{subfigure}
+\end{minipage}
+\caption{An example of solution that SEC finds to solve. \textsc{Cylinder}\label{ref:cylinder}}
 \end{figure}
 
 
@@ -266,15 +287,13 @@ With a frontier size of 1000, the algorithm solves 7/12 tasks. With a frontier s
 
 \section{Discussion}
 
-\subsection{Relation to Prior Work}
+To be clear, what we have shown so far does not provide a way a way to learn the structure of a graphical model directly from observed data. Rather, this work suggests that we may be able to learn automatically an inductive bias that will subsequently make learning graphical model structures more efficient. Some of the programs that SEC includes in its library correspond to graph transformations, and we think that using this transformations as search operators will make structure learning of graphical models with latent variables a more tractable proposition than it currently is. 
 
-MH sampling of programs, ILP, Kitzelman, graph grammars
+The notion that an appropriate inductive bias might help in the structure learning of graphical models is not new: \citep{DBLP:conf/icml/HonorioS10} shows that the inductive bias induced via multitask learning helps a search algorithm find accurate graphical model structures. But while work in this field has focused on how to evaluate a given graph, we hope to show that SEC can learn appropriate search operators directly from a set of training examples. 
 
-\subsection{Limitations of SEC}
+We have presented the SEC algorithm in the context of learning graph structures, but we note that SEC is a general purpose multitask program induction algorithm system. For an excellent survey of the current state of inductive programming systems, see~\citep{DBLP:conf/aaip/Kitzelmann09}. 
 
-Does not look at data. Does everything top-down. Blind to the utility of trying one program versus another (no active learning)
-
-\bibliographystyle{plain}
-\bibliography{eyal_bib}
+\bibliographystyle{plainnat}
+\bibliography{main}
 
 \end{document}
