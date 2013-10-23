@@ -67,7 +67,7 @@ Address \\
 \maketitle
 
 \begin{abstract}
-How can machine learning techniques be used to solve problems whose solutions are best represented as computer programs? For example, suppose a researcher wants to design a probabilistic graphical model for a novel domain. Searching the space of probabilistic models automatically is notoriously difficult and is especially difficult when the latent variables are possible. However, when researchers seem able to relatively easily adapt commonly used modeling motifs to new domains. In doing so, they draw on abstractions such as trees, chains, grids and plates to constrain and direct the kinds of models they produce. This suggests that before we ask machine learning algorithms to discover parsimonious models of new domains, we should develop techniques that enable our algorithms to automatically learn these ``graphical conepts'' in much the same way that researchers themselves do, by seeing examples in the literature. One natural way to think of these graphical concepts is as programs that take sets of random variables and produce graphical models that relate them. In this work, we describe the SEC algorithm, which attempts to learn a distribution over programs by incrementally finding program components that commonly help to solve problems in a given domain, and we show prelimarily that SEC is able to discover the graphical concepts that underlie many of the common graphical model structures.  
+How can machine learning techniques be used to solve problems whose solutions are best represented as computer programs? For example, suppose a researcher wants to design a probabilistic graphical model for a novel domain. Searching the space of probabilistic models automatically is notoriously difficult and is especially difficult when the latent variables are possible. However, when researchers seem able to relatively easily adapt commonly used modeling motifs to new domains. In doing so, they draw on abstractions such as trees, chains, grids and plates to constrain and direct the kinds of models they produce. This suggests that before we ask machine learning algorithms to discover parsimonious models of new domains, we should develop techniques that enable our algorithms to automatically learn these ``graphical concepts'' in much the same way that researchers themselves do, by seeing examples in the literature. One natural way to think of these graphical concepts is as programs that take sets of random variables and produce graphical models that relate them. In this work, we describe the SEC algorithm, which attempts to learn a distribution over programs by incrementally finding program components that commonly help to solve problems in a given domain, and we show prelimarily that SEC is able to discover the graphical concepts that underlie many of the common graphical model structures.  
 \end{abstract}
 
 
@@ -82,7 +82,7 @@ However, many of the most natural representations of structured domains are best
 
 Suppose, then, that we want to create machine learning algorithms that can help discover good models for data in novel domains; that is, we want algorithms that discovers the structure of the latent graphical model underlying the data. This is a field of active research \ 
 
-In this paper, we describe our approach to learning over structured representations as a search over the space of programs in a functional programming language. We characterize learning in this space as incrementally developing a weighted library of program abstractions, i.e. a collection of subroutines, that are commonly used to solve problems in a given domain. The SEC algorithm (for Sequential Exploration-Compression), which we present here, takes a set of related tasks and produces a distribution over programs that solve those tasks; as it refines this distribution, SEC is able to search the space of programs more efficiently and solve more tasks. 
+In this paper, we describe our approach to learning over structured representations as a search over the space of programs in a functional programming language. We characterize learning in this space as incrementally building a weighted library of program abstractions, i.e. a collection of subroutines, that are commonly used to solve problems in a given domain. The SEC algorithm (for Sequential Exploration-Compression), which we present here, takes a set of related tasks and produces a distribution over programs that solve those tasks; as it refines this distribution, SEC is able to search the space of programs more efficiently and solve more tasks. 
 
 We will present here two domains of interest. First, continuing with the example above, we will describe how SEC can learn to efficiently explore the space of relevant graphical models for a given problem. Second, we will examine SEC's performance on a completely different type of task, in which we want to an algorithm to build tall and physically stable block towers. 
 
@@ -126,10 +126,10 @@ We will present here two domains of interest. First, continuing with the example
 
 \section{The SEC Algorithm}
 
-The SEC algorithm takes a library of primitives and a set of related tasks to solve; its goal is to produce a set of programs that solve these tasks. Like the EC algorithm~\cite{DBLP:conf/ijcai/DechterMAT13} (of which it an extension), the SEC algorithm maintains a distribution $\mathcal{D}$ over programs and this distribution helps guide its search to relevant parts of of the space of programs. In each iteration, SEC does two things: 
+The SEC algorithm takes a library of primitives and a set of related tasks to solve; its goal is to produce a set of programs that solve these tasks. Like the EC algorithm~\cite{DBLP:conf/ijcai/DechterMAT13}, of which it an extension, the SEC algorithm maintains a distribution $\mathcal{D}$ over programs. This distribution helps guide its search to relevant parts of of the space of programs. In each iteration, SEC does two things: 
 \begin{itemize}
-	\item first, it uses $\mathcal{D}$ to explore the space of programs that are likely to be relevant for the tasks it has been given;
-	\item second, it compresses the solutions it found and uses this compression generate a new weighted library of primitives that defines an updated $\mathcal{D}$.
+	\item First, it uses $\mathcal{D}$ to explore the space of programs that are likely to be relevant for the tasks it has been given;
+	\item Second, it compresses the solutions it found and uses this compression generate a new weighted library of primitives that defines an updated $\mathcal{D}$.
 \end{itemize}
 
 \subsection{Generative Model}
@@ -196,42 +196,56 @@ simply typed combinatory calculus -- a variable-free subset of the
 polymorphic simply-typed lambda calculus~\cite{DBLP:books/daglib/0005958} -- as our
 program representation language. The simplicity the combinatory calculus makes describing a distribution over its expressions particularly simple. A more detailed explanation and discussion of this program representation can be found in the papers cited above. 
 
-\section{Application to Structure Learning}
-Learning the structure of graphical models is a difficult problem - not only for machines, but also for humans, where expert knowledge is often required.
-In practice, the sorts of graphical models that humans design, such as Hidden Markov Models, phylogenetic trees, topic models, and Ising models, exhibit certain symmetries and recursive structures that are amenable to synthesis by programs.
-Could an algorithm, such as SEC, automatically learn these structures?
+\section{Learning to Construct Graphical Models}
 
-\section{Application to Graphical Model Structure Learning}
+Learning the structure of graphical models that capture the independencies underlying a dataset is an active area of research\cite{adams-wallach-ghahramani-2010a}\cite{ISI:000240797500002}\cite{ISI:000178037200004}\cite{ISI:A1995RX35400001}. Graphical model structures enforce the conditional independences a modeler believes exists among latent and observed random variables\cite{DBLP:books/daglib/0066829}.
 
-Learning the structure of graphical models that capture the independencies underlying a dataset is an active area of research\cite{adams-wallach-ghahramani-2010a}\cite{ISI:000240797500002}\cite{ISI:000178037200004}\cite{ISI:A1995RX35400001}. Graphical model structures enforce the conditional independences a modeler believes exists among latent and observed random variables\cite{DBLP:books/daglib/0066829}. 
+In practice, the sorts of graphical models that humans design, such as Hidden Markov Models, phylogenetic trees, topic models, and Ising models, exhibit certain symmetries and recursive structures that might be amenable to synthesis by programs.
+We use our algorithm to learn the motifs and design patterns that underly certain popular graphical models.
+Concretely, our algorithm induces programs that take as input the visible nodes of an undirected graphical model and introduces new latent nodes and edges.
 
-\subsection{Graph Combinators}
+\subsection{Experiments}
 
-Diagrams illustrating the graph combinators. An example program that makes an Ising model.
+The SEC algorithm was provided a set of related tasks, each of which involved the construction of a program that built undirected graphical models.
+Each program synthesis task included a set of input/output test cases; the likelihood of a task, given a program, was defined as the fraction of test cases passed.
+Example input/output pairs of the target programs are shown in figure (\ref{fig:tasks}).
 
-\subsection{Learning Graphical Models}
-
-Show the actual results for our test cases: ``density estimation of the space of interesting graphical models.''
-In future work, could be used as high-level moves in the search for a good structure.
-Connect to, eg, Charles Kemp's work.
+The initial library of primitive combinators contains four binary operations upon undirected graphical models.
+Each of these operations we introduce, called an \emph{undirected union}, serves to combine two smaller models while also introducing new edges.
+%Using this representation, many models may be expressed in a compositional fashion when combined with higher-order combinators taken from functional programming languages, such as \emph{map} and \emph{fold}.
+The operation of these four undirected unions is diagrammed in figure (\ref{fig:graphcomb}).
+%In this representation of graphs, the vertexes are given unique indexes.
+%Some of the undirected unions exploit these indexes by adding edges as a function of index.
 
 \begin{figure}
 \begin{minipage}[c][8cm][t]{.4\textwidth}
   \vspace*{\fill}
   \includegraphics[width=\linewidth]{./figures/tasks.pdf}
-  \caption{test figure one}
-  \label{fig:test1}
+  \caption{Example input/output pairs of learned programs. Each induced program takes as input a list of visible nodes and produces an undirected graphical model.}
+  \label{fig:tasks}
 \end{minipage}%
 \begin{minipage}[c][8cm][t]{.3\textwidth}
   \vspace*{\fill}
   \fbox{\includegraphics[width=\linewidth]{./figures/GraphCombinators.pdf}}
-  \caption{test figure two}
-  \label{fig:test2}\par\vfill
-  % \includegraphics[width=5cm,height=4.5cm]{im
-  \caption{test figure three}
-  \label{fig:test3}
+  \caption{The operation of the undirected unions. Union: Computes union of vertexes and edges. UnionC: Adds edges between corresponding vertexes. UnionHT: Adds edge between first (head) vertex and last (tail) vertex. UnionD: Preserves uniqueness of distinctly indexed vertexes.}
+  \label{fig:graphcomb}\par\vfill
 \end{minipage}
 \end{figure}
+
+\subsection{Results}
+Initially, SEC is unable to find any solutions to the complicated graph structure tasks, such as the Ising Model or the Hidden Markov Model, even after enumerating 4 million programs through its heuristic search.
+However, it is able to find programs that generate simpler graphical models, such as Markov chains.
+By compressing the solutions to these simpler problems, it modifies its search procedure and, in subsequent iterations, learns more and more successful programs.
+Shown in figure (\ref{TODO}) are the learning curves for SEC, represented both as the number of solved tasks per iteration and as the size of the grammar per iteration.
+
+What grammars does SEC learn, and how do they enable the bootstrap learning of more complicated programs?
+The simplest example is that of how the Markov chain bootstraps the learning of the Ising model.
+Most of the easy tasks, such as the Markov chain, can be solved with the right choice of one higher-order function and one undirected union.
+After one iteration, the program fragment \verb|(foldr unionC)|, used in the Markov chain program, is incorporated in to the grammar.
+On the second iteration, the Ising model is learned using this fragment, producing the program \verb|(((S B) map) ((foldr unionC) null))|.
+
+%In future work, could be used as high-level moves in the search for a good structure.
+
 
 \section{Discussion}
 
@@ -242,7 +256,6 @@ MH sampling of programs, ILP, Kitzelman, graph grammars
 \subsection{Limitations of SEC}
 
 Does not look at data. Does everything top-down. Blind to the utility of trying one program versus another (no active learning)
-
 
 \bibliographystyle{plain}
 \bibliography{eyal_bib}

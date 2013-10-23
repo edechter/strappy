@@ -116,14 +116,14 @@ ugmRename2Disjoint u1@(UGM vs1 es1) u2@(UGM vs2 es2) =
     in
         (u1, buildSub (map getVertexID $ filter isLatent vs2) u2)
 
-ugmExplode :: UGM -> [UGM]
-ugmExplode (UGM vs _) = map (\v -> UGM [v] []) (sort vs)
+ugmExplode :: UGM -> UGM
+ugmExplode (UGM vs _) = UGM vs []
 
 -- | Test cases
 ugmLatentify :: UGM -> UGM
 ugmLatentify (UGM vs es) =
     let l (Visible x) = Latent x
-        l x = x
+        l (Latent x) = Visible x
         e (UEdge v v') = mkUEdge (l v) (l v')
     in UGM (nub $ map l vs) (nub $ map e es)
 
@@ -193,7 +193,7 @@ cUnion = mkTerm "union" (tUGM ->- tUGM ->- tUGM) $ ugmUnion
 cUnionC = mkTerm "unionC" (tUGM ->- tUGM ->- tUGM) $ ugmUnionCorrespondence
 cUnionHT = mkTerm "unionHT" (tUGM ->- tUGM ->- tUGM) $ ugmUnionHeadTail
 cUnionD = mkTerm "unionD" (tUGM ->- tUGM ->- tUGM) $ ugmUnionDisjoint
-cExplode = mkTerm "explode" (tUGM ->- tList tUGM) $ ugmExplode
+cExplode = mkTerm "explode" (tUGM ->- tUGM) $ ugmExplode
 cLatentify = mkTerm "latentify" (tUGM ->- tUGM) $ ugmLatentify
 cLatent = mkTerm "latent" tUGM $ singletonUGM $ Latent 0
 cNull = mkTerm "null" tUGM $ nullUGM
@@ -243,10 +243,10 @@ cylTask = makeUGMTask "cylinder" (tList tUGM ->- tUGM)
              (isingRow 2 6, ugmCylinder (isingRow 2 6))]
 deepCylTask :: EMTask
 deepCylTask = makeUGMTask "deepCylinder" (tList (tList tUGM) ->- tUGM)
-            [(isingRow 1 1, ugmDeepCylinder (isingRow 1 1)),
-             (isingRow 1 2, ugmDeepCylinder (isingRow 1 2)),
-             (isingRow 1 3, ugmDeepCylinder (isingRow 1 3)),
-             (isingRow 2 6, ugmDeepCylinder (isingRow 2 6))]
+            [(isingWorld 1, ugmDeepCylinder (isingWorld 1)),
+             (isingWorld 2, ugmDeepCylinder (isingWorld 2)),
+             (isingWorld 4, ugmDeepCylinder (isingWorld 4)),
+             (isingWorld 5, ugmDeepCylinder (isingWorld 5))]
 mrfTask :: EMTask
 mrfTask = makeUGMTask "mrf" (tList (tList tUGM) ->- tUGM)
             [(isingWorld 1, ugmMRF (isingWorld 1)),
