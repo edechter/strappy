@@ -1,6 +1,6 @@
 
---module Strappy.UGM where
-module Main where
+module Strappy.UGM where
+--module Main where
 
 
 import Strappy.EM
@@ -123,7 +123,7 @@ ugmExplode (UGM vs _) = UGM vs []
 ugmLatentify :: UGM -> UGM
 ugmLatentify (UGM vs es) =
     let l (Visible x) = Latent x
-        l x = x
+        l (Latent x) = Visible x
         e (UEdge v v') = mkUEdge (l v) (l v')
     in UGM (nub $ map l vs) (nub $ map e es)
 

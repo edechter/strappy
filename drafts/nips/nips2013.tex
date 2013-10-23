@@ -82,7 +82,7 @@ However, many of the most natural representations of structured domains are best
 
 Suppose, then, that we want to create machine learning algorithms that can help discover good models for data in novel domains; that is, we want algorithms that discovers the structure of the latent graphical model underlying the data. This is a field of active research \ 
 
-In this paper, we describe our approach to learning over structured representations as a search over the space of programs in a functional programming language. We characterize learning in this space as incrementally developing a weighted library of program abstractions, i.e. a collection of subroutines, that are commonly used to solve problems in a given domain. The SEC algorithm (for Sequential Exploration-Compression), which we present here, takes a set of related tasks and produces a distribution over programs that solve those tasks; as it refines this distribution, SEC is able to search the space of programs more efficiently and solve more tasks. 
+In this paper, we describe our approach to learning over structured representations as a search over the space of programs in a functional programming language. We characterize learning in this space as incrementally building a weighted library of program abstractions, i.e. a collection of subroutines, that are commonly used to solve problems in a given domain. The SEC algorithm (for Sequential Exploration-Compression), which we present here, takes a set of related tasks and produces a distribution over programs that solve those tasks; as it refines this distribution, SEC is able to search the space of programs more efficiently and solve more tasks. 
 
 We will present here two domains of interest. First, continuing with the example above, we will describe how SEC can learn to efficiently explore the space of relevant graphical models for a given problem. Second, we will examine SEC's performance on a completely different type of task, in which we want to an algorithm to build tall and physically stable block towers. 
 
@@ -126,10 +126,10 @@ We will present here two domains of interest. First, continuing with the example
 
 \section{The SEC Algorithm}
 
-The SEC algorithm takes a library of primitives and a set of related tasks to solve; its goal is to produce a set of programs that solve these tasks. Like the EC algorithm~\cite{DBLP:conf/ijcai/DechterMAT13}, of which it an extension, the SEC algorithm maintains a distribution $\mathcal{D}$ over programs and this distribution helps guide its search to relevant parts of of the space of programs. In each iteration, SEC does two things: 
+The SEC algorithm takes a library of primitives and a set of related tasks to solve; its goal is to produce a set of programs that solve these tasks. Like the EC algorithm~\cite{DBLP:conf/ijcai/DechterMAT13}, of which it an extension, the SEC algorithm maintains a distribution $\mathcal{D}$ over programs. This distribution helps guide its search to relevant parts of of the space of programs. In each iteration, SEC does two things: 
 \begin{itemize}
-	\item first, it uses $\mathcal{D}$ to explore the space of programs that are likely to be relevant for the tasks it has been given;
-	\item second, it compresses the solutions it found and uses this compression generate a new weighted library of primitives that defines an updated $\mathcal{D}$.
+	\item First, it uses $\mathcal{D}$ to explore the space of programs that are likely to be relevant for the tasks it has been given;
+	\item Second, it compresses the solutions it found and uses this compression generate a new weighted library of primitives that defines an updated $\mathcal{D}$.
 \end{itemize}
 
 \subsection{Generative Model}
@@ -232,10 +232,18 @@ The operation of these four undirected unions is diagrammed in figure (\ref{fig:
 \end{figure}
 
 \subsection{Results}
+Initially, SEC is unable to find any solutions to the complicated graph structure tasks, such as the Ising Model or the Hidden Markov Model, even after enumerating 4 million programs through its heuristic search.
+However, it is able to find programs that generate simpler graphical models, such as Markov chains.
+By compressing the solutions to these simpler problems, it modifies its search procedure and, in subsequent iterations, learns more and more successful programs.
+Shown in figure (\ref{TODO}) are the learning curves for SEC, represented both as the number of solved tasks per iteration and as the size of the grammar per iteration.
 
-In future work, could be used as high-level moves in the search for a good structure.
-Connect to, eg, Charles Kemp's work.
+What grammars does SEC learn, and how do they enable the bootstrap learning of more complicated programs?
+The simplest example is that of how the Markov chain bootstraps the learning of the Ising model.
+Most of the easy tasks, such as the Markov chain, can be solved with the right choice of one higher-order function and one undirected union.
+After one iteration, the program fragment \verb|(foldr unionC)|, used in the Markov chain program, is incorporated in to the grammar.
+On the second iteration, the Ising model is learned using this fragment, producing the program \verb|(((S B) map) ((foldr unionC) null))|.
 
+%In future work, could be used as high-level moves in the search for a good structure.
 
 
 \section{Discussion}
@@ -247,7 +255,6 @@ MH sampling of programs, ILP, Kitzelman, graph grammars
 \subsection{Limitations of SEC}
 
 Does not look at data. Does everything top-down. Blind to the utility of trying one program versus another (no active learning)
-
 
 \bibliographystyle{plain}
 \bibliography{eyal_bib}
