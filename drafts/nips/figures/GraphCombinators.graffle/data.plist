@@ -908,113 +908,6 @@
 				<integer>396</integer>
 			</dict>
 			<key>ID</key>
-			<integer>404</integer>
-			<key>Points</key>
-			<array>
-				<string>{473.10523260510934, 681.50000364120774}</string>
-				<string>{558.99996148668708, 681.50000364120774}</string>
-			</array>
-			<key>Style</key>
-			<dict>
-				<key>stroke</key>
-				<dict>
-					<key>HeadArrow</key>
-					<string>0</string>
-					<key>Legacy</key>
-					<true/>
-					<key>TailArrow</key>
-					<string>0</string>
-					<key>Width</key>
-					<real>3</real>
-				</dict>
-			</dict>
-			<key>Tail</key>
-			<dict>
-				<key>ID</key>
-				<integer>395</integer>
-			</dict>
-		</dict>
-		<dict>
-			<key>Class</key>
-			<string>LineGraphic</string>
-			<key>Head</key>
-			<dict>
-				<key>ID</key>
-				<integer>392</integer>
-			</dict>
-			<key>ID</key>
-			<integer>403</integer>
-			<key>Points</key>
-			<array>
-				<string>{473.10523260010541, 634.50001101540818}</string>
-				<string>{512.105216618643, 634.50001101540818}</string>
-			</array>
-			<key>Style</key>
-			<dict>
-				<key>stroke</key>
-				<dict>
-					<key>HeadArrow</key>
-					<string>0</string>
-					<key>Legacy</key>
-					<true/>
-					<key>TailArrow</key>
-					<string>0</string>
-					<key>Width</key>
-					<real>3</real>
-				</dict>
-			</dict>
-			<key>Tail</key>
-			<dict>
-				<key>ID</key>
-				<integer>393</integer>
-			</dict>
-		</dict>
-		<dict>
-			<key>Class</key>
-			<string>LineGraphic</string>
-			<key>Head</key>
-			<dict>
-				<key>ID</key>
-				<integer>394</integer>
-			</dict>
-			<key>ID</key>
-			<integer>402</integer>
-			<key>Points</key>
-			<array>
-				<string>{473.10523260010541, 587.50001101540829}</string>
-				<string>{512.105216618643, 587.50001101540829}</string>
-			</array>
-			<key>Style</key>
-			<dict>
-				<key>stroke</key>
-				<dict>
-					<key>HeadArrow</key>
-					<string>0</string>
-					<key>Legacy</key>
-					<true/>
-					<key>LineType</key>
-					<integer>1</integer>
-					<key>TailArrow</key>
-					<string>0</string>
-					<key>Width</key>
-					<real>3</real>
-				</dict>
-			</dict>
-			<key>Tail</key>
-			<dict>
-				<key>ID</key>
-				<integer>391</integer>
-			</dict>
-		</dict>
-		<dict>
-			<key>Class</key>
-			<string>LineGraphic</string>
-			<key>Head</key>
-			<dict>
-				<key>ID</key>
-				<integer>396</integer>
-			</dict>
-			<key>ID</key>
 			<integer>401</integer>
 			<key>Points</key>
 			<array>
@@ -5321,7 +5214,7 @@
 	<key>MasterSheets</key>
 	<array/>
 	<key>ModificationDate</key>
-	<string>2013-10-23 00:09:19 +0000</string>
+	<string>2013-10-23 01:48:53 +0000</string>
 	<key>Modifier</key>
 	<string>Eyal Dechter</string>
 	<key>NotesVisible</key>
