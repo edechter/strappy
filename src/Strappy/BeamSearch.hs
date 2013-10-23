@@ -42,31 +42,42 @@ beamPlan :: PlanTask ->
             [(Expr, Double)] -> -- ^ (Log) Distribution over seed expressions drawn from the grammar
             [(Expr, Double)] -> -- ^ (Log) Distribution over transition expressions drawn from the grammar
             Int -> -- ^ length of the plan
-            IO (Map.Map Expr Double, Set.Set ([Expr], Double)) -- ^ Log rewards for each expression, programs hitting task
+            IO (Map.Map Expr Double, -- ^ Log rewards for each expression
+                Set.Set ([Expr], Double), -- ^ programs hitting task
+                Maybe ([Expr], Double, Double)) -- ^ Best partial credit
 beamPlan pt beamSize seedDist dist planLen = do
     seedRewards <- forM seedDist $ \(e, pLL) -> ptLogLikelihood pt e >>=
                                                 \ll -> return (ll, (e, pLL))
+    let seedPartial = foldl mergePartial Nothing $ flip map seedRewards $ \(ll, (e, pLL)) ->
+                                                                          if isInvalidNum ll
+                                                                          then Nothing
+                                                                          else Just ([e], ll, pLL)
     let seedPlans = map snd $ MinQueue.toList $
                     foldl (\beam (ll, (e, pLL)) -> insertIntoBeam beamSize beam (ll+pLL, pLL) ([e],pLL)) MinQueue.empty seedRewards
     let seedRewards' = filter (not . isInvalidNum . fst) seedRewards
     let seedRewards'' = Map.fromList $ map (\ (ll, (e, pLL)) -> (e, ll+pLL)) seedRewards'
     let seedLogZ = logSumExpList $ map (\ (ll, (_, pLL)) -> ll + pLL) seedRewards
     let seedHits = Set.fromList [([e], pLL+ll) | (ll, (e, pLL)) <- seedRewards, ll > -0.1 ]
-    (logRewards, logZ, hits) <- bs seedPlans planLen seedRewards'' seedLogZ seedHits
-    return (Map.map (\x -> x-logZ) logRewards, hits)
+    (logRewards, logZ, hits, part) <- bs seedPlans planLen seedRewards'' seedLogZ seedHits seedPartial
+    return (Map.map (\x -> x-logZ) logRewards, hits, part)
     where bs :: [([Expr], Double)] -> -- ^ Incoming plans to be extended
                 Int -> -- ^ Remaining plan length
                 Map.Map Expr Double -> -- ^ Old log rewards
                 Double -> -- ^ Old log Z
                 Set.Set ([Expr], Double) -> -- ^ Old hits
-                IO (Map.Map Expr Double, Double, Set.Set ([Expr], Double)) -- ^ Log rewards, log partition function, hits
-          bs _ 0 rewards logZ hits = return (rewards, logZ, hits)
-          bs partialPlans pLen oldRewards oldLogZ oldHits = do
+                Maybe ([Expr], Double, Double) ->
+                IO (Map.Map Expr Double, Double, Set.Set ([Expr], Double), Maybe ([Expr], Double, Double)) -- ^ Log rewards, log partition function, hits
+          bs _ 0 rewards logZ hits partial = return (rewards, logZ, hits, partial)
+          bs partialPlans pLen oldRewards oldLogZ oldHits oldPartial = do
             -- Obtain new plans
             let newPlans = [ (e:p, eLL+pLL) | (p, pLL) <- partialPlans, (e, eLL) <- dist ]
             -- Score those plans in parallel
             scoredPlans <- {-Parallel.-} mapM (\(p, pLL) -> ptLogLikelihood pt (foldr1 (<>) p) >>= \ll ->
                                                        return (ll+pLL, (p, pLL))) newPlans
+            let myPartial = foldl mergePartial oldPartial $ flip map scoredPlans $ \(tLL, (p, pLL)) ->
+                                                                          if isInvalidNum tLL
+                                                                          then Nothing
+                                                                          else Just (p, tLL-pLL, pLL)
             -- See if any of the plans hit the task
             let myHits = Set.fromList [ (p, a) | (a, (p, pLL)) <- scoredPlans,
                                 a-pLL > -0.1 ]
@@ -87,7 +98,13 @@ beamPlan pt beamSize seedDist dist planLen = do
             --forceShowHack newLogZ
             --forceShowHack newHits
             -- Recurse
-            bs newBeam (pLen-1) newRewards newLogZ newHits
+            bs newBeam (pLen-1) newRewards newLogZ newHits myPartial
+          mergePartial Nothing x = x
+          mergePartial x Nothing = x
+          mergePartial x@(Just (_,ll,pLL)) y@(Just (_,ll',pLL')) =
+            if (ll,pLL) > (ll',pLL')
+            then x
+            else y
 
 doEMBeam :: Maybe String -> -- ^ Filename to save logs to
             [PlanTask] -> -- ^ Tasks
@@ -118,18 +135,18 @@ doEMBeam maybeFname tasks lambda pseudocounts frontierSize beamSize planLen gram
   aggregateRewards <- loopM Map.empty tasks $ \acc tsk -> do
     let actionFrontier = snd $ fromJust $ find ((==(ptType tsk)) . fst) actionFrontiers
     let seedFrontier = snd $ fromJust $ find ((==(ptType tsk)) . fst) seedFrontiers
-    (rewards, hits) <- beamPlan tsk beamSize seedFrontier actionFrontier planLen
+    (rewards, hits, maybePartial) <- beamPlan tsk beamSize seedFrontier actionFrontier planLen
     let anyHit = not (Set.null hits)
     when anyHit $ do
       when verbose $ putStrLn $ "Hit " ++ (ptName tsk)
       let (bestPlan, bestLL) = maximumBy (compare `on` snd) (Set.toList hits)
       putStrLn $ show bestPlan ++ "\t\t" ++ show bestLL
       modifyIORef numHitRef (+1)
-    when (verbose && (not anyHit)) $ do
-      if Map.null rewards
-      then putStrLn $ "Missed " ++ (ptName tsk)
-      else do putStrLn $ "Got partial credit for " ++ (ptName tsk)
-              putStrLn $ show $ fst $ maximumBy (compare `on` snd) $ Map.toList rewards
+    when (verbose && (not anyHit)) $
+      maybe (putStrLn $ "Missed " ++ (ptName tsk)) (\(p, ll, pLL) ->
+                                                     putStrLn $ "Got partial credit for " ++ (ptName tsk)
+                                                                ++ "\n" ++ show p ++ "\t" ++ show ll)
+                                                    maybePartial
     -- Hack to force Haskell to not use lazy evaluation
     let newAcc = Map.unionWith logSumExp acc rewards
     forceShowHack newAcc

@@ -6,6 +6,11 @@
 \usepackage{graphicx}
 \usepackage{subcaption}
 \usepackage{listings}
+\usepackage{clrscode4e}
+\usepackage{tikz}
+\usepackage{amsmath}
+
+
 %\documentstyle[nips13submit_09,times,art10]{article} % For LaTeX 2.09
 
 
@@ -97,7 +102,7 @@ We will present here two domains of interest. First, continuing with the example
 \begin{subfigure}{.5\textwidth}
   \centering
 \includegraphics[width=.7\linewidth]{./figures/lda_plate_blei.pdf}
-  \caption{An example of a typical plate notation use. \label{fig:lda_plate}}
+  \caption{An example of typical plate notation use. \label{fig:lda_plate}}
 
 \end{subfigure}%
 \begin{subfigure}{.4\textwidth}
@@ -120,12 +125,60 @@ We will present here two domains of interest. First, continuing with the example
 
 \section{The SEC Algorithm}
 \subsection{Generative Model}
+We propose a generative model over programs that captures two intuitions:
+\begin{itemize}
+\item{Useful programs are composed of useful subparts.}
+\item{Short programs are a prior more likely.}
+\end{itemize}
+\begin{codebox}
+\li \id{G} $\sim$ $P_G(\cdot)$ \Comment{Draw grammar from description-length prior}
+\li \id{\ell_n} $\sim\mbox{Uniform}(1, L)$ \Comment{Draw number of subprograms in $n^{th}$ program}
+\li \Comment{Draw $\rho_n$, the $n^{th}$ program, by composing its subprograms, $e_n^{i}$}
+\li \id{e_n^{i}} $\sim P_{e|G}(\cdot | G)$
+\li \id{\rho_n} $= e_n^{\ell_n} (e_n^{\ell_n-1} ( \cdots e_n^{1}))$
+\li \Comment{Draw $t_n$ by adding noise $\epsilon_n$ to the output of $\rho_n$}
+\li \id{\epsilon_n} $\sim P_{\mbox{noise}}(\cdot)$
+\li \id{t_n} $= \rho_n + \epsilon_n$
+\end{codebox}
+
+
 Write down the generative model. Connect to EC and Percy Liang's work. Discuss ``programs as plans.''
 \subsection{Inference}
-Write down EM updates. Interpret them as a form of compression solved via a weighted Neville-Manning variant.
+We implement an iterative Expectation-Maximization algorithm that performs MAP estimation of the libraray, $G$, given the tasks, $\{t_n\}$.
+The joint distribution factorizes as
+\begin{equation}
+P(G,\{\rho_n\},\{t_n\}) = \frac{1}{L^N} P(G) \prod_n P(t_n | \rho_n) \prod_i P(e^i_n | G)
+\label{eq:joint}
+\end{equation}
+From equation (\ref{eq:joint}), the EM updates are
+\begin{eqnarray}
+q(\rho_n) &\propto& P(t_n | \rho_n) \prod_i P(e^i_n | G^{old})\\
+\label{eq:qdist}
+G^{new} &=& \operatorname{argmin}_G \left( -\ln P(G) -
+\sum_n 
+E_{q_n}
+ \left[ \ln P(\rho_n | G) \right] \right)
+ \label{eq:gmax}
+\end{eqnarray}
+Exact computation of $q(\cdot)$ in equation (\ref{eq:qdist}) would involve marginalizing over the space of all programs.
+Instead, we perform a heuristic search over the space of programs, with the goal of finding those programs for which $q(\cdot)$ is high.
+Rather than use mutation and crossover operators, as done in genetic programming, or random resampling of subprograms, as done in recent work in applying Metropolis-Hastings to program learning, we propose that the search moves should themselves be programs drawn from the grammar $G$.
+Concretely, in order to modify a program $e$ to produce new candidate programs, we draw a new function from our grammar, $G$, and apply that new function to $e$.
+Thus, we use the grammar not only as a distribution over programs of interest, but also as a distribution over programs that take as input other programs.
+This incremental construction of programs by repeatedly applying draws from the grammar mirrors the construction of programs in the generative model.
 
-Discuss bootstrap learning: the right curriculum allows us to build more complicated programs.
-Make some analogy involving how humans learn to paint, write poetry, bake, compose music, play with blocks, or design statistical models.
+In our experiments, we used beam search. The objective function was the unnormalized posterior $P_{t_n|\rho_n}(t_n | \cdot )P_{\rho_n | G}(\cdot | G)$.
+The beam was initialized to be the programs with the highest prior probability according to the grammar $G$.
+Similarly, the search moves considered were those functions with the most highest prior probability under $G$.
+
+Equation (\ref{eq:gmax}) has a natural interpretation as a form of compression.
+Interpreting negative log probabilities as description lengths, the update (\ref{eq:gmax}) picks the grammar minimizing the sum of the description length of the grammar, plus the expected description length of the programs found to solve the tasks.
+
+Performing the minimization operation in equation (\ref{eq:gmax}) is generally difficult.
+We approximate the description length of the grammar by the number of unique program fragments in the grammar, multiplied by a regularization constant.
+The description length of a program is approximated by the number of (not necessarily unique) program fragments in its smallest parse tree given the grammar.
+A slight generalization of the Neville-Manning algorithm then permits tractible minimization of (\ref{eq:gmax}).
+Estimation of the production probabilities of $G$ is performed as in \cite{ijcai}.
 
 \subsection{Program Representation}
 Discuss combinatory logic and the adaptor-grammar-esque distribution we use.

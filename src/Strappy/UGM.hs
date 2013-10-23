@@ -1,6 +1,6 @@
 
---module Strappy.UGM where
-module Main where
+module Strappy.UGM where
+--module Main where
 
 
 import Strappy.EM
@@ -87,7 +87,7 @@ ugmUnionCorrespondence ugm ugm' =
 -- | Connects first vertex of a UGM to the last vertex of another UGM
 ugmUnionHeadTail :: UGM -> UGM -> UGM
 ugmUnionHeadTail ugm ugm' =
-    let (UGM vs1 es1, UGM vs2 es2) = ugmRename2Disjoint ugm ugm'
+    let (UGM vs1 es1, UGM vs2 es2) = (ugm, ugm') --ugmRename2Disjoint ugm ugm'
         headV = minimum vs2
         tailV = maximum vs1
         newEdge = if null vs1 || null vs2 || headV == tailV
@@ -145,12 +145,15 @@ ugmrHMM vs = ugmUnionCorrespondence (ugmChain vs) (foldl1 ugmUnion $ map ugmLate
 ugmCylinder :: [UGM] -> UGM
 ugmCylinder vs = ugmUnionCorrespondence (ugmRing vs) (ugmRing $ map ugmLatentify vs)
 
+ugmDeepCylinder :: [[UGM]] -> UGM
+ugmDeepCylinder vss = foldr1 ugmUnionCorrespondence (map ugmRing vss)
+
 ugmMRF :: [[UGM]] -> UGM
 ugmMRF vss = ugmUnionCorrespondence (foldr1 ugmUnion $ concat vss) $
              ugmIsing $ map (map ugmLatentify) vss
 
 ugmLatentCommon :: [UGM] -> UGM
-ugmLatentCommon = foldl ugmUnionHeadTail (singletonUGM $ Latent 1)
+ugmLatentCommon = foldl ugmUnionHeadTail (singletonUGM $ Latent 0)
 
 -- Just for fun: the graphical model behind EC
 ugmEC :: [UGM] -> UGM
@@ -169,7 +172,7 @@ partialCredit (UGM vs es) (UGM vs' es') =
   in if vs1 == vs2
      then if es1 == es2
           then 1.0
-          else 0.5
+          else 0.15
       else 0.0
 
 makeUGMTask nm tp tests =
@@ -238,6 +241,12 @@ cylTask = makeUGMTask "cylinder" (tList tUGM ->- tUGM)
              (isingRow 1 2, ugmCylinder (isingRow 1 2)),
              (isingRow 1 3, ugmCylinder (isingRow 1 3)),
              (isingRow 2 6, ugmCylinder (isingRow 2 6))]
+deepCylTask :: EMTask
+deepCylTask = makeUGMTask "deepCylinder" (tList (tList tUGM) ->- tUGM)
+            [(isingRow 1 1, ugmDeepCylinder (isingRow 1 1)),
+             (isingRow 1 2, ugmDeepCylinder (isingRow 1 2)),
+             (isingRow 1 3, ugmDeepCylinder (isingRow 1 3)),
+             (isingRow 2 6, ugmDeepCylinder (isingRow 2 6))]
 mrfTask :: EMTask
 mrfTask = makeUGMTask "mrf" (tList (tList tUGM) ->- tUGM)
             [(isingWorld 1, ugmMRF (isingWorld 1)),
@@ -272,7 +281,8 @@ main = do
   let seed = Grammar { grApp = log 0.35,
                        grExprDistr = Map.fromList [ (annotateRequested e, 1.0) | e <- ugmLib ] }
   let tasks = [ independentTask, latentTask, latentCommonTask, chainTask,
-                ringTask, isingTask, hmmTask, revHMMTask, cylTask, mrfTask, ecTask ]
+                ringTask, isingTask, hmmTask, revHMMTask, cylTask, mrfTask, ecTask,
+                deepCylTask ]
   let planTasks = map convert2planTask tasks
   loopM seed [0..14] $ \grammar step -> do
     if planning
