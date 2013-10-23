@@ -45,7 +45,7 @@ planLikelihood cache plan = do
   let ll = ((ht - gnd_height) * (sum stabilities) + (sum stabilities) {- - log (genericLength plan)-})/3.0
   if isNaN ht || isInfinite ht
     then return (log 0)
-    else return $ trace ("LL: " ++ show ll ++ "\n\t" ++ show plan) ll
+    else return (4 * ll) -- $ trace ("LL: " ++ show ll ++ "\n\t" ++ show plan) ll
 
 main = do
   cache <- loadPhysicsCache "physics_cache"
@@ -57,7 +57,8 @@ main = do
   let emtask = EMTask { etName = "tower",
                         etLogLikelihood = unsafePerformIO . towerLikelihood cache,
                         etType = tList (tPair tDouble tBool) }
-  [rndSeed, planOrEm, lambda, pseudocounts, fSize, beamWidth, maxPlanLen, prefix] <- getArgs
+  args@[rndSeed, planOrEm, lambda, pseudocounts, fSize, beamWidth, maxPlanLen, prefix] <- getArgs
+  putStrLn $ "Tower run with: " ++ unwords args
   let planning = head planOrEm == 'p'
   setStdGen $ mkStdGen $ read rndSeed
   loopM seed [1..10] $ \grammar step -> do

@@ -1,6 +1,6 @@
 
---module Strappy.UGM where
-module Main where
+module Strappy.UGM where
+--module Main where
 
 
 import Strappy.EM
@@ -52,7 +52,12 @@ mkUEdge v1 v2 | v1 < v2 = UEdge v1 v2
 mkUEdge v1 v2 = UEdge v2 v1
 
 data UGM = UGM [Vertex] [UEdge]
-    deriving(Eq, Ord, Show)
+    deriving(Show)
+
+instance Eq UGM where
+  (UGM v e) == (UGM v' e') = sort v == sort v' && sort e == sort e'
+instance Ord UGM where
+  compare (UGM v e) (UGM v' e') = compare (sort v, sort e) (sort v', sort e')
 
 nullUGM :: UGM
 nullUGM = UGM [] []
@@ -82,7 +87,7 @@ ugmUnionCorrespondence ugm ugm' =
 -- | Connects first vertex of a UGM to the last vertex of another UGM
 ugmUnionHeadTail :: UGM -> UGM -> UGM
 ugmUnionHeadTail ugm ugm' =
-    let (UGM vs1 es1, UGM vs2 es2) = ugmRename2Disjoint ugm ugm'
+    let (UGM vs1 es1, UGM vs2 es2) = (ugm, ugm') --ugmRename2Disjoint ugm ugm'
         headV = minimum vs2
         tailV = maximum vs1
         newEdge = if null vs1 || null vs2 || headV == tailV
@@ -111,6 +116,8 @@ ugmRename2Disjoint u1@(UGM vs1 es1) u2@(UGM vs2 es2) =
     in
         (u1, buildSub (map getVertexID $ filter isLatent vs2) u2)
 
+ugmExplode :: UGM -> [UGM]
+ugmExplode (UGM vs _) = map (\v -> UGM [v] []) (sort vs)
 
 -- | Test cases
 ugmLatentify :: UGM -> UGM
@@ -132,31 +139,51 @@ ugmIsing vss = foldr1 ugmUnionCorrespondence (map ugmChain vss)
 ugmHMM :: [UGM] -> UGM
 ugmHMM vs = ugmUnionCorrespondence (foldl1 ugmUnion vs) (ugmChain $ map ugmLatentify vs)
 
+ugmrHMM :: [UGM] -> UGM
+ugmrHMM vs = ugmUnionCorrespondence (ugmChain vs) (foldl1 ugmUnion $ map ugmLatentify vs)
+
+ugmCylinder :: [UGM] -> UGM
+ugmCylinder vs = ugmUnionCorrespondence (ugmRing vs) (ugmRing $ map ugmLatentify vs)
+
+ugmDeepCylinder :: [[UGM]] -> UGM
+ugmDeepCylinder vss = foldr1 ugmUnionCorrespondence (map ugmRing vss)
+
 ugmMRF :: [[UGM]] -> UGM
 ugmMRF vss = ugmUnionCorrespondence (foldr1 ugmUnion $ concat vss) $
              ugmIsing $ map (map ugmLatentify) vss
 
 ugmLatentCommon :: [UGM] -> UGM
-ugmLatentCommon = foldl ugmUnionHeadTail (singletonUGM $ Latent 1)
+ugmLatentCommon = foldl ugmUnionHeadTail (singletonUGM $ Latent 0)
+
+-- Just for fun: the graphical model behind EC
+ugmEC :: [UGM] -> UGM
+ugmEC = foldl1 ugmUnion .
+        map (\v -> ugmUnionHeadTail (ugmUnionCorrespondence v (ugmLatentify v)) (singletonUGM $ Latent 0))
 
 isingRow start end = [ singletonUGM (Visible x) | x <- [start..end] ]
-isingWorld = [ isingRow (start*4-3) (start*4) | start <- [1..4] ]
+isingWorld len = [ isingRow (start*len-len+1) (start*len) | start <- [1..len] ]
 
+partialCredit :: UGM -> UGM -> Double
+partialCredit (UGM vs es) (UGM vs' es') =
+  let vs1 = sort vs
+      vs2 = sort vs'
+      es1 = sort es
+      es2 = sort es'
+  in if vs1 == vs2
+     then if es1 == es2
+          then 1.0
+          else 0.15
+      else 0.0
 
-{-makeUGMTask :: Eq b, Show b =>
-               String -> -- ^ Name
-               Type -> -- ^ Desired type
-               [(a, b)] -> -- ^ Test cases
-               EMTask-}
 makeUGMTask nm tp tests =
     EMTask { etName = nm,
              etType = tp,
              etLogLikelihood = \e -> 
                 let results = map (\(a, _) -> timeLimitedEval $ e <> (mkTerm undefined undefined a)) tests
                 in if all isJust results
-                   then let numHits = length $ filter (\(Just x, (_,y)) -> x == y) $ zip results tests
-                            fractionHit = fromIntegral numHits / genericLength tests
-                        in log fractionHit
+                   then let numPoints = foldl (\acc (Just x, (_, y)) -> acc + partialCredit x y) 0.0 $ zip results tests
+                            fractionHit = numPoints / genericLength tests
+                        in 5.0 * log fractionHit
                    else log 0.0
             }
 
@@ -166,8 +193,9 @@ cUnion = mkTerm "union" (tUGM ->- tUGM ->- tUGM) $ ugmUnion
 cUnionC = mkTerm "unionC" (tUGM ->- tUGM ->- tUGM) $ ugmUnionCorrespondence
 cUnionHT = mkTerm "unionHT" (tUGM ->- tUGM ->- tUGM) $ ugmUnionHeadTail
 cUnionD = mkTerm "unionD" (tUGM ->- tUGM ->- tUGM) $ ugmUnionDisjoint
+cExplode = mkTerm "explode" (tUGM ->- tList tUGM) $ ugmExplode
 cLatentify = mkTerm "latentify" (tUGM ->- tUGM) $ ugmLatentify
-cLatent = mkTerm "latent" tUGM $ singletonUGM $ Latent 1
+cLatent = mkTerm "latent" tUGM $ singletonUGM $ Latent 0
 cNull = mkTerm "null" tUGM $ nullUGM
 
 -- | Initial combinators
@@ -181,7 +209,7 @@ ugmLib = [cI,
           cConcat,
           cMap,
           cSingle,
-          cUnion, cUnionC, cUnionD, cUnionHT, cLatentify, cLatent, cNull ]
+          cUnion, cUnionC, cUnionD, cUnionHT, cLatentify, cLatent, cNull, cExplode ]
 
 -- | UGM tasks
 chainTask :: EMTask
@@ -194,12 +222,37 @@ ringTask = makeUGMTask "ring" (tList tUGM ->- tUGM)
              (isingRow 2 6, ugmRing (isingRow 2 6))]
 isingTask :: EMTask
 isingTask = makeUGMTask "ising" ((tList (tList tUGM)) ->- tUGM)
-            [(isingWorld, ugmIsing isingWorld)]
+            [(isingWorld 4, ugmIsing (isingWorld 4))]
 hmmTask :: EMTask
 hmmTask = makeUGMTask "hmm" (tList tUGM ->- tUGM)
             [(isingRow 1 1, ugmHMM (isingRow 1 1)),
+             (isingRow 1 2, ugmHMM (isingRow 1 2)),
              (isingRow 1 3, ugmHMM (isingRow 1 3)),
              (isingRow 2 6, ugmHMM (isingRow 2 6))]
+revHMMTask :: EMTask
+revHMMTask = makeUGMTask "revHMM" (tList tUGM ->- tUGM)
+            [(isingRow 1 1, ugmrHMM (isingRow 1 1)),
+             (isingRow 1 2, ugmrHMM (isingRow 1 2)),
+             (isingRow 1 3, ugmrHMM (isingRow 1 3)),
+             (isingRow 2 6, ugmrHMM (isingRow 2 6))]
+cylTask :: EMTask
+cylTask = makeUGMTask "cylinder" (tList tUGM ->- tUGM)
+            [(isingRow 1 1, ugmCylinder (isingRow 1 1)),
+             (isingRow 1 2, ugmCylinder (isingRow 1 2)),
+             (isingRow 1 3, ugmCylinder (isingRow 1 3)),
+             (isingRow 2 6, ugmCylinder (isingRow 2 6))]
+deepCylTask :: EMTask
+deepCylTask = makeUGMTask "deepCylinder" (tList (tList tUGM) ->- tUGM)
+            [(isingRow 1 1, ugmDeepCylinder (isingRow 1 1)),
+             (isingRow 1 2, ugmDeepCylinder (isingRow 1 2)),
+             (isingRow 1 3, ugmDeepCylinder (isingRow 1 3)),
+             (isingRow 2 6, ugmDeepCylinder (isingRow 2 6))]
+mrfTask :: EMTask
+mrfTask = makeUGMTask "mrf" (tList (tList tUGM) ->- tUGM)
+            [(isingWorld 1, ugmMRF (isingWorld 1)),
+             (isingWorld 2, ugmMRF (isingWorld 2)),
+             (isingWorld 3, ugmMRF (isingWorld 3)),
+             (isingWorld 4, ugmMRF (isingWorld 4))]
 latentTask :: EMTask
 latentTask = makeUGMTask "latent" (tList tUGM ->- tUGM)
              [(isingRow 1 1, ugmHMM (isingRow 1 1))]
@@ -212,15 +265,24 @@ latentCommonTask = makeUGMTask "latentCommon" (tList tUGM ->- tUGM)
                (isingRow 1 2, ugmLatentCommon (isingRow 1 2)),
                (isingRow 1 4, ugmLatentCommon (isingRow 1 4)),
                (isingRow 1 5, ugmLatentCommon (isingRow 1 5))]
+ecTask :: EMTask
+ecTask = makeUGMTask "EC" (tList tUGM ->- tUGM)
+              [(isingRow 1 1, ugmEC (isingRow 1 1)),
+               (isingRow 1 2, ugmEC (isingRow 1 2)),
+               (isingRow 1 4, ugmEC (isingRow 1 4)),
+               (isingRow 1 5, ugmEC (isingRow 1 5))]
 
 main = do
-  [rndSeed, planOrEM, lambda, pseudocounts, fSize, beamSize, planLen, prefix] <- getArgs
+  args@[rndSeed, planOrEM, lambda, pseudocounts, fSize, beamSize, planLen, prefix] <- getArgs
+  putStrLn $ "UGM run with: " ++ unwords args
   setStdGen $ mkStdGen $ read rndSeed
   let planning = head planOrEM == 'p'
   -- Seed grammar
   let seed = Grammar { grApp = log 0.35,
                        grExprDistr = Map.fromList [ (annotateRequested e, 1.0) | e <- ugmLib ] }
-  let tasks = [ independentTask, latentTask, latentCommonTask, chainTask, ringTask, isingTask, hmmTask ]
+  let tasks = [ independentTask, latentTask, latentCommonTask, chainTask,
+                ringTask, isingTask, hmmTask, revHMMTask, cylTask, mrfTask, ecTask,
+                deepCylTask ]
   let planTasks = map convert2planTask tasks
   loopM seed [0..14] $ \grammar step -> do
     if planning
