@@ -64,11 +64,11 @@ How can machine learning techniques be used to solve problems whose solutions ar
 
 The vast majority of research in machine learning is focused on utilizing large amounts of noisy data living in high-dimensional, real-valued vector spaces. Such research has been immensely successful and has enabled automatic and accurate modelling on a scale that was previously infeasible. However, when we want to build a car, draw a painting, or design the machine learning models to which we apply our new algorithms and techniques, we face problems that current machine learning tools are unable to handle. The highly structured objects that humans produce seems to require a different representation than the ones which machine learning algorithms have most successfully employed. 
 
-One example of a structured representation we would like to be able to learn is the probabilistic graphical model. Although graphical models are widely used in machine learning to represent the factorizes structure of probability distributions, they are generally designed by researchers rather than by algorithms. This is especially true when the goal is to learn about latent variables underlying the observed data, because it is difficult to capture the knowledge which allows researchers to make reasonable assumptions about which latent variables exists and what they depend on. 
+One example of a structured representation we would like to be able to learn is the probabilistic graphical model. Although graphical models are widely used in machine learning to represent the factorized structure of probability distributions, they are generally designed by researchers rather than by algorithms. This is especially true when the goal is to learn about latent variables underlying the observed data, because it is difficult to capture the knowledge which allows researchers to make reasonable assumptions about which latent variables exists and what they depend on. 
 
 In particular, machine learning researchers make frequent use of graphical motifs and abstractions such as trees, chains, rings, grids, mixtures, and plates to constrain the space of graphical models they consider. But how do they learn that these are good motifs? How do they learn how to use them and combine them to design new models? 
 
-One hypothesis is that these motifs and abstractions are best represented as programs that manipulate and compose graph operations. In this work, we discuss how one could learn these motifs and abstracts by finding programs that generate commonly occured graphical model types. In particular, we present the SEC algorithm, a general purpose multitask program induction algorithm, that attempts to solve many related tasks by generating a weighted library of useful subroutines that induces a distribution over the space of programs. We discuss how SEC can be used to extract from a set of training tasks the kind of abstract knowledge that machine learning researchers bring to the task of designing graphical models, and we speculate that learning such representations can assist in the difficult tasks of automatically finding good latent-variable graphical models for novel datasets. 
+One hypothesis is that these motifs and abstractions are best represented as programs that manipulate and compose graph operations. In this work, we discuss how one could learn these motifs and abstractions by finding programs that generate common graphical model types. In particular, we present the SEC algorithm, a general purpose multitask program induction algorithm, that attempts to solve many related tasks by generating a weighted library of useful subroutines that induces a distribution over the space of programs. We discuss how SEC can be used to extract from a set of training tasks the kind of abstract knowledge that machine learning researchers bring to the task of designing graphical models, and we speculate that learning such representations can assist in the difficult tasks of automatically finding good latent-variable graphical models for novel datasets. 
 
 % To address this problem, many structured representations have been proposed in the machine learning and AI literatures: learning over graphs \cite{}, grammars\cite{}, Horn clauses\cite{}, relations{}, etc., has been investigated. These are representations that attempt to bridge the gap between the tractablity of learning and reasoning in smooth continuous spaces and the expressivity of general purpose programming languages. 
 
@@ -120,7 +120,9 @@ One hypothesis is that these motifs and abstractions are best represented as pro
 
 \section{The SEC Algorithm}
 
-The SEC algorithm takes a library of primitives and a set of related tasks to solve; its goal is to produce a set of programs that solve these tasks. Like the EC algorithm~\cite{DBLP:conf/ijcai/DechterMAT13}, of which it an extension, the SEC algorithm maintains a distribution $\mathcal{D}$ over programs. This distribution helps guide its search to relevant parts of of the space of programs. In each iteration, SEC does two things: first, it uses $\mathcal{D}$ to explore the space of programs that are likely to be relevant for the tasks it has been given; and second, compresses the solutions it found and uses this compression generate a new weighted library of primitives that defines an updated $\mathcal{D}$.
+The SEC algorithm takes a library of primitives and a set of related tasks to solve; its goal is to produce a set of programs that solve these tasks. Like the EC algorithm~\cite{DBLP:conf/ijcai/DechterMAT13}, of which it an extension, the SEC algorithm maintains a distribution $\mathcal{D}$ over programs.
+%This distribution helps guide its search to relevant parts of of the space of programs.
+In each iteration, SEC does two things: first, it uses $\mathcal{D}$ to explore the space of programs that are likely to be relevant for the tasks it has been given; and second, compresses the solutions it found and uses this compression generate a new weighted library of primitives that defines an updated $\mathcal{D}$.
 
 \subsection{Generative Model}
 The SEC algorithm can be expressed as MAP inference in a probabilistic generative model over the space of programs that captures two intuitions: 1) for a set of related tasks, useful programs are composed of useful subparts, and 2) short programs are a priori more likely than long programs. 
@@ -196,13 +198,13 @@ In practice, the sorts of graphical models that humans design, such as Hidden Ma
 \begin{minipage}[t]{.4\textwidth}
 
   \includegraphics[width=\linewidth]{./figures/tasks.pdf}
-  \caption{Example input/output pairs of learned programs. Each induced program takes as input a list of observed nodes and produces an undirected graphical model. Here, we show each program with a small number of input nodes, but the learned programs transfer arbitrary length lists of visible nodes into the corresponding graphs. Labeled nodes correspond to observed variables; unlabeled nodes correspond to latent variables.}
+  \caption{Example input/output pairs of learned programs. Each induced program takes as input an arbitrarily large list of observed nodes and produces an undirected graphical model. Labeled/Unlabeled nodes correspond to observed/latent variables.}
   \label{fig:tasks}
 \end{minipage}
 \hspace{0.2in}
 \begin{minipage}[t]{.5\textwidth}
   \includegraphics[width=\linewidth]{./figures/GraphCombinators.pdf}
-  \caption{The operation of the undirected unions. Union: computes union of vertexes and edges. UnionC: adds edges between corresponding vertexes. UnionHT: adds edge between first (head) vertex and last (tail) vertex. UnionD: relabels input graph vertices so that they do not overlap and then computes union.}
+  \caption{Union: computes union of vertexes and edges. UnionC: adds edges between corresponding vertexes. UnionHT: adds edge between first (head) vertex and last (tail) vertex. UnionD: relabels input graph vertices so that they do not overlap and then computes union.}
   \label{fig:graphcomb}\par\vfill
 % \end{subfigure}
 \end{minipage}
@@ -226,21 +228,22 @@ The SEC algorithm was provided with an initial library of primitive  combinators
 
 \subsection{Results}
 
-We ran the SEC algorithm on the set of twelve tasks. The algorithm is parameterized by the frontier size, the number of unique subprograms $\{e_i\}$ enumerated from the library on each iteration. We ran the algorithm both for frontier sizes of 1000 and 5000. Note that because proposed solutions are compositions of these programs, the algorithm looks at many more potential solutions than the number of programs in the frontier. 
+We ran the SEC algorithm on the set of twelve tasks. The algorithm is parameterized by the frontier size, the number of unique programs drawn from the library on each iteration. We ran the algorithm both for frontier sizes of 1000 and 5000. Note that because proposed solutions are compositions of these programs, the algorithm looks at many more potential solutions than the number of programs in the frontier. 
 
-With a frontier size of 1000, the algorithm solves 7/12 tasks. With a frontier size of 5000, the algorithm solves 8/12 tasks. In each case, the algorithm returns solutions that partially satisfy the remaining tasks. As an example, we show in Figure~\ref{ref:cylinder} an instance of SEC's solution to the \textsc{Cylinder} task. 
+With a frontier size of 1000, the algorithm solves 7/12 tasks. With a frontier size of 5000, the algorithm solves 8/12 tasks. In each case, the algorithm returns solutions that partially satisfy the remaining tasks. As an example, we show in Figure~\ref{ref:cylinder} SEC's solution to the \textsc{Cylinder} task. 
 
-Initially, SEC is unable to find solutions to the complicated graph structure tasks, such as the Ising Model or the Hidden Markov Model, even after enumerating 4 million programs through its heuristic search.
+Initially, SEC is unable to find solutions to the complicated graph structure tasks, such as the Ising Model or the Hidden Markov Model, even after enumerating $\approx 4$ million programs through its heuristic search.
 However, it is able to find programs that generate simpler graphical models, such as Markov chains.
 By compressing the solutions to these simpler problems, it modifies its search procedure and, in subsequent iterations, learns more successful programs.
 
 \begin{figure}
 % \begin{minipage}[b]{.45\textwidth}
-\begin{subfigure}[b]{.45\textwidth}
-\includegraphics[width=\linewidth]{./figures/cylinder.pdf}
-\caption{The program generates a cylinder from nodes by generating two ring -- one latent, one visible -- and connecting them.}
+%\begin{subfigure}[b]{.45\textwidth}
+\includegraphics[width=0.45\linewidth]{./figures/cylinder.pdf}
+\caption{The program generates a cylinder from nodes by generating two rings -- one latent, one visible -- and connecting them.}
 % \end{minipage}
-\end{subfigure}
+%\end{subfigure}
+\begin{comment}
 \hspace{0.2in}
 \begin{minipage}[b]{.5\textwidth}
 \begin{subfigure}[t]{\textwidth}
@@ -256,11 +259,12 @@ By compressing the solutions to these simpler problems, it modifies its search p
        in unionC vs'' vs'''
 \end{lstlisting}
 \vfill
-\caption{The combinatory calculus expression tranlated into \textsc{Hakell}-like syntax for readability.}
+\caption{The combinatory calculus expression tranlated into \textsc{Haskell}-like syntax for readability.}
 % \end{minipage}
 \end{subfigure}
 \end{minipage}
-\caption{An example of solution that SEC finds to solve. \textsc{Cylinder}\label{ref:cylinder}}
+\end{comment}
+%\caption{An example of solution SEC finds to solve \textsc{Cylinder}\label{ref:cylinder}}
 \end{figure}
 
 What grammars does SEC learn, and how do they enable the bootstrap learning of more complicated programs?
