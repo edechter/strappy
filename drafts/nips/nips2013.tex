@@ -125,11 +125,18 @@ We will present here two domains of interest. First, continuing with the example
 
 
 \section{The SEC Algorithm}
-\subsection{Generative Model}
-We propose a generative model over programs that captures two intuitions:
+
+The SEC algorithm takes a library of primitives and a set of related tasks to solve; its goal is to produce a set of programs that solve these tasks. Like the EC algorithm~\cite{DBLP:conf/ijcai/DechterMAT13} (of which it an extension), the SEC algorithm maintains a distribution $\mathcal{D}$ over programs and this distribution helps guide its search to relevant parts of of the space of programs. In each iteration, SEC does two things: 
 \begin{itemize}
-\item{Useful programs are composed of useful subparts.}
-\item{Short programs are a prior more likely.}
+	\item first, it uses $\mathcal{D}$ to explore the space of programs that are likely to be relevant for the tasks it has been given;
+	\item second, it compresses the solutions it found and uses this compression generate a new weighted library of primitives that defines an updated $\mathcal{D}$.
+\end{itemize}
+
+\subsection{Generative Model}
+The SEC algorithm can be expressed as MAP inference in a probabilistic generative model over the space of programs that captures two intuitions:
+\begin{itemize}
+\item{For a set of related tasks, useful programs are composed of useful subparts.}
+\item{Short programs are a priori more likely than long programs.}
 \end{itemize}
 \begin{codebox}
 \li \id{G} $\sim$ $P_G(\cdot)$ \Comment{Draw grammar from description-length prior}
