@@ -120,11 +120,8 @@ One hypothesis is that these motifs and abstractions are best represented as pro
 
 \section{The SEC Algorithm}
 
-The SEC algorithm takes a library of primitives and a set of related tasks to solve; its goal is to produce a set of programs that solve these tasks. Like the EC algorithm~\cite{DBLP:conf/ijcai/DechterMAT13}, of which it an extension, the SEC algorithm maintains a distribution $\mathcal{D}$ over programs. This distribution helps guide its search to relevant parts of of the space of programs. In each iteration, SEC does two things: 
-\begin{itemize}
-	\item First, it uses $\mathcal{D}$ to explore the space of programs that are likely to be relevant for the tasks it has been given;
-	\item Second, it compresses the solutions it found and uses this compression generate a new weighted library of primitives that defines an updated $\mathcal{D}$.
-\end{itemize}
+The SEC algorithm takes a library of primitives and a set of related tasks to solve; its goal is to produce a set of programs that solve these tasks. Like the EC algorithm~\cite{DBLP:conf/ijcai/DechterMAT13}, of which it an extension, the SEC algorithm maintains a distribution $\mathcal{D}$ over programs. This distribution helps guide its search to relevant parts of of the space of programs. In each iteration, SEC does two things: first, it uses $\mathcal{D}$ to explore the space of programs that are likely to be relevant for the tasks it has been given; and second, compresses the solutions it found and uses this compression generate a new weighted library of primitives that defines an updated $\mathcal{D}$.
+
 
 \subsection{Generative Model}
 The SEC algorithm can be expressed as MAP inference in a probabilistic generative model over the space of programs that captures two intuitions: 1) for a set of related tasks, useful programs are composed of useful subparts, and 2) short programs are a priori more likely than long programs. 
@@ -165,12 +162,10 @@ E_{q_n}
  \label{eq:gmax}
 \end{eqnarray}
 
-Exact computation of these updates requires summing over the infinite space of programs that can be generated from the grammar. To approximate this, we can attempt to evaluate 
-Instead, we perform a heuristic search over the space of programs, with the goal of finding those programs for which $q(\cdot)$ is high.
-Rather than use mutation and crossover operators, as done in genetic programming, or random resampling of subprograms, as done in recent work in applying Metropolis-Hastings to program learning, we propose that the search moves should themselves be programs drawn from the grammar $G$.
-Concretely, in order to modify a program $e$ to produce new candidate programs, we draw a new function from our grammar, $G$, and apply that new function to $e$.
+Exact computation of the normalizing constant in equation (\ref{eq:qdist}), or the expectation in equation (\ref{eqn:gmax}), would require summing over the infinite space of programs that can be generated from the grammar. To approximate this expectation, we perform a heuristic search over the space of programs, with the goal of finding those programs for which $q(\cdot)$ is high.
+%Rather than use mutation and crossover operators, as done in genetic programming, or random resampling of subprograms, as done in recent work in applying Metropolis-Hastings to program learning, we propose that the search moves should themselves be programs drawn from the grammar $G$.
+Concretely, in order to modify a program $e$ to produce new candidate programs, we draw a new function from our grammar, $e'$, and apply that new function to produce the program $e'(e)$.
 Thus, we use the grammar not only as a distribution over programs of interest, but also as a distribution over programs that take as input other programs.
-This incremental construction of programs by repeatedly applying draws from the grammar mirrors the construction of programs in the generative model.
 
 In our experiments, we used beam search. The objective function was the unnormalized posterior $P_{t_n|\rho_n}(t_n | \cdot )P_{\rho_n | G}(\cdot | G)$.
 The beam was initialized to be the programs with the highest prior probability according to the grammar $G$.
@@ -182,7 +177,7 @@ Interpreting negative log probabilities as description lengths, the update (\ref
 Performing the minimization operation in equation (\ref{eq:gmax}) is generally difficult.
 We approximate the description length of the grammar by the number of unique program fragments in the grammar, multiplied by a regularization constant.
 The description length of a program is approximated by the number of (not necessarily unique) program fragments in its smallest parse tree given the grammar.
-A slight generalization of the Neville-Manning algorithm then permits tractible minimization of (\ref{eq:gmax}).
+A slight generalization of the Neville-Manning algorithm then permits tractible approximate maximization of (\ref{eq:gmax}).
 Estimation of the production probabilities of $G$ is performed as in \cite{ijcai}.
 
 \subsection{Program Representation}
@@ -195,7 +190,6 @@ program representation language. The simplicity the combinatory calculus makes d
 \section{Learning to Construct Graphical Models}
 
 Learning the structure of graphical models that capture the independencies underlying a dataset is an active area of research\cite{adams-wallach-ghahramani-2010a}\cite{ISI:000240797500002}\cite{ISI:000178037200004}\cite{ISI:A1995RX35400001}. Graphical model structures enforce the conditional independences a modeler believes exists among latent and observed random variables\cite{DBLP:books/daglib/0066829}.
-
 In practice, the sorts of graphical models that humans design, such as Hidden Markov Models, phylogenetic trees, topic models, and Ising models, exhibit certain symmetries and recursive structures that might be amenable to synthesis by programs.
 
 \begin{figure}[h]
@@ -209,6 +203,7 @@ In practice, the sorts of graphical models that humans design, such as Hidden Ma
   \caption{Example input/output pairs of learned programs. Each induced program takes as input a list of observed nodes and produces an undirected graphical model. Here, we show each program with a small number of input nodes, but the learned programs transfer arbitrary length lists of visible nodes into the corresponding graphs. Labeled nodes correspond to observed variables; unlabeled nodes correspond to latent variables.}
   \label{fig:tasks}
 \end{minipage}
+\hspace{1cm}
 \begin{minipage}[t]{.5\textwidth}
 % \vspace{\fill}
   \includegraphics[width=\linewidth]{./figures/GraphCombinators.pdf}
@@ -220,19 +215,15 @@ In practice, the sorts of graphical models that humans design, such as Hidden Ma
 
 \subsection{Experiment}
 
-We wanted to use the SEC algorithm to learn the common abstractions and motifs that underlie the graphical models that are commonly found in the machine learning literature. To that end, we supplied SEC with a set of twelve tasks, each of which corresponds to learning how to build a specific type of graphical model, with potentially latent vertices, given that it is provided with a list of observed verticies. A partial list of the tasks is shown in Figure~\ref{fig:tasks}. For example, the \textsc{Cylinder} task requires EC to build a program that takes as input at list of observed vertices (of any length) and produces a graph where one ring consists of the observed vertices and the other consists of corresponding latent variables. 
-
+We wanted to use the SEC algorithm to learn the common abstractions and motifs that underlie the graphical models that are commonly found in the machine learning literature. To that end, we supplied SEC with a set of twelve tasks, each of which corresponds to learning how to build a specific type of graphical model, potentially with latent vertices, given that it is provided with a list of observed verticies. A partial list of the tasks is shown in Figure~\ref{fig:tasks}. For example, the \textsc{Cylinder} task requires EC to build a program that takes as input a list of observed vertices (of any length) and produces a graph where one ring consists of the observed vertices and the other consists of corresponding latent variables. 
 Tasks were specified via a set of input/output test cases, and we defined the likelihood of a program for a task to be the fraction of test cases it passed. 
 
-The SEC algorithm was provided with an initial library of primitive  combinators, which included the basis combinators of the combinatory calculus, function list operations such as \textsc{Map} and \textsc{Foldr}/\textsc{Foldl}. We also included four binary operations on undirected graphical models, each of which computes some kind of union between two graphs. These graph operations are shown in Figure~\ref{fig:graphcomb}.
+The SEC algorithm was provided with an initial library of primitive  combinators, which included the basis combinators of the combinatory calculus, function list operations such as \textsc{Map} and \textsc{Foldr}/\textsc{Foldl}. We also included four binary operations on undirected graphical models, each of which computes some kind of union between two graphs. These graph operations are diagrammed in Figure~\ref{fig:graphcomb}.
 
-Each program synthesis task included a set of input/output test cases; the likelihood of a task, given a program, was defined as the fraction of test cases passed.
-Example input/output pairs of the target programs are shown in figure (\ref{fig:tasks}).
-
-The initial library of primitive combinators contains four binary operations upon undirected graphical models.
-Each of these operations we introduce, called an \emph{undirected union}, serves to combine two smaller models while also introducing new edges.
+%The initial library of primitive combinators contains four binary operations upon undirected graphical models.
+%Each of these operations we introduce, called an \emph{undirected union}, serves to combine two smaller models while also introducing new edges.
 %Using this representation, many models may be expressed in a compositional fashion when combined with higher-order combinators taken from functional programming languages, such as \emph{map} and \emph{fold}.
-The operation of these four undirected unions is diagrammed in figure (\ref{fig:graphcomb}).
+%The operation of these four undirected unions is diagrammed in figure (\ref{fig:graphcomb}).
 %In this representation of graphs, the vertexes are given unique indexes.
 %Some of the undirected unions exploit these indexes by adding edges as a function of index.
 
@@ -240,29 +231,24 @@ The operation of these four undirected unions is diagrammed in figure (\ref{fig:
 
 \subsection{Results}
 
-We ran the SEC algorithm on the set of twelve tasks. The algorithm is parameterized by the frontier size (the number of unique subprograms $\{e_i\}$ enumerated from the library on each iteration). We ran the algorithm both for frontier sizes of 1000 and 5000. Note that because proposed solutions are compositions of these programs, the algorithm looks at many more potential solutions than the number of programs in the frontier. 
+We ran the SEC algorithm on the set of twelve tasks. The algorithm is parameterized by the frontier size, the number of unique subprograms $\{e_i\}$ enumerated from the library on each iteration. We ran the algorithm both for frontier sizes of 1000 and 5000. Note that because proposed solutions are compositions of these programs, the algorithm looks at many more potential solutions than the number of programs in the frontier. 
 
 With a frontier size of 1000, the algorithm solves 7/12 tasks. With a frontier size of 5000, the algorithm solves 8/12 tasks. In each case, the algorithm returns solutions that partially satisfy the remaining tasks. As an example, we show in Figure~\ref{ref:cylinder} an instance of SEC's solution to the \textsc{Cylinder} task. 
+
+Initially, SEC is unable to find solutions to the complicated graph structure tasks, such as the Ising Model or the Hidden Markov Model, even after enumerating 4 million programs through its heuristic search.
+However, it is able to find programs that generate simpler graphical models, such as Markov chains.
+By compressing the solutions to these simpler problems, it modifies its search procedure and, in subsequent iterations, learns more successful programs.
 
 \begin{figure}
 \includegraphics[width=.5\linewidth]{./figures/cylinder.pdf}
 \caption{An example of how the \textsc{Cylinder} task is solved by SEC, with the basis combinators replaced by control flow arrows. The full program is written in the combinatory calculus below the image. \label{ref:cylinder}}
 \end{figure}
 
-
-% Initially, SEC is unable to find any solutions to the complicated graph structure tasks, such as the Ising Model or the Hidden Markov Model, even after enumerating 4 million programs through its heuristic search.
-% However, it is able to find programs that generate simpler graphical models, such as Markov chains.
-% By compressing the solutions to these simpler problems, it modifies its search procedure and, in subsequent iterations, learns more and more successful programs.
-% Shown in figure (\ref{TODO}) are the learning curves for SEC, represented both as the number of solved tasks per iteration and as the size of the grammar per iteration.
-
-% What grammars does SEC learn, and how do they enable the bootstrap learning of more complicated programs?
-% The simplest example is that of how the Markov chain bootstraps the learning of the Ising model.
-% Most of the easy tasks, such as the Markov chain, can be solved with the right choice of one higher-order function and one undirected union.
-% After one iteration, the program fragment \verb|(foldr unionC)|, used in the Markov chain program, is incorporated in to the grammar.
-% On the second iteration, the Ising model is learned using this fragment, producing the program \verb|(((S B) map) ((foldr unionC) null))|.
-
-%In future work, could be used as high-level moves in the search for a good structure.
-
+What grammars does SEC learn, and how do they enable the bootstrap learning of more complicated programs?
+The simplest example is that of how the Markov chain bootstraps the learning of the Ising model.
+%Most of the easy tasks, such as the Markov chain, can be solved with the right choice of one higher-order function and one undirected union.
+After one iteration, the program fragment \verb|(foldr unionC)|, used in the Markov chain program, is incorporated in to the grammar.
+On the second iteration, the Ising model is learned using this fragment, producing the program \verb|(((S B) map) ((foldr unionC) null))|.
 
 \section{Discussion}
 
