@@ -56,7 +56,7 @@ MIT\\
 \maketitle
 
 \begin{abstract}
-How can machine learning techniques be used to solve problems whose solutions are best represented as computer programs? For example, suppose a researcher wants to design a probabilistic graphical model for a novel domain. Searching the space of probabilistic models automatically is notoriously difficult and is especially difficult when the latent variables are possible. However, when researchers seem able to relatively easily adapt commonly used modeling motifs to new domains. In doing so, they draw on abstractions such as trees, chains, grids and plates to constrain and direct the kinds of models they produce. This suggests that before we ask machine learning algorithms to discover parsimonious models of new domains, we should develop techniques that enable our algorithms to automatically learn these ``graphical concepts'' in much the same way that researchers themselves do, by seeing examples in the literature. One natural way to think of these graphical concepts is as programs that take sets of random variables and produce graphical models that relate them. In this work, we describe the SEC algorithm, which attempts to learn a distribution over programs by incrementally finding program components that commonly help to solve problems in a given domain, and we show prelimarily that SEC is able to discover the graphical concepts that underlie many of the common graphical model structures.  
+How can machine learning techniques be used to solve problems whose solutions are best represented as computer programs? For example, suppose a researcher wants to design a probabilistic graphical model for a novel domain. Searching the space of probabilistic models automatically is notoriously difficult, especially difficult when latent variables are involved. However, researchers seem able to easily adapt commonly used modeling motifs to new domains. In doing so, they draw on abstractions such as trees, chains, grids and plates to constrain and direct the kinds of models they produce. This suggests that before we ask machine learning algorithms to discover parsimonious models of new domains, we should develop techniques that enable our algorithms to automatically learn these ``graphical concepts'' in much the same way that researchers themselves do, by seeing examples in the literature. One natural way to think of these graphical concepts is as programs that take sets of random variables and produce graphical models that relate them. In this work, we describe the CEC algorithm, which attempts to learn a distribution over programs by incrementally finding program components that commonly help to solve problems in a given domain, and we show preliminary results indicating that CEC is able to discover the graphical concepts that underlie many of the common graphical model structures.  
 \end{abstract}
 
 
@@ -69,11 +69,11 @@ One example of a structured representation we would like to be able to learn is 
 % to represent the factorized structure of probability distributions
 % , they are generally designed by researchers rather than by algorithms.
 %This is especially true when the goal is to learn about latent variables underlying the observed data, because it is difficult to capture the knowledge which allows researchers to make reasonable assumptions about which latent variables exists and what they depend on. 
-Machine learning researchers make frequent use of graphical motifs and abstractions such as trees, chains, rings, grids, mixtures, and plates to constrain the space of graphical models they consider. But how do they learn that these are good motifs? How do they learn how to use them and combine them to design new models? 
+Machine learning researchers make frequent use of graphical motifs and abstractions such as trees, chains, rings, grids, mixtures, and plates to constrain the space of graphical models they consider. But how do they learn that these are good motifs? How do they learn how to use and combine them to design new models? 
 
-One hypothesis is that these motifs and abstractions are best represented as programs that manipulate and compose graph operations. In this work, we discuss how one could learn these motifs and abstractions by finding programs that generate common graphical models. In particular, we present the SEC algorithm, a general purpose multitask program induction algorithm.
+One hypothesis is that these motifs and abstractions are best represented as programs that manipulate and compose graph operations. In this work, we discuss how one could learn these motifs and abstractions by finding programs that generate common graphical models. In particular, we present the CEC algorithm, a general purpose multitask program induction algorithm.
 %, that attempts to solve related tasks by generating a weighted library of useful subroutines that induces a distribution over the space of programs.
-We discuss how SEC can be used to extract from a set of examples the kind of abstract knowledge that machine learning researchers bring to the task of designing graphical models, and we speculate that learning such representations can assist in the difficult tasks of automatically finding good latent-variable graphical models for novel datasets. 
+We discuss how CEC can be used to extract from a set of examples the kind of abstract knowledge that machine learning researchers bring to the task of designing graphical models, and we speculate that learning such representations can assist in the difficult tasks of automatically finding good latent-variable graphical models for novel datasets. 
 
 % To address this problem, many structured representations have been proposed in the machine learning and AI literatures: learning over graphs \cite{}, grammars\cite{}, Horn clauses\cite{}, relations{}, etc., has been investigated. These are representations that attempt to bridge the gap between the tractablity of learning and reasoning in smooth continuous spaces and the expressivity of general purpose programming languages. 
 
@@ -123,23 +123,23 @@ We discuss how SEC can be used to extract from a set of examples the kind of abs
 % \end{figure}
 
 
-\section{The SEC Algorithm}
+\section{The CEC Algorithm}
 
-The SEC algorithm takes a library of primitives and a set of related tasks to solve; its goal is to produce a set of programs that solve these tasks. Like the EC algorithm~\cite{DBLP:conf/ijcai/DechterMAT13}, of which it an extension, the SEC algorithm maintains a distribution $\mathcal{D}$ over programs.
+The CEC algorithm takes a library of primitives and a set of related tasks to solve; its goal is to produce a set of programs that solve these tasks. Like the EC algorithm~\cite{DBLP:conf/ijcai/DechterMAT13}, of which it an extension, the CEC algorithm maintains a distribution $\mathcal{D}$ over programs.
 %This distribution helps guide its search to relevant parts of of the space of programs.
-In each iteration, SEC does two things: first, it uses $\mathcal{D}$ to explore the space of programs
+In each iteration, CEC does two things: first, it uses $\mathcal{D}$ to explore the space of programs;
 %that are likely to be relevant for the tasks it has been given
-; and second, compresses the solutions it found to generate a new weighted library of primitives that define an updated $\mathcal{D}$.
+ and second, it compresses the solutions it found to generate a new weighted library of primitives that define an updated distribution.
 
-Following~\citet{DBLP:conf/ijcai/DechterMAT13} and~\citet{DBLP:conf/icml/LiangJK10}, SEC learns programs expressed in
+Following~\cite{DBLP:conf/ijcai/DechterMAT13} and~\cite{DBLP:conf/icml/LiangJK10}, CEC learns programs expressed in
 simply typed combinatory calculus 
 %-- a variable-free subset of the
 %polymorphic simply-typed lambda calculus
 ~\citep{DBLP:books/daglib/0005958} %-- as our program representation language.
- The simplicity the combinatory calculus makes describing a distribution over its expressions particularly simple. A more detailed explanation and discussion of this program representation can be found in the papers cited above. 
+ The simplicity of the combinatory calculus makes describing a distribution over its expressions particularly simple. A more detailed explanation and discussion of this program representation can be found in~\cite{DBLP:conf/ijcai/DechterMAT13,DBLP:conf/icml/LiangJK10}. 
 
 \subsection{Generative Model}
-The SEC algorithm can be expressed as MAP inference in a probabilistic generative model over the space of programs that captures two intuitions: 1) for a set of related tasks, useful programs are composed of useful subparts, and 2) short programs are a priori more likely than long programs. 
+The CEC algorithm can be expressed as MAP inference in a probabilistic generative model. This generative model captures two intuitions: 1) for a set of related tasks, useful programs are composed of useful subparts, and 2) short programs are a priori more likely than long programs. 
 
 \begin{wrapfigure}{R}{0.6\textwidth}
 \begin{codebox}
@@ -155,12 +155,16 @@ The SEC algorithm can be expressed as MAP inference in a probabilistic generativ
 \caption{The generative model underlying the SEC algorithm. \label{ref:gm}}
 \end{wrapfigure}
 
-Our generative model assumes that the programs that solve a set of related tasks are themselves constructing by composing program fragments that are drawn from a common stochastic grammar. This grammar is itself drawn from a distribution over grammars that is biased towards grammars with smaller descriptions lengths. This generative model is shown in Figure~\ref{ref:gm}.
-
-
+Our generative model assumes that the programs are themselves constructed by composing program fragments that are drawn from a common stochastic grammar.
+We write $G$ to indicate this grammar, which is drawn from a distribution over grammars that is biased towards grammars with smaller descriptions lengths.
+We write $\{\rho_n\}_{n=1}^N$ to indicate the $N$ programs, each of which solves one of the $N$ tasks.
+We write $\{e_n^i\}_{i=1}^{\ell_n}$ to indicate the $\ell_n$ program fragments that are composed to create $\rho_n$, where $\ell_n$ is drawn uniformly from 1 to $L$, the maximum program length.
+The set $\{t_n\}_{n=1}^N$ refers to the tasks we want to write programs to solve.
+We use how well a program $\rho_n$ solves task $t_n$ as a surrogate for the likelihood function $P(t_n | \rho_n)$.
+This generative model is shown in Figure~\ref{ref:gm}.
 
 \subsection{Inference}
-We implement an version of the EM algorithm~\cite{dempster:1977} for MAP estimation of the grammar, $G$, given the tasks, $\{t_n\}$. The hidden data in this case is the latent program that solves each task.
+We implement a version of the EM algorithm~\cite{dempster:1977} for MAP estimation of the grammar, $G$, given the tasks, $\{t_n\}$. The hidden data in this case is the latent program that solves each task.
 
 The joint distribution factorizes as
 \begin{equation}
@@ -170,27 +174,27 @@ P(G,\{\rho_n\},\{t_n\}) = \frac{1}{L^N} P(G) \prod_n P(t_n | \rho_n) P(\rho_n | 
 where $P(\rho_n | G) = \prod_i P(e^i_n | G)$.
 From equation (\ref{eq:joint}), the EM updates are
 \begin{eqnarray}
-q(\rho_n) &\propto& P(t_n | \rho_n) P(\rho_n | G^{\text{old}})\\
 \label{eq:qdist}
+q(\rho_n) &\propto& P(t_n | \rho_n) P(\rho_n | G^{\text{old}})\\
+ \label{eq:gmax}
 G^{\text{new}} &=& \operatorname{argmin}_G \left( -\ln P(G) -
 \sum_n 
 E_{q_n}
  \left[ \ln P(\rho_n | G) \right] \right)
- \label{eq:gmax}
 \end{eqnarray}
 
-Exact computation of the normalizing constant in equation (\ref{eq:qdist}), or the expectation in equation (\ref{eqn:gmax}), would require summing over the infinite space of programs that can be generated from the grammar. To approximate this expectation, we perform a heuristic search over the space of programs, with the goal of finding those programs for which $q(\cdot)$ is high.
+Exact computation of the normalizing constant in equation (\ref{eq:qdist}), or the expectation in equation (\ref{eq:gmax}), would require summing over the infinite space of programs that can be generated from the grammar. To approximate this expectation, we perform a heuristic search over the space of programs, with the goal of finding those programs for which $q(\cdot)$ is high.
 %Rather than use mutation and crossover operators, as done in genetic programming, or random resampling of subprograms, as done in recent work in applying Metropolis-Hastings to program learning, we propose that the search moves should themselves be programs drawn from the grammar $G$.
 %Concretely, in order to modify a program $e$ to produce new candidate programs, we draw a new function from our grammar, $e'$, and apply that new function to produce the program $e'(e)$.
 %Thus, we use the grammar not only as a distribution over programs of interest, but also as a distribution over programs that take as input other programs.
 
-In our experiments, we used beam search. The objective function was equation (\ref{eq:qdist}).
-The beam was initialized to be the programs with the highest prior probability according to the grammar $G$.
-Similarly, the search moves considered were those functions with the most highest prior probability under $G$.
+The CEC algorithm uses beam search \cite{Russell:2003:AIM:773294} to maximize $q(\cdot )$.
+The beam is initialized with the programs with the highest prior probability according to the grammar $G$.
+Similarly, the search moves considered are those functions with the highest prior probability under $G$.
 
 Equation (\ref{eq:gmax}) has a natural interpretation as a form of compression.
 Interpreting negative log probabilities as description lengths, the update (\ref{eq:gmax}) picks the grammar minimizing the sum of the description length of the grammar, plus the expected description length of the programs found to solve the tasks.
-A slight generalization of the Neville-Manning algorithm permits tractible approximate minimization of (\ref{eq:gmax}).
+A slight generalization of the Neville-Manning algorithm~\cite{DBLP:journals/corr/cs-AI-9709102} permits tractible approximate minimization of (\ref{eq:gmax}).
 
 \begin{comment}
 Performing the minimization operation in equation (\ref{eq:gmax}) is generally difficult.
@@ -203,20 +207,20 @@ Estimation of the production probabilities of $G$ is performed as in \cite{DBLP:
 \section{Learning to Construct Graphical Models}
 
 Learning the structure of graphical models that capture the independencies underlying a dataset is an active area of research\cite{adams-wallach-ghahramani-2010a}\cite{ISI:000240797500002}\cite{ISI:000178037200004}\cite{DBLP:journals/corr/abs-1302-6815}. Graphical model structures enforce the conditional independences a modeler believes exists among latent and observed random variables\cite{DBLP:books/daglib/0066829}.
-In practice, the sorts of graphical models that humans design, such as Hidden Markov Models, phylogenetic trees, topic models, and Ising models, exhibit certain symmetries and recursive structures that might be amenable to synthesis by programs.
+In practice, the sorts of graphical models that humans design -- Hidden Markov Models, phylogenetic trees, topic models, Ising models -- exhibit certain symmetries and recursive structures that might be amenable to synthesis by programs.
 
 \begin{figure}[h]
 % \centering
 \begin{minipage}[t]{.4\textwidth}
 
   \includegraphics[width=\linewidth]{./figures/tasks.pdf}
-  \caption{Example input/output pairs of learned programs. Each induced program takes as input an arbitrarily large list of observed nodes and produces an undirected graphical model. Labeled/Unlabeled nodes correspond to observed/latent variables.}
+  \caption{Example input/output pairs of learned programs. Each induced program takes as input an arbitrarily large list of observed nodes and produces an undirected graphical model. Labeled/unlabeled nodes correspond to observed/latent variables.}
   \label{fig:tasks}
 \end{minipage}
 \hspace{0.2in}
 \begin{minipage}[t]{.5\textwidth}
   \includegraphics[width=\linewidth]{./figures/GraphCombinators.pdf}
-  \caption{Union: computes union of vertexes and edges. UnionC: adds edges between corresponding vertexes. UnionHT: adds edge between first (head) vertex and last (tail) vertex. UnionD: relabels input graph vertices so that they do not overlap and then computes union.}
+  \caption{Graph combinators in initial library. Union: computes union of vertexes and edges. UnionC: adds edges between corresponding vertexes. UnionHT: adds edge between first (head) vertex and last (tail) vertex. UnionD: relabels input graph vertices so that they do not overlap and then computes union.}
   \label{fig:graphcomb}\par\vfill
 % \end{subfigure}
 \end{minipage}
@@ -225,10 +229,10 @@ In practice, the sorts of graphical models that humans design, such as Hidden Ma
 
 \subsection{Experimental Setup}
 
-We wanted to use the SEC algorithm to learn the common abstractions and motifs that underlie the graphical models that are commonly found in the machine learning literature. To that end, we supplied SEC with a set of twelve tasks, each of which corresponds to learning how to build a specific type of graphical model, potentially with latent vertices, given that it is provided with a list of observed verticies. A partial list of the tasks is shown in Figure~\ref{fig:tasks}. For example, the \textsc{Cylinder} task requires EC to build a program that takes as input a list of observed vertices (of any length) and produces a graph where one ring consists of the observed vertices and the other consists of corresponding latent variables. 
-Tasks were specified via a set of input/output test cases, and we defined the likelihood of a program for a task to be the fraction of test cases it passed. 
+We wanted to use the CEC algorithm to learn the common abstractions and motifs that underlie the graphical models that are commonly found in the machine learning literature. To that end, we supplied CEC with a set of twelve tasks, each of which corresponds to learning how to build a specific type of graphical model, potentially with latent vertexes, given that it is provided with a list of observed vertexes. A partial list of the tasks is shown in Figure~\ref{fig:tasks}. For example, the \textsc{Cylinder} task requires CEC to build a program that takes as input a list of observed vertices (of any length) and produces a graph with one ring consisting of the observed vertexes and the other consists of corresponding latent variables. 
+Tasks were specified via a set of input/output test cases, and we defined the score of a program on a task to be the fraction of test cases it passed. 
 
-The SEC algorithm was provided with an initial library of primitive  combinators, which included the basis combinators of the combinatory calculus, function list operations such as \textsc{Map} and \textsc{Foldr}/\textsc{Foldl}. We also included four binary operations on undirected graphical models, each of which computes a union between two graphs. These graph operations are diagrammed in Figure~\ref{fig:graphcomb}.
+The CEC algorithm was provided with an initial library of primitive  combinators, which included the basis combinators of the combinatory calculus and functional list operations such as \textsc{Map} and \textsc{Foldr}/\textsc{Foldl}. We also included four binary operations on undirected graphical models, each of which computes a union between two graphs. These graph operations are diagrammed in Figure~\ref{fig:graphcomb}.
 
 %The initial library of primitive combinators contains four binary operations upon undirected graphical models.
 %Each of these operations we introduce, called an \emph{undirected union}, serves to combine two smaller models while also introducing new edges.
@@ -241,18 +245,18 @@ The SEC algorithm was provided with an initial library of primitive  combinators
 
 \subsection{Results}
 
-We ran the SEC algorithm on the set of twelve tasks. The algorithm is parameterized by the frontier size, the number of unique programs drawn from the library on each iteration. %We ran the algorithm both for frontier sizes of 1000 and 5000. %Note that because proposed solutions are compositions of these programs, the algorithm looks at many more potential solutions than the number of programs in the frontier. 
-With a frontier size of 1000, the algorithm solves 7/12 tasks. With a frontier size of 5000, the algorithm solves 8/12 tasks. In each case, the algorithm returns solutions that partially satisfy the remaining tasks. Figure~\ref{ref:cylinder} shows SEC's solution to the \textsc{Cylinder} task. 
+We ran the CEC algorithm on the set of twelve tasks. The algorithm is parameterized by the frontier size (the number of unique programs drawn from the library on each iteration). %We ran the algorithm both for frontier sizes of 1000 and 5000. %Note that because proposed solutions are compositions of these programs, the algorithm looks at many more potential solutions than the number of programs in the frontier. 
+With a frontier size of 1000, the algorithm solves 7/12 tasks. With a frontier size of 5000, the algorithm solves 8/12 tasks. In each case, the algorithm returns solutions that partially satisfy the remaining tasks. Figure~\ref{ref:cylinder} shows CEC's solution to the \textsc{Cylinder} task. 
 \begin{wrapfigure}{R}{0.6\textwidth}
 \includegraphics[width=\linewidth]{./figures/cylinder.pdf}
 \caption{The program generates a cylinder from nodes by generating two rings -- one latent, one visible -- and connecting them.\label{ref:cylinder}}
 \end{wrapfigure}
-Initially, SEC is unable to find solutions to the complicated graph structure tasks, such as the Ising Model or the Hidden Markov Model, even after enumerating $\approx 4$ million programs through its heuristic search.
+Initially, CEC is unable to find solutions to the complicated graph structure tasks, such as the Ising Model or the Hidden Markov Model, even after enumerating $\approx 4$ million programs through its heuristic search.
 However, it is able to find programs that generate simpler graphical models, such as Markov chains.
 By compressing the solutions to these simpler problems, it modifies its search procedure and, in subsequent iterations, learns more successful programs.
 
-What grammars does SEC learn, and how do they enable the bootstrap learning of more complicated programs?
-The simplest example is that of how the Markov chain bootstraps the learning of the Ising model.
+What grammars does CEC learn, and how do they enable the bootstrap learning of more complicated programs?
+The simplest example is how the Markov chain bootstraps the learning of the Ising model.
 %Most of the easy tasks, such as the Markov chain, can be solved with the right choice of one higher-order function and one undirected union.
 After one iteration, the program fragment \textsc{(foldr unionC)}, used in the Markov chain program, is incorporated in to the grammar.
 On the second iteration, the Ising model is learned using this fragment, producing the program
@@ -260,13 +264,13 @@ On the second iteration, the Ising model is learned using this fragment, produci
 
 \section{Discussion}
 
-To be clear, what we have shown so far does not provide a way to learn the structure of a graphical model directly from observed data. Rather, this work suggests that we may be able to learn automatically an inductive bias that will subsequently make learning graphical model structures more efficient. Some of the programs that SEC includes in its library correspond to graph transformations, and we think that using this transformations as search operators will make structure learning of graphical models with latent variables a more tractable proposition than it currently is. 
+To be clear, what we have shown so far does not provide a way to learn the structure of a graphical model directly from observed data. Rather, this work suggests that we may be able to learn automatically an inductive bias that will subsequently make learning graphical model structures more efficient. Some of the programs that CEC includes in its library correspond to graph transformations, and we think that using these transformations as search operators will make structure learning of graphical models with latent variables a more tractable proposition than it currently is. 
 
-The notion that an appropriate inductive bias might help in the structure learning of graphical models is not new: \citep{DBLP:conf/icml/HonorioS10} shows that the inductive bias induced via multitask learning helps a search algorithm find accurate graphical model structures. But while work in this field has focused on how to evaluate a given graph, we hope to show that SEC can learn appropriate search operators directly from a set of training examples. 
+The notion that an appropriate inductive bias might help in the structure learning of graphical models is not new: \cite{DBLP:conf/icml/HonorioS10} shows that the inductive bias induced via multitask learning helps a search algorithm find accurate graphical model structures. But while work in this field has focused on how to evaluate a given graph, we hope to show that CEC can learn appropriate search operators directly from a set of training examples. 
 
 %We have presented the SEC algorithm in the context of learning graph structures, but we note that SEC is a general purpose multitask program induction algorithm. For an excellent survey of the current state of inductive programming systems, see~\citep{DBLP:conf/aaip/Kitzelmann09}. 
 
-\bibliographystyle{plainnat}
+\bibliographystyle{plain}
 \bibliography{main}
 
 \end{document}
