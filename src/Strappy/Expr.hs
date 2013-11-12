@@ -236,6 +236,12 @@ cBool2Expr :: Bool -> Expr
 cBool2Expr b = mkTerm (show b) tBool b
 
 
+getArity :: Expr -> Int
+getArity expr =
+  arity $ doTypeInference expr
+  where arity (TCon "->" [t1, t2]) = 1 + arity t2
+        arity _ = 0
+
 ----------------------------------------
 -- Hashable instance ------------------- 
 ----------------------------------------
