@@ -15,12 +15,14 @@ module Strappy.ExprTemplate where
 -- making a new module that abstracts out the common code.
 
 import Strappy.Expr
+import Strappy.Type
 
 import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.State
 import qualified Data.Map as M
 import Data.List
+import Debug.Trace
 
 -- | type inference monad
 type ExprTemp = StateT (Int, -- ^ next expr var
@@ -33,7 +35,7 @@ runETVar nextTVar m =
   evalStateT m (nextTVar, M.empty)
 
 eVar :: Int -> Expr
-eVar i = mkTerm ("?" ++ show i) undefined $ error "Attempt to eval eVar"
+eVar i = mkTerm ("?" ++ show i) (TVar 0) $ error "Attempt to eval eVar"
 
 -- Create an unbound type variable
 mkEVar :: Monad m => ExprTemp m Expr
@@ -65,6 +67,7 @@ applyESub e@(App { eLeft = l, eRight = r }) = do
   l' <- applyESub l
   r' <- applyESub r
   return $ e { eLeft = l', eRight = r' }
+applyESub e = return e
 
 -- Unification
 -- Primed unifyE is for exprs that have already had the substitution applied
@@ -86,14 +89,17 @@ unifyE' _ _ = lift $ fail "Could not unifyE"
 occursE :: Int -> Expr -> Bool
 occursE v (Term { eName = '?':v'}) = v == read v'
 occursE v (App { eLeft = l, eRight = r}) = occursE v l || occursE v r
+occursE _ _ = False
 
 -- Ground a universally quantified expr by instantiating new expr vars
-instantiateExpr :: Monad m => 
-                   Expr -> ExprTemp m Expr
-instantiateExpr e = do
-  let evars = filter (<0) $ nub $ getEVars e -- Only take universally quantified variables
-  newEVars <- mapM (const mkEVar) evars
-  return $ applyEVarSub (zip evars newEVars) e
+instantiateExpr :: Expr -> Expr
+instantiateExpr e =
+  let evars = nub $ getEVars e
+      existentialVars = filter (<0) evars -- Only take universally quantified variables
+      nextVar = maximum evars + 1
+      nextVar' = if nextVar <= 0 then 1 else nextVar
+      newEVars = map eVar [nextVar'..]
+  in applyEVarSub (zip existentialVars newEVars) e
   
 getEVars :: Expr -> [Int]
 getEVars (Term { eName = '?':v}) = [read v]
@@ -109,3 +115,19 @@ applyEVarSub sub e@(App { eLeft = l, eRight = r }) =
   e { eLeft = applyEVarSub sub l,
 	  eRight = applyEVarSub sub r }
 applyEVarSub _ e = e
+
+canonicalizeEVars :: Expr -> Expr
+canonicalizeEVars expr = evalState (canon expr) (1, [])
+  where canon (Term { eName = '?':v}) = do
+          let v' = read v
+          (next, subs) <- get
+          case lookup v' subs of
+            Nothing -> do let newExpr = eVar next
+                          put (next+1, (next, newExpr):subs)
+                          return newExpr
+            Just e -> return e
+        canon e@(Term {}) = return e
+        canon e@(App { eLeft = l, eRight = r }) = do
+          l' <- canon l
+          r' <- canon r
+          return $ e { eLeft = l', eRight = r' }

@@ -13,6 +13,7 @@ import Control.Exception
 import System.IO.Unsafe
 import Control.Concurrent.Timeout
 import Control.DeepSeq (deepseq)
+import Data.Maybe
 
 import Strappy.Type
 import Strappy.Config
@@ -130,16 +131,20 @@ timeLimitedEval expr = unsafePerformIO $
 
 -- | Runs type inference on the given program, returning its type
 doTypeInference :: Expr -> Type
-doTypeInference expr = runIdentity $ runTI $ infer expr
-  where infer (Term { eType = tp }) = instantiateType tp
-        infer (App { eLeft = l, eRight = r }) = do
-          alpha <- mkTVar
-          beta <- mkTVar
-          lTp <- infer l
-          unify lTp (alpha ->- beta)
-          rTp <- infer r
-          unify rTp alpha
-          applySub beta
+doTypeInference expr = runIdentity $ runTI $ doTypeInferenceM expr
+
+doTypeInferenceM (Term { eType = tp }) = instantiateType tp
+doTypeInferenceM (App { eLeft = l, eRight = r }) = do
+  alpha <- mkTVar
+  beta <- mkTVar
+  lTp <- doTypeInferenceM l
+  unify lTp (alpha ->- beta)
+  rTp <- doTypeInferenceM r
+  unify rTp alpha
+  applySub beta
+
+typeChecks :: Expr -> Bool
+typeChecks expr = isJust $ runTI $ doTypeInferenceM expr
 
 -- | Folds a monadic procedure over each subtree of a given expression
 exprFoldM :: Monad m => (a -> Expr -> m a) -> a -> Expr -> m a
