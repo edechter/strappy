@@ -7,6 +7,9 @@ import Strappy.Type
 import Strappy.Library
 import Strappy.Simplify
 import Strappy.ExprTemplate
+import Strappy.Utils
+import Strappy.Config
+import Strappy.Compress
 
 import Data.List
 import Control.Monad
@@ -16,6 +19,7 @@ import qualified Data.Set as S
 import Data.PQueue.Min (MinQueue)
 import qualified Data.PQueue.Min as PQ
 import Data.Maybe
+import Data.Function
 
 
 getTemplates :: Expr -> [(Expr, [Expr])]
@@ -94,12 +98,17 @@ templateMDL (Grammar { grApp = logApp, grExprDistr = distr }) tp expr = runTI (m
         minMDL :: Double
         minMDL = minimum $ map snd distrList
 
-enumBU :: Int -> Grammar -> Type -> Expr -> IO [Expr]
+enumBU :: Int -> Grammar -> Type -> Expr -> IO (ExprMap Double)
 enumBU sz gr tp seed =
   let open = PQ.singleton (fromJust $ templateMDL gr tp seed,
                            seed)
       closed = S.singleton seed
-  in liftM (filter typeChecks) $ liftM concat $ mapM instantiateVars $ S.toList $ bu open closed
+  in do es <- liftM concat $ mapM instantiateVars $ S.toList $ bu open closed
+        let distr = [ (e', fromJust (eLogLikelihood e')) | e <- es, let e' = exprLogLikelihood gr (annotateRequested' tp e) ]
+        -- Normalize
+        let logZ = logSumExpList $ map snd distr
+        let distr' = [ (e, ll-logZ) | (e, ll) <- distr ]
+        return $ M.fromList distr'
   where bu open closed | PQ.size open == 0 || S.size closed >= sz = closed
         bu open closed =
           let ((_, cb), open') = PQ.deleteFindMin open -- get best open solution
@@ -108,17 +117,45 @@ enumBU sz gr tp seed =
               children'' = map (\(maybeMDL, child) -> (fromJust maybeMDL, child)) $
                            filter (isJust . fst) children'
               children''' = filter (\child -> not (S.member (snd child) closed)) children''
-              closed' = foldl (\acc child -> S.insert (snd child) acc) closed children'''
-              open'' = foldl (\acc kid -> PQ.insert kid acc) open' children'''
+              children'''' = filter (typeChecks . snd) children'''
+              closed' = foldl (\acc child -> S.insert (snd child) acc) closed children''''
+              open'' = foldl (\acc kid -> PQ.insert kid acc) open' children''''
           in bu open'' closed'
         templates = appendTemplates ++ concatMap getTemplates (map fst $ M.toList $ grExprDistr gr)
         instantiateVars e =
           case getEVars e of
             [] -> return [e]
-            _ -> error "Variables not currently handled"
+            _ -> error "enumBU: Variables not currently handled"
 {-
 main = do
     let rs = appendTemplates ++ concatMap getTemplates [cS, cB, cI, cC]
     let expr = readExpr "((: 0) ((: 0) []))"
     forM_ (invertRewrites expr rs) $ putStrLn . show
 -}
+
+
+-- | Performs one iteration of Bottom-Up EM
+doBUIter :: String -- ^ Prefix for log output
+            -> [(Type, Expr, String)] -- ^ Tasks
+            -> Double -- ^ Lambda
+            -> Double -- ^ pseudocounts
+            -> Int -- ^ frontier size
+            -> Grammar -- ^ Initial grammar
+            -> IO Grammar -- ^ Improved grammar
+doBUIter prefix tasks lambda pseudocounts frontierSize grammar = do
+    -- Enumerate frontiers
+  frontiers <- mapM (\(tp, seed, _) -> enumBU frontierSize grammar tp seed) tasks
+  -- Save out the best program for each task to a file
+  saveBestBU $ zip frontiers tasks
+  let grammar' = grammarEM lambda pseudocounts (blankLibrary grammar) frontiers --compressWeightedCorpus lambda pseudocounts grammar obs'
+  let terminalLen = length $ filter isTerm $ M.keys $ grExprDistr grammar
+  putStrLn $ "Got " ++ show ((length $ lines $ showGrammar $ removeSubProductions grammar') - terminalLen - 1) ++ " new productions."
+  putStrLn $ "Grammar entropy: " ++ show (entropyLogDist $ M.elems $ grExprDistr grammar')
+  when verbose $ putStrLn $ showGrammar $ removeSubProductions grammar'
+  putStrLn "" -- newline
+  return grammar'
+  where saveBestBU frontiersAndTasks =
+          let str = unlines $ map (\(front, (_, _, nm)) -> 
+                                      let (bestProg, bestLL) = maximumBy (compare `on` snd) (M.toList front)
+                                      in nm ++ "\t" ++ show bestProg ++ "\t" ++ show bestLL) frontiersAndTasks
+          in writeFile prefix str

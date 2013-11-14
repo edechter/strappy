@@ -9,7 +9,7 @@ import Strappy.Type
 import Strappy.Task
 import Strappy.Utils
 import Strappy.Library 
-import Strappy.LPCompress
+import Strappy.Compress
 import Strappy.Config
 
 import Data.Maybe

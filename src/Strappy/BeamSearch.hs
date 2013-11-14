@@ -7,7 +7,7 @@ import Strappy.Planner
 import Strappy.Utils
 import Strappy.Expr
 import Strappy.Type
-import Strappy.LPCompress
+import Strappy.Compress
 import Strappy.Sample
 import Strappy.Library
 import Strappy.Config

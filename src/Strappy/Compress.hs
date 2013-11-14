@@ -1,104 +1,62 @@
--- Compress.hs
--- Eyal Dechter
+-- | This module compresses a set of combinators using a weighted version of Neville-Manning
+-- | It finds the same solution as the corresponding linear program.
 
--- | This module contains functions for compressing a set of
--- combinators.
+module Strappy.Compress (compressWeightedCorpus, grammarEM) where
 
-module Strappy.Compress where
-
-import Control.Monad.State 
-import Data.List (foldl')
-import Debug.Trace
-
-import Strappy.CL
+import Strappy.Expr
+import Strappy.Library
+import Strappy.Utils
+import Strappy.Config
 import Strappy.Type
-import qualified Strappy.CombMap as CM
-import Strappy.CombMap (CombMap)
+
+import Data.List
+import qualified Data.Set as Set
+import qualified Data.Map as Map
+import Control.Monad
+import Control.Monad.Trans
+import Debug.Trace
+import System.IO.Unsafe
+import System.CPUTime
+import Data.Maybe
 
 
--- | Record all unique combinators that satisfy the following:
+compressWeightedCorpus :: Double -> -- ^ lambda
+                          Double -> -- ^ pseudocounts
+                          Grammar -> -- ^ initial grammar
+                          [(Expr, Double)] -> -- ^ weighted corpus
+                          Grammar
+compressWeightedCorpus lambda pseudocounts grammar corpus =
+  let subtrees = foldl1 (Map.unionWith (+)) $ map (countSubtrees Map.empty) corpus
+      terminals = filter isTerm $ Map.keys $ grExprDistr grammar
+      newProductions = compressCorpus lambda subtrees
+      productions = map annotateRequested $ newProductions ++ terminals
+      uniformLogProb = -log (genericLength productions)
+      grammar'   = Grammar (log 0.5) $ Map.fromList [ (prod, uniformLogProb) | prod <- productions ]
+      grammar''  = if pruneGrammar
+                   then removeUnusedProductions grammar' $ map fst corpus
+                   else grammar'
+      grammar''' = inoutEstimateGrammar grammar'' pseudocounts corpus
+  in grammar'''
 
-type Index = CombMap Int
-
--- | When incrementing a tree:
--- a ) if it has count 0 set count to 1 and increment children
--- b) if it has count 1 set count to 2 and decrement children
--- c) if it has count > 2 set count (+1)
--- | When decrementing a tree:
--- a) if it has count 1 set count to 0 and decrement children
--- b) if it has count 2 or greater, set count (-1) and increment children
-
-
-incr :: Index -> Comb -> Index
-incr index c@(CApp{lComb=l, rComb=r})
-    = case CM.lookup c index of
-        Nothing -> let index' = CM.insert c 1 index
-                   in incr (incr index' l) r
-        Just i -> let index' = CM.insert c (i + 1) index
-                  in case i  of
-                       0 -> incr (incr index' l) r
-                       otherwise -> index'
-incr index c@(CLeaf{}) = case CM.lookup c index of
-                               Nothing -> CM.insert c 1 index
-                               Just i -> CM.insert c (i+1) index
-
-                 
-compress :: [Comb] -> Index
-compress cs = foldl' incr CM.empty cs
+-- Weighted Nevill-Manning
+compressCorpus :: Double -> ExprMap Double -> [Expr]
+compressCorpus lambda counts =
+  map fst $ filter (\(_, c) -> c >= lambda) $ Map.toList counts
 
 
-
-incr2 :: CombMap [Type] -> Comb -> Type -> State Int (CombMap [Type])
-incr2 index c@(CApp{lComb=l, rComb=r}) tp 
-    = do t <- newTVar Star
-         let t_left = t ->- tp
-         case CM.lookup c index of
-           Nothing -> do let index' = CM.insert c [tp] index 
-                         l_index <- incr2 index' l t_left
-                         r_index <- incr2 l_index r (fromType (cType l))
-                         return r_index
-           Just (x:[]) -> do let index' = CM.insert c [tp, x] index 
-                             l_index <- incr2 index' l t_left
-                             r_index <- incr2 l_index r (fromType (cType l))
-                             return r_index
-           Just xs -> do let index' = CM.insert c (tp:xs) index 
-                         return index'
-incr2 index c@(CLeaf{}) tp = return $ CM.insertWith (++) c [tp] index 
-
-compress2 :: [(Type, Comb)] -> CombMap [Type]
-compress2 xs = foldl' f  CM.empty xs
-    where f ind (t, c) = fst $ runState (incr2 ind c t) 0
-
-
-
-
--------------------------------
--- | Alternative compression scheme 
--- 1) index and count all the unique
--- subexpressions in the library 
--- 2) the complexity of a set of
--- expressions is the number of unique subexpression.
-
-getUniqueTrees :: Comb -> Index
-getUniqueTrees c@(CLeaf{}) = CM.singleton c 1 
-                  
-getUniqueTrees c@(CApp{lComb=l, rComb=r}) = let a = CM.singleton c 1 
-                                                b = getUniqueTrees  l
-                                                d = getUniqueTrees  r
-                                            in d  `with` a `with` b 
-    where with = CM.unionWith (+)
-
-
-
-                      
-
-
-
-
-
-                    
-
-                    
-
-
-
+grammarEM :: Double -> -- ^ lambda
+             Double -> -- ^ pseudocounts
+             Grammar -> -- ^ initial grammar
+             [ExprMap Double] -> -- ^ For each task, program likelihoods
+             Grammar
+grammarEM lambda pseudocounts g0 tsks =
+  let frontiers = flip map tsks $ \lls -> Map.mapWithKey (\e ll -> ll + fromJust (eLogLikelihood (exprLogLikelihood g0 e))) lls
+      zs = flip map frontiers $ Map.fold logSumExp (log 0)
+      normFrontiers = zipWith (\front z -> Map.map (\l -> l - z) front) frontiers zs
+      corpus = Map.toList $ Map.map exp $ foldl1 (Map.unionWith logSumExp) normFrontiers
+      g' = compressWeightedCorpus lambda pseudocounts g0 corpus
+      oldProductions = Set.fromList $ Map.keys $ grExprDistr g0
+      newProductions = Set.fromList $ Map.keys $ grExprDistr g'
+  in if oldProductions == newProductions
+     then g'
+     else trace "Another iter of grammarEM..." (grammarEM lambda pseudocounts g' tsks)

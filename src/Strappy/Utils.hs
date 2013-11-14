@@ -102,6 +102,10 @@ forceShowHack x = do
   a <- (newListArray (1::Int,length strVal) strVal) :: IO (IOUArray Int Char)
   return ()
 
+fst3 (x, _, _) = x
+snd3 (_, x, _) = x
+thd3 (_, _, x) = x
+
 instance (MonadRandom m) => MonadRandom (MaybeT m) where
   getRandom = lift getRandom
   getRandoms = lift getRandoms
