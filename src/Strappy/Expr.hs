@@ -213,6 +213,9 @@ cDouble2Expr :: Double -> Expr
 -- | Convert doubles to expressions. 
 cDouble2Expr i = mkTerm (show i) tDouble i 
 
+cChar2Expr :: Char -> Expr
+cChar2Expr c = mkTerm (show c) tChar c
+
 -------------------------------------------
 -- Pattern matching for combinators -------
 -------------------------------------------

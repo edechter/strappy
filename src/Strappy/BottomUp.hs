@@ -103,13 +103,13 @@ enumBU sz gr tp seed =
   let open = PQ.singleton (fromJust $ templateMDL gr tp seed,
                            seed)
       closed = S.singleton seed
-  in do es <- liftM concat $ mapM instantiateVars $ S.toList $ bu open closed
+  in do es <- liftM concat . mapM instantiateVars . S.toList =<< bu open closed
         let distr = [ (e', fromJust (eLogLikelihood e')) | e <- es, let e' = exprLogLikelihood gr (annotateRequested' tp e) ]
         -- Normalize
         let logZ = logSumExpList $ map snd distr
         let distr' = [ (e, ll-logZ) | (e, ll) <- distr ]
         return $ M.fromList distr'
-  where bu open closed | PQ.size open == 0 || S.size closed >= sz = closed
+  where bu open closed | PQ.size open == 0 || S.size closed >= sz = return closed
         bu open closed =
           let ((_, cb), open') = PQ.deleteFindMin open -- get best open solution
               children = invertRewrites cb templates
@@ -120,7 +120,8 @@ enumBU sz gr tp seed =
               children'''' = filter (typeChecks . snd) children'''
               closed' = foldl (\acc child -> S.insert (snd child) acc) closed children''''
               open'' = foldl (\acc kid -> PQ.insert kid acc) open' children''''
-          in bu open'' closed'
+          in do forceShowHack children
+                bu open'' closed'
         templates = appendTemplates ++ concatMap getTemplates (map fst $ M.toList $ grExprDistr gr)
         instantiateVars e =
           case getEVars e of

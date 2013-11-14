@@ -399,6 +399,17 @@ towerExprs = [cI,
               ] ++ [ cDouble2Expr 0, cDouble2Expr 1, cDouble2Expr (-1) ]
                 ++ [ cBool2Expr True, cBool2Expr False ]
 
+-- Library for words
+wordExprs :: [Expr]
+wordExprs = [cI, 
+              cS, 
+              cB, 
+              cC,
+              cCons,
+              cEmpty,
+              cAppend]
+              ++ [ cChar2Expr c | c <- ['a'..'z'] ]
+
 mkExprDistr :: [Expr] -> ExprDistr
 mkExprDistr exprs = Map.adjust (const (-5)) cBottom
                     $ Map.fromList [(e, 1) | e <- exprs] 
