@@ -21,7 +21,7 @@ main = do
   putStrLn $ "Words run with: " ++ unwords args
   let seed = Grammar { grApp = log 0.35,
                        grExprDistr = Map.fromList [ (annotateRequested e, 1.0) | e <- wordExprs ] }
-  let tasks = [makeWordTask word | word <- ["aaaa" ]] --, "bbbb", "cccc", "dddd", "eeee"] ]
+  let tasks = [makeWordTask word | word <- ["antifoo", "antibar", "antiasdf", "antieat", "antiread", "antisloth", "anticat"] ]
   loopM seed [0..14] $ \grammar step -> do
     putStrLn ("EM Iteration: " ++ show step)
     grammar' <- doBUIter (prefix++"/best_"++show step) tasks

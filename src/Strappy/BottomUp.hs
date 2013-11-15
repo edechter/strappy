@@ -16,8 +16,8 @@ import Control.Monad
 import Control.Monad.State
 import qualified Data.Map as M
 import qualified Data.Set as S
-import Data.PQueue.Min (MinQueue)
-import qualified Data.PQueue.Min as PQ
+import Data.PQueue.Max (MaxQueue)
+import qualified Data.PQueue.Max as PQ
 import Data.Maybe
 import Data.Function
 
@@ -100,8 +100,7 @@ templateMDL (Grammar { grApp = logApp, grExprDistr = distr }) tp expr = runTI (m
 
 enumBU :: Int -> Grammar -> Type -> Expr -> IO (ExprMap Double)
 enumBU sz gr tp seed =
-  let open = PQ.singleton (fromJust $ templateMDL gr tp seed,
-                           seed)
+  let open = PQ.singleton (getLL seed, seed)
       closed = S.singleton seed
   in do es <- liftM concat . mapM instantiateVars . S.toList =<< bu open closed
         let distr = [ (e', fromJust (eLogLikelihood e')) | e <- es, let e' = exprLogLikelihood gr (annotateRequested' tp e) ]
@@ -111,26 +110,26 @@ enumBU sz gr tp seed =
         return $ M.fromList distr'
   where bu open closed | PQ.size open == 0 || S.size closed >= sz = return closed
         bu open closed =
-          let ((_, cb), open') = PQ.deleteFindMin open -- get best open solution
+          let ((_, cb), open') = PQ.deleteFindMax open -- get best open solution
               children = invertRewrites cb templates
-              children' = map (\child -> (templateMDL gr tp seed, child)) children
-              children'' = map (\(maybeMDL, child) -> (fromJust maybeMDL, child)) $
-                           filter (isJust . fst) children'
-              children''' = filter (\child -> not (S.member (snd child) closed)) children''
-              children'''' = filter (typeChecks . snd) children'''
-              closed' = foldl (\acc child -> S.insert (snd child) acc) closed children''''
-              open'' = foldl (\acc kid -> PQ.insert kid acc) open' children''''
-          in do forceShowHack children
+              children' = filter (not . flip S.member closed) children
+              children'' = filter typeChecks children'
+              children''' = map (\child -> (getLL child, child)) children''
+              closed' = foldl (\acc child -> S.insert (snd child) acc) closed children'''
+              open'' = foldl (\acc kid -> PQ.insert kid acc) open' children'''
+          in do forceShowHack children'''
                 bu open'' closed'
         templates = appendTemplates ++ concatMap getTemplates (map fst $ M.toList $ grExprDistr gr)
         instantiateVars e =
           case getEVars e of
             [] -> return [e]
             _ -> error "enumBU: Variables not currently handled"
+        getLL :: Expr -> Double
+        getLL e = fromJust $ eLogLikelihood $ exprLogLikelihood gr $ annotateRequested' tp e
 {-
 main = do
     let rs = appendTemplates ++ concatMap getTemplates [cS, cB, cI, cC]
-    let expr = readExpr "((: 0) ((: 0) []))"
+    let expr = readExpr "((: 1) ((: 0) ((: 1) [])))"
     forM_ (invertRewrites expr rs) $ putStrLn . show
 -}
 
