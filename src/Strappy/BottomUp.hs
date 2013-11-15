@@ -98,16 +98,22 @@ templateMDL (Grammar { grApp = logApp, grExprDistr = distr }) tp expr = runTI (m
         minMDL :: Double
         minMDL = minimum $ map snd distrList
 
-enumBU :: Int -> Grammar -> Type -> Expr -> IO (ExprMap Double)
-enumBU sz gr tp seed =
+enumBU :: Int -> -- ^ Number programs enumerated
+          Int -> -- ^ Of those programs, how many do we keep?
+          Grammar -> -- ^ Starting grammar
+          Type -> -- ^ Requested type
+          Expr -> -- ^ Initializing expression; evaluates to what we want to enumerate, and is in normal form
+          IO (ExprMap Double)
+enumBU sz szKept gr tp seed =
   let open = PQ.singleton (getLL seed, seed)
       closed = S.singleton seed
   in do es <- liftM concat . mapM instantiateVars . S.toList =<< bu open closed
         let distr = [ (e', fromJust (eLogLikelihood e')) | e <- es, let e' = exprLogLikelihood gr (annotateRequested' tp e) ]
+        let distr' = take szKept $ sortBy (\ (_, ll) (_, ll') -> compare ll' ll) distr
         -- Normalize
-        let logZ = logSumExpList $ map snd distr
-        let distr' = [ (e, ll-logZ) | (e, ll) <- distr ]
-        return $ M.fromList distr'
+        let logZ = logSumExpList $ map snd distr'
+        let distr'' = [ (e, ll-logZ) | (e, ll) <- distr' ]
+        return $ M.fromList distr''
   where bu open closed | PQ.size open == 0 || S.size closed >= sz = return closed
         bu open closed =
           let ((_, cb), open') = PQ.deleteFindMax open -- get best open solution
@@ -128,9 +134,13 @@ enumBU sz gr tp seed =
         getLL e = fromJust $ eLogLikelihood $ exprLogLikelihood gr $ annotateRequested' tp e
 {-
 main = do
-    let rs = appendTemplates ++ concatMap getTemplates [cS, cB, cI, cC]
-    let expr = readExpr "((: 1) ((: 0) ((: 1) [])))"
-    forM_ (invertRewrites expr rs) $ putStrLn . show
+    let rs = appendTemplates -- ++ concatMap getTemplates [cS, cB, cI, cC]
+    let expr = readExpr "((: 'a') ((: 'n') ((: 't') ((: 'i') ((: 'b') [])))))"
+    let seed = Grammar { grApp = log 0.35,
+                         grExprDistr = M.fromList [ (annotateRequested e, 1.0) | e <- wordExprs ] }
+    es <- enumBU 15000 500 seed (tList tChar)  expr
+    let es' = sortBy (compare `on` snd) $ M.toList es
+    forM_ es' $ putStrLn . show . fst
 -}
 
 
@@ -140,14 +150,18 @@ doBUIter :: String -- ^ Prefix for log output
             -> Double -- ^ Lambda
             -> Double -- ^ pseudocounts
             -> Int -- ^ frontier size
+            -> Int -- ^ size kept
             -> Grammar -- ^ Initial grammar
             -> IO Grammar -- ^ Improved grammar
-doBUIter prefix tasks lambda pseudocounts frontierSize grammar = do
+doBUIter prefix tasks lambda pseudocounts frontierSize keepSize grammar = do
     -- Enumerate frontiers
-  frontiers <- mapM (\(tp, seed, _) -> enumBU frontierSize grammar tp seed) tasks
+  frontiers <- mapM (\(tp, seed, _) -> do front <- enumBU frontierSize keepSize grammar tp seed
+                                          forceShowHack front
+                                          return front) tasks
   -- Save out the best program for each task to a file
   saveBestBU $ zip frontiers tasks
-  let grammar' = grammarEM lambda pseudocounts (blankLibrary grammar) frontiers --compressWeightedCorpus lambda pseudocounts grammar obs'
+  let frontiers' = map (M.map (const 0.0)) frontiers
+  let grammar' = grammarEM lambda pseudocounts (blankLibrary grammar) frontiers' --compressWeightedCorpus lambda pseudocounts grammar obs'
   let terminalLen = length $ filter isTerm $ M.keys $ grExprDistr grammar
   putStrLn $ "Got " ++ show ((length $ lines $ showGrammar $ removeSubProductions grammar') - terminalLen - 1) ++ " new productions."
   putStrLn $ "Grammar entropy: " ++ show (entropyLogDist $ M.elems $ grExprDistr grammar')

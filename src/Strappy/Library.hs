@@ -331,6 +331,7 @@ cFoldl1 = mkTerm "foldl1" ((t ->- t ->- t) ->- tList t ->- t) $ foldl1
 cFoldr1 = mkTerm "foldr1" ((t ->- t ->- t) ->- tList t ->- t) $ foldr1
 cInts =  [ cInt2Expr i | i <- [-10..10]]
 cDoubles =  [ cDouble2Expr i | i <- [-10..10]]
+cChars = [ cChar2Expr c | c <- ['a'..'z']]
 
 -- | Bools
 cNand = mkTerm "nand" (tBool ->- tBool ->- tBool) $ \ x y -> not (x && y)
@@ -364,7 +365,7 @@ basicExprs = [cI,
               cBool2Expr True,
               cBool2Expr False,
               cHole
-             ] ++ cInts ++ cDoubles
+             ] ++ cInts ++ cDoubles ++ cChars
              
 -- Library for testing EM+polynomial regression
 polyExprs :: [Expr]
@@ -596,7 +597,7 @@ readExpr input = case parse parseComb "CL" input of
      Left err -> error $ "No match: " ++ show err
      Right val -> val
      where symbol :: Parser Char
-           symbol = oneOf "!#$%&|*+-/:<=>?@^_~.[]?"
+           symbol = oneOf "!#$%&|*+-/:<=>?@^_~.[]?'"
            parseAtom :: Parser Expr
            parseAtom = do 
              hd <- letter <|> digit <|> symbol

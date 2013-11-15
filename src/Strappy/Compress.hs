@@ -59,4 +59,4 @@ grammarEM lambda pseudocounts g0 tsks =
       newProductions = Set.fromList $ Map.keys $ grExprDistr g'
   in if oldProductions == newProductions
      then g'
-     else trace "Another iter of grammarEM..." (grammarEM lambda pseudocounts g' tsks)
+     else trace ("Another iter of grammarEM...\n" ++ showGrammar g') $ grammarEM lambda pseudocounts g' tsks

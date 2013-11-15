@@ -17,15 +17,15 @@ makeWordTask str =
           e (c:cs) = (cCons <> cChar2Expr c) <> e cs
 
 main = do
-  args@[rndSeed, lambda, pseudocounts, fSize, prefix] <- getArgs
+  args@[rndSeed, lambda, pseudocounts, fSize, keepSize, prefix] <- getArgs
   putStrLn $ "Words run with: " ++ unwords args
   let seed = Grammar { grApp = log 0.35,
                        grExprDistr = Map.fromList [ (annotateRequested e, 1.0) | e <- wordExprs ] }
-  let tasks = [makeWordTask word | word <- ["antifoo", "antibar", "antiasdf", "antieat", "antiread", "antisloth", "anticat"] ]
+  let tasks = [makeWordTask ("anti"++[suffix]) | suffix <- "abcdefgh" ]
   loopM seed [0..14] $ \grammar step -> do
     putStrLn ("EM Iteration: " ++ show step)
     grammar' <- doBUIter (prefix++"/best_"++show step) tasks
-                         (read lambda) (read pseudocounts) (read fSize) grammar
+                         (read lambda) (read pseudocounts) (read fSize) (read keepSize) grammar
     saveGrammar (prefix++"/grammar_" ++ show step) grammar'
     return grammar'
   return ()
