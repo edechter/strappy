@@ -146,7 +146,7 @@ main = do
 
 -- | Performs one iteration of Bottom-Up EM
 doBUIter :: String -- ^ Prefix for log output
-            -> [(Type, Expr, String)] -- ^ Tasks
+            -> [(Type, Expr, String, Int)] -- ^ Tasks
             -> Double -- ^ Lambda
             -> Double -- ^ pseudocounts
             -> Int -- ^ frontier size
@@ -155,12 +155,12 @@ doBUIter :: String -- ^ Prefix for log output
             -> IO Grammar -- ^ Improved grammar
 doBUIter prefix tasks lambda pseudocounts frontierSize keepSize grammar = do
     -- Enumerate frontiers
-  frontiers <- mapM (\(tp, seed, _) -> do front <- enumBU frontierSize keepSize grammar tp seed
-                                          forceShowHack front
-                                          return front) tasks
+  frontiers <- mapM (\(tp, seed, nm, cnt) -> do front <- enumBU frontierSize keepSize grammar tp seed
+                                                forceShowHack front
+                                                return (front, cnt)) tasks
   -- Save out the best program for each task to a file
-  saveBestBU $ zip frontiers tasks
-  let frontiers' = map (M.map (const 0.0)) frontiers
+  saveBestBU $ zip (map fst frontiers) tasks
+  let frontiers' = map (\(fnt, cnt) -> (M.map (const 0.0) fnt, cnt)) frontiers
   let grammar' = grammarEM lambda pseudocounts (blankLibrary grammar) frontiers' --compressWeightedCorpus lambda pseudocounts grammar obs'
   let terminalLen = length $ filter isTerm $ M.keys $ grExprDistr grammar
   putStrLn $ "Got " ++ show ((length $ lines $ showGrammar $ removeSubProductions grammar') - terminalLen - 1) ++ " new productions."
@@ -169,7 +169,7 @@ doBUIter prefix tasks lambda pseudocounts frontierSize keepSize grammar = do
   putStrLn "" -- newline
   return grammar'
   where saveBestBU frontiersAndTasks =
-          let str = unlines $ map (\(front, (_, _, nm)) -> 
+          let str = unlines $ map (\(front, (_, _, nm, _)) -> 
                                       let (bestProg, bestLL) = maximumBy (compare `on` snd) (M.toList front)
                                       in nm ++ "\t" ++ show bestProg ++ "\t" ++ show bestLL) frontiersAndTasks
           in writeFile prefix str

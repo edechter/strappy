@@ -27,6 +27,10 @@ compressWeightedCorpus :: Double -> -- ^ lambda
                           Grammar
 compressWeightedCorpus lambda pseudocounts grammar corpus =
   let subtrees = foldl1 (Map.unionWith (+)) $ map (countSubtrees Map.empty) corpus
+      -- Debugging of words
+      antiExpr = readExpr "((: 'a') ((: 'n') ((: 't') ((: 'i') []))))"
+      antiWeight = fromJust $ Map.lookup antiExpr subtrees
+      antiStr = "Anti weight:" ++ show antiWeight
       terminals = filter isTerm $ Map.keys $ grExprDistr grammar
       newProductions = compressCorpus lambda subtrees
       productions = map annotateRequested $ newProductions ++ terminals
@@ -36,7 +40,7 @@ compressWeightedCorpus lambda pseudocounts grammar corpus =
                    then removeUnusedProductions grammar' $ map fst corpus
                    else grammar'
       grammar''' = inoutEstimateGrammar grammar'' pseudocounts corpus
-  in grammar'''
+  in trace antiStr grammar'''
 
 -- Weighted Nevill-Manning
 compressCorpus :: Double -> ExprMap Double -> [Expr]
@@ -47,13 +51,13 @@ compressCorpus lambda counts =
 grammarEM :: Double -> -- ^ lambda
              Double -> -- ^ pseudocounts
              Grammar -> -- ^ initial grammar
-             [ExprMap Double] -> -- ^ For each task, program likelihoods
+             [(ExprMap Double, Int)] -> -- ^ For each task, program likelihoods and multiplicative counts
              Grammar
 grammarEM lambda pseudocounts g0 tsks =
-  let frontiers = flip map tsks $ \lls -> Map.mapWithKey (\e ll -> ll + fromJust (eLogLikelihood (exprLogLikelihood g0 e))) lls
+  let frontiers = flip map tsks $ \(lls, _) -> Map.mapWithKey (\e ll -> ll + fromJust (eLogLikelihood (exprLogLikelihood g0 e))) lls
       zs = flip map frontiers $ Map.fold logSumExp (log 0)
-      normFrontiers = zipWith (\front z -> Map.map (\l -> l - z) front) frontiers zs
-      corpus = Map.toList $ Map.map exp $ foldl1 (Map.unionWith logSumExp) normFrontiers
+      normFrontiers = zipWith3 (\front z (_, cnt) -> Map.map (\l -> fromIntegral cnt * exp (l - z)) front) frontiers zs tsks
+      corpus = Map.toList $ foldl1 (Map.unionWith (+)) normFrontiers
       g' = compressWeightedCorpus lambda pseudocounts g0 corpus
       oldProductions = Set.fromList $ Map.keys $ grExprDistr g0
       newProductions = Set.fromList $ Map.keys $ grExprDistr g'
