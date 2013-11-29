@@ -59,6 +59,14 @@ reduceExpr e@(App { eLeft = l, eRight = r }) =
                  Just r' -> Just $ e { eRight = r' }
     Just l' -> Just $ e { eLeft = l' }
 
+reductionNeighbors :: Expr -> [Expr]
+reductionNeighbors (Term {}) = []
+reductionNeighbors e@(App { eLeft = l, eRight = r}) =
+  let ereds = case reduceExpr e of
+                Nothing -> []
+                Just e -> [e]
+  in ereds ++ map (\l' -> e { eLeft = l' }) (reductionNeighbors l) ++ map (\r' -> e { eRight = r' }) (reductionNeighbors r)
+
 {-main = do
   let e = readExpr $ "(((S ++) (: 0)) ((: 1) ((: ((K 0) I)) (I []))))"
   loopM e [1..10] $ \expr _ ->

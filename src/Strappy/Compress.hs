@@ -1,7 +1,7 @@
 -- | This module compresses a set of combinators using a weighted version of Neville-Manning
 -- | It finds the same solution as the corresponding linear program.
 
-module Strappy.Compress (compressWeightedCorpus, grammarEM) where
+module Strappy.Compress (compressWeightedCorpus, grammarEM, grammarHillClimb) where
 
 import Strappy.Expr
 import Strappy.Library
@@ -18,6 +18,7 @@ import Debug.Trace
 import System.IO.Unsafe
 import System.CPUTime
 import Data.Maybe
+import Data.Function
 
 
 compressWeightedCorpus :: Double -> -- ^ lambda
@@ -27,10 +28,6 @@ compressWeightedCorpus :: Double -> -- ^ lambda
                           Grammar
 compressWeightedCorpus lambda pseudocounts grammar corpus =
   let subtrees = foldl1 (Map.unionWith (+)) $ map (countSubtrees Map.empty) corpus
-      -- Debugging of words
-      antiExpr = readExpr "((: 'a') ((: 'n') ((: 't') ((: 'i') []))))"
-      antiWeight = fromJust $ Map.lookup antiExpr subtrees
-      antiStr = "Anti weight:" ++ show antiWeight
       terminals = filter isTerm $ Map.keys $ grExprDistr grammar
       newProductions = compressCorpus lambda subtrees
       productions = map annotateRequested $ newProductions ++ terminals
@@ -40,7 +37,7 @@ compressWeightedCorpus lambda pseudocounts grammar corpus =
                    then removeUnusedProductions grammar' $ map fst corpus
                    else grammar'
       grammar''' = inoutEstimateGrammar grammar'' pseudocounts corpus
-  in trace antiStr grammar'''
+  in grammar'''
 
 -- Weighted Nevill-Manning
 compressCorpus :: Double -> ExprMap Double -> [Expr]
@@ -64,3 +61,70 @@ grammarEM lambda pseudocounts g0 tsks =
   in if oldProductions == newProductions
      then g'
      else trace ("Another iter of grammarEM...\n" ++ showGrammar g') $ grammarEM lambda pseudocounts g' tsks
+
+
+
+-- | In this procedure, likelihoods are ignored.
+grammarHillClimb :: Double -> -- ^ lambda
+                    Double -> -- ^ pseudocounts
+                    Grammar -> -- ^ initial grammar
+                    [(ExprMap Double, Int)] -> -- ^ For each task, program likelihoods and multiplicative counts
+                    Grammar
+grammarHillClimb lambda pseudocounts g0 tsks =
+  let tsks' = map (Map.keys . fst) tsks
+      -- chop each task up in to its constituent program fragments
+      frags = map (Set.toList . foldl collectSubtrees Set.empty) tsks'
+      -- find only those fragments that occur in more than one task
+      candidateFrags = Map.keys $ Map.filter (>1) $
+                       foldl (\acc fs ->
+                               foldl (\a f -> Map.insertWith (+) f 1 a)
+                                     acc fs)
+                             Map.empty frags
+      candidateFrags' = map (\e -> e { eType = doTypeInference e }) candidateFrags
+      seedPrims = Map.keys $ grExprDistr g0
+      lp = logPosterior tsks' seedPrims
+  in trace ("Num fragaments:" ++ show (length candidateFrags)) $
+           climb tsks' seedPrims lp candidateFrags'
+  where climb :: [[Expr]] -> -- ^ Programs that solve each task
+                 [Expr] -> -- ^ Current library
+                 Double  -> -- ^ Log posterior under previous grammar
+                 [Expr] -> -- ^ Program fragments we might consider adding
+                 Grammar -- ^ Final grammar
+        climb ts ps oldLP frags =
+          -- For each fragment, consider what the library would look like with it added
+          let newPs = map (add2lib ps) frags
+              newLLs = map (logPosterior ts) newPs
+              (newLib, newLP) = maximumBy (compare `on` snd) (zip newPs newLLs)
+              newFrags = filter (not . flip elem newLib) frags
+          in if newLP > oldLP
+             then trace ("New library:" ++ show newLib) $ climb ts newLib newLP newFrags
+             else let g = Grammar { grExprDistr = Map.fromList [ (l, 0.0) | l <- ps],
+                                    grApp = log 0.5 }
+                      ts' = [ [ (e, fromJust $ eLogLikelihood $ exprLogLikelihood g e) | e <- front ] | front <- ts ]
+                      logZs = map (logSumExpList . map snd) ts'
+                      ts'' = zipWith (\front logZ -> map (\(e, w) -> (e, exp (w-logZ))) front) ts' logZs
+                      corpus = concat ts''
+                  in inoutEstimateGrammar g pseudocounts corpus
+        add2lib :: [Expr] -> Expr -> [Expr]
+        add2lib ps e =
+          let newPs (Term {}) = []
+              newPs e'@(App { eLeft = l, eRight = r}) =
+                if e' `elem` ps
+                then []
+                else e' : nub (newPs l ++ newPs r)
+              additions = newPs e
+          in additions ++ ps
+        logPosterior :: [[Expr]] -> [Expr] -> Double
+        logPosterior solns lib = -lambda * genericLength lib + sum (map (logSumExpList . map (negate . approxMDL lib)) solns)
+
+
+log2 = log 2.0
+
+-- | With uniform production probabilities, what is the MDL of the expression?
+approxMDL :: [Expr] -> Expr -> Double
+approxMDL lib (Term { eReqType = Just tp }) =
+  log2 + log (genericLength $ filter (canUnifyFast tp . eType) lib)
+approxMDL lib e@(App { eReqType = Just tp, eLeft = l, eRight = r }) =
+  log2 + if e `elem` lib
+         then log $ genericLength $ filter (canUnifyFast tp . eType) lib
+         else approxMDL lib l + approxMDL lib r

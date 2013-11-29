@@ -20,7 +20,8 @@ import Data.PQueue.Max (MaxQueue)
 import qualified Data.PQueue.Max as PQ
 import Data.Maybe
 import Data.Function
-
+import Control.Monad.Random
+import System.Random
 
 getTemplates :: Expr -> [(Expr, [Expr])]
 getTemplates e =
@@ -63,6 +64,46 @@ invertRewrites expr = map canonicalizeEVars . concatMap (invert expr)
           in case runET action of
               Nothing -> invert1 target (lhs, rhss)
               Just lhs' -> [lhs']
+
+mcmcNeighbors :: Expr ->
+                 [(Expr, [Expr])] -> -- ^ Rewrites
+                 [Expr] -- ^ Possible moves
+mcmcNeighbors expr rewrites =
+  filter typeChecks $ nub $ invertRewrites expr rewrites ++ reductionNeighbors expr
+
+mcmcMove :: Grammar -> [(Expr, [Expr])] -> Expr -> IO Expr
+mcmcMove g rewrites e = do
+  let ns = mcmcNeighbors e rewrites
+  idx <- getRandomR (0,length ns - 1)
+  let child = ns !! idx
+  let childNeighbors = mcmcNeighbors child rewrites
+  let toplevelRequest = fromJust $ eReqType e
+  let child' = exprLogLikelihood g $ annotateRequested' toplevelRequest child
+  let childLL = fromJust $ eLogLikelihood child'
+  let myLL = fromJust $ eLogLikelihood e
+  let logAlpha = childLL - myLL + log (genericLength childNeighbors) - log (genericLength ns)
+  let alpha = exp logAlpha
+  if alpha > 1
+  then return child'
+  else do x <- randomIO
+          if alpha > x
+          then return child'
+          else return e
+
+buMCMC :: Grammar ->
+          Type ->
+          Int ->
+          Expr ->
+          IO (M.Map Expr Double)
+buMCMC gr tp iters e = do
+  let e' = exprLogLikelihood gr $ annotateRequested' tp e
+  cnts <- loop iters e' M.empty
+  return $ M.map (\cnt -> log $ fromIntegral cnt / fromIntegral iters) cnts
+  where templates = appendTemplates ++ concatMap getTemplates (map fst $ M.toList $ grExprDistr gr)
+        loop 0 _ m = return m
+        loop i e' m = do e'' <- mcmcMove gr templates e'
+                         let m' = M.insertWith (+) e'' 1 m
+                         loop (i-1) e'' m'
 
 -- Approximate calculation of the MDL of any expression matching the template
 -- TODO: Make use of typing info to get a better estimate of MDL
@@ -132,16 +173,6 @@ enumBU sz szKept gr tp seed =
             _ -> error "enumBU: Variables not currently handled"
         getLL :: Expr -> Double
         getLL e = fromJust $ eLogLikelihood $ exprLogLikelihood gr $ annotateRequested' tp e
-{-
-main = do
-    let rs = appendTemplates -- ++ concatMap getTemplates [cS, cB, cI, cC]
-    let expr = readExpr "((: 'a') ((: 'n') ((: 't') ((: 'i') ((: 'b') [])))))"
-    let seed = Grammar { grApp = log 0.35,
-                         grExprDistr = M.fromList [ (annotateRequested e, 1.0) | e <- wordExprs ] }
-    es <- enumBU 15000 500 seed (tList tChar)  expr
-    let es' = sortBy (compare `on` snd) $ M.toList es
-    forM_ es' $ putStrLn . show . fst
--}
 
 
 -- | Performs one iteration of Bottom-Up EM
@@ -155,13 +186,17 @@ doBUIter :: String -- ^ Prefix for log output
             -> IO Grammar -- ^ Improved grammar
 doBUIter prefix tasks lambda pseudocounts frontierSize keepSize grammar = do
     -- Enumerate frontiers
-  frontiers <- mapM (\(tp, seed, nm, cnt) -> do front <- enumBU frontierSize keepSize grammar tp seed
+  frontiers <- mapM (\(tp, seed, nm, cnt) -> do front <- if sampleByEnumeration
+                                                         then enumBU frontierSize keepSize grammar tp seed
+                                                         else buMCMC grammar tp frontierSize seed
                                                 forceShowHack front
+                                                putStrLn $ "Got " ++ show (M.size front) ++ " programs for " ++ nm
                                                 return (front, cnt)) tasks
   -- Save out the best program for each task to a file
   saveBestBU $ zip (map fst frontiers) tasks
   let frontiers' = map (\(fnt, cnt) -> (M.map (const 0.0) fnt, cnt)) frontiers
-  let grammar' = grammarEM lambda pseudocounts (blankLibrary grammar) frontiers' --compressWeightedCorpus lambda pseudocounts grammar obs'
+  let grammar' = grammarHillClimb lambda pseudocounts (blankLibrary grammar) frontiers'
+  --grammarEM lambda pseudocounts (blankLibrary grammar) frontiers' --compressWeightedCorpus lambda pseudocounts grammar obs'
   let terminalLen = length $ filter isTerm $ M.keys $ grExprDistr grammar
   putStrLn $ "Got " ++ show ((length $ lines $ showGrammar $ removeSubProductions grammar') - terminalLen - 1) ++ " new productions."
   putStrLn $ "Grammar entropy: " ++ show (entropyLogDist $ M.elems $ grExprDistr grammar')
