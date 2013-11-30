@@ -149,10 +149,10 @@ annotateRequested' tp expr = runIdentity $ runTI $ do
 
 
 
-data Counts = Counts {appCounts :: Double,
-                        termCounts :: Double,
-                        useCounts :: ExprMap Double,
-                        possibleUseCounts :: ExprMap Double} deriving Show
+data Counts = Counts { appCounts :: Double,
+                       termCounts :: Double,
+                       useCounts :: ExprMap Double,
+                       possibleUseCounts :: ExprMap Double } deriving Show
 
 -- | Iteratively performs the inside-out algorithm to a corpus, restimating the gramar
 -- This assumes we're sampling from P(program | typed)
