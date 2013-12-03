@@ -31,13 +31,13 @@ main = do
   putStrLn $ "Words run with: " ++ unwords args
   let seed = Grammar { grApp = log 0.5,
                        grExprDistr = Map.fromList [ (annotateRequested e, 1.0) | e <- wordExprs ] }
-  let tasks = [makeWordTask ("anti"++[suffix]) 100 | suffix <- "bcde" ]
-  {-finalG <- loopM seed [0..0] $ \grammar step -> do
+  let tasks = [makeWordTask wd 100 | wd <- ["antifur", "anticipation", "notion"] ]
+  finalG <- loopM seed [0..0] $ \grammar step -> do
     putStrLn ("EM Iteration: " ++ show step)
     grammar' <- doBUIter (prefix++"/best_"++show step) tasks
                          (read lambda) (read pseudocounts) (read fSize) (read keepSize) grammar
     saveGrammar (prefix++"/grammar_" ++ show step) grammar'
-    return grammar'-}
+    return grammar'
   -- Feature extraction
   {-putStrLn $ "Final features:\n\n" ++ unlines (featureNames finalG) 
   putStrLn "Doing a final round of enumeration..."
@@ -46,11 +46,11 @@ main = do
     let front' = Map.keys front
     putStrLn $ "Features for " ++ nm
     putStrLn $ unlines $ map show $ taskFeatures finalG tp front'-}
-  putStrLn "Doing a symbolic dimensionality reduction..."
+  {-putStrLn "Doing a symbolic dimensionality reduction..."
   fs <- forM tasks $ \(tp, seed, nm, _) -> do
     front <- enumBU (read fSize) (read keepSize) seed tp seed
     return $ Map.keys front
-  putStrLn $ show $ mlDecoder seed (tList tChar) fs
+  putStrLn $ show $ mlDecoder seed (tList tChar) fs-}
   return ()
 
 makeWordEMTask :: String -> EMTask

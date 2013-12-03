@@ -72,7 +72,9 @@ showExprLong App{eLeft=l, eRight=r, eType=tp, eReqType=rt }
     = printf ("app, type: %7s, reqType: %7s\n--"++showExprLong l ++ "\n--" ++ showExprLong r ++ "\n")  (show tp)  (show rt)
 
 instance Eq Expr where
-    e1 == e2 = show e1 == show e2
+  Term { eName = n } == Term { eName = n' } = n == n'
+  App { eLeft = l, eRight = r} == App { eLeft = l', eRight = r' } = l == l' && r == r'
+  _ == _ = False
 
 instance Ord Expr where
     compare (Term {eName = n}) (Term {eName = n'}) = compare n n' 
