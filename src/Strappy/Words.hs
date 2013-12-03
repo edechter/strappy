@@ -9,6 +9,7 @@ import Strappy.BeamSearch
 import Strappy.Planner
 import Strappy.EM
 import Strappy.ProdFeat
+import Strappy.SymDimRed
 
 import qualified Data.Map as Map
 import System.Environment
@@ -31,20 +32,25 @@ main = do
   let seed = Grammar { grApp = log 0.5,
                        grExprDistr = Map.fromList [ (annotateRequested e, 1.0) | e <- wordExprs ] }
   let tasks = [makeWordTask ("anti"++[suffix]) 100 | suffix <- "bcde" ]
-  finalG <- loopM seed [0..0] $ \grammar step -> do
+  {-finalG <- loopM seed [0..0] $ \grammar step -> do
     putStrLn ("EM Iteration: " ++ show step)
     grammar' <- doBUIter (prefix++"/best_"++show step) tasks
                          (read lambda) (read pseudocounts) (read fSize) (read keepSize) grammar
     saveGrammar (prefix++"/grammar_" ++ show step) grammar'
-    return grammar'
+    return grammar'-}
   -- Feature extraction
-  putStrLn $ "Final features:\n\n" ++ unlines (featureNames finalG) 
+  {-putStrLn $ "Final features:\n\n" ++ unlines (featureNames finalG) 
   putStrLn "Doing a final round of enumeration..."
   forM_ tasks $ \(tp, seed, nm, _) -> do
     front <- enumBU (read fSize) (read keepSize) finalG tp seed
     let front' = Map.keys front
     putStrLn $ "Features for " ++ nm
-    putStrLn $ unlines $ map show $ taskFeatures finalG tp front'
+    putStrLn $ unlines $ map show $ taskFeatures finalG tp front'-}
+  putStrLn "Doing a symbolic dimensionality reduction..."
+  fs <- forM tasks $ \(tp, seed, nm, _) -> do
+    front <- enumBU (read fSize) (read keepSize) seed tp seed
+    return $ Map.keys front
+  putStrLn $ show $ mlDecoder seed (tList tChar) fs
   return ()
 
 makeWordEMTask :: String -> EMTask
