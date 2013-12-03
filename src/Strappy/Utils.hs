@@ -106,6 +106,12 @@ fst3 (x, _, _) = x
 snd3 (_, x, _) = x
 thd3 (_, _, x) = x
 
+listIdx :: Eq a => a -> [a] -> Int
+listIdx x xs = i 0 xs
+  where i c (y':ys) | x == y' = c
+        i c (_:ys) = i (c+1) ys
+        i _ [] = error "listIdx: not found"
+
 instance (MonadRandom m) => MonadRandom (MaybeT m) where
   getRandom = lift getRandom
   getRandoms = lift getRandoms

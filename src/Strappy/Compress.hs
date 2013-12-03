@@ -19,6 +19,7 @@ import System.IO.Unsafe
 import System.CPUTime
 import Data.Maybe
 import Data.Function
+import qualified Data.Array.IArray as Array
 
 
 compressWeightedCorpus :: Double -> -- ^ lambda
@@ -82,49 +83,108 @@ grammarHillClimb lambda pseudocounts g0 tsks =
                              Map.empty frags
       candidateFrags' = map (\e -> e { eType = doTypeInference e }) candidateFrags
       seedPrims = Map.keys $ grExprDistr g0
-      lp = logPosterior tsks' seedPrims
+      -- Hill climbing
+      flags2posterior = compileLogPosterior tsks' seedPrims candidateFrags'
+      deps = makeDependencyArray candidateFrags'
+      succs = grammarSuccessors deps
+      flags = Array.listArray (0, length candidateFrags' - 1) $ replicate (length candidateFrags') False :: Array.Array Int Bool
+      bestVector = climb flags2posterior succs flags (flags2posterior flags)
+      bestFrags = vec2lib bestVector candidateFrags'
+      -- Estimate grammar params
+      g = Grammar { grExprDistr = Map.fromList [ (l, 0.0) | l <- (bestFrags ++ seedPrims) ],
+                    grApp = log 0.5 }
+      ts' = [ [ (e, fromJust $ eLogLikelihood $ exprLogLikelihood g e) | e <- front ] | front <- tsks' ]
+      logZs = map (logSumExpList . map snd) ts'
+      ts'' = zipWith (\front logZ -> map (\(e, w) -> (e, exp (w-logZ))) front) ts' logZs
+      corpus = concat ts''
   in trace ("Num fragaments:" ++ show (length candidateFrags)) $
-           climb tsks' seedPrims lp candidateFrags'
-  where climb :: [[Expr]] -> -- ^ Programs that solve each task
-                 [Expr] -> -- ^ Current library
+           inoutEstimateGrammar g pseudocounts corpus
+  where climb :: (Array.Array Int Bool -> Double) -> -- ^ Scoring function
+                 (Array.Array Int Bool -> [Array.Array Int Bool]) -> -- ^ Successorship function
+                 Array.Array Int Bool -> -- ^ current state
                  Double  -> -- ^ Log posterior under previous grammar
-                 [Expr] -> -- ^ Program fragments we might consider adding
-                 Grammar -- ^ Final grammar
-        climb ts ps oldLP frags =
-          -- For each fragment, consider what the library would look like with it added
-          let newPs = map (add2lib ps) frags
-              newLLs = map (logPosterior ts) newPs
-              (newLib, newLP) = maximumBy (compare `on` snd) (zip newPs newLLs)
-              newFrags = filter (not . flip elem newLib) frags
+                 Array.Array Int Bool -- ^ Final result
+        climb lp succs curr oldLP =
+          let newStates = succs curr
+              newLLs = map lp newStates
+              (newLib, newLP) = maximumBy (compare `on` snd) (zip newStates newLLs)
           in if newLP > oldLP
-             then trace ("New library:" ++ show newLib) $ climb ts newLib newLP newFrags
-             else let g = Grammar { grExprDistr = Map.fromList [ (l, 0.0) | l <- ps],
-                                    grApp = log 0.5 }
-                      ts' = [ [ (e, fromJust $ eLogLikelihood $ exprLogLikelihood g e) | e <- front ] | front <- ts ]
-                      logZs = map (logSumExpList . map snd) ts'
-                      ts'' = zipWith (\front logZ -> map (\(e, w) -> (e, exp (w-logZ))) front) ts' logZs
-                      corpus = concat ts''
-                  in inoutEstimateGrammar g pseudocounts corpus
-        add2lib :: [Expr] -> Expr -> [Expr]
-        add2lib ps e =
-          let newPs (Term {}) = []
-              newPs e'@(App { eLeft = l, eRight = r}) =
-                if e' `elem` ps
-                then []
-                else e' : nub (newPs l ++ newPs r)
-              additions = newPs e
-          in additions ++ ps
-        logPosterior :: [[Expr]] -> [Expr] -> Double
-        logPosterior solns lib = -lambda * genericLength lib + sum (map (logSumExpList . map (negate . approxMDL lib)) solns)
+             then climb lp succs newLib newLP
+             else curr
+        compileLogPosterior :: [[Expr]] -> [Expr] -> [Expr] -> Array.Array Int Bool -> Double
+        compileLogPosterior solns prims fs =
+          let cts = map (compileTaskLL prims fs) solns
+          in \flags -> -lambda * vecHamming flags + sum (map ($flags) cts)
+        makeDependencyArray :: [Expr] -> Array.Array Int [Int]
+        makeDependencyArray fs =
+          let getD idx = case (fs !! idx) of
+                           Term {} -> []
+                           App { eLeft = Term {}, eRight = Term {} } -> []
+                           App { eLeft = Term {}, eRight = r@(App {}) } ->
+                             [listIdx r fs]
+                           App { eLeft = l@(App {}), eRight = Term {} } ->
+                             [listIdx l fs]
+                           App { eLeft = l@(App {}), eRight = r@(App {}) } ->
+                             [listIdx l fs, listIdx r fs]
+          in Array.array (0, length fs - 1)
+                      [ (idx, getD idx) | idx <- [0..length fs - 1] ]
+        getDependencies :: Array.Array Int [Int] -> Array.Array Int Bool ->
+                           Array.Array Int Bool
+        getDependencies deps flags =
+          let collectFlags idx =
+                concatMap (\i -> if flags Array.! i then [] else i : collectFlags i) (deps Array.! idx)
+          in flags Array.// [ (idx, True) | i <- [0..snd (Array.bounds deps)], flags Array.! i, idx <- collectFlags i]
+        vec2lib :: Array.Array Int Bool -> [Expr] -> [Expr]
+        vec2lib v fs = map fst $ filter (\(_, idx) -> v Array.! idx) $ zip fs [0..]
+        -- hamming weight
+        vecHamming :: Array.Array Int Bool -> Double
+        vecHamming flags = foldl (\acc i -> if flags Array.! i then acc+1.0 else acc) 0.0 [0..snd (Array.bounds flags)]
+        grammarSuccessors :: Array.Array Int [Int] -> Array.Array Int Bool -> [Array.Array Int Bool]
+        grammarSuccessors deps flags =
+          map (\toflag -> getDependencies deps $ flags Array.// [(toflag, True)]) $
+            filter (not . (flags Array.!)) [0..snd (Array.bounds flags)]
 
 
 log2 = log 2.0
 
--- | With uniform production probabilities, what is the MDL of the expression?
-approxMDL :: [Expr] -> Expr -> Double
-approxMDL lib (Term { eReqType = Just tp }) =
-  log2 + log (genericLength $ filter (canUnifyFast tp . eType) lib)
-approxMDL lib e@(App { eReqType = Just tp, eLeft = l, eRight = r }) =
-  log2 + if e `elem` lib
-         then log $ genericLength $ filter (canUnifyFast tp . eType) lib
-         else approxMDL lib l + approxMDL lib r
+compileTaskLL :: [Expr] -> -- ^ Primitives
+                 [Expr] -> -- ^ Candidate library procedures
+                 [Expr] -> -- ^ expressions solving task
+                 Array.Array Int Bool -> -- ^ vector of library flags
+                 Double -- ^ log likelihood of expression
+compileTaskLL prims candidates solns =
+  let cs = map (compileLL prims candidates) solns
+  in \flags -> logSumExpList $ map ($flags) cs
+
+compileLL :: [Expr] -> -- ^ Primitives
+             [Expr] -> -- ^ Candidate library procedures
+             Expr -> -- ^ expression
+             Array.Array Int Bool -> -- ^ vector of library flags
+             Double -- ^ log likelihood of expression
+compileLL prims candidates (Term { eReqType = Just tp }) =
+  let conflictingPrims = genericLength $ filter (canUnifyFast tp . eType) prims
+      conflictingIndexes = filter (\idx -> canUnifyFast tp $ eType $ candidates !! idx) [0 .. length (candidates) - 1] :: [Int]
+  in \flags ->
+        let conflicts = conflictingPrims + genericLength (filter (flags Array.!) conflictingIndexes)
+        in - log2 - log conflicts
+compileLL prims candidates e@(App { eLeft = l, eRight = r, eReqType = Just tp }) | e `elem` candidates =
+  let conflictingPrims = genericLength $ filter (canUnifyFast tp . eType) prims
+      conflictingIndexes = filter (\idx -> canUnifyFast tp $ eType $ candidates !! idx) [0 .. length (candidates) - 1]
+      lComp = compileLL prims candidates l
+      rComp = compileLL prims candidates r
+      myIdx = listIdx e candidates
+  in \flags ->
+        let lLL = lComp flags
+            rLL = rComp flags
+            appLL = -log2 + lLL + rLL
+        in if flags Array.! myIdx
+           then let conflicts = conflictingPrims + genericLength (filter (flags Array.!) conflictingIndexes)
+                in logSumExp (- log2 - log conflicts) appLL
+           else appLL
+compileLL prims candidates (App { eLeft = l, eRight = r, eReqType = tp })  =
+  let lComp = compileLL prims candidates l
+      rComp = compileLL prims candidates r
+  in \flags ->
+        let lLL = lComp flags
+            rLL = rComp flags
+        in -log2 + lLL + rLL

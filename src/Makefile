@@ -4,6 +4,8 @@ ugm:
 	ghc -O3 -rtsopts --make Strappy/UGM.hs
 words:
 	ghc -O3 -rtsopts --make Strappy/Words.hs
+profwords:
+	ghc -O3 -fbreak-on-exception -prof -auto-all -caf-all -fforce-recomp -rtsopts --make Strappy/Words.hs
 profpoly:
 	ghc -O3 -fbreak-on-exception -prof -auto-all -caf-all -fforce-recomp -rtsopts --make Strappy/Poly.hs
 tower:
