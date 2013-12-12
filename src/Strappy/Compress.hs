@@ -48,12 +48,12 @@ compressCorpus lambda counts =
 grammarEM :: Double -> -- ^ lambda
              Double -> -- ^ pseudocounts
              Grammar -> -- ^ initial grammar
-             [(ExprMap Double, Int)] -> -- ^ For each task, program likelihoods and multiplicative counts
+             [ExprMap Double] -> -- ^ For each task, program likelihoods
              Grammar
 grammarEM lambda pseudocounts g0 tsks =
-  let frontiers = flip map tsks $ \(lls, _) -> Map.mapWithKey (\e ll -> ll + fromJust (eLogLikelihood (exprLogLikelihood g0 e))) lls
+  let frontiers = flip map tsks $ \lls -> Map.mapWithKey (\e ll -> ll + fromJust (eLogLikelihood (exprLogLikelihood g0 e))) lls
       zs = flip map frontiers $ Map.fold logSumExp (log 0)
-      normFrontiers = zipWith3 (\front z (_, cnt) -> Map.map (\l -> fromIntegral cnt * exp (l - z)) front) frontiers zs tsks
+      normFrontiers = zipWith (\front z -> Map.map (\l -> exp (l - z)) front) frontiers zs
       corpus = Map.toList $ foldl1 (Map.unionWith (+)) normFrontiers
       g' = compressWeightedCorpus lambda pseudocounts g0 corpus
       oldProductions = Set.fromList $ Map.keys $ grExprDistr g0
@@ -68,10 +68,10 @@ grammarEM lambda pseudocounts g0 tsks =
 grammarHillClimb :: Double -> -- ^ lambda
                     Double -> -- ^ pseudocounts
                     Grammar -> -- ^ initial grammar
-                    [(ExprMap Double, Int)] -> -- ^ For each task, program likelihoods and multiplicative counts
+                    [ExprMap Double] -> -- ^ For each task, program likelihoods
                     Grammar
 grammarHillClimb lambda pseudocounts g0 tsks =
-  let tsks' = map (Map.keys . fst) tsks
+  let tsks' = map Map.keys tsks
       -- chop each task up in to its constituent program fragments
       frags = map (Set.toList . foldl collectSubtrees Set.empty) tsks'
       -- find only those fragments that occur in more than one task
@@ -97,7 +97,7 @@ grammarHillClimb lambda pseudocounts g0 tsks =
               (newLib, newLP) = maximumBy (compare `on` snd) (zip newPs newLLs)
               newFrags = filter (not . flip elem newLib) frags
           in if newLP > oldLP
-             then trace ("New library:" ++ show newLib) $ climb ts newLib newLP newFrags
+             then trace ("New library:" ++ show newLib ++ "\t+" ++ show (newLP - oldLP)) $ climb ts newLib newLP newFrags
              else let g = Grammar { grExprDistr = Map.fromList [ (l, 0.0) | l <- ps],
                                     grApp = log 0.5 }
                       ts' = [ [ (e, fromJust $ eLogLikelihood $ exprLogLikelihood g e) | e <- front ] | front <- ts ]

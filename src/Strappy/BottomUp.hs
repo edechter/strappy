@@ -177,7 +177,7 @@ enumBU sz szKept gr tp seed =
 
 -- | Performs one iteration of Bottom-Up EM
 doBUIter :: String -- ^ Prefix for log output
-            -> [(Type, Expr, String, Int)] -- ^ Tasks
+            -> [(Type, Expr, String)] -- ^ Tasks
             -> Double -- ^ Lambda
             -> Double -- ^ pseudocounts
             -> Int -- ^ frontier size
@@ -186,17 +186,23 @@ doBUIter :: String -- ^ Prefix for log output
             -> IO Grammar -- ^ Improved grammar
 doBUIter prefix tasks lambda pseudocounts frontierSize keepSize grammar = do
     -- Enumerate frontiers
-  frontiers <- mapM (\(tp, seed, nm, cnt) -> do front <- if sampleByEnumeration
-                                                         then enumBU frontierSize keepSize grammar tp seed
-                                                         else buMCMC grammar tp frontierSize seed
-                                                forceShowHack front
-                                                putStrLn $ "Got " ++ show (M.size front) ++ " programs for " ++ nm
-                                                return (front, cnt)) tasks
+  frontiers <- mapM (\(tp, seed, nm) -> do front <- if sampleByEnumeration
+                                                    then enumBU frontierSize keepSize grammar tp seed
+                                                    else buMCMC grammar tp frontierSize seed
+                                           forceShowHack front
+                                           putStrLn $ "Got " ++ show (M.size front) ++ " programs for " ++ nm
+                                           return front) tasks
   -- Save out the best program for each task to a file
-  saveBestBU $ zip (map fst frontiers) tasks
-  let frontiers' = map (\(fnt, cnt) -> (M.map (const 0.0) fnt, cnt)) frontiers
-  let grammar' = grammarHillClimb lambda pseudocounts (blankLibrary grammar) frontiers'
-  --grammarEM lambda pseudocounts (blankLibrary grammar) frontiers' --compressWeightedCorpus lambda pseudocounts grammar obs'
+  saveBestBU $ zip frontiers tasks
+  let frontiers' = map (\fnt -> M.map (const 0.0) fnt) frontiers
+  let obs = foldl (\acc frontier ->
+                    M.unionWith logSumExp acc frontier) M.empty frontiers
+  -- Exponentiate log likelihoods to get final weights
+  let obs' = map (\(e,logW) -> (e, exp logW)) $
+             M.toList obs
+  let grammar' = compressWeightedCorpus lambda pseudocounts grammar obs'
+  --let grammar' = grammarHillClimb lambda pseudocounts (blankLibrary grammar) frontiers'
+  --let grammar' = grammarEM lambda pseudocounts (blankLibrary grammar) frontiers' --compressWeightedCorpus lambda pseudocounts grammar obs'
   let terminalLen = length $ filter isTerm $ M.keys $ grExprDistr grammar
   putStrLn $ "Got " ++ show ((length $ lines $ showGrammar $ removeSubProductions grammar') - terminalLen - 1) ++ " new productions."
   putStrLn $ "Grammar entropy: " ++ show (entropyLogDist $ M.elems $ grExprDistr grammar')
@@ -204,7 +210,7 @@ doBUIter prefix tasks lambda pseudocounts frontierSize keepSize grammar = do
   putStrLn "" -- newline
   return grammar'
   where saveBestBU frontiersAndTasks =
-          let str = unlines $ map (\(front, (_, _, nm, _)) -> 
+          let str = unlines $ map (\(front, (_, _, nm)) -> 
                                       let (bestProg, bestLL) = maximumBy (compare `on` snd) (M.toList front)
                                       in nm ++ "\t" ++ show bestProg ++ "\t" ++ show bestLL) frontiersAndTasks
           in writeFile prefix str

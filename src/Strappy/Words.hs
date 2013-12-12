@@ -20,28 +20,93 @@ import Debug.Trace
 import Data.List
 import Data.Array
 
-makeWordTask :: String -> Int -> (Type, Expr, String, Int)
-makeWordTask str cnt =
-    (tList tChar, e str, str, cnt)
+main = mainSymRed
+
+makeWordTask :: String -> (Type, Expr, String)
+makeWordTask str =
+    (tList tChar, e str, str)
     where e [] = cEmpty
           e (c:cs) = (cCons <> cChar2Expr c) <> e cs
 
-main = do
+-- | Slurps in a grammar and spits out a log likelihood of held-out test data
+mainLL = do
+  [gFile] <- getArgs
+  g <- loadGrammar gFile
+  let heldout = [ "antiparticle", "antichrist", "antithetical",
+                   "antiseptic", "antiquark", "antineutrino", "antiproton", "antielectron",
+                   "anticipation",
+                   "convolution", "compilation", "dereliction", "fiction",
+                  "revolution", "caution", "motion"]
+  lls <- forM heldout $ \wd -> do
+    let (_, wd', _) = makeWordTask wd
+    solns <- enumBU 15000 15000 g (tList tChar) wd'
+    return $ logSumExpList $ map (fromJust . eLogLikelihood . fst) $ Map.toList solns
+  putStrLn $ show $ sum lls
+
+testLL g = do
+  let heldout = [ "antiparticle", "antichrist", "antithetical",
+                   "antiseptic", "antiquark", "antineutrino", "antiproton", "antielectron",
+                   "anticipation",
+                   "convolution", "compilation", "dereliction", "fiction",
+                  "revolution", "caution", "motion"]
+  lls <- forM heldout $ \wd -> do
+    let (_, wd', _) = makeWordTask wd
+    solns <- enumBU 15000 15000 g (tList tChar) wd'
+    return $ logSumExpList $ map (fromJust . eLogLikelihood . fst) $ Map.toList solns
+  putStrLn $ show $ sum lls
+
+mainFeat = do
+  [gFile] <- getArgs
+  g <- loadGrammar gFile
+  putStrLn $ "loaded " ++ gFile
+  let tot = [ "antiparticle", "antichrist", "antithetical",
+                   "antiseptic", "antiquark", "antineutrino", "antiproton", "antielectron",
+                   "antifur", "antimatter", "antigen",
+                   "anticipation",
+                   "convolution", "compilation", "dereliction", "fiction",
+                  "revolution", "caution", "motion",
+                  "notion", "cation", "diction"]
+  let tasks = [makeWordTask wd | wd <- tot ]
+  forM_ tasks $ \(tp, seed, nm) -> do
+    putStrLn $ "enuming for" ++ nm
+    front <- enumBU 15000 500 g tp seed
+    putStrLn "done"
+    let front' = Map.keys front
+    putStrLn $ nm ++ "=" ++ show (taskFeatures g tp front')
+
+mainSymRed = do
+  args@[fSize, keepSize, gNm] <- getArgs
+  let g0   = Grammar { grApp = log 0.5,
+                       grExprDistr = Map.fromList [ (annotateRequested e, 1.0) | e <- wordExprs ] }
+  g <- if gNm == "g0"
+       then return g0
+       else loadGrammar gNm
+  let tasks = [makeWordTask wd | wd <- ["notion", "cation", "antifur", "antimatter", "antigen"]]
+  putStrLn "Doing a symbolic dimensionality reduction..."
+  fs <- forM tasks $ \(tp, seed, nm) -> do
+    front <- enumBU 15000 500 g tp seed
+    return $ Map.keys front
+  putStrLn $ show $ mlDecoder g0 (tList tChar) fs
+
+mainBU = do
   args@[rndSeed, lambda, pseudocounts, fSize, keepSize, prefix] <- getArgs
   putStrLn $ "Words run with: " ++ unwords args
   let seed = Grammar { grApp = log 0.5,
                        grExprDistr = Map.fromList [ (annotateRequested e, 1.0) | e <- wordExprs ] }
-  let tasks = [makeWordTask wd 100 | wd <- ["antifur", "anticipation", "notion"] ]
-  finalG <- loopM seed [0..0] $ \grammar step -> do
+  let tasks = [makeWordTask wd | wd <- ["antifur", "antimatter", "antigen",
+--                                            "anticipation",
+                                            "notion", "cation", "diction"] ]
+  finalG <- loopM seed [0..1] $ \grammar step -> do
     putStrLn ("EM Iteration: " ++ show step)
     grammar' <- doBUIter (prefix++"/best_"++show step) tasks
                          (read lambda) (read pseudocounts) (read fSize) (read keepSize) grammar
     saveGrammar (prefix++"/grammar_" ++ show step) grammar'
     return grammar'
+  testLL finalG
   -- Feature extraction
   {-putStrLn $ "Final features:\n\n" ++ unlines (featureNames finalG) 
   putStrLn "Doing a final round of enumeration..."
-  forM_ tasks $ \(tp, seed, nm, _) -> do
+  forM_ tasks $ \(tp, seed, nm) -> do
     front <- enumBU (read fSize) (read keepSize) finalG tp seed
     let front' = Map.keys front
     putStrLn $ "Features for " ++ nm
@@ -80,10 +145,10 @@ editDistance xs ys = table ! (m,n)
     dist (i,j) = minimum [table ! (i-1,j) + 1, table ! (i,j-1) + 1,
         if x ! i == y ! j then table ! (i-1,j-1) else 1 + table ! (i-1,j-1)]
 
-{-
+
 
 -- Uses EC for the word task
-main = do
+mainEC = do
   args@[rndSeed, planOrEM, lambda, pseudocounts, fSize, beamSize, planLen, prefix] <- getArgs
   putStrLn $ "Word (EC) run with: " ++ unwords args
   setStdGen $ mkStdGen $ read rndSeed
@@ -105,4 +170,3 @@ main = do
     saveGrammar (prefix++"/grammar_" ++ show step) grammar'
     return grammar'
   return ()
--}

@@ -162,6 +162,7 @@ doEMBeam maybeFname tasks lambda pseudocounts frontierSize beamSize planLen gram
   -- Compress the corpus
   let rewards = Map.toList $ Map.map exp $ aggregateRewards
   let grammar' = compressWeightedCorpus lambda pseudocounts grammar rewards
+  --let grammar' = grammarHillClimb lambda pseudocounts (blankLibrary grammar) frontiers'
   let terminalLen = length $ filter isTerm $ Map.keys $ grExprDistr grammar
   putStrLn $ "Got " ++ show ((length $ lines $ showGrammar $ removeSubProductions grammar') - terminalLen - 1) ++ " new productions."
   putStrLn $ "Grammar entropy: " ++ show (entropyLogDist $ Map.elems $ grExprDistr grammar') ++ " nats."
