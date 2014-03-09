@@ -111,3 +111,5 @@ instance (MonadRandom m) => MonadRandom (MaybeT m) where
   getRandoms = lift getRandoms
   getRandomR = lift . getRandomR
   getRandomRs = lift . getRandomRs
+
+log2 = log 2.0

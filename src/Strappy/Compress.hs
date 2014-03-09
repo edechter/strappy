@@ -118,7 +118,7 @@ grammarHillClimb lambda pseudocounts g0 tsks =
         logPosterior solns lib = -lambda * genericLength lib + sum (map (logSumExpList . map (negate . approxMDL lib)) solns)
 
 
-log2 = log 2.0
+
 
 -- | With uniform production probabilities, what is the MDL of the expression?
 approxMDL :: [Expr] -> Expr -> Double
