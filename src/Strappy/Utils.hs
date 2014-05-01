@@ -8,6 +8,8 @@ import Control.Monad.Random
 import Control.Monad.Maybe
 import Debug.Trace
 import Data.Array.IO 
+import Data.Set (Set())
+import qualified Data.Set as Set
 
 flipCoin :: (Num a, Ord a, Random a, MonadRandom m) => a -> m Bool
 flipCoin p = do r <- getRandomR (0, 1)
@@ -52,6 +54,10 @@ logSumExp x y | isInvalidNum x = y
 logSumExp x y | isInvalidNum y = x
 logSumExp x y | x > y = x + log (1 + exp (y-x))
 logSumExp x y = y + log (1 + exp (x-y))
+
+-- create an integer set of a given size
+makeIntSet :: Int -> Set Int
+makeIntSet n = foldl (\s i -> Set.insert i s) Set.empty [1..n]
 
 -- Calculates the entropy of a discrete distribution, given log probabilities
 entropyLogDist :: [Double] -> Double

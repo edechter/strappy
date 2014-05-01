@@ -4,6 +4,7 @@ module Strappy.Library where
 
 import Data.Maybe 
 import qualified Data.Map as Map hiding ((\\))
+import Data.Set (Set())
 import qualified Data.Set as Set
 import Data.Hashable
 import GHC.Prim
@@ -254,6 +255,14 @@ cC = mkTerm "C" ((t1 ->- t2 ->- t) ->- t2 ->- t1 ->- t) $
 cK = mkTerm "K" (t1 ->- t2 ->- t1) $ 
      \x y -> x
 
+sFix :: (a -> a) -> a
+sFix f = f (sFix f)
+
+cFix = mkTerm "fix" ((t ->- t) ->- t) $
+    \f -> sFix f
+
+
+
 -- | Holes
 cHole :: Expr
 cHole = mkTerm "H" tDouble $ error "Attempt to evaluate a hole"
@@ -335,6 +344,66 @@ cChars = [ cChar2Expr c | c <- ['a'..'z']]
 
 -- | Bools
 cNand = mkTerm "nand" (tBool ->- tBool ->- tBool) $ \ x y -> not (x && y)
+cAnd  = mkTerm "and"  (tBool ->- tBool ->- tBool) $ \ x y -> (x && y)
+cOr   = mkTerm "or"   (tBool ->- tBool ->- tBool) $ \ x y -> (x || y)
+cNot  = mkTerm "not"  (tBool ->- tBool) $ \ x -> not (x)
+
+-- | Conditionals
+cIf   = mkTerm "if"   (tBool ->- t1 ->- t1 ->- t1) $ \ p x y -> if p then x else y
+
+-- | Sets
+cEmptySet :: Expr
+cEmptySet = mkTerm "empty?"      (tSet t ->- tBool) $ \ x -> Set.null x
+cSingleton :: Expr
+cSingleton = mkTerm "singleton?" (tSet t ->- tBool) $ \ x -> (Set.size x) == 1
+cDoubleton :: Expr
+cDoubleton = mkTerm "doubleton?" (tSet t ->- tBool) $ \ x -> (Set.size x) == 2
+cTripleton :: Expr
+cTripleton = mkTerm "tripleton?" (tSet t ->- tBool) $ \ x -> (Set.size x) == 3
+cSetDiff :: Expr
+cSetDiff = mkTerm "setdifference" (tSet t ->- tSet t ->- tSet t ) $ (Set.difference :: Set Int -> Set Int -> Set Int)
+cUnion :: Expr
+cUnion = mkTerm "union" (tSet t ->- tSet t ->- tSet t) $ (Set.union :: Set Int -> Set Int -> Set Int)
+cIntersection :: Expr
+cIntersection = mkTerm "intersection" (tSet t ->- tSet t ->- tSet t) $ (Set.intersection :: Set Int -> Set Int -> Set Int)
+cSelect :: Expr
+cSelect = mkTerm "select" (tSet t ->- tSet t ) $ \ x -> (Set.singleton (Set.findMin x))
+
+-- | Words
+cNext :: Expr
+cNext = mkTerm "next" (tChar ->- tChar) $ \ x -> case x of
+                                                     '1'  -> '2'
+                                                     '2'  -> '3'
+                                                     '3'  -> '4'
+                                                     '4'  -> '5'
+                                                     '5'  -> '6'
+                                                     '6'  -> '7'
+                                                     '7'  -> '8'
+                                                     '8'  -> '9'
+                                                     '9'  -> '0'
+                                                     '0'  -> 'U'
+                                                     'U'  -> 'U'
+cPrev :: Expr
+cPrev = mkTerm "prev" (tChar ->- tChar) $ \ x -> case x of
+                                                     '0'  -> '9'
+                                                     '9'  -> '8'
+                                                     '8'  -> '7'
+                                                     '7'  -> '6'
+                                                     '6'  -> '5'
+                                                     '5'  -> '4'
+                                                     '4'  -> '3'
+                                                     '3'  -> '2'
+                                                     '2'  -> '1'
+                                                     '1'  -> 'U'
+                                                     'U'  -> 'U'
+
+cEqualWord = mkTerm "equalWord" (tChar ->- tChar ->- tBool) $ ((==) :: Char -> Char -> Bool)
+
+cCountList :: [Expr]
+cCountList = [ cChar2Expr w | w <- ['1'..'9']++['0'] ]
+
+cUndef :: Expr
+cUndef = cChar2Expr 'U'
 
 -- | A basic collection of expressions
 basicExprs :: [Expr]
@@ -366,6 +435,37 @@ basicExprs = [cI,
               cBool2Expr False,
               cHole
              ] ++ cInts ++ cDoubles ++ cChars
+
+-- | Number Word Learning
+numberWordExprs :: [Expr]
+numberWordExprs = [cI, 
+                   cS, 
+                   cB, 
+                   cC, 
+                   cMap,
+                   cFoldl,
+                   cEmptySet,
+                   cSetDiff,
+                   cUnion,
+                   cIntersection,
+                   cSelect,
+                   cAnd,
+                   cOr,
+                   cNot,
+                   cIf,
+                   cBool2Expr True,
+                   cBool2Expr False]
+--                 cK, 
+--                 cFix,
+--                 cSingleton,
+--                 cDoubleton,
+--                 cTripleton,
+--                 cPrev,
+--                 cNext,
+--                 cEqualWord,
+--                 cUndef,
+--                 cCountList!!0]
+             
              
 -- Library for testing EM+polynomial regression
 polyExprs :: [Expr]

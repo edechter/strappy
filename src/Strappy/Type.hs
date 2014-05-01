@@ -21,6 +21,8 @@ import Control.Monad.Error
 import Control.Monad.State
 import Data.IORef
 import System.IO.Unsafe
+import Data.Set (Set())
+import qualified Data.Set as Set
 
 type Id = Int
 data Type = TVar Int
@@ -261,6 +263,7 @@ tInt = tGnd "Int"
 tDouble = tGnd "Double"
 tBool = tGnd "Bool"
 tList t = TCon "[]" [t]
+tSet t = TCon "Set" [t]
 tMaybe t = TCon "Maybe" [t]
 tPair a b = TCon "(,)" [a,b]
 tTriple a b c = TCon "(,,)" [a,b,c]
@@ -295,6 +298,8 @@ instance Typeable Double where
 	typeOf _ = tDouble
 instance Typeable Bool where
 	typeOf _ = tBool
+instance (Typeable a) => Typeable (Set a) where
+    typeOf _ = (tSet t)
 instance (Typeable a, Typeable b) =>  Typeable (a -> b)  where
 	typeOf _ = (typeOf (undefined :: a)) ->- (typeOf (undefined :: b)) 
 instance (Typeable a) => Typeable [a] where
