@@ -55,10 +55,6 @@ logSumExp x y | isInvalidNum y = x
 logSumExp x y | x > y = x + log (1 + exp (y-x))
 logSumExp x y = y + log (1 + exp (x-y))
 
--- create an integer set of a given size
-makeIntSet :: Int -> Set Int
-makeIntSet n = foldl (\s i -> Set.insert i s) Set.empty [1..n]
-
 -- Calculates the entropy of a discrete distribution, given log probabilities
 entropyLogDist :: [Double] -> Double
 entropyLogDist ls =
@@ -119,3 +115,6 @@ instance (MonadRandom m) => MonadRandom (MaybeT m) where
   getRandomRs = lift . getRandomRs
 
 log2 = log 2.0
+
+bool2Binary :: Bool -> Int
+bool2Binary x = if x then 1 else 0

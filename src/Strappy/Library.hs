@@ -351,59 +351,20 @@ cNot  = mkTerm "not"  (tBool ->- tBool) $ \ x -> not (x)
 -- | Conditionals
 cIf   = mkTerm "if"   (tBool ->- t1 ->- t1 ->- t1) $ \ p x y -> if p then x else y
 
--- | Sets
-cEmptySet :: Expr
-cEmptySet = mkTerm "empty?"      (tSet t ->- tBool) $ \ x -> Set.null x
-cSingleton :: Expr
-cSingleton = mkTerm "singleton?" (tSet t ->- tBool) $ \ x -> (Set.size x) == 1
-cDoubleton :: Expr
-cDoubleton = mkTerm "doubleton?" (tSet t ->- tBool) $ \ x -> (Set.size x) == 2
-cTripleton :: Expr
-cTripleton = mkTerm "tripleton?" (tSet t ->- tBool) $ \ x -> (Set.size x) == 3
-cSetDiff :: Expr
-cSetDiff = mkTerm "setdifference" (tSet t ->- tSet t ->- tSet t ) $ (Set.difference :: Set Int -> Set Int -> Set Int)
-cUnion :: Expr
-cUnion = mkTerm "union" (tSet t ->- tSet t ->- tSet t) $ (Set.union :: Set Int -> Set Int -> Set Int)
-cIntersection :: Expr
-cIntersection = mkTerm "intersection" (tSet t ->- tSet t ->- tSet t) $ (Set.intersection :: Set Int -> Set Int -> Set Int)
-cSelect :: Expr
-cSelect = mkTerm "select" (tSet t ->- tSet t ) $ \ x -> (Set.singleton (Set.findMin x))
-
--- | Words
-cNext :: Expr
-cNext = mkTerm "next" (tChar ->- tChar) $ \ x -> case x of
-                                                     '1'  -> '2'
-                                                     '2'  -> '3'
-                                                     '3'  -> '4'
-                                                     '4'  -> '5'
-                                                     '5'  -> '6'
-                                                     '6'  -> '7'
-                                                     '7'  -> '8'
-                                                     '8'  -> '9'
-                                                     '9'  -> '0'
-                                                     '0'  -> 'U'
-                                                     'U'  -> 'U'
-cPrev :: Expr
-cPrev = mkTerm "prev" (tChar ->- tChar) $ \ x -> case x of
-                                                     '0'  -> '9'
-                                                     '9'  -> '8'
-                                                     '8'  -> '7'
-                                                     '7'  -> '6'
-                                                     '6'  -> '5'
-                                                     '5'  -> '4'
-                                                     '4'  -> '3'
-                                                     '3'  -> '2'
-                                                     '2'  -> '1'
-                                                     '1'  -> 'U'
-                                                     'U'  -> 'U'
-
-cEqualWord = mkTerm "equalWord" (tChar ->- tChar ->- tBool) $ ((==) :: Char -> Char -> Bool)
-
-cCountList :: [Expr]
-cCountList = [ cChar2Expr w | w <- ['1'..'9']++['0'] ]
-
-cUndef :: Expr
-cUndef = cChar2Expr 'U'
+-- | "Bags", lists which act as collections of objects
+cBMkSingleton :: Expr
+cBMkSingleton = mkTerm "bSingleton" (tInt ->- tList tInt) $ \ x -> [x]
+cBIsSingleton :: Expr
+cBIsSingleton = mkTerm "bSingleton?" (tList tInt ->- tBool) $ \ x -> (length x) == 1
+cBSetDiff :: Expr
+-- cBSetDiff = mkTerm "bSetDifference" (tList tInt ->- tList tInt ->- tList tInt) $ (\\)
+cBSetDiff = mkTerm "bSetDifference" (tList tInt ->- tList tInt ->- tList tInt) $ \ x y -> reverse (drop (min (length x) (length y)) $ reverse x)
+cBUnion :: Expr
+-- cBUnion =  mkTerm "bUnion" (tList tInt ->- tList tInt ->- tList tInt) $ (++)
+cBUnion =  mkTerm "bUnion" (tList tInt ->- tList tInt ->- tList tInt) $ \ x y -> x ++ y
+cBIntersection :: Expr
+-- cBIntersection =  mkTerm "bIntersection" (tList tInt ->- tList tInt ->- tList tInt) $ List.intersect
+cBIntersection =  mkTerm "bIntersection" (tList tInt ->- tList tInt ->- tList tInt) $ \ x y -> take (max (min (length x) (length y)) 0) x
 
 -- | A basic collection of expressions
 basicExprs :: [Expr]
@@ -433,6 +394,7 @@ basicExprs = [cI,
               cSnd,
               cBool2Expr True,
               cBool2Expr False,
+              intToExpr 1,
               cHole
              ] ++ cInts ++ cDoubles ++ cChars
 
@@ -442,30 +404,17 @@ numberWordExprs = [cI,
                    cS, 
                    cB, 
                    cC, 
-                   cMap,
-                   cFoldl,
-                   cEmptySet,
-                   cSetDiff,
-                   cUnion,
-                   cIntersection,
-                   cSelect,
+                   cBIsSingleton,
+                   cBMkSingleton,
+                   cBSetDiff,
+                   cBUnion,
+                   cBIntersection,
                    cAnd,
                    cOr,
                    cNot,
                    cIf,
                    cBool2Expr True,
                    cBool2Expr False]
---                 cK, 
---                 cFix,
---                 cSingleton,
---                 cDoubleton,
---                 cTripleton,
---                 cPrev,
---                 cNext,
---                 cEqualWord,
---                 cUndef,
---                 cCountList!!0]
-             
              
 -- Library for testing EM+polynomial regression
 polyExprs :: [Expr]

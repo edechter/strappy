@@ -85,16 +85,6 @@ instance Ord Expr where
         EQ -> compare r r'
         cmp -> cmp
 
-showableToExpr :: (Show a) => a -> Type -> Expr
--- | Convert any Showable Haskell object into an Expr.
-showableToExpr f tp = mkTerm (show f) tp f
-
-doubleToExpr :: Double -> Expr
-doubleToExpr d = showableToExpr d tDouble
-
-intToExpr :: Int -> Expr
-intToExpr d = showableToExpr d tInt
-
 typeOfApp :: Monad m => Expr -> Expr -> TypeInference m Type
 typeOfApp e_left e_right 
     = do tp <- mkTVar
@@ -206,6 +196,18 @@ expectedLikelihood ll samples e = do
 -- Conversion functions ----------------
 ----------------------------------------
 
+showableToExpr :: (Show a) => a -> Type -> Expr
+-- | Convert any Showable Haskell object into an Expr.
+showableToExpr f tp = mkTerm (show f) tp f
+
+intListToExpr :: [Int] -> Expr
+intListToExpr s = showableToExpr s (tList tInt)
+
+doubleToExpr :: Double -> Expr
+doubleToExpr d = showableToExpr d tDouble
+
+intToExpr :: Int -> Expr
+intToExpr d = showableToExpr d tInt
 
 cInt2Expr :: Int -> Expr
 -- | Convert integers to expressions. 
