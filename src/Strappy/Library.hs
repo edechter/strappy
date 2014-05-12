@@ -357,14 +357,11 @@ cBMkSingleton = mkTerm "bSingleton" (tInt ->- tList tInt) $ \ x -> [x]
 cBIsSingleton :: Expr
 cBIsSingleton = mkTerm "bSingleton?" (tList tInt ->- tBool) $ \ x -> (length x) == 1
 cBSetDiff :: Expr
--- cBSetDiff = mkTerm "bSetDifference" (tList tInt ->- tList tInt ->- tList tInt) $ (\\)
-cBSetDiff = mkTerm "bSetDifference" (tList tInt ->- tList tInt ->- tList tInt) $ \ x y -> reverse (drop (min (length x) (length y)) $ reverse x)
+cBSetDiff = mkTerm "bSetDiff" (tList tInt ->- tList tInt ->- tList tInt) $ ((\\) :: [Int] -> [Int] -> [Int])
 cBUnion :: Expr
--- cBUnion =  mkTerm "bUnion" (tList tInt ->- tList tInt ->- tList tInt) $ (++)
-cBUnion =  mkTerm "bUnion" (tList tInt ->- tList tInt ->- tList tInt) $ \ x y -> x ++ y
+cBUnion =  mkTerm "bUnion" (tList tInt ->- tList tInt ->- tList tInt) $ ((++) :: [Int] -> [Int] -> [Int] )
 cBIntersection :: Expr
--- cBIntersection =  mkTerm "bIntersection" (tList tInt ->- tList tInt ->- tList tInt) $ List.intersect
-cBIntersection =  mkTerm "bIntersection" (tList tInt ->- tList tInt ->- tList tInt) $ \ x y -> take (max (min (length x) (length y)) 0) x
+cBIntersection =  mkTerm "bIntersection" (tList tInt ->- tList tInt ->- tList tInt) $ (List.intersect :: [Int] -> [Int] -> [Int])
 
 -- | A basic collection of expressions
 basicExprs :: [Expr]
@@ -394,27 +391,27 @@ basicExprs = [cI,
               cSnd,
               cBool2Expr True,
               cBool2Expr False,
-              intToExpr 1,
               cHole
              ] ++ cInts ++ cDoubles ++ cChars
 
 -- | Number Word Learning
-numberWordExprs :: [Expr]
-numberWordExprs = [cI, 
-                   cS, 
-                   cB, 
-                   cC, 
-                   cBIsSingleton,
-                   cBMkSingleton,
-                   cBSetDiff,
-                   cBUnion,
-                   cBIntersection,
-                   cAnd,
-                   cOr,
-                   cNot,
-                   cIf,
-                   cBool2Expr True,
-                   cBool2Expr False]
+numberExprs :: [Expr]
+numberExprs = [cI, 
+               cS, 
+               cB, 
+               cC, 
+               cBSetDiff,
+               cBUnion,
+               cBIntersection,
+               cBMkSingleton,
+               intToExpr 1,
+               cBIsSingleton,
+               cAnd,
+               cOr,
+               cNot,
+               cIf,
+               cBool2Expr True,
+               cBool2Expr False]
              
 -- Library for testing EM+polynomial regression
 polyExprs :: [Expr]

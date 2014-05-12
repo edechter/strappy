@@ -21,5 +21,5 @@ else
     make number
 
     # Run script
-    ./Strappy/Number 0 1.5 1.0 $3 $fullOut | tee $fullOut/log
+    ./Strappy/Number 0 1.0 1.0 $3 $fullOut | tee $fullOut/log
 fi

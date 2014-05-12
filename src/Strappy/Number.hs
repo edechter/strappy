@@ -21,6 +21,8 @@ import Data.List
 import Data.Array
 import Data.Char
 
+-- | TASK SPECIFIC UTILITIES | --
+
 mkBagExpr x = intListToExpr $ replicate x 1
 
 compareMaybe :: (Eq a1) => (a -> a1) -> Maybe a -> Maybe a -> Bool
@@ -28,41 +30,97 @@ compareMaybe _ _ Nothing = False
 compareMaybe _ Nothing _ = False
 compareMaybe f (Just x) (Just y) = (f x) == (f y)
 
-makeNumberTask :: Int -> EMTask
-makeNumberTask n1 = 
-    EMTask { etName = "num_" ++ show n1,
+-- | TASKS | -- 
+
+makePredXTask :: Int -> EMTask
+makePredXTask x = 
+    EMTask { etName = "pred_" ++ show x,
+             etLogLikelihood =
+                 \e -> let result  = timeLimitedEval (e <> (mkBagExpr x)) :: Maybe [Int]
+                           correct = Just (replicate (x-1) 1)             :: Maybe [Int]
+                       in log . fromIntegral . bool2Binary $ compareMaybe length result correct,
+             etType = tList tInt }
+
+makePredTask :: EMTask
+makePredTask = 
+    EMTask { etName = "pred",
+             etLogLikelihood =
+                 \e -> let result  = [ timeLimitedEval (e <> (mkBagExpr x)) | x <- [2..10] ] :: [Maybe [Int]]
+                           correct = [ Just (replicate (x-1) 1)             | x <- [2..10] ] :: [Maybe [Int]]
+                       in (log . fromIntegral . sum $ zipWith (\ x y -> bool2Binary $ compareMaybe length x y) result correct) - (log . fromIntegral $ length result),
+             etType = tList tInt ->- tList tInt }
+
+makeSuccXTask :: Int -> EMTask
+makeSuccXTask x = 
+    EMTask { etName = "succ_" ++ show x,
+             etLogLikelihood =
+                 \e -> let result  = timeLimitedEval (e <> (mkBagExpr x)) :: Maybe [Int]
+                           correct = Just (replicate (x+1) 1)             :: Maybe [Int]
+                       in log . fromIntegral . bool2Binary $ compareMaybe length result correct,
+             etType = tList tInt }
+
+makeSuccTask :: EMTask
+makeSuccTask = 
+    EMTask { etName = "succ",
+             etLogLikelihood =
+                 \e -> let result  = [ timeLimitedEval (e <> (mkBagExpr x)) | x <- [1..9] ] :: [Maybe [Int]]
+                           correct = [ Just (replicate (x+1) 1)             | x <- [1..9] ] :: [Maybe [Int]]
+                       in (log . fromIntegral . sum $ zipWith (\ x y -> bool2Binary $ compareMaybe length x y) result correct) - (log . fromIntegral $ length result),
+             etType = tList tInt ->- tList tInt }
+
+makeSameXTask :: Int -> EMTask
+makeSameXTask x = 
+    EMTask { etName = "same_" ++ show x,
              etLogLikelihood = -- partial credit: LL is # correct/# total.
-                 \e -> let result  = [ timeLimitedEval (e <> (mkBagExpr n)) | n <- [1..10] ] :: [Maybe Bool]
-                           correct = (map (\x -> Just (x == n1)) [1..10]) :: [Maybe Bool]
-                       in log (fromIntegral (sum $ zipWith (\x y -> bool2Binary $ x == y) result correct)) - log 10,
+                 \e -> let result  = [ timeLimitedEval (e <> (mkBagExpr y)) | y <- [1..10] ] :: [Maybe Bool]
+                           correct = [ Just (x == y)                        | y <- [1..10] ] :: [Maybe Bool]
+                       in (log . fromIntegral . sum $ zipWith (\ x y -> bool2Binary $ compareMaybe id x y) result correct) - (log . fromIntegral $ length result),
              etType = tList tInt ->- tBool }
 
-makeEqualTask :: Int -> Int -> EMTask
-makeEqualTask n1 n2 = -- are two sets of equal size?
-    EMTask { etName = "equal_" ++ show n1 ++ "_" ++ show n2
+makeSameTask :: EMTask
+makeSameTask =
+    EMTask { etName = "same",
              etLogLikelihood =
-                 \e -> let result = timeLimitedEval (e <> (mkBagExpr n1) <> (mkBagExpr n2)) :: Maybe Bool
-                           correct = Just (n1 == n2) :: Maybe Bool
-                       in log . fromIntegral . bool2Binary $ compareMaybe id result correct,
+                 \e -> let result  = [ timeLimitedEval (e <> (mkBagExpr n1) <> (mkBagExpr n2)) | n1 <- [1..10], n2 <- [1..10] ] :: [Maybe Bool]
+                           correct = [ Just (n1 == n2) | n1 <- [1..10], n2 <- [1..10] ] :: [Maybe Bool]
+                       in (log . fromIntegral . sum $ zipWith (\ x y -> bool2Binary $ compareMaybe id x y) result correct) - (log . fromIntegral $ length result),
              etType = tList tInt ->- tList tInt ->- tBool }
 
-makePredTask :: Int -> EMTask
-makePredTask n1 = 
-    EMTask { etName = "pred_" ++ show n1,
-             etLogLikelihood =
-                 \e -> let result  = timeLimitedEval (e <> (mkBagExpr n1)) :: Maybe [Int]
-                           correct = Just $ replicate (n1-1) 1 :: Maybe [Int]
-                       in log . fromIntegral . bool2Binary $ compareMaybe length result correct,
-             etType = tList tInt ->- tList tInt }
+makeMoreXTask :: Int -> EMTask
+makeMoreXTask x = 
+    EMTask { etName = "more_" ++ show x,
+             etLogLikelihood = -- partial credit: LL is # correct/# total.
+                 \e -> let result  = [ timeLimitedEval (e <> (mkBagExpr y)) | y <- [1..10] ] :: [Maybe Bool]
+                           correct = [ Just (x < y)                         | y <- [1..10] ] :: [Maybe Bool]
+                       in (log . fromIntegral . sum $ zipWith (\ x y -> bool2Binary $ compareMaybe id x y) result correct) - (log . fromIntegral $ length result),
+             etType = tList tInt ->- tBool }
 
-makeSuccTask :: Int -> EMTask
-makeSuccTask n1 = 
-    EMTask { etName = "succ_" ++ show n1,
+makeMoreTask :: EMTask
+makeMoreTask =
+    EMTask { etName = "more",
              etLogLikelihood =
-                 \e -> let result  = timeLimitedEval (e <> (mkBagExpr n1)) :: Maybe [Int]
-                           correct = Just $ replicate (n1+1) 1 :: Maybe [Int]
-                       in log . fromIntegral . bool2Binary $ compareMaybe length result correct,
-             etType = tList tInt ->- tList tInt }
+                 \e -> let result  = [ timeLimitedEval (e <> (mkBagExpr n1) <> (mkBagExpr n2)) | n1 <- [1..10], n2 <- [1..10] ] :: [Maybe Bool]
+                           correct = [ Just (n1 < n2)                                          | n1 <- [1..10], n2 <- [1..10] ] :: [Maybe Bool]
+                       in (log . fromIntegral . sum $ zipWith (\ x y -> bool2Binary $ compareMaybe id x y) result correct) - (log . fromIntegral $ length result),
+             etType = tList tInt ->- tList tInt ->- tBool }
+
+makeLessXTask :: Int -> EMTask
+makeLessXTask x = 
+    EMTask { etName = "less_" ++ show x,
+             etLogLikelihood = -- partial credit: LL is # correct/# total.
+                 \e -> let result  = [ timeLimitedEval (e <> (mkBagExpr y)) | y <- [1..10] ] :: [Maybe Bool]
+                           correct = [ Just (x > y)                         | y <- [1..10] ] :: [Maybe Bool]
+                       in (log . fromIntegral . sum $ zipWith (\ x y -> bool2Binary $ compareMaybe id x y) result correct) - (log . fromIntegral $ length result),
+             etType = tList tInt ->- tBool }
+
+makeLessTask :: EMTask
+makeLessTask =
+    EMTask { etName = "less",
+             etLogLikelihood =
+                 \e -> let result  = [ timeLimitedEval (e <> (mkBagExpr n1) <> (mkBagExpr n2)) | n1 <- [1..10], n2 <- [1..10] ] :: [Maybe Bool]
+                           correct = [ Just (n1 > n2)                                          | n1 <- [1..10], n2 <- [1..10] ] :: [Maybe Bool]
+                       in (log . fromIntegral . sum $ zipWith (\ x y -> bool2Binary $ compareMaybe id x y) result correct) - (log . fromIntegral $ length result),
+             etType = tList tInt ->- tList tInt ->- tBool }
 
 main = do 
     args@[rndSeed, lambda, pseudocounts, fSize, prefix] <- getArgs
@@ -70,11 +128,11 @@ main = do
     setStdGen $ mkStdGen $ read rndSeed
     let seed = Grammar { grApp = log 0.35,
                          grExprDistr = Map.fromList 
-                             [ (annotateRequested e, 1.0) | e <- numberWordExprs ] }
-        tasks = [ makeNumberTask n1    | n1 <- [1..10]                ] ++
-                [ makeSuccTask   n1    | n1 <- [1..9]                 ] ++
-                [ makePredTask   n1    | n1 <- [2..10]                ] ++
-                [ makeEqualTask  n1 n2 | n1 <- [1..10], n2 <- [1..10] ]
+                             [ (annotateRequested e, 1.0) | e <- numberExprs ] }
+        tasks = [ makeSameXTask x | x <- [1..10] ] ++ [ makeSameTask ] ++
+                [ makeMoreXTask x | x <- [1..10] ] ++ [ makeMoreTask ] ++
+                [ makeLessXTask x | x <- [1..10] ] ++ [ makeLessTask ] ++
+                [ makeSuccTask, makePredTask ]
     good <- loopM seed [0..9] $ \grammar step -> do
         putStrLn $ "EM Iteration: " ++ show step
         grammar' <- doEMIter (prefix++"/best_"++show step) tasks (read lambda) 
