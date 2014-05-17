@@ -30,6 +30,10 @@ compareMaybe _ _ Nothing = False
 compareMaybe _ Nothing _ = False
 compareMaybe f (Just x) (Just y) = (f x) == (f y)
 
+binaryLog = log . fromIntegral . bool2Binary
+
+nCorrect f xs ys = sum $ zipWith (\ x y -> bool2Binary $ compareMaybe f x y) xs ys
+
 -- | TASKS | -- 
 
 makePredXTask :: Int -> EMTask
@@ -38,7 +42,7 @@ makePredXTask x =
              etLogLikelihood =
                  \e -> let result  = timeLimitedEval (e <> (mkBagExpr x)) :: Maybe [Int]
                            correct = Just (replicate (x-1) 1)             :: Maybe [Int]
-                       in log . fromIntegral . bool2Binary $ compareMaybe length result correct,
+                       in binaryLog $ compareMaybe length result correct,
              etType = tList tInt }
 
 makePredTask :: EMTask
@@ -47,7 +51,7 @@ makePredTask =
              etLogLikelihood =
                  \e -> let result  = [ timeLimitedEval (e <> (mkBagExpr x)) | x <- [2..10] ] :: [Maybe [Int]]
                            correct = [ Just (replicate (x-1) 1)             | x <- [2..10] ] :: [Maybe [Int]]
-                       in (log . fromIntegral . sum $ zipWith (\ x y -> bool2Binary $ compareMaybe length x y) result correct) - (log . fromIntegral $ length result),
+                       in binaryLog $ (nCorrect length result correct) == (length result),
              etType = tList tInt ->- tList tInt }
 
 makeSuccXTask :: Int -> EMTask
@@ -56,7 +60,7 @@ makeSuccXTask x =
              etLogLikelihood =
                  \e -> let result  = timeLimitedEval (e <> (mkBagExpr x)) :: Maybe [Int]
                            correct = Just (replicate (x+1) 1)             :: Maybe [Int]
-                       in log . fromIntegral . bool2Binary $ compareMaybe length result correct,
+                       in binaryLog $ compareMaybe length result correct,
              etType = tList tInt }
 
 makeSuccTask :: EMTask
@@ -65,7 +69,7 @@ makeSuccTask =
              etLogLikelihood =
                  \e -> let result  = [ timeLimitedEval (e <> (mkBagExpr x)) | x <- [1..9] ] :: [Maybe [Int]]
                            correct = [ Just (replicate (x+1) 1)             | x <- [1..9] ] :: [Maybe [Int]]
-                       in (log . fromIntegral . sum $ zipWith (\ x y -> bool2Binary $ compareMaybe length x y) result correct) - (log . fromIntegral $ length result),
+                       in binaryLog $ (nCorrect length result correct) == (length result),
              etType = tList tInt ->- tList tInt }
 
 makeSameXTask :: Int -> EMTask
@@ -74,7 +78,7 @@ makeSameXTask x =
              etLogLikelihood = -- partial credit: LL is # correct/# total.
                  \e -> let result  = [ timeLimitedEval (e <> (mkBagExpr y)) | y <- [1..10] ] :: [Maybe Bool]
                            correct = [ Just (x == y)                        | y <- [1..10] ] :: [Maybe Bool]
-                       in (log . fromIntegral . sum $ zipWith (\ x y -> bool2Binary $ compareMaybe id x y) result correct) - (log . fromIntegral $ length result),
+                       in binaryLog $ (nCorrect id result correct) == (length result),
              etType = tList tInt ->- tBool }
 
 makeSameTask :: EMTask
@@ -83,7 +87,7 @@ makeSameTask =
              etLogLikelihood =
                  \e -> let result  = [ timeLimitedEval (e <> (mkBagExpr n1) <> (mkBagExpr n2)) | n1 <- [1..10], n2 <- [1..10] ] :: [Maybe Bool]
                            correct = [ Just (n1 == n2) | n1 <- [1..10], n2 <- [1..10] ] :: [Maybe Bool]
-                       in (log . fromIntegral . sum $ zipWith (\ x y -> bool2Binary $ compareMaybe id x y) result correct) - (log . fromIntegral $ length result),
+                       in binaryLog $ (nCorrect id result correct) == (length result),
              etType = tList tInt ->- tList tInt ->- tBool }
 
 makeMoreXTask :: Int -> EMTask
@@ -92,7 +96,7 @@ makeMoreXTask x =
              etLogLikelihood = -- partial credit: LL is # correct/# total.
                  \e -> let result  = [ timeLimitedEval (e <> (mkBagExpr y)) | y <- [1..10] ] :: [Maybe Bool]
                            correct = [ Just (x < y)                         | y <- [1..10] ] :: [Maybe Bool]
-                       in (log . fromIntegral . sum $ zipWith (\ x y -> bool2Binary $ compareMaybe id x y) result correct) - (log . fromIntegral $ length result),
+                       in binaryLog $ (nCorrect id result correct) == (length result),
              etType = tList tInt ->- tBool }
 
 makeMoreTask :: EMTask
@@ -101,7 +105,7 @@ makeMoreTask =
              etLogLikelihood =
                  \e -> let result  = [ timeLimitedEval (e <> (mkBagExpr n1) <> (mkBagExpr n2)) | n1 <- [1..10], n2 <- [1..10] ] :: [Maybe Bool]
                            correct = [ Just (n1 < n2)                                          | n1 <- [1..10], n2 <- [1..10] ] :: [Maybe Bool]
-                       in (log . fromIntegral . sum $ zipWith (\ x y -> bool2Binary $ compareMaybe id x y) result correct) - (log . fromIntegral $ length result),
+                       in binaryLog $ (nCorrect id result correct) == (length result),
              etType = tList tInt ->- tList tInt ->- tBool }
 
 makeLessXTask :: Int -> EMTask
@@ -110,7 +114,7 @@ makeLessXTask x =
              etLogLikelihood = -- partial credit: LL is # correct/# total.
                  \e -> let result  = [ timeLimitedEval (e <> (mkBagExpr y)) | y <- [1..10] ] :: [Maybe Bool]
                            correct = [ Just (x > y)                         | y <- [1..10] ] :: [Maybe Bool]
-                       in (log . fromIntegral . sum $ zipWith (\ x y -> bool2Binary $ compareMaybe id x y) result correct) - (log . fromIntegral $ length result),
+                       in binaryLog $ (nCorrect id result correct) == (length result),
              etType = tList tInt ->- tBool }
 
 makeLessTask :: EMTask
@@ -119,21 +123,21 @@ makeLessTask =
              etLogLikelihood =
                  \e -> let result  = [ timeLimitedEval (e <> (mkBagExpr n1) <> (mkBagExpr n2)) | n1 <- [1..10], n2 <- [1..10] ] :: [Maybe Bool]
                            correct = [ Just (n1 > n2)                                          | n1 <- [1..10], n2 <- [1..10] ] :: [Maybe Bool]
-                       in (log . fromIntegral . sum $ zipWith (\ x y -> bool2Binary $ compareMaybe id x y) result correct) - (log . fromIntegral $ length result),
+                       in binaryLog $ (nCorrect id result correct) == (length result),
              etType = tList tInt ->- tList tInt ->- tBool }
 
 main = do 
     args@[rndSeed, lambda, pseudocounts, fSize, prefix] <- getArgs
     putStrLn $ "Number (EC) run with: " ++ unwords args 
     setStdGen $ mkStdGen $ read rndSeed
-    let seed = Grammar { grApp = log 0.35,
+    let seed = Grammar { grApp = log 0.375,
                          grExprDistr = Map.fromList 
                              [ (annotateRequested e, 1.0) | e <- numberExprs ] }
         tasks = [ makeSameXTask x | x <- [1..10] ] ++ [ makeSameTask ] ++
                 [ makeMoreXTask x | x <- [1..10] ] ++ [ makeMoreTask ] ++
                 [ makeLessXTask x | x <- [1..10] ] ++ [ makeLessTask ] ++
                 [ makeSuccTask, makePredTask ]
-    good <- loopM seed [0..9] $ \grammar step -> do
+    good <- loopM seed [0..19] $ \grammar step -> do
         putStrLn $ "EM Iteration: " ++ show step
         grammar' <- doEMIter (prefix++"/best_"++show step) tasks (read lambda) 
           (read pseudocounts) (read fSize) grammar  
