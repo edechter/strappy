@@ -141,7 +141,7 @@ cJust = CLeaf "Just" (Const "Just") tp
 cNothing = CLeaf "Nothing" (Const "Nothing") tp
     where tp = (TAp tMaybe t0)
 
-cFromJust = CLeaf "FromJust" expr t0
+cFromJust = CLeaf "FromJust" expr (TAp tMaybe t0 ->- t0)
     where expr = Func $ \e -> case e of
                                 App (Const "Just") x -> x
                                 (Const "Nothing") 
