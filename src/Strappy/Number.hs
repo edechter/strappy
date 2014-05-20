@@ -10,6 +10,7 @@ import Strappy.EM
 import Strappy.ProdFeat
 import Strappy.Sample
 import Strappy.EnumBits
+import Strappy.Response
 
 import qualified Data.Map as Map
 import System.Environment
@@ -25,118 +26,44 @@ import Data.Char
 
 mkBagExpr x = intListToExpr $ replicate x 1
 
-compareMaybe :: (Eq a1) => (a -> a1) -> Maybe a -> Maybe a -> Bool
-compareMaybe _ _ Nothing = False
-compareMaybe _ Nothing _ = False
-compareMaybe f (Just x) (Just y) = (f x) == (f y)
-
 binaryLog = log . fromIntegral . bool2Binary
 
-nCorrect f xs ys = sum $ zipWith (\ x y -> bool2Binary $ compareMaybe f x y) xs ys
+checkTask :: [Char] -> [Char] -> Int -> Int -> Maybe Response -> Bool
+checkTask _ _ _ _ Nothing = False
+checkTask "i" t x y (Just (Nod b)) = 
+    b == case t of
+            "a" -> (y == (x+1)) -- successor
+            "b" -> (y == (x-1)) -- predecessor
+            "e" -> (y ==  x   ) -- same as
+            "l" -> (y <   x   ) -- less than
+            "m" -> (y >   x   ) -- more than
+checkTask "i" t x y (Just (Give b)) = False
+checkTask "i" t x y (Just (Speak s)) = False
+-- checkTask "g" t x y _ = 
+-- checkTask "w" t x y _ = 
 
 -- | TASKS | -- 
 
-makePredXTask :: Int -> EMTask
-makePredXTask x = 
-    EMTask { etName = "pred_" ++ show x,
-             etLogLikelihood =
-                 \e -> let result  = timeLimitedEval (e <> (mkBagExpr x)) :: Maybe [Int]
-                           correct = Just (replicate (x-1) 1)             :: Maybe [Int]
-                       in binaryLog $ compareMaybe length result correct,
-             etType = tList tInt }
-
-makePredTask :: EMTask
-makePredTask = 
-    EMTask { etName = "pred",
-             etLogLikelihood =
-                 \e -> let result  = [ timeLimitedEval (e <> (mkBagExpr x)) | x <- [2..10] ] :: [Maybe [Int]]
-                           correct = [ Just (replicate (x-1) 1)             | x <- [2..10] ] :: [Maybe [Int]]
-                       in binaryLog $ (nCorrect length result correct) == (length result),
-             etType = tList tInt ->- tList tInt }
-
-makeSuccXTask :: Int -> EMTask
-makeSuccXTask x = 
-    EMTask { etName = "succ_" ++ show x,
-             etLogLikelihood =
-                 \e -> let result  = timeLimitedEval (e <> (mkBagExpr x)) :: Maybe [Int]
-                           correct = Just (replicate (x+1) 1)             :: Maybe [Int]
-                       in binaryLog $ compareMaybe length result correct,
-             etType = tList tInt }
-
-makeSuccTask :: EMTask
-makeSuccTask = 
-    EMTask { etName = "succ",
-             etLogLikelihood =
-                 \e -> let result  = [ timeLimitedEval (e <> (mkBagExpr x)) | x <- [1..9] ] :: [Maybe [Int]]
-                           correct = [ Just (replicate (x+1) 1)             | x <- [1..9] ] :: [Maybe [Int]]
-                       in binaryLog $ (nCorrect length result correct) == (length result),
-             etType = tList tInt ->- tList tInt }
-
-makeSameXTask :: Int -> EMTask
-makeSameXTask x = 
-    EMTask { etName = "same_" ++ show x,
-             etLogLikelihood = -- partial credit: LL is # correct/# total.
-                 \e -> let result  = [ timeLimitedEval (e <> (mkBagExpr y)) | y <- [1..10] ] :: [Maybe Bool]
-                           correct = [ Just (x == y)                        | y <- [1..10] ] :: [Maybe Bool]
-                       in binaryLog $ (nCorrect id result correct) == (length result),
-             etType = tList tInt ->- tBool }
-
-makeSameTask :: EMTask
-makeSameTask =
-    EMTask { etName = "same",
-             etLogLikelihood =
-                 \e -> let result  = [ timeLimitedEval (e <> (mkBagExpr n1) <> (mkBagExpr n2)) | n1 <- [1..10], n2 <- [1..10] ] :: [Maybe Bool]
-                           correct = [ Just (n1 == n2) | n1 <- [1..10], n2 <- [1..10] ] :: [Maybe Bool]
-                       in binaryLog $ (nCorrect id result correct) == (length result),
-             etType = tList tInt ->- tList tInt ->- tBool }
-
-makeMoreXTask :: Int -> EMTask
-makeMoreXTask x = 
-    EMTask { etName = "more_" ++ show x,
-             etLogLikelihood = -- partial credit: LL is # correct/# total.
-                 \e -> let result  = [ timeLimitedEval (e <> (mkBagExpr y)) | y <- [1..10] ] :: [Maybe Bool]
-                           correct = [ Just (x < y)                         | y <- [1..10] ] :: [Maybe Bool]
-                       in binaryLog $ (nCorrect id result correct) == (length result),
-             etType = tList tInt ->- tBool }
-
-makeMoreTask :: EMTask
-makeMoreTask =
-    EMTask { etName = "more",
-             etLogLikelihood =
-                 \e -> let result  = [ timeLimitedEval (e <> (mkBagExpr n1) <> (mkBagExpr n2)) | n1 <- [1..10], n2 <- [1..10] ] :: [Maybe Bool]
-                           correct = [ Just (n1 < n2)                                          | n1 <- [1..10], n2 <- [1..10] ] :: [Maybe Bool]
-                       in binaryLog $ (nCorrect id result correct) == (length result),
-             etType = tList tInt ->- tList tInt ->- tBool }
-
-makeLessXTask :: Int -> EMTask
-makeLessXTask x = 
-    EMTask { etName = "less_" ++ show x,
-             etLogLikelihood = -- partial credit: LL is # correct/# total.
-                 \e -> let result  = [ timeLimitedEval (e <> (mkBagExpr y)) | y <- [1..10] ] :: [Maybe Bool]
-                           correct = [ Just (x > y)                         | y <- [1..10] ] :: [Maybe Bool]
-                       in binaryLog $ (nCorrect id result correct) == (length result),
-             etType = tList tInt ->- tBool }
-
-makeLessTask :: EMTask
-makeLessTask =
-    EMTask { etName = "less",
-             etLogLikelihood =
-                 \e -> let result  = [ timeLimitedEval (e <> (mkBagExpr n1) <> (mkBagExpr n2)) | n1 <- [1..10], n2 <- [1..10] ] :: [Maybe Bool]
-                           correct = [ Just (n1 > n2)                                          | n1 <- [1..10], n2 <- [1..10] ] :: [Maybe Bool]
-                       in binaryLog $ (nCorrect id result correct) == (length result),
-             etType = tList tInt ->- tList tInt ->- tBool }
+makeNumberTask :: [Char] -> [Char] -> Int -> Int -> EMTask
+makeNumberTask query task x y =
+    EMTask { etName = intercalate "_" [query, task, show x, show y],
+             etLogLikelihood = \e ->
+                let queryExpr = charListToExpr query
+                    taskExpr = charListToExpr task
+                    result = timeLimitedEval (e <> queryExpr <> taskExpr <> (mkBagExpr x) <> (mkBagExpr y)) :: Maybe Response
+                in binaryLog $ checkTask query task x y result,
+             etType = tList tChar ->- tList tChar ->- tList tInt ->- tList tInt ->- tResponse }
 
 main = do 
     args@[rndSeed, lambda, pseudocounts, fSize, prefix] <- getArgs
     putStrLn $ "Number (EC) run with: " ++ unwords args 
     setStdGen $ mkStdGen $ read rndSeed
-    let seed = Grammar { grApp = log 0.375,
+    let seed = Grammar { grApp = log 0.3625,
                          grExprDistr = Map.fromList 
                              [ (annotateRequested e, 1.0) | e <- numberExprs ] }
-        tasks = [ makeSameXTask x | x <- [1..10] ] ++ [ makeSameTask ] ++
-                [ makeMoreXTask x | x <- [1..10] ] ++ [ makeMoreTask ] ++
-                [ makeLessXTask x | x <- [1..10] ] ++ [ makeLessTask ] ++
-                [ makeSuccTask, makePredTask ]
+        tasks = [ makeNumberTask "i" t x y | t <- ["a", "b", "e", "l", "m"], 
+                                             x <- [1..3],
+                                             y <- [1..3] ]
     good <- loopM seed [0..19] $ \grammar step -> do
         putStrLn $ "EM Iteration: " ++ show step
         grammar' <- doEMIter (prefix++"/best_"++show step) tasks (read lambda) 

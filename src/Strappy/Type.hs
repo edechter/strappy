@@ -13,7 +13,6 @@ module Strappy.Type where
 --  standard library imports
 import qualified Data.Map as M
 import Data.List (nub)
-
 import Control.Monad (foldM)
 import Control.Monad.Identity
 import Control.Monad.Trans.Class
@@ -23,6 +22,8 @@ import Data.IORef
 import System.IO.Unsafe
 import Data.Set (Set())
 import qualified Data.Set as Set
+
+import Strappy.Response
 
 type Id = Int
 data Type = TVar Int
@@ -268,6 +269,7 @@ tPair a b = TCon "(,)" [a,b]
 tTriple a b c = TCon "(,,)" [a,b,c]
 tQuad a b c d = TCon "(,,,)" [a,b,c,d]
 tQuint a b c d e = TCon "(,,,,)" [a,b,c,d,e]
+tResponse = TCon "Response" []
 t = TVar 0                  
 t1 = TVar 1               
 t2 = TVar 2                  
@@ -283,26 +285,26 @@ instance Show Type where
   show (TCon k []) = k
   show (TCon k ts) = "(" ++ k ++ " " ++ unwords (map show ts) ++ ")"
 
-----------------------------------------                    
--- Typeable ----------------------------
-----------------------------------------                    
+-- | Typeable Type Class
+
 class Typeable a where
-	typeOf :: a ->  Type
+    typeOf :: a ->  Type
 
 instance Typeable Int where
-	typeOf _ = tInt 
+    typeOf _ = tInt 
 instance Typeable Char where
-	typeOf _ = tChar
+    typeOf _ = tChar
 instance Typeable Double where
-	typeOf _ = tDouble
+    typeOf _ = tDouble
 instance Typeable Bool where
-	typeOf _ = tBool
+    typeOf _ = tBool
 instance (Typeable a, Typeable b) =>  Typeable (a -> b)  where
-	typeOf _ = (typeOf (undefined :: a)) ->- (typeOf (undefined :: b)) 
+    typeOf _ = (typeOf (undefined :: a)) ->- (typeOf (undefined :: b)) 
 instance (Typeable a) => Typeable [a] where
-	typeOf _ = tList (typeOf $ (undefined :: a))
+    typeOf _ = tList (typeOf $ (undefined :: a))
 instance (Typeable a, Typeable b) => Typeable (a, b) where
-	typeOf _ = tPair (typeOf (undefined :: a)) (typeOf (undefined :: b))
-
-
-
+    typeOf _ = tPair (typeOf (undefined :: a)) (typeOf (undefined :: b))
+instance (Typeable a) => Typeable (Maybe a) where
+    typeOf _ = tMaybe (typeOf (undefined :: a))
+instance Typeable (Response) where
+    typeOf _ = tResponse

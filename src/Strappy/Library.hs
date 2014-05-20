@@ -24,6 +24,7 @@ import Strappy.Type
 import Strappy.Expr
 import Strappy.Utils
 import Strappy.Config
+import Strappy.Response
 
 -- | Type alias for hash table with keys as type-hidden expressions.
 type ExprMap a = Map.Map Expr a
@@ -363,6 +364,41 @@ cBUnion =  mkTerm "bUnion" (tList tInt ->- tList tInt ->- tList tInt) $ ((++) ::
 cBIntersection :: Expr
 cBIntersection =  mkTerm "bIntersection" (tList tInt ->- tList tInt ->- tList tInt) $ (List.intersect :: [Int] -> [Int] -> [Int])
 
+-- | Maybe
+
+cJust :: Expr
+cJust = mkTerm "Just" (t ->- tMaybe t) $ Just
+
+cNothing :: Expr
+cNothing = mkTerm "Nothing" (tMaybe t) $ Nothing
+
+cFromJust :: Expr
+cFromJust = mkTerm "fromJust" (tMaybe t ->- t) (\ x -> safeFromJust "cFromJust applied to cNothing" x)
+
+-- | Responses
+
+cNod :: Expr
+cNod = mkTerm "Nod" (tBool ->- tResponse) $ Nod
+
+cSpeak :: Expr
+cSpeak = mkTerm "Speak" ((tList tChar) ->- tResponse) $ Speak
+
+cGive :: Expr
+cGive = mkTerm "Give" ((tList tInt) ->- tResponse) $ Give
+
+cGetNod :: Expr
+cGetNod = mkTerm "getNod" (tResponse ->- (tMaybe tBool)) $ getNod
+
+cGetGive :: Expr
+cGetGive = mkTerm "getGive" (tResponse ->- (tMaybe (tList tInt))) $ getGive
+
+cGetSpeak :: Expr
+cGetSpeak = mkTerm "getSpeak" (tResponse ->- (tMaybe (tList tChar))) $ getSpeak
+
+-- | String Checking
+cStrEql :: Expr
+cStrEql = mkTerm "stringsEqual" (tList tChar ->- tList tChar ->- tBool) $ ((==) :: [Char] -> [Char] -> Bool)
+
 -- | A basic collection of expressions
 basicExprs :: [Expr]
 basicExprs = [cI, 
@@ -400,6 +436,7 @@ numberExprs = [cI,
                cS, 
                cB, 
                cC, 
+--             cK,
                cBSetDiff,
                cBUnion,
                cBIntersection,
@@ -411,7 +448,17 @@ numberExprs = [cI,
                cNot,
                cIf,
                cBool2Expr True,
-               cBool2Expr False]
+               cBool2Expr False,
+               cStrEql,
+               charListToExpr "a",
+               charListToExpr "b",
+               charListToExpr "e",
+               charListToExpr "l",
+               charListToExpr "m",
+               charListToExpr "i",
+               cNod,
+               cSpeak,
+               cGive]
              
 -- Library for testing EM+polynomial regression
 polyExprs :: [Expr]
