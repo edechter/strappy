@@ -234,9 +234,9 @@ blankLibrary (Grammar {grExprDistr = distr}) =
   in Grammar { grExprDistr = Map.fromList [ (l, 0.0) | l <- leaves ],
                grApp = log 0.45}
 
----------------------------------------------------------------------      
+---------------------------------------------------------------------
 
--- | Helper for turning a Haskell type to Any. 
+-- | Helper for turning a Haskell type to Any.
 mkAny :: a -> Any
 mkAny = unsafeCoerce  
         
@@ -250,11 +250,14 @@ cS = mkTerm "S" ((t2 ->- t1 ->- t) ->- (t2 ->- t1) ->- t2 ->- t) $
 cB = mkTerm "B" ((t1 ->- t) ->- (t2 ->- t1) ->- t2 ->- t) $
      \f g x -> f (g x)
 
-cC = mkTerm "C" ((t1 ->- t2 ->- t) ->- t2 ->- t1 ->- t) $ 
+cC = mkTerm "C" ((t1 ->- t2 ->- t) ->- t2 ->- t1 ->- t) $
      \f g x -> f x g
 
-cK = mkTerm "K" (t1 ->- t2 ->- t1) $ 
+cK = mkTerm "K" (t1 ->- t2 ->- t1) $
      \x y -> x
+
+cW = mkTerm "W" ((t1 ->- t1 ->- t) ->- t1 ->- t) $
+    \x y -> x y y
 
 sFix :: (a -> a) -> a
 sFix f = f (sFix f)
@@ -284,6 +287,15 @@ cOnFst = mkTerm "onFst" ((t1 ->- t2) ->- (tPair t1 t) ->- (tPair t2 t)) $
 cOnSnd :: Expr
 cOnSnd = mkTerm "onSnd" ((t1 ->- t2) ->- (tPair t t1) ->- (tPair t t2)) $
          \f (a,b) -> (a, f b)
+
+cTriple :: Expr
+cTriple = mkTerm "triple" (t ->- t1 ->- t2 ->- tTriple t t1 t2) $ \ x y z -> (x,y,z)
+c3Fst :: Expr
+c3Fst = mkTerm "3fst" (tTriple t t1 t2 ->- t ) $ \(x,_,_) -> x
+c3Snd :: Expr
+c3Snd = mkTerm "3snd" (tTriple t t1 t2 ->- t1) $ \(_,x,_) -> x
+c3Trd :: Expr
+c3Trd = mkTerm "3trd" (tTriple t t1 t2 ->- t2) $ \(_,_,x) -> x
 
 -- | Integer arithmetic
 cPlus :: Expr
@@ -354,15 +366,15 @@ cIf   = mkTerm "if"   (tBool ->- t1 ->- t1 ->- t1) $ \ p x y -> if p then x else
 
 -- | "Bags", lists which act as collections of objects
 cBMkSingleton :: Expr
-cBMkSingleton = mkTerm "bSingleton" (tInt ->- tList tInt) $ \ x -> [x]
+cBMkSingleton = intToExpr 1
 cBIsSingleton :: Expr
-cBIsSingleton = mkTerm "bSingleton?" (tList tInt ->- tBool) $ \ x -> (length x) == 1
+cBIsSingleton = mkTerm "bSingleton?" (tInt ->- tBool) $ \ x -> 1 == x
 cBSetDiff :: Expr
-cBSetDiff = mkTerm "bSetDiff" (tList tInt ->- tList tInt ->- tList tInt) $ ((\\) :: [Int] -> [Int] -> [Int])
+cBSetDiff = mkTerm "bSetDiff" (tInt ->- tInt ->- tInt) $ \ x y -> (max (x-y) 0)
 cBUnion :: Expr
-cBUnion =  mkTerm "bUnion" (tList tInt ->- tList tInt ->- tList tInt) $ ((++) :: [Int] -> [Int] -> [Int] )
+cBUnion =  mkTerm "bUnion" (tInt ->- tInt ->- tInt) $ (+)
 cBIntersection :: Expr
-cBIntersection =  mkTerm "bIntersection" (tList tInt ->- tList tInt ->- tList tInt) $ (List.intersect :: [Int] -> [Int] -> [Int])
+cBIntersection =  mkTerm "bIntersection" (tInt ->- tInt ->- tInt) $ (min :: Int -> Int -> Int)
 
 -- | Maybe
 
@@ -396,8 +408,8 @@ cGetSpeak :: Expr
 cGetSpeak = mkTerm "getSpeak" (tResponse ->- (tMaybe (tList tChar))) $ getSpeak
 
 -- | String Checking
-cStrEql :: Expr
-cStrEql = mkTerm "stringsEqual" (tList tChar ->- tList tChar ->- tBool) $ ((==) :: [Char] -> [Char] -> Bool)
+cCharEql :: Expr
+cCharEql = mkTerm "charEqual" (tChar ->- tChar ->- tBool) $ ((==) :: Char -> Char -> Bool)
 
 -- | A basic collection of expressions
 basicExprs :: [Expr]
@@ -432,16 +444,15 @@ basicExprs = [cI,
 
 -- | Number Word Learning
 numberExprs :: [Expr]
-numberExprs = [cI, 
-               cS, 
-               cB, 
-               cC, 
---             cK,
+numberExprs = [cI,
+               cS,
+               cB,
+               cC,
+               cW,
                cBSetDiff,
                cBUnion,
                cBIntersection,
                cBMkSingleton,
-               intToExpr 1,
                cBIsSingleton,
                cAnd,
                cOr,
@@ -449,17 +460,15 @@ numberExprs = [cI,
                cIf,
                cBool2Expr True,
                cBool2Expr False,
-               cStrEql,
-               charListToExpr "a",
-               charListToExpr "b",
-               charListToExpr "e",
-               charListToExpr "l",
-               charListToExpr "m",
-               charListToExpr "i",
-               cNod,
-               cSpeak,
-               cGive]
-             
+               cFst,
+               cSnd,
+               cCharEql,
+               cChar2Expr 'm',
+               cChar2Expr 'l',
+               cChar2Expr 'e',
+               cChar2Expr 'p',
+               cChar2Expr 's']
+
 -- Library for testing EM+polynomial regression
 polyExprs :: [Expr]
 polyExprs = [cI, 

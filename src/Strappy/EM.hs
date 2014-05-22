@@ -60,6 +60,7 @@ doEMIter prefix tasks lambda pseudocounts frontierSize grammar = do
   let weightedFrontiers' = zipWith (\logZ -> filter (\(_,x) -> not (isNaN x) && not (isInfinite x)) . Map.toList .
                                              Map.map (\x-> x-logZ))
                                    logZs weightedFrontiers
+  -- numHit = convert the rewardedFrontiers to an association list, each value will be a pair, take the second member of each pair, look to see whether it is a valid value, see if it is high enough be an answer, save those that are, and consider them hit.
   let numHit = length $ filter id $ flip map rewardedFrontiers $ \ (_, mp) -> any (\x-> x >= -0.01) $ filter (\x -> not (isNaN x) && not (isInfinite x)) $ map (snd . snd) $ Map.toList mp
   putStrLn $ "Completely solved " ++ show numHit ++ "/" ++ show (length tasks) ++ " tasks."
   -- Save out the best program for each task to a file
@@ -88,7 +89,7 @@ saveBest fname fronts =
                                   in (nm, es')) fronts
       bestprogs = map (\(nm, front) -> if null front
                                        then (nm, Nothing)
-                                       else (nm, Just $ maximumBy (\(_, (w,ll)) (_, (w',ll')) -> compare (w+ll) (w'+ll')) front))
+                                       else (nm, Just $ maximumBy (\(_, (w,ll)) (_, (w',ll')) -> compare (ll) (ll')) front))
                       fronts'
       str = flip map bestprogs $ \(nm, result) ->
                                  maybe ("Missed "++nm) (\(e, (w,ll)) -> nm ++ "\t" ++ show e ++ "\t" ++ show ll) result

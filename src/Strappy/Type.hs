@@ -304,6 +304,8 @@ instance (Typeable a) => Typeable [a] where
     typeOf _ = tList (typeOf $ (undefined :: a))
 instance (Typeable a, Typeable b) => Typeable (a, b) where
     typeOf _ = tPair (typeOf (undefined :: a)) (typeOf (undefined :: b))
+instance (Typeable a, Typeable b, Typeable c) => Typeable (a, b, c) where
+    typeOf _ = tTriple (typeOf (undefined :: a)) (typeOf (undefined :: b)) (typeOf (undefined :: c))
 instance (Typeable a) => Typeable (Maybe a) where
     typeOf _ = tMaybe (typeOf (undefined :: a))
 instance Typeable (Response) where

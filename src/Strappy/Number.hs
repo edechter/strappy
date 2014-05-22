@@ -24,46 +24,64 @@ import Data.Char
 
 -- | TASK SPECIFIC UTILITIES | --
 
-mkBagExpr x = intListToExpr $ replicate x 1
+logInt = log . fromIntegral
 
-binaryLog = log . fromIntegral . bool2Binary
-
-checkTask :: [Char] -> [Char] -> Int -> Int -> Maybe Response -> Bool
-checkTask _ _ _ _ Nothing = False
-checkTask "i" t x y (Just (Nod b)) = 
+checkTask2 :: (Char,Int,Int,Maybe Bool) -> Bool
+checkTask2 (_,_,_,Nothing) = False
+checkTask2 (t,x,y,(Just b))   =
     b == case t of
-            "a" -> (y == (x+1)) -- successor
-            "b" -> (y == (x-1)) -- predecessor
-            "e" -> (y ==  x   ) -- same as
-            "l" -> (y <   x   ) -- less than
-            "m" -> (y >   x   ) -- more than
-checkTask "i" t x y (Just (Give b)) = False
-checkTask "i" t x y (Just (Speak s)) = False
--- checkTask "g" t x y _ = 
--- checkTask "w" t x y _ = 
+               's' -> (y == (x+1)) -- successor
+               'p' -> (y == (x-1)) -- predecessor
+               'e' -> (y ==  x   ) -- same as
+               'l' -> (y <   x   ) -- less than
+               'm' -> (y >   x   ) -- more than
 
--- | TASKS | -- 
+checkTask1 :: (Char,Int,Maybe Int) -> Bool
+checkTask1 (_,_,Nothing) = False
+checkTask1 (t,x,(Just y)) = case t of
+    's' -> y == (x+1) -- successor
+    'p' -> y == (x-1) -- predecessor
+    'e' -> y ==  x    -- same as
+    'l' -> y <   x    -- less than
+    'm' -> y >   x    -- more than
+    _   -> False
 
-makeNumberTask :: [Char] -> [Char] -> Int -> Int -> EMTask
-makeNumberTask query task x y =
-    EMTask { etName = intercalate "_" [query, task, show x, show y],
+makeNumberTask2 :: EMTask
+makeNumberTask2 =
+    EMTask { etName = "number_2",
              etLogLikelihood = \e ->
-                let queryExpr = charListToExpr query
-                    taskExpr = charListToExpr task
-                    result = timeLimitedEval (e <> queryExpr <> taskExpr <> (mkBagExpr x) <> (mkBagExpr y)) :: Maybe Response
-                in binaryLog $ checkTask query task x y result,
-             etType = tList tChar ->- tList tChar ->- tList tInt ->- tList tInt ->- tResponse }
+                let results = [(t,x,y, timeLimitedEval
+                                   (e <> (cTriple <>
+                                             (cChar2Expr t) <>
+                                             (cInt2Expr  x) <>
+                                             (cInt2Expr  y))))|
+                                t <- "sp",
+                                x <- [1..3],
+                                y <- [1..3]] :: [(Char,Int,Int,Maybe Bool)]
+                in (logInt $ sum [ bool2Binary $ checkTask2 r | r <- results ]) -
+                   (logInt . length $ results),
+             etType = tTriple tChar tInt tInt ->- tBool }
 
-main = do 
+makeNumberTask1 :: EMTask
+makeNumberTask1 =
+    EMTask { etName = "number_1",
+             etLogLikelihood = \e ->
+                let results = [(t,x,timeLimitedEval (e <> (cPair <>
+                                    (cChar2Expr t) <> (cInt2Expr  x)))) |
+                                t <- "melps",
+                                x <- [1..5]] :: [(Char,Int,Maybe Int)]
+                in (logInt $ sum [ bool2Binary $ checkTask1 r | r <- results ]) -
+                   (logInt . length $ results),
+             etType = tPair tChar tInt ->- tInt }
+
+main = do
     args@[rndSeed, lambda, pseudocounts, fSize, prefix] <- getArgs
     putStrLn $ "Number (EC) run with: " ++ unwords args 
     setStdGen $ mkStdGen $ read rndSeed
-    let seed = Grammar { grApp = log 0.3625,
+    let seed = Grammar { grApp = log 0.375,
                          grExprDistr = Map.fromList 
                              [ (annotateRequested e, 1.0) | e <- numberExprs ] }
-        tasks = [ makeNumberTask "i" t x y | t <- ["a", "b", "e", "l", "m"], 
-                                             x <- [1..3],
-                                             y <- [1..3] ]
+        tasks = [ makeNumberTask1 ]
     good <- loopM seed [0..19] $ \grammar step -> do
         putStrLn $ "EM Iteration: " ++ show step
         grammar' <- doEMIter (prefix++"/best_"++show step) tasks (read lambda) 
