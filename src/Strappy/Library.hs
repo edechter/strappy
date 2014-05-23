@@ -25,6 +25,7 @@ import Strappy.Expr
 import Strappy.Utils
 import Strappy.Config
 import Strappy.Response
+import Strappy.Case
 
 -- | Type alias for hash table with keys as type-hidden expressions.
 type ExprMap a = Map.Map Expr a
@@ -259,6 +260,9 @@ cK = mkTerm "K" (t1 ->- t2 ->- t1) $
 cW = mkTerm "W" ((t1 ->- t1 ->- t) ->- t1 ->- t) $
     \x y -> x y y
 
+cS' = mkTerm "S'" ((t3 ->- t2 ->- t1 ->- t) ->- (t3 ->- t2 ->- t1) ->- (t3 ->- t2) ->- t3 ->- t) $
+     \f g h x -> (f x) (g x) (h x)
+
 sFix :: (a -> a) -> a
 sFix f = f (sFix f)
 
@@ -338,6 +342,7 @@ cTail = mkTerm "tail" (tList t ->- tList t) $
         tail
 cMap = mkTerm "map" ((t ->- t1) ->- tList t ->- tList t1) $
        map
+cFilter = mkTerm "filter" ((t ->- tBool) ->- tList t ->- tList t) $ filter
 cEmpty = mkTerm "[]" (tList t) $ []
 cSingle = mkTerm "single" (t ->- tList t) $ 
           \x -> [x]
@@ -362,19 +367,32 @@ cOr   = mkTerm "or"   (tBool ->- tBool ->- tBool) $ \ x y -> (x || y)
 cNot  = mkTerm "not"  (tBool ->- tBool) $ \ x -> not (x)
 
 -- | Conditionals
-cIf   = mkTerm "if"   (tBool ->- t1 ->- t1 ->- t1) $ \ p x y -> if p then x else y
+cIf = mkTerm "if" (tBool ->- t1 ->- t1 ->- t1) $ \ p x y -> if p then x else y
+
+-- | Cases
+cDefaultCase :: Expr
+cDefaultCase = mkTerm "defaultCase" ((t ->- t1) ->- tCase t t1) $ defaultCase 
+
+cAddCase :: Expr
+cAddCase = mkTerm "addCase" (tCase t t1 ->- tPair (t ->- tBool) (t ->- t1) ->- tCase t t1) $ addCase
+
+cChangeDefault :: Expr
+cChangeDefault = mkTerm "changeDefault" (tCase t t1 ->- (t->-t1) ->- tCase t t1) $ changeDefault
+
+cEvalCase :: Expr 
+cEvalCase = mkTerm "evalCase" (tCase t t1 ->- t ->- t1) $ evalCase
 
 -- | "Bags", lists which act as collections of objects
-cBMkSingleton :: Expr
-cBMkSingleton = intToExpr 1
-cBIsSingleton :: Expr
-cBIsSingleton = mkTerm "bSingleton?" (tInt ->- tBool) $ \ x -> 1 == x
-cBSetDiff :: Expr
-cBSetDiff = mkTerm "bSetDiff" (tInt ->- tInt ->- tInt) $ \ x y -> (max (x-y) 0)
-cBUnion :: Expr
-cBUnion =  mkTerm "bUnion" (tInt ->- tInt ->- tInt) $ (+)
-cBIntersection :: Expr
-cBIntersection =  mkTerm "bIntersection" (tInt ->- tInt ->- tInt) $ (min :: Int -> Int -> Int)
+cMkSingleton :: Expr
+cMkSingleton = mkTerm "Singleton" (tChar ->- tList tChar) $ \ x -> [x]
+cIsSingleton :: Expr
+cIsSingleton = mkTerm "Singleton?" (tList tChar ->- tBool) $ \ x -> (length x) == 1
+cSetDiff :: Expr
+cSetDiff = mkTerm "SetDiff" (tList tChar ->- tList tChar ->- tList tChar) $ ((\\) :: String -> String -> String)
+cUnion :: Expr
+cUnion =  mkTerm "Union" (tList tChar ->- tList tChar ->- tList tChar) $ ((++) :: String -> String -> String)
+cIntersection :: Expr
+cIntersection =  mkTerm "Intersection" (tList tChar ->- tList tChar ->- tList tChar) $ (List.intersect :: String -> String -> String)
 
 -- | Maybe
 
@@ -408,8 +426,8 @@ cGetSpeak :: Expr
 cGetSpeak = mkTerm "getSpeak" (tResponse ->- (tMaybe (tList tChar))) $ getSpeak
 
 -- | String Checking
-cCharEql :: Expr
-cCharEql = mkTerm "charEqual" (tChar ->- tChar ->- tBool) $ ((==) :: Char -> Char -> Bool)
+cStrEql :: Expr
+cStrEql = mkTerm "strEqual" (tList tChar ->- tList tChar ->- tBool) $ ((==) :: String -> String -> Bool)
 
 -- | A basic collection of expressions
 basicExprs :: [Expr]
@@ -449,25 +467,32 @@ numberExprs = [cI,
                cB,
                cC,
                cW,
-               cBSetDiff,
-               cBUnion,
-               cBIntersection,
-               cBMkSingleton,
-               cBIsSingleton,
+               cS',
+               cFilter,
+               cSetDiff,
+               cIsSingleton,
+               cMkSingleton,
                cAnd,
                cOr,
                cNot,
                cIf,
                cBool2Expr True,
                cBool2Expr False,
-               cFst,
-               cSnd,
-               cCharEql,
-               cChar2Expr 'm',
-               cChar2Expr 'l',
-               cChar2Expr 'e',
-               cChar2Expr 'p',
-               cChar2Expr 's']
+               c3Fst, -- det
+               c3Snd, -- noun
+               c3Trd, -- world
+               cDefaultCase,
+               cAddCase,
+               cChangeDefault,
+               cEvalCase,
+               cStrEql,
+               stringToExpr "X",
+               stringToExpr "O",
+               stringToExpr "thing",
+               stringToExpr "one",
+               stringToExpr "all",
+               cChar2Expr 'x',
+               cChar2Expr 'o']
 
 -- Library for testing EM+polynomial regression
 polyExprs :: [Expr]
