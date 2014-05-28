@@ -31,13 +31,15 @@ data EMTask = EMTask { etName :: String,
 
 -- | Performs one iteration of EM on multitask learning
 doEMIter :: String -- ^ Prefix for log output
+            -> String -- ^ Prefix for logging a specific task
+            -> String -- ^ name of task
             -> [EMTask] -- ^ Tasks (functions from compiled expressions to log likelihoods)
             -> Double -- ^ Lambda
             -> Double -- ^ pseudocounts
             -> Int -- ^ frontier size
             -> Grammar -- ^ Initial grammar
             -> IO Grammar -- ^ Improved grammar
-doEMIter prefix tasks lambda pseudocounts frontierSize grammar = do
+doEMIter prefix1 prefix2 taskname tasks lambda pseudocounts frontierSize grammar = do
     -- Sample frontiers
   let sampler = if sampleByEnumeration then sampleBitsM else sampleExprs
   frontiers <- mapM (\tp -> sampler frontierSize grammar tp >>= return . (tp,)) $ nub (map etType tasks)
@@ -64,7 +66,8 @@ doEMIter prefix tasks lambda pseudocounts frontierSize grammar = do
   let numHit = length $ filter id $ flip map rewardedFrontiers $ \ (_, mp) -> any (\x-> x >= -0.01) $ filter (\x -> not (isNaN x) && not (isInfinite x)) $ map (snd . snd) $ Map.toList mp
   putStrLn $ "Completely solved " ++ show numHit ++ "/" ++ show (length tasks) ++ " tasks."
   -- Save out the best program for each task to a file
-  saveBest prefix rewardedFrontiers
+  saveBest prefix1 rewardedFrontiers
+  saveSpecified prefix2 taskname rewardedFrontiers
   let obs = foldl (\acc frontier ->
                     Map.unionWith logSumExp acc $ Map.fromList frontier) Map.empty weightedFrontiers'
   -- Exponentiate log likelihoods to get final weights
@@ -89,8 +92,19 @@ saveBest fname fronts =
                                   in (nm, es')) fronts
       bestprogs = map (\(nm, front) -> if null front
                                        then (nm, Nothing)
-                                       else (nm, Just $ maximumBy (\(_, (w,ll)) (_, (w',ll')) -> compare (ll) (ll')) front))
+                                       else (nm, 
+                                             Just ((maximumBy (\(_, (w,ll)) (_, (w',ll')) -> compare (w+ll) (w'+ll')) front),
+                                                   (maximumBy (\(_, (w,ll)) (_, (w',ll')) -> compare (ll) (ll')) front))))
                       fronts'
-      str = flip map bestprogs $ \(nm, result) ->
-                                 maybe ("Missed "++nm) (\(e, (w,ll)) -> nm ++ "\t" ++ show e ++ "\t" ++ show ll) result
+      str = flip map bestprogs $ \(nm, results) ->
+                                 maybe ("Missed "++nm) (\((e1,(w1,ll1)),(e2,(w2,ll2))) -> nm ++ "\t" ++ show e1 ++ "\t" ++ show (w1+ll1) ++ "\t" ++ show e2 ++ "\t" ++ show ll2) results
   in writeFile fname (unlines str)
+
+saveSpecified filename taskname fronts = 
+  let hitFronts = map (\(nm, es) -> let es' = filter (\(_, (w, ll)) -> not (isNaN w) && not (isNaN ll) && not (isInfinite w) && not (isInfinite ll) && (ll > - 0.1))
+                                                     $ Map.toList es
+                                    in (nm, es'))
+                      fronts
+      front = concatMap (\(nm,es) -> if nm == taskname then es else []) hitFronts
+      str = (show taskname) : (flip map front (\(e,(w,ll)) -> show e))
+  in writeFile filename (unlines str)

@@ -1,17 +1,16 @@
 module Strappy.Case
     where
 
-data Case a b = Case [(a->Bool,a->b)] (a->b)
+data Case a b = Case [(a->Bool,b)] b
 
-defaultCase :: (a->b) -> Case a b
-defaultCase f = Case [] f 
+defaultCase :: (a->Bool) -> b -> b -> Case a b
+defaultCase g r f = Case [(g,r)] f
 
-addCase :: (Case a b) -> (a->Bool,a->b) -> (Case a b)
-addCase (Case cases failsafe) newCase = Case (cases++[newCase]) failsafe
+addCase :: (Case a b) -> (a->Bool) -> b  -> (Case a b)
+addCase (Case cs f) g r = Case (cs++[(g,r)]) f
 
-changeDefault  :: (Case a b) -> (a->b) -> (Case a b)
-changeDefault (Case cases failsafe) newFailSafe = Case cases newFailSafe
+changeDefault  :: (Case a b) -> b -> (Case a b)
+changeDefault (Case cs _) f = Case cs f
 
 evalCase :: (Case a b) -> a -> b
-evalCase (Case cases failsafe) x = head ((map snd $ (filter (\(guard,_) -> guard x) $ cases)) ++ [failsafe]) $ x
-
+evalCase (Case cs f) x = head ((map snd $ (filter (\(guard,_) -> guard x) $ cs)) ++ [f])
