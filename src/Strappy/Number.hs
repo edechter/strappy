@@ -20,59 +20,81 @@ import Control.Monad
 import Debug.Trace
 import Data.List
 import Data.Array
-import Data.Char
 
 -- | TASK SPECIFIC UTILITIES | --
 
+xHack = 1
+oHack = 2
+
 logInt = log . fromIntegral
 
-checkTask2 :: (Char,Int,Int,Maybe Bool) -> Bool
-checkTask2 (_,_,_,Nothing) = False
-checkTask2 (t,x,y,(Just b))   =
-    b == case t of
-               's' -> (y == (x+1)) -- successor
-               'p' -> (y == (x-1)) -- predecessor
-               'e' -> (y ==  x   ) -- same as
-               'l' -> (y <   x   ) -- less than
-               'm' -> (y >   x   ) -- more than
+world2Expr = intListToExpr
 
-checkTask1 :: (Char,Int,Maybe Int) -> Bool
-checkTask1 (_,_,Nothing) = False
-checkTask1 (t,x,(Just y)) = case t of
-    's' -> y == (x+1) -- successor
-    'p' -> y == (x-1) -- predecessor
-    'e' -> y ==  x    -- same as
-    'l' -> y <   x    -- less than
-    'm' -> y >   x    -- more than
-    _   -> False
+makeBag :: Int -> Int -> [Int]
+makeBag x o = (replicate x xHack) ++ (replicate o oHack)
 
-makeNumberTask2 :: EMTask
-makeNumberTask2 =
-    EMTask { etName = "number_2",
+checkTask :: String -> String -> Int -> Int -> Maybe [Int] -> Bool
+checkTask _ _ _ _ Nothing = False
+checkTask "all" noun x o (Just result) =
+    case noun of
+        "X"     -> result == replicate x xHack
+        "O"     -> result == replicate o oHack
+        "thing" -> (length $ filter (== xHack) result) == x &&
+                   (length $ filter (== oHack) result) == o &&
+                   (length result) == (x+o)
+        _       -> False
+checkTask "one" noun x o (Just result) =
+    case noun of
+        "X"     -> result == [xHack]
+        "O"     -> result == [oHack]
+        "thing" -> result == [xHack] || result == [oHack]
+        _       -> False
+checkTask "two" noun x o (Just result) =
+    case noun of
+        "X"     -> result == [xHack,xHack]
+        "O"     -> result == [oHack,oHack]
+        "thing" -> result == [xHack,xHack] || result == [oHack,oHack] ||
+                   result == [xHack,oHack] || result == [oHack,xHack]
+        _       -> False
+
+checkSuperTask result = sum $ map (\(det,noun,x,o,eval) -> bool2Binary $ checkTask det noun x o eval) result
+
+-- | TASKS | --
+
+makeTask :: String -> String -> Int -> Int -> EMTask
+makeTask det noun x o =
+    EMTask { etName = intercalate "_" ["task", det, noun, (show x), (show o)],
              etLogLikelihood = \e ->
-                let results = [(t,x,y, timeLimitedEval
-                                   (e <> (cTriple <>
-                                             (cChar2Expr t) <>
-                                             (cInt2Expr  x) <>
-                                             (cInt2Expr  y))))|
-                                t <- "sp",
-                                x <- [1..3],
-                                y <- [1..3]] :: [(Char,Int,Int,Maybe Bool)]
-                in (logInt $ sum [ bool2Binary $ checkTask2 r | r <- results ]) -
-                   (logInt . length $ results),
-             etType = tTriple tChar tInt tInt ->- tBool }
+                let results = [timeLimitedEval
+                                  (e <> 
+                                      (cTriple             <>
+                                      (stringToExpr det)   <>
+                                      (stringToExpr  noun) <>
+                                      (world2Expr world))) |
+                                      world <- permutations $ makeBag x o ] :: [Maybe [Int]]
+                in (logInt $ sum (map (bool2Binary . checkTask det noun x o) results)) - (logInt $ length results),
+             etType = tTriple (tList tChar) (tList tChar) (tList tInt) ->- (tList tInt) }
 
-makeNumberTask1 :: EMTask
-makeNumberTask1 =
-    EMTask { etName = "number_1",
+makeSuperTask :: EMTask
+makeSuperTask =
+    EMTask { etName = "super_task",
              etLogLikelihood = \e ->
-                let results = [(t,x,timeLimitedEval (e <> (cPair <>
-                                    (cChar2Expr t) <> (cInt2Expr  x)))) |
-                                t <- "melps",
-                                x <- [1..5]] :: [(Char,Int,Maybe Int)]
-                in (logInt $ sum [ bool2Binary $ checkTask1 r | r <- results ]) -
-                   (logInt . length $ results),
-             etType = tPair tChar tInt ->- tInt }
+                let results = [
+                                [ (det,noun,x,o,timeLimitedEval
+                                    (e <> 
+                                        (cTriple             <>
+                                        (stringToExpr det)   <>
+                                        (stringToExpr  noun) <>
+                                        (world2Expr world))))|
+                                        world <- permutations $ makeBag x o] |
+                                det <- ["one","two","all"],
+                                noun <- ["X","O","thing"],
+                                x    <- [1..3],
+                                o    <- [1..3]] :: [[(String,String,Int,Int,Maybe [Int])]]
+                in (logInt $ sum (map checkSuperTask results)) - (logInt . length $ concat results),
+             etType = tTriple (tList tChar) (tList tChar) (tList tInt) ->- (tList tInt) }
+
+-- | MAIN | --
 
 main = do
     args@[rndSeed, lambda, pseudocounts, fSize, prefix] <- getArgs
@@ -81,11 +103,15 @@ main = do
     let seed = Grammar { grApp = log 0.375,
                          grExprDistr = Map.fromList 
                              [ (annotateRequested e, 1.0) | e <- numberExprs ] }
-        tasks = [ makeNumberTask1 ]
+        tasks = [ makeTask det noun x o | det <- ["one","two","all"],
+                                          noun <- ["X","O","thing"],
+                                          x    <- [1..3],
+                                          o    <- [1..3] ] ++
+                [ makeSuperTask ]
     good <- loopM seed [0..19] $ \grammar step -> do
         putStrLn $ "EM Iteration: " ++ show step
-        grammar' <- doEMIter (prefix++"/best_"++show step) tasks (read lambda) 
-          (read pseudocounts) (read fSize) grammar  
+        grammar' <- doEMIter (prefix++"/best_"++show step) (prefix++"/task_"++show step)
+          "task_one_O_3_2" tasks (read lambda) (read pseudocounts) (read fSize) grammar  
         saveGrammar (prefix++"/grammar_" ++ show step) grammar'
         return grammar'
-    putStrLn "Finished with EM Iterations"
+    putStrLn $ "Finished!"
