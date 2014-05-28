@@ -203,8 +203,8 @@ showableToExpr f tp = mkTerm (show f) tp f
 intListToExpr :: [Int] -> Expr
 intListToExpr s = showableToExpr s (tList tInt)
 
-charListToExpr :: [Char] -> Expr
-charListToExpr s = showableToExpr s (tList tChar)
+stringToExpr :: String -> Expr
+stringToExpr s = showableToExpr s (tList tChar)
 
 doubleToExpr :: Double -> Expr
 doubleToExpr d = showableToExpr d tDouble
