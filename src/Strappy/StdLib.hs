@@ -110,7 +110,7 @@ cPrim = CLeaf "PrimRec" prim primType
 
 cTrue = CLeaf "True" (B True) tBool
 cFalse = CLeaf "False" (B False) tBool
-
+`
 cAnd = CLeaf "&" expr tp
     where expr = Func $ \(B x) -> Func $ \(B y) -> B ( x && y)
           tp = tBool ->- tBool ->- tBool
