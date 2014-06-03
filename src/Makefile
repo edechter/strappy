@@ -2,6 +2,8 @@ clean:
 	rm Strappy/*.o Strappy/*.hi
 number:
 	ghc -O3 -rtsopts --make Strappy/Number.hs
+numberFrontier:
+	ghc -O3 -rtsopts --make Strappy/frontierForGoal.hs
 poly:
 	ghc -O3 -rtsopts --make Strappy/Poly.hs
 ugm:

@@ -79,6 +79,10 @@ pcfgLogLikelihood gr@(Grammar { grExprDistr = distr, grApp = app }) e@(App { eLe
 
 -- | Annotates log likelihood as done in IJCAI paper
 ijcaiLogLikelihood :: Grammar -> Expr -> Expr
+ijcaiLogLikelihood _ (Term { eReqType = Nothing }) =
+  error "ijcaiLogLikelihood called on Term without requested types annotated"
+ijcaiLogLikelihood _ (App { eReqType = Nothing }) =
+  error "ijcaiLogLikelihood called on App without requested types annotated"
 ijcaiLogLikelihood (Grammar { grApp = logApp, grExprDistr = distr }) e@(Term { eReqType = Just tp}) | not (Map.member e distr) =
   error "ijcaiLogLikelihood: Terminal not in library"
 ijcaiLogLikelihood (Grammar { grApp = logApp, grExprDistr = distr }) e@(Term { eReqType = Just tp}) =
@@ -87,8 +91,6 @@ ijcaiLogLikelihood (Grammar { grApp = logApp, grExprDistr = distr }) e@(Term { e
       logTerm = log (1 - exp logApp)
       ll = (distr Map.! e) + logTerm - zT
   in e { eLogLikelihood = Just ll }
-ijcaiLogLikelihood gr (Term { eReqType = Nothing }) =
-  error "ijcaiLogLikelihood called on Term without requested types annotated"
 ijcaiLogLikelihood gr@(Grammar { grApp = logApp, grExprDistr = distr }) e@(App { eLeft = l,
                                                                                 eRight = r,
                                                                                 eReqType = Just tp})
@@ -103,8 +105,6 @@ ijcaiLogLikelihood gr@(Grammar { grApp = logApp, grExprDistr = distr }) e@(App {
         eLL = logSumExp ((distr Map.! e) + logTerm - zA)
                         (lLL + rLL + logApp)
     in e { eLeft = l', eRight = r', eLogLikelihood = Just eLL }
-ijcaiLogLikelihood _ (App { eReqType = Nothing }) =
-  error "ijcaiLogLikelihood called on App without requested types annotated"
 ijcaiLogLikelihood gr@(Grammar { grApp = logApp }) e@(App { eLeft = l, eRight = r}) =
   let l' = ijcaiLogLikelihood gr l
       r' = ijcaiLogLikelihood gr r
@@ -112,8 +112,6 @@ ijcaiLogLikelihood gr@(Grammar { grApp = logApp }) e@(App { eLeft = l, eRight = 
       rLL = fromJust $ eLogLikelihood r'
       eLL = logApp + lLL + rLL
   in e { eLeft = l', eRight = r', eLogLikelihood = Just eLL }
-
-  
 
 -- | Annotates the requested types
 -- Takes as input the top-level type request
@@ -391,7 +389,7 @@ cNot  = mkTerm "not"  (tBool ->- tBool) $ \ x -> not (x)
 cIf = mkTerm "If" (tBool ->- t ->- t ->- t) $ \ p x y -> if p then x else y
 
 -- | Cases
-cDefaultCase = mkTerm "defaultCase" ((t ->- tBool) ->- t1 ->- t1 ->- tCase t t1) $ defaultCase 
+cDefaultCase = mkTerm "defaultCase" (t1 ->- tCase t t1) $ defaultCase 
 
 cAddCase = mkTerm "addCase" (tCase t t1 ->- (t ->- tBool) ->- t1 ->- tCase t t1) $ addCase
 
@@ -402,13 +400,13 @@ cEvalCase = mkTerm "evalCase" (tCase t t1 ->- t ->- t1) $ evalCase
 -- | "Bags", lists which act as collections of objects
 cMkSingleton = mkTerm "Singleton" (tInt ->- tList tInt) $ \ x -> [x]
 
-cIsSingleton = mkTerm "Singleton?" (tList tInt ->- tBool) $ \ x -> (length x) == 1
-
 cSetDiff = mkTerm "SetDiff" (tList tInt ->- tList tInt ->- tList tInt) $ ((\\) :: [Int] -> [Int] -> [Int])
 
-cUnion =  mkTerm "Union" (tList tInt ->- tList tInt ->- tList tInt) $ ((++) :: [Int] -> [Int] -> [Int])
-
 cIntersection =  mkTerm "Intersection" (tList tInt ->- tList tInt ->- tList tInt) $ (List.intersect :: [Int] -> [Int] -> [Int])
+
+cIsSingleton = mkTerm "Singleton?" (tList tInt ->- tBool) $ \ x -> (length x) == 1
+
+cUnion =  mkTerm "Union" (tPair (tList tInt) (tList tInt) ->- tList tInt) $ \(x,y) -> x ++ y
 
 cSelect = mkTerm "Select" (tList tInt ->- tPair (tList tInt) (tList tInt)) $ \ xs -> if (null xs) then ([],[]) else ([head xs],(tail xs))
 
@@ -427,36 +425,35 @@ cFromJust = mkTerm "fromJust" (tMaybe t ->- t) (\ x -> safeFromJust "cFromJust a
 
 -- | Responses
 
-cNod :: Expr
 cNod = mkTerm "Nod" (tBool ->- tResponse) $ Nod
 
-cSpeak :: Expr
 cSpeak = mkTerm "Speak" ((tList tChar) ->- tResponse) $ Speak
 
-cGive :: Expr
 cGive = mkTerm "Give" ((tList tInt) ->- tResponse) $ Give
 
-cGetNod :: Expr
 cGetNod = mkTerm "getNod" (tResponse ->- (tMaybe tBool)) $ getNod
 
-cGetGive :: Expr
 cGetGive = mkTerm "getGive" (tResponse ->- (tMaybe (tList tInt))) $ getGive
 
-cGetSpeak :: Expr
 cGetSpeak = mkTerm "getSpeak" (tResponse ->- (tMaybe (tList tChar))) $ getSpeak
 
--- | String Checking
-cStrEqual :: Expr
-cStrEqual = mkTerm "strEqual" (tList tChar ->- tList tChar ->- tBool) $ ((==) :: String -> String -> Bool)
-
 -- | Hacks for Number Learning
+cStrEqual = mkTerm "strEqual" (tList tChar ->- tList tChar ->- tBool) $ ((\x y -> x == y) :: String -> String -> Bool)
 
-cXHack = mkTerm "x" tInt 1
-cOHack = mkTerm "o" tInt 2
-cIntEqual = mkTerm "IntEqual" (tInt ->- tInt ->- tBool) $ ((==) :: Int -> Int -> Bool)
+perceive n = if n == 1 then "x" else "o"
+
+cPerceive = mkTerm "perceive" (tInt ->- tList tChar) $ perceive
+
+cObjEqual = mkTerm "objEqual" (tList tChar ->- tInt ->- tBool) $ \word obj -> word == (perceive obj)
+
+cIsX = mkTerm "isX" (tInt ->- tBool) $ \x -> (perceive x) == "x"
+cIsO = mkTerm "isO" (tInt ->- tBool) $ \x -> (perceive x) == "o"
 
 -- cIsX = mkTerm "isX" (tInt ->- tBool) $ \x -> x == 1
 -- cIsO = mkTerm "isO" (tInt ->- tBool) $ \o -> o == 2
+-- cXHack = mkTerm "x" tInt 1
+-- cOHack = mkTerm "o" tInt 2
+-- cIntEqual = mkTerm "IntEqual" (tInt ->- tInt ->- tBool) $ ((==) :: Int -> Int -> Bool)
 
 -- | A basic collection of expressions
 basicExprs :: [Expr]
@@ -495,6 +492,7 @@ numberExprs = [cFilter, -- Filtering
                cIsSingleton, -- Sets/Worlds
                cSelect,
                cShift,
+               cUnion,
                cFst, -- pair
                cSnd,
                cSwap,
@@ -505,30 +503,30 @@ numberExprs = [cFilter, -- Filtering
                cAddCase,
                cChangeDefault,
                cEvalCase,
-               cXHack, -- Ints
-               cOHack,
-               cIntEqual,
-               stringToExpr "X", -- Strings
+               cAnd, -- Booleans
+               cOr,
+               cNot,
+               cBool2Expr True,
+               cBool2Expr False,
+               stringToExpr "X", -- the word, Strings
                stringToExpr "O",
                stringToExpr "thing",
                stringToExpr "one",
+               stringToExpr "two",
                stringToExpr "all",
+               stringToExpr "x", -- the LOT representation
+               stringToExpr "o",
+               cPerceive,
+               cObjEqual,
+               cIsX,
+               cIsO,
                cStrEqual,
                cI, -- combinators
                cS,
                cB,
                cC,
-               cW,
-               cS'] ++ cDualCombinators
---             cMap,
---             cSetDiff,
---             cMkSingleton,
---             cIf, -- Booleans
---             cAnd,
---             cOr,
---             cNot,
---             cBool2Expr True,
---             cBool2Expr False,
+               cK, -- unsure about this one
+               cW] ++ cDualCombinators
 
 -- Library for testing EM+polynomial regression
 polyExprs :: [Expr]
