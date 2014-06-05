@@ -19,6 +19,9 @@ import Control.Arrow (first)
 import Debug.Trace
 import Text.ParserCombinators.Parsec hiding (spaces)
 import System.Directory
+import Data.String (IsString)
+import Control.Monad.Error.Class
+
 
 import Strappy.Type
 import Strappy.Expr
@@ -121,7 +124,7 @@ ijcaiLogLikelihood gr@(Grammar { grApp = logApp }) e@(App { eLeft = l, eRight = 
 -- all of its types (and requested types) could be more specific than what they are in the library.
 -- If we were to decide to remove this production from the library, then we would need to know
 -- the requested type information of all of the subtrees in order to re-estimate the production probabilities.
-annotateRequestedM :: Monad m =>
+annotateRequestedM :: (IsString e, MonadError e m) => 
                      Type -> -- ^ Requested type of the expression
                      Expr -> -- ^ The expression
                      TypeInference m Expr -- ^ The freshly annotated expression
@@ -139,14 +142,14 @@ annotateRequestedM tp e@(Term { eType = eTp }) = do
 
 -- | Non-monadic wrapper
 -- Presumes no constraint on top-level type
-annotateRequested :: Expr -> Expr
-annotateRequested expr = runIdentity $ runTI $ do
+annotateRequested :: (IsString e, MonadError e m) =>  Expr -> m Expr
+annotateRequested expr = runTI $ do
   tp <- mkTVar
   annotateRequestedM tp expr
 
 -- | Non-monadic wrapper that allows one to specify the type
-annotateRequested' :: Type -> Expr -> Expr
-annotateRequested' tp expr = runIdentity $ runTI $ do
+annotateRequested' :: (IsString e, MonadError e m) => Type -> Expr -> m Expr
+annotateRequested' tp expr = runTI $ do
   tp' <- instantiateType tp
   annotateRequestedM tp' expr
 
@@ -514,7 +517,7 @@ numberExprs = [cFilter, -- Filtering
                stringToExpr "one",
                stringToExpr "all",
                cStrEqual,
-               cI, -- combinators
+               --cI, -- combinators
                cS,
                cB,
                cC,
@@ -587,7 +590,7 @@ basicExprDistr = Map.adjust (const (-5)) cBottom
 
 
 basicGrammar :: Grammar
-basicGrammar = normalizeGrammar $ Grammar 3 basicExprDistr
+basicGrammar = normalizeGrammar $ Grammar (-1.2) basicExprDistr
 
 extendedGrammar :: Grammar
 extendedGrammar = normalizeGrammar $ Grammar 3 $ Map.fromList $
@@ -713,7 +716,7 @@ loadGrammar fname = do
   let prods' = map (\ln ->
                      let p = read $ takeWhile (/=' ') ln
                          c = readExpr $ drop 1 $ dropWhile (/=' ') ln
-                         c' = c { eType = doTypeInference c }
+                         c' = c { eType = doTypeInference_ c }
                      in (c', p)) prods
   return $ Grammar { grApp = read papp,
                      grExprDistr = Map.fromList prods' }
@@ -740,7 +743,7 @@ simplifyLibrary :: [Expr] -> -- ^ library productions
 simplifyLibrary prods =
   let (newprods, subs) = simplify prods $ score prods
       newprods' = Set.toList $ foldl (\acc prod -> collectSubtrees acc prod) Set.empty newprods
-  in (map (\prod -> prod { eType = doTypeInference prod}) newprods', subs)
+  in (map (\prod -> prod { eType = doTypeInference_ prod}) newprods', subs)
   where -- Score counts # unique subtrees
         score = Set.size . foldl (\acc prod -> collectSubtrees acc prod) Set.empty
         -- Takes as input a library and its score

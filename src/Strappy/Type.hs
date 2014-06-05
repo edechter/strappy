@@ -17,14 +17,21 @@ import Control.Monad (foldM)
 import Control.Monad.Identity
 import Control.Monad.Trans.Class
 import Control.Monad.Error
+import Control.Monad.Error.Class
 import Control.Monad.State
+import Control.Monad.Error
+import Control.DeepSeq
+
 import Data.IORef
 import System.IO.Unsafe
 import Data.Set (Set())
 import qualified Data.Set as Set
+import Data.String (IsString)
 
 import Strappy.Response
 import Strappy.Case
+
+import Debug.Trace
 
 type Id = Int
 data Type = TVar Int
@@ -32,6 +39,10 @@ data Type = TVar Int
             deriving(Ord, Eq)
 infixr 6 ->-
 t1 ->- t2 = TCon "->" [t1,t2]
+
+data Context = Context {nextTVar :: Int, subst :: M.Map Int Type} deriving (Show, Eq)
+freshTVar :: Context -> (Type, Context)
+freshTVar (Context i subst) = (TVar i, Context (i+1) subst)
 
 -- | type inference monad
 type TypeInference = StateT (Int, -- ^ next type var
@@ -42,6 +53,11 @@ runTI = runTIVar 0
 runTIVar :: Monad m => Int -> TypeInference m a -> m a
 runTIVar nextTVar m =
   evalStateT m (nextTVar, M.empty)
+
+evalTIVar nextTVar m = 
+  runStateT m (nextTVar, M.empty)
+
+evalTI = evalTIVar 0 
 
 
 -- Create an unbound type variable
@@ -90,19 +106,22 @@ checkSubForCycles =
 
 -- Unification
 -- Primed unify is for types that have already had the substitution applied
+unify :: (IsString e, MonadError e m) => Type -> Type -> TypeInference m ()
 unify t1 t2 = do
   t1' <- applySub t1
   t2' <- applySub t2
   unify' t1' t2'
+
+unify' ::  (IsString e, MonadError e m) => Type -> Type -> TypeInference m ()
 unify' (TVar v) (TVar v') | v == v' = return ()
-unify' (TVar v) t | occurs v t = lift $ fail "Occurs check"
+unify' (TVar v) t | occurs v t = lift $ throwError "Occurs check"
 unify' (TVar v) t = bindTVar v t
-unify' t (TVar v) | occurs v t = lift $ fail "Occurs check"
+unify' t (TVar v) | occurs v t = lift $ throwError "Occurs check"
 unify' t (TVar v) = bindTVar v t
 unify' (TCon k []) (TCon k' []) | k == k' = return ()
 unify' (TCon k ts) (TCon k' ts') | k == k' = do
   zipWithM_ unify ts ts'
-unify' _ _ = lift $ fail "Could not unify"
+unify' _ _ = lift $ throwError "Could not unify"
 
 -- Occurs check: does the variable occur in the type?
 occurs :: Int -> Type -> Bool
@@ -115,8 +134,8 @@ canUnifyM :: Monad m => Type -> Type -> TypeInference m Bool
 canUnifyM t1 t2 = do
   state <- get
   case evalStateT (unify t1 t2) state of
-    Nothing -> return False
-    Just () -> return True
+    Left _ -> return False
+    Right _ -> return True
   
 -- Non-monadic wrapper
 canUnify :: Type -> Type -> Bool
@@ -130,6 +149,38 @@ canUnify t1 t2 =
   in case runTIVar (t1Max+t2Max+10) (canUnifyM t1' t2'') of
     Nothing -> False
     Just x -> x
+
+canUnifyWithSomeRightTree :: Monad m 
+                          => Type -- tp1
+                          -> Type -- tp2
+                          -> TypeInference m Bool
+-- Returns true if any right subtree of tp2 can unify with tp1
+canUnifyWithSomeRightTree tp1 tp2 = 
+    let rightDepth tp = go 0 tp 
+              where go !i tp = case tp of
+                                TCon con [t1, t2] | con == "->" -> go (i+1) t2
+                                _      -> i 
+    in do 
+     tp2' <- instantiateType tp2
+     let d = rightDepth tp2'
+
+     let loop 0 _ = return False
+         loop !d tp = do
+            st <- get 
+            b <- canUnifyM tp tp2' 
+            if b then (trace $ show tp2') return True
+                 else do put st
+                         s <- mkTVar 
+                         loop (d - 1) (s ->- tp)
+     s <- mkTVar 
+     loop d (s ->- tp1)
+
+
+--heuristic :: Grammmar -> Type -> Context -> Double 
+---- | a lower bound on the cost of a program with the requested type
+--heuristic gr tp ctx = flip evalState (nTVar, subst) $ do 
+
+
 
 -- | Fast types that hold an implicit substitution
 -- Using IORef's is dirty, and I should be using STRef's,

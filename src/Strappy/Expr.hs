@@ -10,10 +10,12 @@ import Control.Monad.Identity
 import Data.Hashable
 import Text.Printf
 import Control.Exception
+import Control.Monad.Error.Class
 import System.IO.Unsafe
 import Control.Concurrent.Timeout
 import Control.DeepSeq (deepseq)
 import Data.Maybe
+import Data.String (IsString)
 
 import Strappy.Type
 import Strappy.Config
@@ -48,9 +50,11 @@ a <> b = App { eLeft = a,
                eType = tp, 
                eLogLikelihood = Nothing,
                eReqType = Nothing }
-         where tp = runIdentity . runTI $ typeOfApp a b
+         where tp = case runTI $ typeOfApp a b of
+                Left err -> error err
+                Right t -> t
 
-(<.>) :: Monad m => TypeInference m Expr -> TypeInference m Expr -> TypeInference m Expr
+(<.>) :: (IsString e, MonadError e m) => TypeInference m Expr -> TypeInference m Expr -> TypeInference m Expr
 ma <.> mb = do a <- ma
                b <- mb
                ta <- instantiateType (eType a)
@@ -85,7 +89,7 @@ instance Ord Expr where
         EQ -> compare r r'
         cmp -> cmp
 
-typeOfApp :: Monad m => Expr -> Expr -> TypeInference m Type
+typeOfApp :: (IsString e, MonadError e m) => Expr -> Expr -> TypeInference m Type
 typeOfApp e_left e_right 
     = do tp <- mkTVar
          unify (eType e_left) (eType e_right ->- tp)
@@ -122,9 +126,14 @@ timeLimitedEval expr = unsafePerformIO $
 
 
 -- | Runs type inference on the given program, returning its type
-doTypeInference :: Expr -> Type
-doTypeInference expr = runIdentity $ runTI $ doTypeInferenceM expr
+doTypeInference :: (IsString e, MonadError e m) => Expr -> m Type
+doTypeInference expr = runTI $ doTypeInferenceM expr
 
+doTypeInference_ expr = case doTypeInference expr of 
+    Right t -> t
+    Left err -> error err
+
+doTypeInferenceM :: (IsString e, MonadError e m) => Expr -> TypeInference m Type
 doTypeInferenceM (Term { eType = tp }) = instantiateType tp
 doTypeInferenceM (App { eLeft = l, eRight = r }) = do
   alpha <- mkTVar
@@ -136,7 +145,9 @@ doTypeInferenceM (App { eLeft = l, eRight = r }) = do
   applySub beta
 
 typeChecks :: Expr -> Bool
-typeChecks expr = isJust $ runTI $ doTypeInferenceM expr
+typeChecks expr = case runTI $ doTypeInferenceM expr of 
+        Left _ -> False
+        Right _ -> True
 
 -- | Folds a monadic procedure over each subtree of a given expression
 exprFoldM :: Monad m => (a -> Expr -> m a) -> a -> Expr -> m a
@@ -251,9 +262,9 @@ cBool2Expr :: Bool -> Expr
 cBool2Expr b = mkTerm (show b) tBool b
 
 
-getArity :: Expr -> Int
+getArity :: (IsString e, MonadError e m) =>  Expr -> m Int
 getArity expr =
-  arity $ doTypeInference expr
+  liftM arity $ doTypeInference expr
   where arity (TCon "->" [t1, t2]) = 1 + arity t2
         arity _ = 0
 

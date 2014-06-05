@@ -1,4 +1,4 @@
-module Main where
+module Strappy.Number where
 
 import Strappy.Expr
 import Strappy.Type
@@ -28,12 +28,18 @@ oHack = 2
 
 logInt = log . fromIntegral
 
+world2Expr :: [Int] -> Expr
 world2Expr = intListToExpr
 
 makeBag :: Int -> Int -> [Int]
 makeBag x o = (replicate x xHack) ++ (replicate o oHack)
 
-checkTask :: String -> String -> Int -> Int -> Maybe [Int] -> Bool
+checkTask :: String      -- ^ determiner string
+          -> String      -- ^ noun string
+          -> Int         -- ^ number of x's
+          -> Int         -- ^ number of o's
+          -> Maybe [Int] -- ^ output of the task
+          -> Bool        -- ^ whether task output is correct
 checkTask _ _ _ _ Nothing = False
 checkTask "all" noun x o (Just result) =
     case noun of
@@ -57,6 +63,7 @@ checkTask "two" noun x o (Just result) =
                    result == [xHack,oHack] || result == [oHack,xHack]
         _       -> False
 
+checkSuperTask :: [(String, String, Int, Int, Maybe [Int])] -> Int
 checkSuperTask result = sum $ map (\(det,noun,x,o,eval) -> bool2Binary $ checkTask det noun x o eval) result
 
 -- | TASKS | --
@@ -93,6 +100,11 @@ makeSuperTask =
                                 o    <- [1..3]] :: [[(String,String,Int,Int,Maybe [Int])]]
                 in (logInt $ sum (map checkSuperTask results)) - (logInt . length $ concat results),
              etType = tTriple (tList tChar) (tList tChar) (tList tInt) ->- (tList tInt) }
+
+seedGrammar :: Grammar
+seedGrammar = Grammar { grApp = log 0.375,
+                        grExprDistr = Map.fromList 
+                        [ (annotateRequested e, 1.0) | e <- numberExprs ] }
 
 -- | MAIN | --
 
