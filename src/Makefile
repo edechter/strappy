@@ -1,3 +1,9 @@
+clean:
+	rm Strappy/*.o Strappy/*.hi
+number:
+	ghc -O3 -rtsopts --make Strappy/Number.hs
+numberFrontier:
+	ghc -O3 -rtsopts --make Strappy/frontierForGoal.hs
 poly:
 	ghc -O3 -rtsopts --make Strappy/Poly.hs
 ugm:
@@ -12,5 +18,3 @@ tower:
 	ghc -O3 -rtsopts --make Strappy/Tower.hs
 proftower:
 	ghc -O3 -fbreak-on-exception -prof -auto-all -caf-all -fforce-recomp -rtsopts --make Strappy/Tower.hs
-clean:
-	rm Strappy/*.o Strappy/*.hi

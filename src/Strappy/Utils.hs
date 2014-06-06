@@ -8,6 +8,8 @@ import Control.Monad.Random
 import Control.Monad.Maybe
 import Debug.Trace
 import Data.Array.IO 
+import Data.Set (Set())
+import qualified Data.Set as Set
 
 flipCoin :: (Num a, Ord a, Random a, MonadRandom m) => a -> m Bool
 flipCoin p = do r <- getRandomR (0, 1)
@@ -113,3 +115,6 @@ instance (MonadRandom m) => MonadRandom (MaybeT m) where
   getRandomRs = lift . getRandomRs
 
 log2 = log 2.0
+
+bool2Binary :: Bool -> Int
+bool2Binary x = if x then 1 else 0

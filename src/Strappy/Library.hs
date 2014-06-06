@@ -4,6 +4,7 @@ module Strappy.Library where
 
 import Data.Maybe 
 import qualified Data.Map as Map hiding ((\\))
+import Data.Set (Set())
 import qualified Data.Set as Set
 import Data.Hashable
 import GHC.Prim
@@ -23,6 +24,8 @@ import Strappy.Type
 import Strappy.Expr
 import Strappy.Utils
 import Strappy.Config
+import Strappy.Response
+import Strappy.Case
 
 -- | Type alias for hash table with keys as type-hidden expressions.
 type ExprMap a = Map.Map Expr a
@@ -76,6 +79,10 @@ pcfgLogLikelihood gr@(Grammar { grExprDistr = distr, grApp = app }) e@(App { eLe
 
 -- | Annotates log likelihood as done in IJCAI paper
 ijcaiLogLikelihood :: Grammar -> Expr -> Expr
+ijcaiLogLikelihood _ (Term { eReqType = Nothing }) =
+  error "ijcaiLogLikelihood called on Term without requested types annotated"
+ijcaiLogLikelihood _ (App { eReqType = Nothing }) =
+  error "ijcaiLogLikelihood called on App without requested types annotated"
 ijcaiLogLikelihood (Grammar { grApp = logApp, grExprDistr = distr }) e@(Term { eReqType = Just tp}) | not (Map.member e distr) =
   error "ijcaiLogLikelihood: Terminal not in library"
 ijcaiLogLikelihood (Grammar { grApp = logApp, grExprDistr = distr }) e@(Term { eReqType = Just tp}) =
@@ -84,8 +91,6 @@ ijcaiLogLikelihood (Grammar { grApp = logApp, grExprDistr = distr }) e@(Term { e
       logTerm = log (1 - exp logApp)
       ll = (distr Map.! e) + logTerm - zT
   in e { eLogLikelihood = Just ll }
-ijcaiLogLikelihood gr (Term { eReqType = Nothing }) =
-  error "ijcaiLogLikelihood called on Term without requested types annotated"
 ijcaiLogLikelihood gr@(Grammar { grApp = logApp, grExprDistr = distr }) e@(App { eLeft = l,
                                                                                 eRight = r,
                                                                                 eReqType = Just tp})
@@ -100,8 +105,6 @@ ijcaiLogLikelihood gr@(Grammar { grApp = logApp, grExprDistr = distr }) e@(App {
         eLL = logSumExp ((distr Map.! e) + logTerm - zA)
                         (lLL + rLL + logApp)
     in e { eLeft = l', eRight = r', eLogLikelihood = Just eLL }
-ijcaiLogLikelihood _ (App { eReqType = Nothing }) =
-  error "ijcaiLogLikelihood called on App without requested types annotated"
 ijcaiLogLikelihood gr@(Grammar { grApp = logApp }) e@(App { eLeft = l, eRight = r}) =
   let l' = ijcaiLogLikelihood gr l
       r' = ijcaiLogLikelihood gr r
@@ -109,8 +112,6 @@ ijcaiLogLikelihood gr@(Grammar { grApp = logApp }) e@(App { eLeft = l, eRight = 
       rLL = fromJust $ eLogLikelihood r'
       eLL = logApp + lLL + rLL
   in e { eLeft = l', eRight = r', eLogLikelihood = Just eLL }
-
-  
 
 -- | Annotates the requested types
 -- Takes as input the top-level type request
@@ -232,9 +233,9 @@ blankLibrary (Grammar {grExprDistr = distr}) =
   in Grammar { grExprDistr = Map.fromList [ (l, 0.0) | l <- leaves ],
                grApp = log 0.45}
 
----------------------------------------------------------------------      
+---------------------------------------------------------------------
 
--- | Helper for turning a Haskell type to Any. 
+-- | Helper for turning a Haskell type to Any.
 mkAny :: a -> Any
 mkAny = unsafeCoerce  
         
@@ -248,11 +249,52 @@ cS = mkTerm "S" ((t2 ->- t1 ->- t) ->- (t2 ->- t1) ->- t2 ->- t) $
 cB = mkTerm "B" ((t1 ->- t) ->- (t2 ->- t1) ->- t2 ->- t) $
      \f g x -> f (g x)
 
-cC = mkTerm "C" ((t1 ->- t2 ->- t) ->- t2 ->- t1 ->- t) $ 
+cC = mkTerm "C" ((t1 ->- t2 ->- t) ->- t2 ->- t1 ->- t) $
      \f g x -> f x g
 
-cK = mkTerm "K" (t1 ->- t2 ->- t1) $ 
+cK = mkTerm "K" (t1 ->- t2 ->- t1) $
      \x y -> x
+
+cW = mkTerm "W" ((t1 ->- t1 ->- t) ->- t1 ->- t) $
+    \x y -> x y y
+
+cS' = mkTerm "S'" ((t3 ->- t2 ->- t1 ->- t) ->- (t3 ->- t2 ->- t1) ->- (t3 ->- t2) ->- t3 ->- t) $
+     \f g h x -> (f x) (g x) (h x)
+
+sFix :: (a -> a) -> a
+sFix f = f (sFix f)
+
+cFix = mkTerm "fix" ((t ->- t) ->- t) $
+    \f -> sFix f
+
+cSS = mkTerm "SS" ((t2 ->- t3 ->- t1 ->- t) ->- (t2 ->- t3 ->- t1) ->- t2 ->- t3 ->- t) $ \ f g x1 x2 -> (f x1 x2) (g x1 x2)
+-- cSS = (cB <> cS <> (cB <> cS))
+
+cSB = mkTerm "SB" ((t2 ->- t1 ->- t) ->- (t2 ->- t3 ->- t1) ->- t2 ->- t3 ->- t) $ \ f g x1 x2 -> (f x1) (g x1 x2)
+-- cSB = (cB <> cS <> (cB <> cB))
+
+cSC = mkTerm "SC" ((t3 ->- t1 ->- t2 ->- t) ->- (t3 ->- t2) ->- t3 ->- t1 ->- t) $ \ f g x1 x2 -> (f x1 x2) (g x1)
+-- cSC = (cB <> cS <> (cB <> cC))
+
+cBS = mkTerm "BS" ((t3 ->- t1 ->- t) ->- (t2 ->- t3 ->- t1) ->- t2 ->- t3 ->- t) $ \ f g x1 x2 -> (f x2) (g x1 x2)
+-- cBS = (cB <> cB <> cS)
+
+cBB = mkTerm "BB" ((t1 ->- t) ->- (t2 ->- t3 ->- t1) ->- t2 ->- t3 ->- t) $ \ f g x1 x2 -> f (g x1 x2)
+-- cBB = (cB <> cB <> cB)
+
+cBC = mkTerm "BC" ((t1 ->- t2 ->- t) ->- (t3 ->- t2) ->- t3 ->- t1 ->- t) $ \ f g x1 x2 -> (f x2) (g x1)
+-- cBC = (cB <> cB <> cC)
+
+cCS = mkTerm "CS" ((t1 ->- t3 ->- t2 ->- t) ->- (t3 ->- t2) ->- t1 ->- t3 ->- t) $ \ f g x1 x2 -> (f x1 x2) (g x2)
+-- cCS = (cB <> cC <> (cB <> cS))
+
+cCB = mkTerm "CB" ((t1 ->- t2 ->- t) ->- (t3 ->- t2) ->- t1 ->- t3 ->- t) $ \ f g x1 x2 -> (f x1) (g x2)
+-- cCB = (cB <> cC <> (cB <> cB))
+
+cCC = mkTerm "CC" ((t1 ->- t2 ->- t3 ->- t) ->- t3 ->- t1 ->- t2 ->- t) $ \ f g x1 x2 -> (f x1 x2) (g)
+-- cCC = (cB <> cC <> (cB <> cC))
+
+cDualCombinators = [cSS,cSB,cSC,cBS,cBB,cBC,cCS,cCB,cCC]
 
 -- | Holes
 cHole :: Expr
@@ -274,6 +316,18 @@ cOnFst = mkTerm "onFst" ((t1 ->- t2) ->- (tPair t1 t) ->- (tPair t2 t)) $
 cOnSnd :: Expr
 cOnSnd = mkTerm "onSnd" ((t1 ->- t2) ->- (tPair t t1) ->- (tPair t t2)) $
          \f (a,b) -> (a, f b)
+
+cSwap :: Expr
+cSwap = mkTerm "Swap" ((tPair t1 t2) ->- (tPair t2 t1)) $ \(a,b) -> (b,a)
+
+cTriple :: Expr
+cTriple = mkTerm "triple" (t ->- t1 ->- t2 ->- tTriple t t1 t2) $ \ x y z -> (x,y,z)
+c3Fst :: Expr
+c3Fst = mkTerm "3fst" (tTriple t t1 t2 ->- t ) $ \(x,_,_) -> x
+c3Snd :: Expr
+c3Snd = mkTerm "3snd" (tTriple t t1 t2 ->- t1) $ \(_,x,_) -> x
+c3Trd :: Expr
+c3Trd = mkTerm "3trd" (tTriple t t1 t2 ->- t2) $ \(_,_,x) -> x
 
 -- | Integer arithmetic
 cPlus :: Expr
@@ -316,6 +370,7 @@ cTail = mkTerm "tail" (tList t ->- tList t) $
         tail
 cMap = mkTerm "map" ((t ->- t1) ->- tList t ->- tList t1) $
        map
+cFilter = mkTerm "filter" ((t ->- tBool) ->- tList t ->- tList t) $ filter
 cEmpty = mkTerm "[]" (tList t) $ []
 cSingle = mkTerm "single" (t ->- tList t) $ 
           \x -> [x]
@@ -335,6 +390,97 @@ cChars = [ cChar2Expr c | c <- ['a'..'z']]
 
 -- | Bools
 cNand = mkTerm "nand" (tBool ->- tBool ->- tBool) $ \ x y -> not (x && y)
+cAnd  = mkTerm "and"  (tBool ->- tBool ->- tBool) $ \ x y -> (x && y)
+cOr   = mkTerm "or"   (tBool ->- tBool ->- tBool) $ \ x y -> (x || y)
+cNot  = mkTerm "not"  (tBool ->- tBool) $ \ x -> not (x)
+
+-- | Conditional
+cIf = mkTerm "If" (tBool ->- t ->- t ->- t) $ \ p x y -> if p then x else y
+
+-- | Cases
+cDefaultCase = mkTerm "defaultCase" (t1 ->- tCase t t1) $ defaultCase 
+
+cAddCase = mkTerm "addCase" (tCase t t1 ->- (t ->- tBool) ->- t1 ->- tCase t t1) $ addCase
+
+cChangeDefault = mkTerm "changeDefault" (tCase t t1 ->- t1 ->- tCase t t1) $ changeDefault
+
+cEvalCase = mkTerm "evalCase" (tCase t t1 ->- t ->- t1) $ evalCase
+
+-- | "Bags", lists which act as collections of objects
+cMkSingleton = mkTerm "Singleton" (tInt ->- tList tInt) $ \ x -> [x]
+
+cSetDiff = mkTerm "SetDiff" (tList tInt ->- tList tInt ->- tList tInt) $ ((\\) :: [Int] -> [Int] -> [Int])
+
+cIntersection =  mkTerm "Intersection" (tList tInt ->- tList tInt ->- tList tInt) $ (List.intersect :: [Int] -> [Int] -> [Int])
+
+cIsSingleton = mkTerm "Singleton?" (tList tInt ->- tBool) $ \ x -> (length x) == 1
+
+cUnion =  mkTerm "Union" (tPair (tList tInt) (tList tInt) ->- tList tInt) $ \(x,y) -> x ++ y
+
+bagSelect :: [a] -> ([a],[a])
+bagSelect xs = if (null xs) then ([],[]) else ([head xs],(tail xs))
+cSelect = mkTerm "Select" (tList tInt ->- tPair (tList tInt) (tList tInt)) $ bagSelect
+
+bagShift :: ([a],[a]) -> ([a],[a])
+bagShift (xs,ys) = if (null ys) then (xs,ys) else ((head ys):xs,(tail ys))
+cShift = mkTerm "Shift" (tPair (tList tInt) (tList tInt) ->- tPair (tList tInt) (tList tInt)) $ bagShift
+
+-- | Maybe
+
+cJust :: Expr
+cJust = mkTerm "Just" (t ->- tMaybe t) $ Just
+
+cNothing :: Expr
+cNothing = mkTerm "Nothing" (tMaybe t) $ Nothing
+
+cFromJust :: Expr
+cFromJust = mkTerm "fromJust" (tMaybe t ->- t) (\ x -> safeFromJust "cFromJust applied to cNothing" x)
+
+-- | Responses
+
+cNod = mkTerm "Nod" (tBool ->- tResponse) $ Nod
+
+cSpeak = mkTerm "Speak" ((tList tChar) ->- tResponse) $ Speak
+
+cGive = mkTerm "Give" ((tList tInt) ->- tResponse) $ Give
+
+cGetNod = mkTerm "getNod" (tResponse ->- (tMaybe tBool)) $ getNod
+
+cGetGive = mkTerm "getGive" (tResponse ->- (tMaybe (tList tInt))) $ getGive
+
+cGetSpeak = mkTerm "getSpeak" (tResponse ->- (tMaybe (tList tChar))) $ getSpeak
+
+-- | Hacks for Number Learning
+cStrEqual = mkTerm "strEqual" (tList tChar ->- tList tChar ->- tBool) $ ((\x y -> x == y) :: String -> String -> Bool)
+
+perceive n = if n == 1 then "a" else "b"
+cPerceive = mkTerm "perceive" (tInt ->- tList tChar) $ perceive
+
+objEqual word obj = word == (perceive obj)
+cObjEqual = mkTerm "objEqual" (tList tChar ->- tInt ->- tBool) $ objEqual
+
+cIsA = mkTerm "isA" (tInt ->- tBool) $ \x -> (perceive x) == "a"
+cIsB = mkTerm "isB" (tInt ->- tBool) $ \x -> (perceive x) == "b"
+
+cQuantCase = mkTerm "quantCase" (tList tChar ->- (tList tInt ->- tList tInt)) $
+    evalCase
+        (addCase
+            (addCase
+                (defaultCase (\x -> x))
+                (=="ONE")
+                (\xs -> fst $ bagSelect xs))
+            (=="TWO")
+            (\xs -> fst . bagShift $ bagSelect xs))
+
+cNounCase = mkTerm "nounCase" (tList tChar ->- (tList tChar ->- tBool)) $
+    evalCase
+        (addCase
+            (addCase
+                (defaultCase (\x -> True))
+                (=="A")
+                (objEqual "a"))
+            (=="B")
+            (objEqual "b"))
 
 -- | A basic collection of expressions
 basicExprs :: [Expr]
@@ -366,7 +512,56 @@ basicExprs = [cI,
               cBool2Expr False,
               cHole
              ] ++ cInts ++ cDoubles ++ cChars
-             
+
+-- | Number Word Learning
+numberExprs :: [Expr]
+numberExprs = [cFilter, -- Filtering
+               cIsSingleton, -- Sets/Worlds
+               cSelect,
+               cShift,
+               cUnion,
+               cFst, -- pair
+               cSnd,
+               cSwap,
+               cDefaultCase, -- Cases
+               cAddCase,
+               cChangeDefault,
+               cEvalCase,
+               cAnd, -- Booleans
+               cOr,
+               cNot,
+               cBool2Expr True,
+               cBool2Expr False,
+               stringToExpr "X", -- the word, Strings
+               stringToExpr "O",
+               stringToExpr "A",
+               stringToExpr "B",
+               stringToExpr "C",
+               stringToExpr "D",
+               stringToExpr "E",
+               stringToExpr "THING",
+               stringToExpr "ONE",
+               stringToExpr "TWO",
+               stringToExpr "ALL",
+               stringToExpr "a", -- the LOT representation
+               stringToExpr "b",
+               cPerceive,
+               cObjEqual,
+               cIsA,
+               cIsB,
+               cStrEqual,
+               cQuantCase, -- making it easy
+               cNounCase,
+               cI, -- combinators
+               cS,
+               cB,
+               cC,
+               cK,
+               cW] ++ cDualCombinators
+--             c3Fst, -- triples, det
+--             c3Snd, -- noun
+--             c3Trd, -- world
+
 -- Library for testing EM+polynomial regression
 polyExprs :: [Expr]
 polyExprs = [cI, 

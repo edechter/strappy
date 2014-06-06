@@ -35,19 +35,21 @@ doEMIter :: String -- ^ Prefix for log output
             -> Double -- ^ Lambda
             -> Double -- ^ pseudocounts
             -> Int -- ^ frontier size
+            -> Grammar -- ^ seed grammar
             -> Grammar -- ^ Initial grammar
             -> IO Grammar -- ^ Improved grammar
-doEMIter prefix tasks lambda pseudocounts frontierSize grammar = do
-    -- Sample frontiers
+doEMIter prefix tasks lambda pseudocounts frontierSize seed grammar = do
+  -- Sample frontiers (a Map from full expressions to their log likelihoods)
   let sampler = if sampleByEnumeration then sampleBitsM else sampleExprs
-  frontiers <- mapM (\tp -> sampler frontierSize grammar tp >>= return . (tp,)) $ nub (map etType tasks)
-  let lookupFrontier tp = fromJust $ lookup tp frontiers
-  -- If we're sampling, the number of unique expressions is not given;
-  -- display them.
+  let uniqueTypes = nub (map etType tasks)
+  frontiers <- mapM (\tp -> sampler frontierSize grammar tp >>= return . (tp,)) $ uniqueTypes
+  -- If we're sampling, list the number of unique expressions
   unless sampleByEnumeration $
     putStrLn $ "Frontier sizes: " ++ show (map (Map.size . snd) frontiers)
+  -- list the frontier entropy
   putStrLn $ "Frontier entropies: " ++ show (map (entropyLogDist . Map.elems . snd) frontiers)
   -- For each task, compute the P(t|e) terms
+  let lookupFrontier tp = fromJust $ lookup tp frontiers
   let rewardedFrontiers = flip map tasks $ \ tsk ->
         (etName tsk,
           Map.mapWithKey (\expr w -> (w, etLogLikelihood tsk expr)) (lookupFrontier $ etType tsk))
@@ -60,13 +62,18 @@ doEMIter prefix tasks lambda pseudocounts frontierSize grammar = do
   let weightedFrontiers' = zipWith (\logZ -> filter (\(_,x) -> not (isNaN x) && not (isInfinite x)) . Map.toList .
                                              Map.map (\x-> x-logZ))
                                    logZs weightedFrontiers
+  -- numHit = convert the rewardedFrontiers to an association list, each value will be a pair, take the second member of each pair, look to see whether it is a valid value, see if it is high enough be an answer, save those that are, and consider them hit.
   let numHit = length $ filter id $ flip map rewardedFrontiers $ \ (_, mp) -> any (\x-> x >= -0.01) $ filter (\x -> not (isNaN x) && not (isInfinite x)) $ map (snd . snd) $ Map.toList mp
   putStrLn $ "Completely solved " ++ show numHit ++ "/" ++ show (length tasks) ++ " tasks."
-  -- Save out the best program for each task to a file
+  -- Save out some program information for the grammar
   saveBest prefix rewardedFrontiers
+  uniqueTypes <- loopM uniqueTypes [0..(length uniqueTypes)] $ \types step -> do
+      saveType (prefix ++ "_" ++ (show step)) (types !! step) rewardedFrontiers
+      return types
+  saveWorst seed prefix frontiers
+  -- Exponentiate log likelihoods to get final weights
   let obs = foldl (\acc frontier ->
                     Map.unionWith logSumExp acc $ Map.fromList frontier) Map.empty weightedFrontiers'
-  -- Exponentiate log likelihoods to get final weights
   let obs' = map (\(e,logW) -> (e, exp logW)) $
              filter (\(_,w) -> not (isNaN w) && not (isInfinite w)) $
              Map.toList obs
@@ -80,7 +87,7 @@ doEMIter prefix tasks lambda pseudocounts frontierSize grammar = do
             when verbose $ putStrLn $ showGrammar $ removeSubProductions grammar'
             putStrLn "" -- newline
             return grammar'
-            
+
 saveBest fname fronts =
   let fronts' = map (\(nm, es) -> let es' = filter (\(_, (w, ll)) -> not (isNaN w) && not (isNaN ll) &&
                                                                      not (isInfinite w) && not (isInfinite ll))
@@ -88,8 +95,36 @@ saveBest fname fronts =
                                   in (nm, es')) fronts
       bestprogs = map (\(nm, front) -> if null front
                                        then (nm, Nothing)
-                                       else (nm, Just $ maximumBy (\(_, (w,ll)) (_, (w',ll')) -> compare (w+ll) (w'+ll')) front))
+                                       else (nm, 
+                                             Just ((maximumBy (\(_, (w,ll)) (_, (w',ll')) -> compare (w+ll) (w'+ll')) front),
+                                                   (maximumBy (\(_, (w,ll)) (_, (w',ll')) -> compare (ll) (ll')) front))))
                       fronts'
-      str = flip map bestprogs $ \(nm, result) ->
-                                 maybe ("Missed "++nm) (\(e, (w,ll)) -> nm ++ "\t" ++ show e ++ "\t" ++ show ll) result
-  in writeFile fname (unlines str)
+      str = flip map bestprogs $ \(nm, results) ->
+                                 maybe ("Missed "++nm) (\((e1,(w1,ll1)),(e2,(w2,ll2))) -> nm ++ "\t" ++ show e1 ++ "\t" ++ show (w1+ll1) ++ "\t" ++ show e2 ++ "\t" ++ show ll2) results
+  in writeFile (fname++"_best") (unlines str)
+
+saveSpecified prefix taskname fronts = 
+  let hitFronts = map (\(nm, es) -> let es' = filter (\(_, (w, ll)) -> not (isNaN w) && not (isNaN ll) && not (isInfinite w) && not (isInfinite ll) && (ll > - 0.1))
+                                                     $ Map.toList es
+                                    in (nm, es'))
+                      fronts
+      front = concatMap (\(nm,es) -> if nm == taskname then es else []) hitFronts
+      str = (show taskname) : (flip map front (\(e,(w,ll)) -> show e))
+  in writeFile (prefix++"_task") (unlines str)
+
+saveType prefix theType fronts = 
+  let matchingTypes = concatMap (\(nm, es) -> let es' = filter (\(e, (w, ll)) -> canUnifyFast theType $ eType $ annotateRequested e)
+                                                     $ Map.toList es
+                                    in es')
+                                fronts
+      str = (show theType) : (flip map matchingTypes (\(e,(w,ll)) -> show e))
+  in writeFile (prefix++"_type") (unlines str)
+
+saveWorst seed prefix frontiers =
+    let outStrings = map (\(tp,program) -> (show tp) ++ "\n" ++ (maybe "No Type Matches" (\(e,ll) -> (show e) ++ "\n" ++ (show ll)) program) ++ "\n") lowestLLProgs
+        lowestLLProgs = map (\(tp,frontier) -> (tp,lowestLLProg frontier)) frontiers'
+        lowestLLProg frontier = ((\front -> if null front then Nothing else (Just $ llMinimum front)) $ Map.toList frontier)
+        llMinimum = (minimumBy (\(_,ll1) (_,ll2) -> compare (ll1) (ll2)))
+        frontiers' = map (\(tp,frontier) -> (tp,(reweight seed frontier))) frontiers
+        reweight gr front = Map.fromList $ map (\(e,ll) -> let e' = exprLogLikelihood gr e in (e', fromJust $ eLogLikelihood e')) $ Map.toList front
+     in writeFile (prefix++"_worst") $ unlines outStrings
