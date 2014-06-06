@@ -393,8 +393,9 @@ cNot  = mkTerm "not"  (tBool ->- tBool) $ \ x -> not (x)
 -- | Conditional
 cIf = mkTerm "If" (tBool ->- t ->- t ->- t) $ \ p x y -> if p then x else y
 
+
 -- | Cases
-cDefaultCase = mkTerm "defaultCase" ((t ->- tBool) ->- t1 ->- t1 ->- tCase t t1) $ defaultCase 
+cDefaultCase = mkTerm "defaultCase" (t1 ->- tCase t t1) $ defaultCase 
 
 cAddCase = mkTerm "addCase" (tCase t t1 ->- (t ->- tBool) ->- t1 ->- tCase t t1) $ addCase
 
@@ -405,17 +406,21 @@ cEvalCase = mkTerm "evalCase" (tCase t t1 ->- t ->- t1) $ evalCase
 -- | "Bags", lists which act as collections of objects
 cMkSingleton = mkTerm "Singleton" (tInt ->- tList tInt) $ \ x -> [x]
 
-cIsSingleton = mkTerm "Singleton?" (tList tInt ->- tBool) $ \ x -> (length x) == 1
-
 cSetDiff = mkTerm "SetDiff" (tList tInt ->- tList tInt ->- tList tInt) $ ((\\) :: [Int] -> [Int] -> [Int])
-
-cUnion =  mkTerm "Union" (tList tInt ->- tList tInt ->- tList tInt) $ ((++) :: [Int] -> [Int] -> [Int])
 
 cIntersection =  mkTerm "Intersection" (tList tInt ->- tList tInt ->- tList tInt) $ (List.intersect :: [Int] -> [Int] -> [Int])
 
-cSelect = mkTerm "Select" (tList tInt ->- tPair (tList tInt) (tList tInt)) $ \ xs -> if (null xs) then ([],[]) else ([head xs],(tail xs))
+cIsSingleton = mkTerm "Singleton?" (tList tInt ->- tBool) $ \ x -> (length x) == 1
 
-cShift = mkTerm "Shift" (tPair (tList tInt) (tList tInt) ->- tPair (tList tInt) (tList tInt)) $ \(xs,ys) -> if (null ys) then (xs,ys) else ((head ys):xs,(tail ys))
+cUnion =  mkTerm "Union" (tPair (tList tInt) (tList tInt) ->- tList tInt) $ \(x,y) -> x ++ y
+
+bagSelect :: [a] -> ([a],[a])
+bagSelect xs = if (null xs) then ([],[]) else ([head xs],(tail xs))
+cSelect = mkTerm "Select" (tList tInt ->- tPair (tList tInt) (tList tInt)) $ bagSelect
+
+bagShift :: ([a],[a]) -> ([a],[a])
+bagShift (xs,ys) = if (null ys) then (xs,ys) else ((head ys):xs,(tail ys))
+cShift = mkTerm "Shift" (tPair (tList tInt) (tList tInt) ->- tPair (tList tInt) (tList tInt)) $ bagShift
 
 -- | Maybe
 
@@ -451,6 +456,36 @@ cGetSpeak = mkTerm "getSpeak" (tResponse ->- (tMaybe (tList tChar))) $ getSpeak
 -- | String Checking
 cStrEqual :: Expr
 cStrEqual = mkTerm "strEqual" (tList tChar ->- tList tChar ->- tBool) $ ((==) :: String -> String -> Bool)
+
+perceive n = if n == 1 then "a" else "b"
+cPerceive = mkTerm "perceive" (tInt ->- tList tChar) $ perceive
+
+objEqual word obj = word == (perceive obj)
+cObjEqual = mkTerm "objEqual" (tList tChar ->- tInt ->- tBool) $ objEqual
+
+cIsA = mkTerm "isA" (tInt ->- tBool) $ \x -> (perceive x) == "a"
+cIsB = mkTerm "isB" (tInt ->- tBool) $ \x -> (perceive x) == "b"
+
+cQuantCase = mkTerm "quantCase" (tList tChar ->- (tList tInt ->- tList tInt)) $
+    evalCase
+        (addCase
+            (addCase
+                (defaultCase (\x -> x))
+                (=="ONE")
+                (\xs -> fst $ bagSelect xs))
+            (=="TWO")
+            (\xs -> fst . bagShift $ bagSelect xs))
+
+cNounCase = mkTerm "nounCase" (tList tChar ->- (tList tChar ->- tBool)) $
+    evalCase
+        (addCase
+            (addCase
+                (defaultCase (\x -> True))
+                (=="A")
+                (objEqual "a"))
+            (=="B")
+            (objEqual "b"))
+
 
 -- | Hacks for Number Learning
 
@@ -492,46 +527,56 @@ basicExprs = [cI,
               cHole
              ] ++ cInts ++ cDoubles ++ cChars
 
+
 -- | Number Word Learning
 numberExprs :: [Expr]
 numberExprs = [cFilter, -- Filtering
                cIsSingleton, -- Sets/Worlds
                cSelect,
                cShift,
+               cUnion,
                cFst, -- pair
                cSnd,
                cSwap,
-               c3Fst, -- triples, det
-               c3Snd, -- noun
-               c3Trd, -- world
                cDefaultCase, -- Cases
                cAddCase,
                cChangeDefault,
                cEvalCase,
-               cXHack, -- Ints
-               cOHack,
-               cIntEqual,
-               stringToExpr "X", -- Strings
+               cAnd, -- Booleans
+               cOr,
+               cNot,
+               cBool2Expr True,
+               cBool2Expr False,
+               stringToExpr "X", -- the word, Strings
                stringToExpr "O",
-               stringToExpr "thing",
-               stringToExpr "one",
-               stringToExpr "all",
+               stringToExpr "A",
+               stringToExpr "B",
+               stringToExpr "C",
+               stringToExpr "D",
+               stringToExpr "E",
+               stringToExpr "THING",
+               stringToExpr "ONE",
+               stringToExpr "TWO",
+               stringToExpr "ALL",
+               stringToExpr "a", -- the LOT representation
+               stringToExpr "b",
+               cPerceive,
+               cObjEqual,
+               cIsA,
+               cIsB,
                cStrEqual,
-               --cI, -- combinators
+               cQuantCase, -- making it easy
+               cNounCase,
+               cI, -- combinators
                cS,
                cB,
                cC,
-               cW,
-               cS'] ++ cDualCombinators
---             cMap,
---             cSetDiff,
---             cMkSingleton,
---             cIf, -- Booleans
---             cAnd,
---             cOr,
---             cNot,
---             cBool2Expr True,
---             cBool2Expr False,
+               cK,
+               cW] ++ cDualCombinators
+
+               --cCB <> cFilter <> c3Trd
+               --cC <> cIntEqual
+               --cFilter <> ((cC <> cIntEqual) <> cXHack)
 
 -- Library for testing EM+polynomial regression
 polyExprs :: [Expr]

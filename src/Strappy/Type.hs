@@ -107,12 +107,14 @@ checkSubForCycles =
 -- Unification
 -- Primed unify is for types that have already had the substitution applied
 unify :: (IsString e, MonadError e m) => Type -> Type -> TypeInference m ()
+{-# INLINE unify #-}
 unify t1 t2 = do
   t1' <- applySub t1
   t2' <- applySub t2
   unify' t1' t2'
 
 unify' ::  (IsString e, MonadError e m) => Type -> Type -> TypeInference m ()
+{-# INLINE unify' #-}
 unify' (TVar v) (TVar v') | v == v' = return ()
 unify' (TVar v) t | occurs v t = lift $ throwError "Occurs check"
 unify' (TVar v) t = bindTVar v t
@@ -125,12 +127,14 @@ unify' _ _ = lift $ throwError "Could not unify"
 
 -- Occurs check: does the variable occur in the type?
 occurs :: Int -> Type -> Bool
+{-# INLINE occurs #-}
 occurs v (TVar v') = v == v'
 occurs v (TCon _ ts) = any (occurs v) ts
 
 
 -- Checks to see if two types can unify, using current substitution
 canUnifyM :: Monad m => Type -> Type -> TypeInference m Bool
+{-# INLINE canUnifyM #-}
 canUnifyM t1 t2 = do
   state <- get
   case evalStateT (unify t1 t2) state of

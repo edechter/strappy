@@ -3,10 +3,10 @@ module Strappy.Case
 
 data Case a b = Case [(a->Bool,b)] b
 
-defaultCase :: (a->Bool) -> b -> b -> Case a b
-defaultCase g r f = Case [(g,r)] f
+defaultCase :: b -> Case a b
+defaultCase f = Case [] f
 
-addCase :: (Case a b) -> (a->Bool) -> b  -> (Case a b)
+addCase :: (Case a b) -> (a->Bool) -> b -> (Case a b)
 addCase (Case cs f) g r = Case (cs++[(g,r)]) f
 
 changeDefault  :: (Case a b) -> b -> (Case a b)
