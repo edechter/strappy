@@ -268,22 +268,31 @@ cFix = mkTerm "fix" ((t ->- t) ->- t) $
     \f -> sFix f
 
 cSS = mkTerm "SS" ((t2 ->- t3 ->- t1 ->- t) ->- (t2 ->- t3 ->- t1) ->- t2 ->- t3 ->- t) $ \ f g x1 x2 -> (f x1 x2) (g x1 x2)
+-- cSS = (cB <> cS <> (cB <> cS))
 
 cSB = mkTerm "SB" ((t2 ->- t1 ->- t) ->- (t2 ->- t3 ->- t1) ->- t2 ->- t3 ->- t) $ \ f g x1 x2 -> (f x1) (g x1 x2)
+-- cSB = (cB <> cS <> (cB <> cB))
 
 cSC = mkTerm "SC" ((t3 ->- t1 ->- t2 ->- t) ->- (t3 ->- t2) ->- t3 ->- t1 ->- t) $ \ f g x1 x2 -> (f x1 x2) (g x1)
+-- cSC = (cB <> cS <> (cB <> cC))
 
 cBS = mkTerm "BS" ((t3 ->- t1 ->- t) ->- (t2 ->- t3 ->- t1) ->- t2 ->- t3 ->- t) $ \ f g x1 x2 -> (f x2) (g x1 x2)
+-- cBS = (cB <> cB <> cS)
 
 cBB = mkTerm "BB" ((t1 ->- t) ->- (t2 ->- t3 ->- t1) ->- t2 ->- t3 ->- t) $ \ f g x1 x2 -> f (g x1 x2)
+-- cBB = (cB <> cB <> cB)
 
 cBC = mkTerm "BC" ((t1 ->- t2 ->- t) ->- (t3 ->- t2) ->- t3 ->- t1 ->- t) $ \ f g x1 x2 -> (f x2) (g x1)
+-- cBC = (cB <> cB <> cC)
 
 cCS = mkTerm "CS" ((t1 ->- t3 ->- t2 ->- t) ->- (t3 ->- t2) ->- t1 ->- t3 ->- t) $ \ f g x1 x2 -> (f x1 x2) (g x2)
+-- cCS = (cB <> cC <> (cB <> cS))
 
 cCB = mkTerm "CB" ((t1 ->- t2 ->- t) ->- (t3 ->- t2) ->- t1 ->- t3 ->- t) $ \ f g x1 x2 -> (f x1) (g x2)
+-- cCB = (cB <> cC <> (cB <> cB))
 
 cCC = mkTerm "CC" ((t1 ->- t2 ->- t3 ->- t) ->- t3 ->- t1 ->- t2 ->- t) $ \ f g x1 x2 -> (f x1 x2) (g)
+-- cCC = (cB <> cC <> (cB <> cC))
 
 cDualCombinators = [cSS,cSB,cSC,cBS,cBB,cBC,cCS,cCB,cCC]
 
@@ -408,9 +417,13 @@ cIsSingleton = mkTerm "Singleton?" (tList tInt ->- tBool) $ \ x -> (length x) ==
 
 cUnion =  mkTerm "Union" (tPair (tList tInt) (tList tInt) ->- tList tInt) $ \(x,y) -> x ++ y
 
-cSelect = mkTerm "Select" (tList tInt ->- tPair (tList tInt) (tList tInt)) $ \ xs -> if (null xs) then ([],[]) else ([head xs],(tail xs))
+bagSelect :: [a] -> ([a],[a])
+bagSelect xs = if (null xs) then ([],[]) else ([head xs],(tail xs))
+cSelect = mkTerm "Select" (tList tInt ->- tPair (tList tInt) (tList tInt)) $ bagSelect
 
-cShift = mkTerm "Shift" (tPair (tList tInt) (tList tInt) ->- tPair (tList tInt) (tList tInt)) $ \(xs,ys) -> if (null ys) then (xs,ys) else ((head ys):xs,(tail ys))
+bagShift :: ([a],[a]) -> ([a],[a])
+bagShift (xs,ys) = if (null ys) then (xs,ys) else ((head ys):xs,(tail ys))
+cShift = mkTerm "Shift" (tPair (tList tInt) (tList tInt) ->- tPair (tList tInt) (tList tInt)) $ bagShift
 
 -- | Maybe
 
@@ -440,20 +453,34 @@ cGetSpeak = mkTerm "getSpeak" (tResponse ->- (tMaybe (tList tChar))) $ getSpeak
 -- | Hacks for Number Learning
 cStrEqual = mkTerm "strEqual" (tList tChar ->- tList tChar ->- tBool) $ ((\x y -> x == y) :: String -> String -> Bool)
 
-perceive n = if n == 1 then "x" else "o"
-
+perceive n = if n == 1 then "a" else "b"
 cPerceive = mkTerm "perceive" (tInt ->- tList tChar) $ perceive
 
-cObjEqual = mkTerm "objEqual" (tList tChar ->- tInt ->- tBool) $ \word obj -> word == (perceive obj)
+objEqual word obj = word == (perceive obj)
+cObjEqual = mkTerm "objEqual" (tList tChar ->- tInt ->- tBool) $ objEqual
 
-cIsX = mkTerm "isX" (tInt ->- tBool) $ \x -> (perceive x) == "x"
-cIsO = mkTerm "isO" (tInt ->- tBool) $ \x -> (perceive x) == "o"
+cIsA = mkTerm "isA" (tInt ->- tBool) $ \x -> (perceive x) == "a"
+cIsB = mkTerm "isB" (tInt ->- tBool) $ \x -> (perceive x) == "b"
 
--- cIsX = mkTerm "isX" (tInt ->- tBool) $ \x -> x == 1
--- cIsO = mkTerm "isO" (tInt ->- tBool) $ \o -> o == 2
--- cXHack = mkTerm "x" tInt 1
--- cOHack = mkTerm "o" tInt 2
--- cIntEqual = mkTerm "IntEqual" (tInt ->- tInt ->- tBool) $ ((==) :: Int -> Int -> Bool)
+cQuantCase = mkTerm "quantCase" (tList tChar ->- (tList tInt ->- tList tInt)) $
+    evalCase
+        (addCase
+            (addCase
+                (defaultCase (\x -> x))
+                (=="ONE")
+                (\xs -> fst $ bagSelect xs))
+            (=="TWO")
+            (\xs -> fst . bagShift $ bagSelect xs))
+
+cNounCase = mkTerm "nounCase" (tList tChar ->- (tList tChar ->- tBool)) $
+    evalCase
+        (addCase
+            (addCase
+                (defaultCase (\x -> True))
+                (=="A")
+                (objEqual "a"))
+            (=="B")
+            (objEqual "b"))
 
 -- | A basic collection of expressions
 basicExprs :: [Expr]
@@ -496,9 +523,6 @@ numberExprs = [cFilter, -- Filtering
                cFst, -- pair
                cSnd,
                cSwap,
-               c3Fst, -- triples, det
-               c3Snd, -- noun
-               c3Trd, -- world
                cDefaultCase, -- Cases
                cAddCase,
                cChangeDefault,
@@ -510,23 +534,33 @@ numberExprs = [cFilter, -- Filtering
                cBool2Expr False,
                stringToExpr "X", -- the word, Strings
                stringToExpr "O",
-               stringToExpr "thing",
-               stringToExpr "one",
-               stringToExpr "two",
-               stringToExpr "all",
-               stringToExpr "x", -- the LOT representation
-               stringToExpr "o",
+               stringToExpr "A",
+               stringToExpr "B",
+               stringToExpr "C",
+               stringToExpr "D",
+               stringToExpr "E",
+               stringToExpr "THING",
+               stringToExpr "ONE",
+               stringToExpr "TWO",
+               stringToExpr "ALL",
+               stringToExpr "a", -- the LOT representation
+               stringToExpr "b",
                cPerceive,
                cObjEqual,
-               cIsX,
-               cIsO,
+               cIsA,
+               cIsB,
                cStrEqual,
+               cQuantCase, -- making it easy
+               cNounCase,
                cI, -- combinators
                cS,
                cB,
                cC,
-               cK, -- unsure about this one
+               cK,
                cW] ++ cDualCombinators
+--             c3Fst, -- triples, det
+--             c3Snd, -- noun
+--             c3Trd, -- world
 
 -- Library for testing EM+polynomial regression
 polyExprs :: [Expr]

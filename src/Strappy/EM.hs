@@ -31,7 +31,6 @@ data EMTask = EMTask { etName :: String,
 
 -- | Performs one iteration of EM on multitask learning
 doEMIter :: String -- ^ Prefix for log output
-            -> String -- ^ name of task
             -> [EMTask] -- ^ Tasks (functions from compiled expressions to log likelihoods)
             -> Double -- ^ Lambda
             -> Double -- ^ pseudocounts
@@ -39,10 +38,11 @@ doEMIter :: String -- ^ Prefix for log output
             -> Grammar -- ^ seed grammar
             -> Grammar -- ^ Initial grammar
             -> IO Grammar -- ^ Improved grammar
-doEMIter prefix taskname tasks lambda pseudocounts frontierSize seed grammar = do
+doEMIter prefix tasks lambda pseudocounts frontierSize seed grammar = do
   -- Sample frontiers (a Map from full expressions to their log likelihoods)
   let sampler = if sampleByEnumeration then sampleBitsM else sampleExprs
-  frontiers <- mapM (\tp -> sampler frontierSize grammar tp >>= return . (tp,)) $ nub (map etType tasks)
+  let uniqueTypes = nub (map etType tasks)
+  frontiers <- mapM (\tp -> sampler frontierSize grammar tp >>= return . (tp,)) $ uniqueTypes
   -- If we're sampling, list the number of unique expressions
   unless sampleByEnumeration $
     putStrLn $ "Frontier sizes: " ++ show (map (Map.size . snd) frontiers)
@@ -67,7 +67,9 @@ doEMIter prefix taskname tasks lambda pseudocounts frontierSize seed grammar = d
   putStrLn $ "Completely solved " ++ show numHit ++ "/" ++ show (length tasks) ++ " tasks."
   -- Save out some program information for the grammar
   saveBest prefix rewardedFrontiers
-  saveSpecified prefix taskname rewardedFrontiers
+  uniqueTypes <- loopM uniqueTypes [0..(length uniqueTypes)] $ \types step -> do
+      saveType (prefix ++ "_" ++ (show step)) (types !! step) rewardedFrontiers
+      return types
   saveWorst seed prefix frontiers
   -- Exponentiate log likelihoods to get final weights
   let obs = foldl (\acc frontier ->
@@ -109,6 +111,14 @@ saveSpecified prefix taskname fronts =
       front = concatMap (\(nm,es) -> if nm == taskname then es else []) hitFronts
       str = (show taskname) : (flip map front (\(e,(w,ll)) -> show e))
   in writeFile (prefix++"_task") (unlines str)
+
+saveType prefix theType fronts = 
+  let matchingTypes = concatMap (\(nm, es) -> let es' = filter (\(e, (w, ll)) -> canUnifyFast theType $ eType $ annotateRequested e)
+                                                     $ Map.toList es
+                                    in es')
+                                fronts
+      str = (show theType) : (flip map matchingTypes (\(e,(w,ll)) -> show e))
+  in writeFile (prefix++"_type") (unlines str)
 
 saveWorst seed prefix frontiers =
     let outStrings = map (\(tp,program) -> (show tp) ++ "\n" ++ (maybe "No Type Matches" (\(e,ll) -> (show e) ++ "\n" ++ (show ll)) program) ++ "\n") lowestLLProgs
