@@ -1,0 +1,27 @@
+\documentclass{article}
+
+\usepackage{amsmath}
+
+\DeclareMathOperator*{\argmax}{argmax} 
+\newcommand{\E}{\mathrm{E}}
+
+\begin{document}
+
+\begin{align}
+G_{new} &= \argmax_{G'} 
+     \E [\log \prod_i p(t_i, e_i | G') | G, t_1, \dots, t_N]\\
+        =& \argmax_{G'} \E 
+           [\sum_i^N \log p(t_i, e_i | G') | G, t_1, \dots, t_N]\\
+  =& \argmax_{G'} \sum_i^N \E [\log p(t_i |  e_i) | G, t_1, \dots, t_N] + 
+  \sum_i^N \E [\log p(e_i |  G') | G, t_1, \dots, t_N]\\
+  =& \argmax_{G'}  
+  \sum_i^N \E [\log p(e_i |  G') | G, t_1, \dots, t_N]\\
+  =& \argmax_{G'} \sum_i^N \E [\log p(e_i |  G') | G, t_1, \dots, t_N]\\
+  =& \argmax_{G'} \sum_i^N \sum_{e_j \sim p(e|G)}
+                            p(t_i | e_j, G) 
+                            \log p(e_i |  G')
+\end{align}
+
+
+
+\end{document}

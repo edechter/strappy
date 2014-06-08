@@ -1,0 +1,23 @@
+Experiment {expName = "digarith_wjittermany", expTaskSet = [not,not,and,and,or,or,xor,xor], expEps = 0.0, expPrior = Grammar
+------------------------
+Expansions: 0.0
+
+Library: 
+-------
+S: -1.8612584495911983
+I: -1.0896726351759414
+C: -2.3303652410268456
+B: -3.6196323633329355
+nand: -0.95673822981245
+, expInitLib = Grammar
+------------------------
+Expansions: 0.0
+
+Library: 
+-------
+S: -1.8612584495911983
+I: -1.0896726351759414
+C: -2.3303652410268456
+B: -3.6196323633329355
+nand: -0.95673822981245
+, expDepthBound = 3, expNumBound = 2000, expReps = 5}

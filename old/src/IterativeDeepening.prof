@@ -1,0 +1,245 @@
+	Thu Jun  5 15:38 2014 Time and Allocation Profiling Report  (Final)
+
+	   IterativeDeepening +RTS -p -hy -RTS -s 1 -o ID-bench.html
+
+	total time  =        0.01 secs   (7 ticks @ 1000 us, 1 processor)
+	total alloc =   3,466,088 bytes  (excludes profiling overheads)
+
+COST CENTRE         MODULE                     %time %alloc
+
+applySub            Strappy.Type                42.9   74.8
+CAF                 GHC.IO.Encoding             14.3    0.1
+->-                 Strappy.Type                14.3    0.0
+applyTVarSub        Strappy.Type                14.3    3.5
+seedGrammar         Strappy.IterativeDeepening  14.3    0.3
+CAF                 GHC.IO.Handle.FD             0.0    1.0
+CAF                 GHC.Float                    0.0    1.3
+annotateRequestedM  Strappy.Library              0.0    1.4
+instantiateType     Strappy.Type                 0.0    2.0
+getTVars            Strappy.Type                 0.0    2.5
+getUnifyingExprs.go Strappy.IterativeDeepening   0.0    7.1
+
+
+                                                                                 individual     inherited
+COST CENTRE                       MODULE                       no.     entries  %time %alloc   %time %alloc
+
+MAIN                              MAIN                         146           0    0.0    0.0   100.0  100.0
+ main                             Strappy.IterativeDeepening   293           0    0.0    0.3     0.0    0.3
+ CAF                              Strappy.IterativeDeepening   291           0    0.0    0.0    71.4   96.9
+  tp                              Strappy.IterativeDeepening   435           1    0.0    0.0     0.0    0.0
+   tList                          Strappy.Type                 438           4    0.0    0.0     0.0    0.0
+   tTriple                        Strappy.Type                 437           1    0.0    0.0     0.0    0.0
+   ->-                            Strappy.Type                 436           1    0.0    0.0     0.0    0.0
+  getUnifyingExprs                Strappy.IterativeDeepening   426           0    0.0    0.0     0.0    0.0
+   getUnifyingExprs.go            Strappy.IterativeDeepening   427           0    0.0    0.0     0.0    0.0
+    mkTVar                        Strappy.Type                 442           1    0.0    0.0     0.0    0.0
+  seedGrammar                     Strappy.IterativeDeepening   300           1   14.3    0.3    28.6   10.2
+   compare                        Strappy.Expr                 338          99    0.0    0.0     0.0    0.0
+   fromRight                      Strappy.IterativeDeepening   331          28    0.0    0.0     0.0    0.0
+   annotateRequested              Strappy.Library              310          28    0.0    0.2    14.3    9.8
+    mkTVar                        Strappy.Type                 313          28    0.0    0.0     0.0    0.0
+    runTI                         Strappy.Type                 311          28    0.0    0.0    14.3    9.6
+     runTIVar                     Strappy.Type                 312          28    0.0    0.3    14.3    9.6
+      annotateRequestedM          Strappy.Library              315          28    0.0    1.4    14.3    9.0
+       bindTVar                   Strappy.Type                 330          28    0.0    0.1     0.0    0.1
+       applySub                   Strappy.Type                 328         224   14.3    5.1    14.3    5.1
+       mkTVar                     Strappy.Type                 323          16    0.0    0.0     0.0    0.0
+       instantiateType            Strappy.Type                 318          28    0.0    0.7     0.0    2.4
+        applyTVarSub              Strappy.Type                 329         196    0.0    0.7     0.0    0.7
+        mkTVar                    Strappy.Type                 324           0    0.0    0.4     0.0    0.4
+        instantiateType.tvars     Strappy.Type                 319          28    0.0    0.1     0.0    0.6
+         getTVars                 Strappy.Type                 320         196    0.0    0.5     0.0    0.5
+      mkTVar                      Strappy.Type                 314           0    0.0    0.3     0.0    0.3
+   normalizeGrammar               Strappy.Library              301           1    0.0    0.0     0.0    0.1
+    normalizeGrammar.logTotalMass Strappy.Library              449           1    0.0    0.0     0.0    0.1
+     logSumExpList                Strappy.Utils                451           0    0.0    0.0     0.0    0.0
+      logSumExp                   Strappy.Utils                452          27    0.0    0.0     0.0    0.0
+       isInvalidNum               Strappy.Utils                453          54    0.0    0.0     0.0    0.0
+    normalizeGrammar.distr'       Strappy.Library              308           1    0.0    0.1     0.0    0.1
+     normalizeGrammar.distr'.\    Strappy.Library              448          28    0.0    0.0     0.0    0.0
+  main                            Strappy.IterativeDeepening   292           1    0.0    0.0    42.9   86.6
+   main.res                       Strappy.IterativeDeepening   475           1    0.0    0.0     0.0    0.0
+   main.(...)                     Strappy.IterativeDeepening   296           1    0.0    0.0    42.9   85.6
+    cbSearchV4                    Strappy.IterativeDeepening   297           2    0.0    0.0    42.9   85.6
+     cbSearchV4.(...)             Strappy.IterativeDeepening   478           1    0.0    0.0    14.3   22.3
+      cbSearchV4.(...).es         Strappy.IterativeDeepening   479           1    0.0    0.0    14.3   22.3
+       getUnifyingExprs           Strappy.IterativeDeepening   480           1    0.0    0.0    14.3   22.3
+        getUnifyingExprs.gamma    Strappy.IterativeDeepening   500           1    0.0    0.0     0.0    0.0
+        grApp                     Strappy.Library              499           1    0.0    0.0     0.0    0.0
+        getUnifyingExprs.tot      Strappy.IterativeDeepening   498           1    0.0    0.0     0.0    0.0
+        getUnifyingExprs.es       Strappy.IterativeDeepening   496           1    0.0    0.0     0.0    0.0
+        getUnifyingExprs.(...)    Strappy.IterativeDeepening   483           1    0.0    0.1    14.3   20.9
+         getUnifyingExprs.go      Strappy.IterativeDeepening   484          28    0.0    1.1    14.3   20.9
+          logSumExp               Strappy.Utils                494           1    0.0    0.0     0.0    0.0
+           isInvalidNum           Strappy.Utils                495           2    0.0    0.0     0.0    0.0
+          bindTVar                Strappy.Type                 493           9    0.0    0.1     0.0    0.1
+          applySub                Strappy.Type                 490         744   14.3   18.7    14.3   18.7
+          eType                   Strappy.Expr                 489          28    0.0    0.0     0.0    0.0
+          instantiateType         Strappy.Type                 486           0    0.0    0.2     0.0    0.9
+           applyTVarSub           Strappy.Type                 491         196    0.0    0.7     0.0    0.7
+        getUnifyingExprs.go       Strappy.IterativeDeepening   482           1    0.0    0.6     0.0    1.4
+         mkTVar                   Strappy.Type                 492           0    0.0    0.1     0.0    0.1
+         instantiateType          Strappy.Type                 485          28    0.0    0.1     0.0    0.7
+          instantiateType.tvars   Strappy.Type                 487          28    0.0    0.1     0.0    0.6
+           getTVars               Strappy.Type                 488         196    0.0    0.5     0.0    0.5
+        grExprDistr               Strappy.Library              481           1    0.0    0.0     0.0    0.0
+     cbSearchV4.leaves            Strappy.IterativeDeepening   477           1    0.0    0.0     0.0    0.0
+     cbSearchV4.applications      Strappy.IterativeDeepening   476           1    0.0    0.0     0.0    0.0
+     cbSearchV4.(...)             Strappy.IterativeDeepening   464           1    0.0    0.0     0.0    0.0
+      cbSearchV4.(...).k_l        Strappy.IterativeDeepening   474           1    0.0    0.0     0.0    0.0
+      cbSearchV4.(...).loop       Strappy.IterativeDeepening   473           1    0.0    0.0     0.0    0.0
+      cbSearchV4.(...).lhss       Strappy.IterativeDeepening   472           1    0.0    0.0     0.0    0.0
+      cbSearchV4.(...).eta        Strappy.IterativeDeepening   470           1    0.0    0.0     0.0    0.0
+      cbSearchV4.(...).(...)      Strappy.IterativeDeepening   467           1    0.0    0.0     0.0    0.0
+       freshTVar                  Strappy.Type                 468           1    0.0    0.0     0.0    0.0
+      cbSearchV4.(...).ctx'       Strappy.IterativeDeepening   466           1    0.0    0.0     0.0    0.0
+      cbSearchV4.(...).(...)      Strappy.IterativeDeepening   465           1    0.0    0.0     0.0    0.0
+       ->-                        Strappy.Type                 469           1    0.0    0.0     0.0    0.0
+     cbSearchV4.cMinA             Strappy.IterativeDeepening   463           1    0.0    0.0     0.0    0.0
+     cbSearchV4.gamma             Strappy.IterativeDeepening   461           1    0.0    0.0     0.0    0.0
+      grApp                       Strappy.Library              462           1    0.0    0.0     0.0    0.0
+     cbSearchV4.lb                Strappy.IterativeDeepening   299           2    0.0    0.0    28.6   62.3
+      lowerBound                  Strappy.IterativeDeepening   302           3    0.0    0.1    28.6   62.3
+       lowerBound.\               Strappy.IterativeDeepening   457          36    0.0    0.0     0.0    0.0
+       lowerBound.es              Strappy.IterativeDeepening   303           3    0.0    0.0    28.6   62.2
+        getUnifyingExprs          Strappy.IterativeDeepening   304           3    0.0    0.2    28.6   62.2
+         getUnifyingExprs.gamma   Strappy.IterativeDeepening   460           3    0.0    0.0     0.0    0.0
+         grApp                    Strappy.Library              459           3    0.0    0.0     0.0    0.0
+         getUnifyingExprs.tot     Strappy.IterativeDeepening   458           3    0.0    0.0     0.0    0.0
+         getUnifyingExprs.es      Strappy.IterativeDeepening   456           3    0.0    0.0     0.0    0.0
+         getUnifyingExprs.(...)   Strappy.IterativeDeepening   307           3    0.0    0.2    28.6   57.8
+          getUnifyingExprs.go     Strappy.IterativeDeepening   425          84    0.0    3.4    28.6   57.6
+           logSumExp              Strappy.Utils                446          36    0.0    0.0     0.0    0.0
+            isInvalidNum          Strappy.Utils                447          72    0.0    0.0     0.0    0.0
+           bindTVar               Strappy.Type                 445          70    0.0    0.3     0.0    0.3
+           applySub               Strappy.Type                 434        2046   14.3   51.0    14.3   51.0
+           eType                  Strappy.Expr                 433          84    0.0    0.0     0.0    0.0
+           instantiateType        Strappy.Type                 429           0    0.0    0.7    14.3    2.8
+            applyTVarSub          Strappy.Type                 439         588   14.3    2.1    14.3    2.1
+         getUnifyingExprs.go      Strappy.IterativeDeepening   306           3    0.0    1.9     0.0    4.3
+          mkTVar                  Strappy.Type                 443           0    0.0    0.2     0.0    0.2
+          instantiateType         Strappy.Type                 428          84    0.0    0.2     0.0    2.1
+           instantiateType.tvars  Strappy.Type                 431          84    0.0    0.4     0.0    1.9
+            getTVars              Strappy.Type                 432         588    0.0    1.5     0.0    1.5
+         grExprDistr              Strappy.Library              305           3    0.0    0.0     0.0    0.0
+     cbSearchV4                   Strappy.IterativeDeepening   298           2    0.0    1.0     0.0    1.0
+      lb_gt_b_V4                  Strappy.IterativeDeepening   471           1    0.0    0.0     0.0    0.0
+   main.mv                        Strappy.IterativeDeepening   295           1    0.0    0.0     0.0    0.0
+   showCbSearchResults            Strappy.IterativeDeepening   294           1    0.0    0.9     0.0    0.9
+    show                          Strappy.Expr                 497           1    0.0    0.0     0.0    0.0
+ CAF                              Strappy.Utils                290           0    0.0    0.0     0.0    0.0
+  logSumExpList                   Strappy.Utils                450           1    0.0    0.0     0.0    0.0
+ CAF                              Strappy.Type                 289           0    0.0    0.0    14.3    0.0
+  tCase                           Strappy.Type                 455           0    0.0    0.0     0.0    0.0
+  tPair                           Strappy.Type                 454           0    0.0    0.0     0.0    0.0
+  tTriple                         Strappy.Type                 444           0    0.0    0.0     0.0    0.0
+  tList                           Strappy.Type                 441           0    0.0    0.0     0.0    0.0
+  ->-                             Strappy.Type                 440           0   14.3    0.0    14.3    0.0
+  t3                              Strappy.Type                 424           1    0.0    0.0     0.0    0.0
+  tChar                           Strappy.Type                 403           1    0.0    0.0     0.0    0.0
+   tGnd                           Strappy.Type                 404           1    0.0    0.0     0.0    0.0
+  t2                              Strappy.Type                 354           1    0.0    0.0     0.0    0.0
+  t1                              Strappy.Type                 353           1    0.0    0.0     0.0    0.0
+  tInt                            Strappy.Type                 336           1    0.0    0.0     0.0    0.0
+   tGnd                           Strappy.Type                 337           1    0.0    0.0     0.0    0.0
+  tBool                           Strappy.Type                 325           1    0.0    0.0     0.0    0.0
+   tGnd                           Strappy.Type                 326           1    0.0    0.0     0.0    0.0
+  t                               Strappy.Type                 322           1    0.0    0.0     0.0    0.0
+ CAF                              Strappy.Expr                 288           0    0.0    0.0     0.0    0.0
+  stringToExpr                    Strappy.Expr                 401           0    0.0    0.0     0.0    0.0
+   tList                          Strappy.Type                 402           1    0.0    0.0     0.0    0.0
+ CAF                              Strappy.Library              287           0    0.0    0.1     0.0    0.3
+  cS'                             Strappy.Library              421           1    0.0    0.0     0.0    0.0
+   ->-                            Strappy.Type                 423          10    0.0    0.0     0.0    0.0
+   mkTerm                         Strappy.Expr                 422           1    0.0    0.0     0.0    0.0
+  cW                              Strappy.Library              418           1    0.0    0.0     0.0    0.0
+   ->-                            Strappy.Type                 420           4    0.0    0.0     0.0    0.0
+   mkTerm                         Strappy.Expr                 419           1    0.0    0.0     0.0    0.0
+  cC                              Strappy.Library              415           1    0.0    0.0     0.0    0.0
+   ->-                            Strappy.Type                 417           5    0.0    0.0     0.0    0.0
+   mkTerm                         Strappy.Expr                 416           1    0.0    0.0     0.0    0.0
+  cB                              Strappy.Library              412           1    0.0    0.0     0.0    0.0
+   ->-                            Strappy.Type                 414           5    0.0    0.0     0.0    0.0
+   mkTerm                         Strappy.Expr                 413           1    0.0    0.0     0.0    0.0
+  cS                              Strappy.Library              409           1    0.0    0.0     0.0    0.0
+   ->-                            Strappy.Type                 411           6    0.0    0.0     0.0    0.0
+   mkTerm                         Strappy.Expr                 410           1    0.0    0.0     0.0    0.0
+  cStrEqual                       Strappy.Library              405           1    0.0    0.0     0.0    0.0
+   tList                          Strappy.Type                 408           2    0.0    0.0     0.0    0.0
+   ->-                            Strappy.Type                 407           2    0.0    0.0     0.0    0.0
+   mkTerm                         Strappy.Expr                 406           1    0.0    0.0     0.0    0.0
+  cIntEqual                       Strappy.Library              395           1    0.0    0.0     0.0    0.0
+   ->-                            Strappy.Type                 397           2    0.0    0.0     0.0    0.0
+   mkTerm                         Strappy.Expr                 396           1    0.0    0.0     0.0    0.0
+  cOHack                          Strappy.Library              393           1    0.0    0.0     0.0    0.0
+   mkTerm                         Strappy.Expr                 394           1    0.0    0.0     0.0    0.0
+  cXHack                          Strappy.Library              391           1    0.0    0.0     0.0    0.0
+   mkTerm                         Strappy.Expr                 392           1    0.0    0.0     0.0    0.0
+  cEvalCase                       Strappy.Library              387           1    0.0    0.0     0.0    0.0
+   tCase                          Strappy.Type                 390           1    0.0    0.0     0.0    0.0
+   ->-                            Strappy.Type                 389           2    0.0    0.0     0.0    0.0
+   mkTerm                         Strappy.Expr                 388           1    0.0    0.0     0.0    0.0
+  cChangeDefault                  Strappy.Library              383           1    0.0    0.0     0.0    0.0
+   tCase                          Strappy.Type                 386           2    0.0    0.0     0.0    0.0
+   ->-                            Strappy.Type                 385           2    0.0    0.0     0.0    0.0
+   mkTerm                         Strappy.Expr                 384           1    0.0    0.0     0.0    0.0
+  cAddCase                        Strappy.Library              379           1    0.0    0.0     0.0    0.0
+   tCase                          Strappy.Type                 382           2    0.0    0.0     0.0    0.0
+   ->-                            Strappy.Type                 381           4    0.0    0.0     0.0    0.0
+   mkTerm                         Strappy.Expr                 380           1    0.0    0.0     0.0    0.0
+  cDefaultCase                    Strappy.Library              375           1    0.0    0.0     0.0    0.0
+   tCase                          Strappy.Type                 378           1    0.0    0.0     0.0    0.0
+   ->-                            Strappy.Type                 377           4    0.0    0.0     0.0    0.0
+   mkTerm                         Strappy.Expr                 376           1    0.0    0.0     0.0    0.0
+  c3Trd                           Strappy.Library              371           1    0.0    0.0     0.0    0.0
+   tTriple                        Strappy.Type                 374           1    0.0    0.0     0.0    0.0
+   ->-                            Strappy.Type                 373           1    0.0    0.0     0.0    0.0
+   mkTerm                         Strappy.Expr                 372           1    0.0    0.0     0.0    0.0
+  c3Snd                           Strappy.Library              367           1    0.0    0.0     0.0    0.0
+   tTriple                        Strappy.Type                 370           1    0.0    0.0     0.0    0.0
+   ->-                            Strappy.Type                 369           1    0.0    0.0     0.0    0.0
+   mkTerm                         Strappy.Expr                 368           1    0.0    0.0     0.0    0.0
+  c3Fst                           Strappy.Library              363           1    0.0    0.0     0.0    0.0
+   tTriple                        Strappy.Type                 366           1    0.0    0.0     0.0    0.0
+   ->-                            Strappy.Type                 365           1    0.0    0.0     0.0    0.0
+   mkTerm                         Strappy.Expr                 364           1    0.0    0.0     0.0    0.0
+  cSwap                           Strappy.Library              359           1    0.0    0.0     0.0    0.0
+   tPair                          Strappy.Type                 362           2    0.0    0.0     0.0    0.0
+   ->-                            Strappy.Type                 361           1    0.0    0.0     0.0    0.0
+   mkTerm                         Strappy.Expr                 360           1    0.0    0.0     0.0    0.0
+  cSnd                            Strappy.Library              355           1    0.0    0.0     0.0    0.0
+   tPair                          Strappy.Type                 358           1    0.0    0.0     0.0    0.0
+   ->-                            Strappy.Type                 357           1    0.0    0.0     0.0    0.0
+   mkTerm                         Strappy.Expr                 356           1    0.0    0.0     0.0    0.0
+  cFst                            Strappy.Library              349           1    0.0    0.0     0.0    0.0
+   tPair                          Strappy.Type                 352           1    0.0    0.0     0.0    0.0
+   ->-                            Strappy.Type                 351           1    0.0    0.0     0.0    0.0
+   mkTerm                         Strappy.Expr                 350           1    0.0    0.0     0.0    0.0
+  cShift                          Strappy.Library              344           1    0.0    0.0     0.0    0.0
+   tList                          Strappy.Type                 348           4    0.0    0.0     0.0    0.0
+   tPair                          Strappy.Type                 347           2    0.0    0.0     0.0    0.0
+   ->-                            Strappy.Type                 346           1    0.0    0.0     0.0    0.0
+   mkTerm                         Strappy.Expr                 345           1    0.0    0.0     0.0    0.0
+  cSelect                         Strappy.Library              339           1    0.0    0.0     0.0    0.0
+   tPair                          Strappy.Type                 343           1    0.0    0.0     0.0    0.0
+   tList                          Strappy.Type                 342           3    0.0    0.0     0.0    0.0
+   ->-                            Strappy.Type                 341           1    0.0    0.0     0.0    0.0
+   mkTerm                         Strappy.Expr                 340           1    0.0    0.0     0.0    0.0
+  cIsSingleton                    Strappy.Library              332           1    0.0    0.0     0.0    0.0
+   tList                          Strappy.Type                 335           1    0.0    0.0     0.0    0.0
+   ->-                            Strappy.Type                 334           1    0.0    0.0     0.0    0.0
+   mkTerm                         Strappy.Expr                 333           1    0.0    0.0     0.0    0.0
+  cFilter                         Strappy.Library              316           1    0.0    0.0     0.0    0.0
+   tList                          Strappy.Type                 327           2    0.0    0.0     0.0    0.0
+   ->-                            Strappy.Type                 321           3    0.0    0.0     0.0    0.0
+   mkTerm                         Strappy.Expr                 317           1    0.0    0.0     0.0    0.0
+  numberExprs                     Strappy.Library              309           1    0.0    0.0     0.0    0.0
+   stringToExpr                   Strappy.Expr                 398           5    0.0    0.0     0.0    0.0
+    showableToExpr                Strappy.Expr                 399           5    0.0    0.0     0.0    0.0
+     mkTerm                       Strappy.Expr                 400           5    0.0    0.0     0.0    0.0
+ CAF                              GHC.Conc.Signal              206           0    0.0    0.0     0.0    0.0
+ CAF                              GHC.Float                    201           0    0.0    1.3     0.0    1.3
+ CAF                              GHC.IO.Encoding              198           0   14.3    0.1    14.3    0.1
+ CAF                              GHC.IO.Encoding.Iconv        196           0    0.0    0.0     0.0    0.0
+ CAF                              GHC.IO.Handle.FD             189           0    0.0    1.0     0.0    1.0
+ CAF                              Debug.Trace                  168           0    0.0    0.0     0.0    0.0

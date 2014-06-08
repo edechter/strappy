@@ -1,0 +1,35 @@
+\documentclass{article}
+
+\title{Learning compositional object detectors}
+\author{Eyal Dechter}
+
+\begin{document}
+\maketitle
+\date
+\section{Introduction} 
+
+At that heart of modern AI and machine learning is a tension between the
+structured approaches to knowledge representation that dominate in classical
+AI and bottom up data driven statistical techniques that deal flexibly with
+large amounts of noisy and incomplete data. The field of computer vision is an
+excellent example of this tension: on the one hand, visual data is extremely
+high-dimensional, ambiguous, and noisy; on the other hand, the knowledge that
+computer vision systems attempt to extract from images is highly structured.
+The world behind the images is composed of objects and environments in
+relations to one another, these objects are composed of other objects, and
+both objects and their environments must obey the physical laws. 
+
+Recently, several attempts to bridge this gap have been proposed in the
+subfield of computer vision that is concerned with object detection. One of
+these approaches, due to Fleizen... and McAllester, works by constructing a
+grammar over object detectors and learning from data the object detector that
+best suits a given classification problem over object types. A detector drawn
+from this grammar has at its leaves primitive feature detectors
+(Fleizensomething et al. specifically used HOG detectors). The score of a
+detector on an image is calculated recursively given the primitive feature
+detectors.
+
+Object detectors, which are drawn from a grammar, are a natural way to
+describe the ways in which parts give rise to wholes in images of objects. 
+
+\end{document}

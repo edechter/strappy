@@ -1,0 +1,7 @@
+
+Title: Inductive programming for symbolic dimensionality reduction. 
+Authors: Kevin Ellis, Eyal Dechter, Brenden Lake, Josh Tenenbaum
+
+Abstract: 
+
+Dimensionality reduction is a core task in machine learning in which the goal is to find a small number of features that capture a large fraction of the variance within a data set. Many real world domains, however, are most naturally expressed as the result of program-like procedural computations. For example, linguists model morphological and phonological rules as simple programs that operator on phonemes, and the most successful representations of production, recognition and generalization of handwritten characters represent characters as motor programs. In domains such as these, we can reduce the dimensionality of the data by learning a single program -- a "renderer" -- whose arguments represent a low dimensional encoding of each data point. Here, we use program induction techniques to find such a renderer and explore its efficacy in the domains of polynomial symbolic regression, inflectional and derivational morphology, and motor programs for handwritten characters. 

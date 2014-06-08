@@ -1,0 +1,183 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+
+
+% \usepackage{fontspec}
+% \setmainfont{Hoefler Text}
+% \newcommand*\DNA{\textsc{dna}}
+
+% \newcommand*\Let[2]{\State #1 $\gets$ #2}
+% \algrenewcommand\alglinenumber[1]{
+%     {\sf\footnotesize\addfontfeatures{Colour=888888,Numbers=Monospaced}#1}}
+% \algrenewcommand\algorithmicrequire{\textbf{Precondition:}}
+% \algrenewcommand\algorithmicensure{\textbf{Postcondition:}}
+
+
+\begin{document}
+
+\section{Iterative Deepening for Functional Programming Enumeration}
+\label{sec:title}
+
+We present here an detailed exposition of an iterative deepening type algorithm for enumerating functional programs.
+
+\begin{algorithm}
+  \caption{Cost bounded depth first search on typed functional programs.
+    \label{alg:costBoundedDfs}}
+  \begin{algorithmic}[1]
+        \Require{$G$ a grammar of typed, weighted primitives.
+                A weight $\gamma$ associated with a new application. 
+                A requested type $\tau$.
+                A current substitution $\sigma$.}
+         \Function{cbSearch}{$G, b, \tau, \sigma$}
+            \Comment{A cost bounded depth first search.}
+             \State{$out = []$}
+             \State{$c_{min} \gets \infty$}
+             \For{$e, \eta, w \in G$} \Comment{$\tau$ is the type of $e$}
+                \State{$\sigma' \gets unify(\eta, \tau, \sigma)$}
+                \If{$null(\sigma))$} \Comment{If types can be unified.}
+                    \State{continue}
+                \Else
+                    \State{$out \gets cons(out, (e, \sigma', w))$}
+                    \If{$w > b$}
+                        \State{$c_{min} \gets min(w, c_{\min})$}
+                    \EndIf
+                \EndIf
+             \EndFor
+
+             \If{$\gamma > b$}
+                 \State{$c_{min} \gets min(\gamma, c_{\min})$}
+                \State{\Return{(out, $c_{min}$)}}
+             \Else
+                \State{(lhss, $k_\ell$) $\gets$ \Call{dbSearch}{$G, b - \gamma, \eta \rightarrow \tau, \sigma$}}
+                \State{$c_{min} \gets \gamma + k_\ell$}
+                \For{$e_\ell, \sigma_\ell, w_\ell \in $ lhss}
+                    \If{$\gamma + w_\ell \leq b $}
+                        \State{(rhss, $k_r$) $\gets$ \Call{dbSearch}{$G, b - \gamma-w_\ell, \eta , \sigma_\ell$}}
+                        \If{$\gamma + w_\ell + k_r > b$}
+                            \State{$c_{min} \gets min(c_{min}, \gamma + w_\ell + k_r$})
+                        \EndIf
+                        \For{$e_r, \sigma_r, w_r \in $ rhss}
+                            \If{$\gamma + w_\ell + w_r \leq b$}
+                                \State{out $\gets cons(out, (app(e_\ell, e_r), \sigma_r, \gamma + w_\ell + w_r))$}
+                            \EndIf
+                        \EndFor
+                    \EndIf
+                \EndFor
+                \State{\Return{(out, $c_{min}$)}}
+             \EndIf
+         \EndFunction
+  \end{algorithmic}
+\end{algorithm}
+
+
+\begin{algorithm}
+  \caption{Cost bounded depth first search on typed functional programs, version 2. 
+  This version adds a modest bounding heuristic cost. Every expansion carries with it an induced cost.  
+  We modify the previous version in the following way: every time we proceed with an application, we reduce the 
+  available bound by the minimum required to complete the application if it comes back successfully. In this first version, 
+  we just reduce the bound by the smallest primitive in the grammar. 
+    \label{alg:costBoundedDfs}}
+  \begin{algorithmic}[1]
+        \Require{$G$ a grammar of typed, weighted primitives.
+                A weight $\gamma$ associated with a new application. 
+                A requested type $\tau$.
+                A current substitution $\sigma$.}
+         \Function{cbSearch}{$G, b, \tau, \sigma$}
+            \Comment{A cost bounded depth first search.}
+             \State{$out = []$}
+             \State{$c_{min} \gets \infty$}
+             \For{$e, \eta, w \in G$} \Comment{$\tau$ is the type of $e$}
+                \State{$\sigma' \gets unify(\eta, \tau, \sigma)$}
+                \If{$null(\sigma))$} \Comment{If types can be unified.}
+                    \State{continue}
+                \Else
+                    \State{$out \gets cons(out, (e, \sigma', w))$}
+                    \If{$w > b$}
+                        \State{$c_{min} \gets min(w, c_{\min})$}
+                    \EndIf
+                \EndIf
+             \EndFor
+
+             \If{$\gamma + w_{min} > b$}
+                 \State{$c_{min} \gets min(\gamma + w_{min}, c_{\min})$}
+                \State{\Return{(out, $c_{min}$)}}
+             \Else
+                \State{$w_{min} \gets \min \{w|(\_, \_, w) \in G\}$}
+                \State{(lhss, $k_\ell$) $\gets$ \Call{dbSearch}{$G, b - \gamma - w_{min}, \eta \rightarrow \tau, \sigma$}}
+                \State{$c_{min} \gets \gamma + k_\ell + w_{min}$}
+                \For{$e_\ell, \sigma_\ell, w_\ell \in $ lhss}
+                    \If{$\gamma + w_\ell \leq b $}
+                        \State{(rhss, $k_r$) $\gets$ \Call{dbSearch}{$G, b - \gamma - w_\ell, \eta , \sigma_\ell$}}
+                        \If{$\gamma + w_\ell + k_r > b$}
+                            \State{$c_{min} \gets min(c_{min}, \gamma + w_\ell + k_r$})
+                        \EndIf
+                        \For{$e_r, \sigma_r, w_r \in $ rhss}
+                            \If{$\gamma + w_\ell + w_r \leq b$}
+                                \State{out $\gets cons(out, (app(e_\ell, e_r), \sigma_r, \gamma + w_\ell + w_r))$}
+                            \EndIf
+                        \EndFor
+                    \EndIf
+                \EndFor
+                \State{\Return{(out, $c_{min}$)}}
+             \EndIf
+         \EndFunction
+  \end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+  \caption{Cost bounded depth first search on typed functional programs, version 3. 
+  This version adds a short circuit when a requested type cannot possibly be fulfilled by any element in the library. 
+  For example, is I have a requested type $Int \rightarrow Int$, then I can short circuit as long as there is no element in the library
+  that is of the form $t_1 \rightarrow t_2 \rightarrow \dots Int \rightarrow Int$.
+    \label{alg:costBoundedDfs}}
+  \begin{algorithmic}[1]
+        \Require{$G$ a grammar of typed, weighted primitives.
+                A weight $\gamma$ associated with a new application. 
+                A requested type $\tau$.
+                A current substitution $\sigma$.}
+         \Function{cbSearch}{$G, b, \tau, \sigma$}
+            \Comment{A cost bounded depth first search.}
+             \State{$out = []$}
+             \State{$c_{min} \gets \infty$}
+             \For{$e, \eta, w \in G$} \Comment{$\tau$ is the type of $e$}
+                \State{$\sigma' \gets unify(\eta, \tau, \sigma)$}
+                \If{$null(\sigma))$} \Comment{If types can be unified.}
+                    \State{continue}
+                \Else
+                    \State{$out \gets cons(out, (e, \sigma', w))$}
+                    \If{$w > b$}
+                        \State{$c_{min} \gets min(w, c_{\min})$}
+                    \EndIf
+                \EndIf
+             \EndFor
+
+             \If{$\gamma + w_{min} > b$}
+                 \State{$c_{min} \gets min(\gamma + w_{min}, c_{\min})$}
+                \State{\Return{(out, $c_{min}$)}}
+             \Else
+                \State{$w_{min} \gets \min \{w|(\_, \_, w) \in G\}$}
+                \State{(lhss, $k_\ell$) $\gets$ \Call{dbSearch}{$G, b - \gamma - w_{min}, \eta \rightarrow \tau, \sigma$}}
+                \State{$c_{min} \gets \gamma + k_\ell + w_{min}$}
+                \For{$e_\ell, \sigma_\ell, w_\ell \in $ lhss}
+                    \If{$\gamma + w_\ell \leq b $}
+                        \State{(rhss, $k_r$) $\gets$ \Call{dbSearch}{$G, b - \gamma - w_\ell, \eta , \sigma_\ell$}}
+                        \If{$\gamma + w_\ell + k_r > b$}
+                            \State{$c_{min} \gets min(c_{min}, \gamma + w_\ell + k_r$})
+                        \EndIf
+                        \For{$e_r, \sigma_r, w_r \in $ rhss}
+                            \If{$\gamma + w_\ell + w_r \leq b$}
+                                \State{out $\gets cons(out, (app(e_\ell, e_r), \sigma_r, \gamma + w_\ell + w_r))$}
+                            \EndIf
+                        \EndFor
+                    \EndIf
+                \EndFor
+                \State{\Return{(out, $c_{min}$)}}
+             \EndIf
+         \EndFunction
+  \end{algorithmic}
+\end{algorithm}
+
+\end{document}
