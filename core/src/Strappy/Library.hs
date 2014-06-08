@@ -243,9 +243,13 @@ blankLibrary (Grammar {grExprDistr = distr}) =
 -- | Helper for turning a Haskell type to Any.
 mkAny :: a -> Any
 mkAny = unsafeCoerce  
-        
+
+
 
 -- | Basic combinators
+cBottom :: Expr
+cBottom = mkTerm "_|_" (TVar 0) (error "cBottom: this should never be called!") 
+
 cI = mkTerm "I" (t ->- t) $ id
 
 cS = mkTerm "S" ((t2 ->- t1 ->- t) ->- (t2 ->- t1) ->- t2 ->- t) $

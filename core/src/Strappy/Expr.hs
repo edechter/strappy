@@ -1,10 +1,34 @@
 -- Expr.hs
-{-# Language GADTs,  ScopedTypeVariables, FlexibleInstances, UndecidableInstances   #-}
+-- |
+-- Module:      Strappy.Core.Expr
+-- Copyright:   (c) Eyal Dechter
+-- License:     MIT
+-- Maintainer:  Eyal Dechter <edechter@mit.edu>
+-- Stability:   experimental
+--
+-- Types and methods for out expression language. 
 
-module Strappy.Expr where
+module Strappy.Expr (
+  -- * Expressions
+  Expr(..),
+  (<>),
+  (<.>),
+  typeOfApp,
+  eval,
+  isTerm,
+  timeLimitedEval,
+  doTypeInference,
+  doTypeInferenceM,
+  typeChecks,
+  exprSize,
+  getArity,
+  subExpr
+  ) where
 
 
-import Unsafe.Coerce (unsafeCoerce) 
+-- system imports --------
+import Unsafe.Coerce (unsafeCoerce)
+import Control.Arrow (second)
 import Control.Monad
 import Control.Monad.Identity
 import Data.Hashable
@@ -12,48 +36,41 @@ import Text.Printf
 import Control.Exception
 import Control.Monad.Error.Class
 import System.IO.Unsafe
-import Control.Concurrent.Timeout
+import Control.Concurrent.Timeout (timeout)
+import Data.Timeout (Timeout(..))
 import Control.DeepSeq (deepseq)
 import Data.Maybe
 import Data.String (IsString)
+import Criterion (nf, run)
+import Data.Word
 
+-- Strappy imports --------
 import Strappy.Type
-import Strappy.Config
-import Strappy.Utils
+import Numeric.StatsUtils
 
--- | Main data type. Holds primitive functions (Term), their
--- application (App) and annotations.
+-- | Main data type for expressions. 
 data Expr = forall a.
             Term {eName  :: String, 
                   eType  :: Type, 
-                  eReqType :: Maybe Type,
-                  eLogLikelihood :: Maybe Double,
-                  eThing :: a }
+                  eThing :: a      -- ^ the haskell term of any type
+                                   -- that is actually computed when
+                                   -- this term is called
+                 }
           | App {eLeft  :: Expr,
                  eRight :: Expr,
-                 eType  :: Type,
-                 eReqType :: Maybe Type, 
-                 eLogLikelihood :: Maybe Double }
+                 eType  :: Type}
              
--- | smart constructor for terms
-mkTerm :: forall a. String -> Type -> a -> Expr
-mkTerm name tp thing = Term { eName = name,
-                              eType = tp, 
-                              eReqType = Nothing,
-                              eLogLikelihood = Nothing,
-                              eThing = thing }
-
 -- | smart constructor for applications
 (<>) :: Expr -> Expr -> Expr
 a <> b = App { eLeft = a, 
                eRight = b, 
-               eType = tp, 
-               eLogLikelihood = Nothing,
-               eReqType = Nothing }
-         where tp = case runTI $ typeOfApp a b of
-                Left err -> error err
-                Right t -> t
+               eType = tp
+             }
+          where tp = case runTI $ typeOfApp a b of
+                      Left err  -> error err
+                      Right t -> t
 
+-- | infix constructor of expr applications within TypeInference monad.
 (<.>) :: (IsString e, MonadError e m) => TypeInference m Expr -> TypeInference m Expr -> TypeInference m Expr
 ma <.> mb = do a <- ma
                b <- mb
@@ -62,18 +79,11 @@ ma <.> mb = do a <- ma
                let a' = a{eType=ta}
                    b' = b{eType=tb}
                tp <- typeOfApp a' b'
-               return App{eLeft = a', eRight = b', eType = tp, eLogLikelihood = Nothing, eReqType = Nothing}
+               return App{eLeft = a', eRight = b', eType = tp}
  
-
 instance Show Expr where
     show Term{eName=s} = s
     show App{eLeft=el, eRight=er} = "(" ++ show el ++ " " ++  show er ++ ")"
-
-showExprLong :: Expr -> String
-showExprLong Term{eName=n, eType=tp, eReqType=rt} = printf "%7s, type: %50s, reqType: %50s" 
-                                                n (show tp) (show rt)  
-showExprLong App{eLeft=l, eRight=r, eType=tp, eReqType=rt }
-    = printf ("app, type: %7s, reqType: %7s\n--"++showExprLong l ++ "\n--" ++ showExprLong r ++ "\n")  (show tp)  (show rt)
 
 instance Eq Expr where
   Term { eName = n } == Term { eName = n' } = n == n'
@@ -89,43 +99,40 @@ instance Ord Expr where
         EQ -> compare r r'
         cmp -> cmp
 
+-- | @typeOfApp e1 e2@ returns the type of (App e1 e2) in in the current environment. 
 typeOfApp :: (IsString e, MonadError e m) => Expr -> Expr -> TypeInference m Type
 typeOfApp e_left e_right 
     = do tp <- mkTVar
          unify (eType e_left) (eType e_right ->- tp)
          applySub tp
-
-eval :: Expr -> a
--- | Evaluates an Expression of type a into a Haskell object of that
+         
+-- | Evaluates an expression of type a into a Haskell object of that
 -- corresponding type.
+eval :: Expr -> a
 eval Term{eThing=f} = unsafeCoerce f
 eval App{eLeft=el, eRight=er} = eval el (eval er)
-
-
 
 isTerm :: Expr -> Bool
 isTerm Term{} = True
 isTerm _ = False
 
-cBottom :: Expr
-cBottom = mkTerm "_|_" (TVar 0) (error "cBottom: this should never be called!") 
-
-timeLimitedEval :: Show a => Expr -> Maybe a
-timeLimitedEval expr = unsafePerformIO $
+-- | Evaluate an expression to a value, forcing the value to be
+-- evaluated to normal form. Limit evaluation time to timeout
+-- specified in nanoseconds.
+timeLimitedEval :: Show a => Word64 -> Expr -> Maybe a
+timeLimitedEval nanoSecs expr = unsafePerformIO $
                        handle (\(_ :: SomeException) -> return Nothing) $ 
-                         timeout maxEvalTime $ do
+                         timeout (Timeout nanoSecs) $ do
                            -- Hack to force Haskell to evaluate the expression:
                            -- Convert the (eval expr) in to a string,
                            -- then force each character of the string by putting it in to an unboxed array
                            let val = eval expr
-                           forceShowHack val
-                           --let strVal = show val
-                           -- a <- (newListArray (1::Int,length strVal) strVal) :: IO (IOUArray Int Char)
-                           -- strVal `deepseq` return val
+                           run (nf show val) 1
                            return val
 
 
--- | Runs type inference on the given program, returning its type
+-- | Runs type inference on the given expression, returning its
+-- type. This completely recalculates from the primitives.
 doTypeInference :: (IsString e, MonadError e m) => Expr -> m Type
 doTypeInference expr = runTI $ doTypeInferenceM expr
 
@@ -133,6 +140,7 @@ doTypeInference_ expr = case doTypeInference expr of
     Right t -> t
     Left err -> error err
 
+-- | Like @doTypeInference@, but remain within the TypeInference monad
 doTypeInferenceM :: (IsString e, MonadError e m) => Expr -> TypeInference m Type
 doTypeInferenceM (Term { eType = tp }) = instantiateType tp
 doTypeInferenceM (App { eLeft = l, eRight = r }) = do
@@ -144,11 +152,14 @@ doTypeInferenceM (App { eLeft = l, eRight = r }) = do
   unify rTp alpha
   applySub beta
 
+-- | Return true if the expression typechecks in a clean
+-- environment. Otherwise, false.
 typeChecks :: Expr -> Bool
 typeChecks expr = case runTI $ doTypeInferenceM expr of 
         Left _ -> False
         Right _ -> True
 
+-- TODO: Defined Foldable instance for Expr
 -- | Folds a monadic procedure over each subtree of a given expression
 exprFoldM :: Monad m => (a -> Expr -> m a) -> a -> Expr -> m a
 exprFoldM f a e@(Term {}) = f a e
@@ -163,17 +174,29 @@ exprSize :: Expr -> Int
 exprSize Term {} = 1
 exprSize App { eLeft = l, eRight = r } = 1 + exprSize l + exprSize r
 
--- | Substitutes instances of Old for New in Target
-subExpr :: Expr -> -- ^ Old
-           Expr -> -- ^ New
-           Expr -> -- ^ Target
-           Expr    -- ^ Updated target
+-- | Return the number of arguments for the expression.
+getArity :: (IsString e, MonadError e m) =>  Expr -> m Int
+getArity expr =
+  liftM arity $ doTypeInference expr
+  where arity (TCon "->" [t1, t2]) = 1 + arity t2
+        arity _ = 0
+
+-- | Substitute instances of Old for New in Target
+subExpr :: Expr -- ^ Old
+        -> Expr -- ^ New
+        -> Expr -- ^ Target
+        -> Expr -- ^ Updated target
 subExpr _ _ e@(Term { }) = e
 subExpr old new target | target == old = new
 subExpr old new e@(App { eLeft = l, eRight = r }) =
   e { eLeft = subExpr old new l,
       eRight = subExpr old new r }
+  
+----------------------------------------
+-- HOLES  ------------------------------
+----------------------------------------
 
+-- TODO: Holes should have their own constructors
 -- | Procedures for managing holes:
 -- | Returns the number of holes in an expression
 countHoles :: Expr -> Int
@@ -184,11 +207,11 @@ countHoles (Term {}) = 0
 -- | Samples values for the holes
 sampleHoles :: Expr -> IO Expr
 sampleHoles (Term { eName = "H" }) = do
-  h <- sampleMultinomial [(0.0, 0.1::Double), (0.1, 0.1), (0.2, 0.1),
-                          (0.3, 0.1), (0.4, 0.1), (0.5, 0.1),
-                          (0.6, 0.1), (0.7, 0.1), (0.8, 0.1),
-                          (0.9, 0.1)]
-  return $ cDouble2Expr h
+  h <- sampleMultinomial $ map (second log) [(0.0, 0.1::Double), (0.1, 0.1), (0.2, 0.1),
+                                             (0.3, 0.1), (0.4, 0.1), (0.5, 0.1),
+                                             (0.6, 0.1), (0.7, 0.1), (0.8, 0.1),
+                                             (0.9, 0.1)]
+  return $ doubleToExpr h
 sampleHoles e@(App { eLeft = l, eRight = r}) = do
   l' <- sampleHoles l
   r' <- sampleHoles r
@@ -209,7 +232,7 @@ expectedLikelihood ll samples e = do
 
 showableToExpr :: (Show a) => a -> Type -> Expr
 -- | Convert any Showable Haskell object into an Expr.
-showableToExpr f tp = mkTerm (show f) tp f
+showableToExpr f tp = Term (show f) tp f
 
 intListToExpr :: [Int] -> Expr
 intListToExpr s = showableToExpr s (tList tInt)
@@ -220,20 +243,14 @@ stringToExpr s = showableToExpr s (tList tChar)
 doubleToExpr :: Double -> Expr
 doubleToExpr d = showableToExpr d tDouble
 
-intToExpr :: Int -> Expr
-intToExpr d = showableToExpr d tInt
+charToExpr :: Char -> Expr
+charToExpr c = showableToExpr c tChar
 
-cInt2Expr :: Int -> Expr
--- | Convert integers to expressions. 
-cInt2Expr i = mkTerm (show i) tInt i 
+boolToExpr :: Bool -> Expr
+boolToExpr b = showableToExpr b tBool
 
-cDouble2Expr :: Double -> Expr
--- | Convert doubles to expressions. 
-cDouble2Expr i = mkTerm (show i) tDouble i 
 
-cChar2Expr :: Char -> Expr
-cChar2Expr c = mkTerm (show c) tChar c
-
+-- TODO: what is this stuff used for?
 -------------------------------------------
 -- Pattern matching for combinators -------
 -------------------------------------------
@@ -241,9 +258,9 @@ cChar2Expr c = mkTerm (show c) tChar c
 -- ?t matches terminals
 -- ?a matches applications
 -- ?d matches deterministic computations (no holes)
-matchExpr :: Expr -> -- ^ Pattern
-             ([Expr] -> Expr) -> -- ^ Callback 
-             Expr -> Expr -- ^ Performs matching
+matchExpr :: Expr  -- ^ Pattern
+             -> ([Expr] -> Expr) -- ^ Callback 
+             -> Expr -> Expr -- ^ Performs matching
 matchExpr pat proc e =
   maybe e proc $ match pat e
   where match (Term { eName = "?" }) t = return [t]
@@ -258,33 +275,22 @@ matchExpr pat proc e =
         match (Term { eName = n }) (Term { eName = n' }) | n == n' = return []
         match _ _ = Nothing
 
-cBool2Expr :: Bool -> Expr
-cBool2Expr b = mkTerm (show b) tBool b
-
-
-getArity :: (IsString e, MonadError e m) =>  Expr -> m Int
-getArity expr =
-  liftM arity $ doTypeInference expr
-  where arity (TCon "->" [t1, t2]) = 1 + arity t2
-        arity _ = 0
-
 ----------------------------------------
 -- Hashable instance ------------------- 
 ----------------------------------------
 instance Hashable Expr where
-    hashWithSalt a (Term { eName = name }) = hash a `hashWithSalt` hash name 
-                                                  
+    hashWithSalt a (Term { eName = name }) = hash a `hashWithSalt` hash name                                                   
     hashWithSalt a (App { eLeft = left, eRight = right }) = 
       hash a `hashWithSalt` hash left `hashWithSalt` hash right
 
 ----------------------------------------
 -- Expressable typeclass -------------- 
 ----------------------------------------
-class Expressable a where
-       toExpr :: a -> Expr
+-- class Expressable a where
+--        toExpr :: a -> Expr
 
-instance (Show a, Typeable a) => Expressable a where
-       toExpr v = mkTerm (show v) (typeOf v) v 
+-- instance (Show a, Typeable a) => Expressable a where
+--        toExpr v = Term (show v) (typeOf v) v 
 
 
 

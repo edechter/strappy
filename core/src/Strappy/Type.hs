@@ -18,18 +18,16 @@ import Control.Monad.Identity
 import Control.Monad.Trans.Class
 import Control.Monad.Error
 import Control.Monad.Error.Class
+
 import Control.Monad.State
 import Control.Monad.Error
 import Control.DeepSeq
 
 import Data.IORef
 import System.IO.Unsafe
-import Data.Set (Set())
-import qualified Data.Set as Set
 import Data.String (IsString)
 
 import Strappy.Response
-import Strappy.Case
 
 import Debug.Trace
 
@@ -45,7 +43,7 @@ freshTVar :: Context -> (Type, Context)
 freshTVar (Context i subst) = (TVar i, Context (i+1) subst)
 
 -- | type inference monad
-type TypeInference = StateT (Int, -- ^ next type var
+type TypeInference = StateT (Int, 
                              M.Map Int Type) -- ^ Union-Find substitution
 runTI :: Monad m => TypeInference m a -> m a
 runTI = runTIVar 0
@@ -367,5 +365,5 @@ instance (Typeable a) => Typeable (Maybe a) where
     typeOf _ = tMaybe (typeOf (undefined :: a))
 instance Typeable (Response) where
     typeOf _ = tResponse
-instance (Typeable a, Typeable b) => Typeable (Case a b) where
-    typeOf _ = tCase (typeOf (undefined :: a)) (typeOf (undefined :: b))
+-- instance (Typeable a, Typeable b) => Typeable (Case a b) where
+--     typeOf _ = tCase (typeOf (undefined :: a)) (typeOf (undefined :: b))

@@ -31,7 +31,7 @@ frontierSize = 1000
 frontierSamples :: Int
 frontierSamples = 20000
 
--- | Number of plans sampled for each task
+-- | Nugmber of plans sampled for each task
 numberOfPlansPerTask :: Int
 numberOfPlansPerTask = 10
 

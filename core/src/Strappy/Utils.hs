@@ -48,7 +48,7 @@ isInvalidNum x = isNaN x || isInfinite x
 
 logSumExpList :: [Double] -> Double
 logSumExpList = foldl1 logSumExp
-
+                        
 logSumExp :: Double -> Double -> Double
 logSumExp x y | isInvalidNum x = y
 logSumExp x y | isInvalidNum y = x
