@@ -1,0 +1,789 @@
+Frontier size 1000, beam size 100:
+
+Iter	Solved	Productions
+0		5/12	0
+1		6/12	9
+2		7/12	15
+3		7/12	15
+(plateus here)
+
+Frontier size 5000, beam size 100:
+Iter	Solved	Productions
+0		5/12	0
+1		7/12	10
+2		8/12	13
+3		8/12	13
+4		8/12	14
+(plateus here)
+
+
+Traces of the output:
+UGM run with: 42 p 1.0 1.5 1000 100 2 experiments/UGM/flip1000
+EM Planning Iteration: 0
+Action frontier sizes: 1000 1000
+Seed frontier sizes: 1000 1000
+Hit indep
+[((foldr unionD) null)]		-7.640488239324077
+Hit latent
+[(B ((S unionHT) latentify)),((foldr unionHT) null)]		-18.44001230316034
+Hit latentCommon
+[((foldl unionHT) latent)]		-7.640488239324077
+Hit chain
+[((foldr unionHT) null)]		-7.640488239324077
+Hit ring
+[(B ((S unionHT) explode)),((foldr unionHT) null)]		-18.44001230316034
+Got partial credit for ising
+[(S (C K)),((foldl (foldr unionHT)) null)]	-9.485599924429405
+Got partial credit for hmm
+[(S (K ((S unionHT) latentify))),((foldr unionHT) null)]	-5.073654023437037
+Got partial credit for revHMM
+[(S (C (foldr unionHT))),(B ((S unionC) latentify)),((foldr unionD) null)]	-2.7669261909239324
+Got partial credit for cylinder
+[(B ((S unionC) latentify)),((foldr unionHT) null)]	-2.7669261909239324
+Missed mrf
+Got partial credit for EC
+[I,(S (I (I (C (foldl unionHT))))),(K ((unionC latent) latent))]	-6.93147180559945
+Got partial credit for deepCylinder
+[I,(I ((foldl (foldr unionHT)) null))]	-5.073654023437037
+Hit 5/12 tasks.
+Got 5 new productions.
+Grammar entropy: 3.1664136354437646 nats.
+      p:   0.35
+      K:  -2.15
+(B ((S unionHT) latentify)):  -1.83
+(B ((S unionC) latentify)):  -1.64
+      B:  -1.64
+      C:  -1.54
+unionHT:  -1.42
+      S:  -1.30
+(foldr unionC):  -1.21
+(foldr unionHT):  -1.20
+      I:  -1.12
+ latent:  -1.07
+ unionC:  -0.91
+  union:  -0.91
+ unionD:  -0.89
+  foldr:  -0.83
+(foldl unionHT):  -0.76
+latentify:  -0.54
+explode:  -0.46
+  foldl:  -0.38
+   null:  -0.27
+    map:  -0.06
+ single:  -0.06
+ concat:  -0.05
+
+
+EM Planning Iteration: 1
+Action frontier sizes: 1000 1000
+Seed frontier sizes: 1000 1000
+Hit indep
+[((foldl unionD) null)]		-6.294158215156268
+Hit latent
+[((B ((S unionC) latentify)) ((foldl unionHT) null))]		-7.320449350970025
+Hit latentCommon
+[((foldl unionHT) latent)]		-4.4238079894111495
+Hit chain
+[((foldl unionHT) null)]		-3.626376894906433
+Hit ring
+[(B ((S unionHT) explode)),((foldl unionHT) null)]		-11.913342869543474
+Got partial credit for ising
+[I,((foldl (foldl unionHT)) null)]	-9.485599924429405
+Got partial credit for hmm
+[(B ((S unionHT) latentify)),(B ((S unionHT) latentify)),((B ((S unionC) latentify)) ((foldl unionHT) null))]	-5.073654023437037
+Hit revHMM
+[(S ((B unionD) ((foldr unionC) null))),((B ((S unionC) latentify)) ((foldl unionD) null))]		-24.441528058768714
+Got partial credit for cylinder
+[I,((B ((S unionC) latentify)) ((foldl unionHT) null))]	-2.7669261909239324
+Got partial credit for mrf
+[(B ((S unionHT) latentify)),((B ((S unionC) latentify)) ((foldl (foldr unionC)) null))]	-5.073654023437037
+Got partial credit for EC
+[((C B) (map ((S unionC) latentify))),((foldr unionHT) (explode latent))]	-5.073654023437037
+Got partial credit for deepCylinder
+[I,I,(I ((foldl (foldr unionC)) null))]	-5.073654023437037
+Hit 6/12 tasks.
+Got 7 new productions.
+Grammar entropy: 3.3823291347944306 nats.
+      p:   0.36
+      K:  -2.54
+      C:  -1.50
+      S:  -1.41
+(B ((S unionHT) latentify)):  -1.37
+(B ((S unionC) latentify)):  -1.26
+      I:  -1.23
+  (C B):  -1.20
+      B:  -1.17
+((foldr unionHT) null):  -1.03
+((foldr unionC) null):  -1.03
+latentify:  -1.00
+  foldr:  -0.91
+ unionC:  -0.85
+unionHT:  -0.85
+ latent:  -0.83
+((foldl unionHT) null):  -0.81
+explode:  -0.73
+  union:  -0.61
+ unionD:  -0.60
+((foldl (foldl unionHT)) null):  -0.52
+   null:  -0.29
+  foldl:  -0.26
+ single:  -0.04
+ concat:  -0.03
+    map:  -0.03
+
+
+EM Planning Iteration: 2
+Action frontier sizes: 1000 1000
+Seed frontier sizes: 1000 1000
+Hit indep
+[(B explode),((foldl unionHT) null)]		-6.248573191491888
+Hit latent
+[((B ((S unionC) latentify)) ((foldl unionHT) null))]		-4.6140057805751
+Hit latentCommon
+[((foldl unionHT) latent)]		-4.589841702127281
+Hit chain
+[((foldl unionHT) null)]		-1.3387055460940602
+Hit ring
+[(B ((S unionHT) explode)),((foldl unionHT) null)]		-9.253500845320847
+Hit ising
+[(((S B) map) ((foldr unionC) null))]		-10.46647529053423
+Got partial credit for hmm
+[(I I),I,((B ((S unionHT) latentify)) ((foldr unionHT) null))]	-5.073654023437037
+Hit revHMM
+[(S (((C B) ((foldl unionHT) null)) unionD)),((B ((S unionC) latentify)) ((foldl unionD) null))]		-21.379538791092468
+Got partial credit for cylinder
+[I,((B ((S unionC) latentify)) ((foldr unionC) null))]	-2.7669261909239324
+Got partial credit for mrf
+[(B ((S unionHT) latentify)),((B ((S unionHT) latentify)) ((foldl (foldr unionHT)) null))]	-5.073654023437037
+Got partial credit for EC
+[(I ((C B) (map ((S unionHT) latentify)))),((foldr unionHT) latent)]	-5.073654023437037
+Got partial credit for deepCylinder
+[I,(((S B) map) ((foldr unionC) null))]	-2.7669261909239324
+Hit 7/12 tasks.
+Got 7 new productions.
+Grammar entropy: 3.4005221060025765 nats.
+      p:   0.35
+      K:  -2.44
+      C:  -1.40
+      I:  -1.29
+      S:  -1.26
+(B ((S unionC) latentify)):  -1.18
+(B ((S unionHT) latentify)):  -1.14
+latentify:  -1.07
+((foldr unionHT) null):  -0.93
+  (C B):  -0.87
+((foldl unionHT) null):  -0.81
+((foldr unionC) null):  -0.79
+ unionC:  -0.76
+  foldr:  -0.72
+unionHT:  -0.69
+  union:  -0.64
+      B:  -0.63
+ unionD:  -0.63
+  foldl:  -0.59
+explode:  -0.57
+   null:  -0.56
+ latent:  -0.30
+((foldl (foldl unionHT)) null):  -0.19
+ single:  -0.09
+    map:  -0.03
+ concat:  -0.02
+
+
+EM Planning Iteration: 3
+Action frontier sizes: 1000 1000
+Seed frontier sizes: 1000 1000
+Hit indep
+[(B explode),((foldr unionC) null)]		-5.895997725935326
+Hit latent
+[((B ((S unionHT) latentify)) ((foldr unionC) null))]		-4.623658150098054
+Hit latentCommon
+[((foldl unionHT) latent)]		-4.144204789780357
+Hit chain
+[((foldr unionC) null)]		-1.4395119738360747
+Hit ring
+[(B ((S unionHT) explode)),((foldr unionC) null)]		-9.005627392808169
+Hit ising
+[(((S B) map) ((foldr unionC) null))]		-9.912144212122133
+Got partial credit for hmm
+[(B ((S unionHT) latentify)),(B ((S unionHT) latentify)),((B ((S unionHT) latentify)) (I ((foldr unionHT) null)))]	-5.073654023437037
+Hit revHMM
+[(S ((B unionD) ((foldr unionC) null))),((B ((S unionC) latentify)) ((foldl unionD) null))]		-22.072626054602196
+Got partial credit for cylinder
+[I,I,((B ((S unionC) latentify)) ((foldr unionHT) null))]	-2.7669261909239324
+Got partial credit for mrf
+[((B I) I),((B ((S unionHT) latentify)) ((foldl (foldl unionHT)) null))]	-5.073654023437037
+Got partial credit for EC
+[I,((C B) (map ((S unionC) latentify))),((foldr unionHT) latent)]	-5.073654023437037
+Got partial credit for deepCylinder
+[I,((B ((foldr unionC) null)) (map ((foldr unionC) null)))]	-2.7669261909239324
+Hit 7/12 tasks.
+Got 7 new productions.
+Grammar entropy: 3.3967940637249363 nats.
+      p:   0.35
+      K:  -2.45
+      C:  -1.45
+      I:  -1.39
+      S:  -1.29
+(B ((S unionC) latentify)):  -1.21
+latentify:  -1.14
+(B ((S unionHT) latentify)):  -1.06
+((foldr unionHT) null):  -0.97
+((foldl unionHT) null):  -0.90
+  foldr:  -0.82
+  foldl:  -0.80
+  (C B):  -0.80
+((foldr unionC) null):  -0.72
+ unionC:  -0.66
+  union:  -0.65
+   null:  -0.65
+ unionD:  -0.64
+unionHT:  -0.60
+      B:  -0.55
+explode:  -0.50
+ single:  -0.22
+ latent:  -0.21
+((foldl (foldl unionHT)) null):  -0.18
+ concat:  -0.03
+    map:  -0.03
+
+
+EM Planning Iteration: 4
+Action frontier sizes: 1000 1000
+Seed frontier sizes: 1000 1000
+Hit indep
+[(B explode),((foldr unionC) null)]		-5.630767416486008
+Hit latent
+[((B ((S unionHT) latentify)) ((foldr unionC) null))]		-4.44745515786719
+Hit latentCommon
+[((foldl unionHT) latent)]		-4.055194574383581
+Hit chain
+[((foldr unionC) null)]		-1.3607699031178584
+Hit ring
+[(B ((S unionHT) explode)),((foldr unionC) null)]		-8.750873346327412
+Hit ising
+[(((S B) map) ((foldr unionC) null))]		-9.68504829966069
+Got partial credit for hmm
+[(B I),(B ((S unionHT) latentify)),((B ((S unionHT) latentify)) ((foldr unionC) null))]	-5.073654023437037
+Hit revHMM
+[(S ((B unionD) ((foldr unionC) null))),((B ((S unionC) latentify)) ((foldl unionD) null))]		-22.261038515538928
+Got partial credit for cylinder
+[I,((B ((S unionC) latentify)) ((foldr unionC) null))]	-2.7669261909239324
+Got partial credit for mrf
+[(B (unionD null)),((B ((S unionHT) latentify)) ((foldl (foldl unionHT)) null))]	-5.073654023437037
+Got partial credit for EC
+[((C B) (map ((S unionHT) ((S unionHT) latentify)))),((foldr unionHT) latent)]	-5.073654023437037
+Got partial credit for deepCylinder
+[I,(((S B) map) ((foldr unionC) null))]	-2.7669261909239324
+Hit 7/12 tasks.
+Got 7 new productions.
+Grammar entropy: 3.394410337622471 nats.
+      p:   0.35
+      K:  -2.45
+      C:  -1.46
+      I:  -1.45
+      S:  -1.29
+(B ((S unionC) latentify)):  -1.23
+latentify:  -1.15
+(B ((S unionHT) latentify)):  -1.00
+((foldr unionHT) null):  -0.99
+((foldl unionHT) null):  -0.95
+  foldr:  -0.84
+  foldl:  -0.83
+  (C B):  -0.80
+((foldr unionC) null):  -0.67
+ unionD:  -0.67
+   null:  -0.66
+  union:  -0.66
+ unionC:  -0.65
+unionHT:  -0.59
+      B:  -0.52
+explode:  -0.48
+ single:  -0.22
+ latent:  -0.20
+((foldl (foldl unionHT)) null):  -0.19
+ concat:  -0.03
+    map:  -0.02
+
+
+EM Planning Iteration: 5
+Action frontier sizes: 1000 1000
+Seed frontier sizes: 1000 1000
+Hit indep
+[(B explode),((foldr unionC) null)]		-5.516602252511587
+Hit latent
+[((B ((S unionHT) latentify)) ((foldr unionC) null))]		-4.336173310799506
+Hit latentCommon
+[((foldl unionHT) latent)]		-4.039773490463717
+Hit chain
+[((foldr unionC) null)]		-1.3113853628945245
+Hit ring
+[(B ((S unionHT) explode)),((foldr unionC) null)]		-8.643254867629622
+Hit ising
+[(((S B) map) ((foldr unionC) null))]		-9.588771362469684
+Got partial credit for hmm
+[(I (B ((S unionHT) latentify))),(B ((S unionHT) latentify)),((B ((S unionC) latentify)) ((foldl unionHT) null))]	-5.073654023437037
+Hit revHMM
+[(S ((B union) ((foldr unionC) null))),((B ((S unionC) latentify)) ((foldl union) null))]		-22.249753615555782
+Got partial credit for cylinder
+[((C B) I),((B ((S unionC) latentify)) ((foldl unionHT) null))]	-2.7669261909239324
+Got partial credit for mrf
+[((C B) (I I)),(B ((S unionHT) latentify)),((B ((S unionHT) latentify)) ((foldl (foldl unionHT)) null))]	-5.073654023437037
+Got partial credit for EC
+[I,((C B) (map ((S unionHT) latentify))),((foldr unionHT) latent)]	-5.073654023437037
+Got partial credit for deepCylinder
+[I,((B ((foldr unionC) null)) (map ((foldr unionC) null)))]	-2.7669261909239324
+Hit 7/12 tasks.
+Got 7 new productions.
+Grammar entropy: 3.393459497514487 nats.
+      p:   0.35
+      K:  -2.45
+      I:  -1.49
+      C:  -1.46
+      S:  -1.29
+(B ((S unionC) latentify)):  -1.25
+latentify:  -1.16
+((foldr unionHT) null):  -1.00
+((foldl unionHT) null):  -0.98
+(B ((S unionHT) latentify)):  -0.96
+  foldr:  -0.84
+  foldl:  -0.84
+  (C B):  -0.81
+ unionD:  -0.67
+   null:  -0.66
+  union:  -0.66
+ unionC:  -0.65
+((foldr unionC) null):  -0.64
+unionHT:  -0.59
+      B:  -0.50
+explode:  -0.47
+ single:  -0.22
+((foldl (foldl unionHT)) null):  -0.20
+ latent:  -0.20
+ concat:  -0.03
+    map:  -0.02
+
+
+EM Planning Iteration: 6
+Action frontier sizes: 1000 1000
+Seed frontier sizes: 1000 1000
+Hit indep
+[(B explode),((foldr unionC) null)]		-5.462615542447264
+Hit latent
+[((B ((S unionHT) latentify)) ((foldr unionC) null))]		-4.268406456000345
+Hit latentCommon
+[((foldl unionHT) latent)]		-4.03645183001798
+Hit chain
+[((foldr unionC) null)]		-1.283311854406306
+Hit ring
+[(B ((S unionHT) explode)),((foldr unionC) null)]		-8.591005069319534
+Hit ising
+[((B ((foldr unionC) null)) (map ((foldr unionC) null)))]		-9.532342101104017
+Got partial credit for hmm
+[(I (B ((S unionHT) latentify))),(B ((S unionHT) latentify)),((B ((S unionC) latentify)) ((foldl unionHT) null))]	-5.073654023437037
+Hit revHMM
+[(S ((B union) ((foldr unionC) null))),((B ((S unionC) latentify)) ((B explode) ((foldr unionC) null)))]		-22.223503351950754
+Got partial credit for cylinder
+[((C B) I),((B ((S unionC) latentify)) ((foldl unionHT) null))]	-2.7669261909239324
+Got partial credit for mrf
+[((C B) (I I)),(B ((S unionHT) latentify)),((B ((S unionHT) latentify)) ((foldl (foldl unionHT)) null))]	-5.073654023437037
+Got partial credit for EC
+[(((B (C B)) map) ((S unionHT) latentify)),((foldr unionHT) latent)]	-5.073654023437037
+Got partial credit for deepCylinder
+[I,I,((B ((foldr unionC) null)) (map ((foldr unionC) null)))]	-2.7669261909239324
+Hit 7/12 tasks.
+Got 7 new productions.
+Grammar entropy: 3.3933136595915308 nats.
+      p:   0.35
+      K:  -2.44
+      I:  -1.52
+      C:  -1.45
+      S:  -1.28
+(B ((S unionC) latentify)):  -1.26
+latentify:  -1.16
+((foldr unionHT) null):  -1.01
+((foldl unionHT) null):  -1.00
+(B ((S unionHT) latentify)):  -0.93
+  foldr:  -0.85
+  foldl:  -0.84
+  (C B):  -0.80
+ unionD:  -0.67
+   null:  -0.66
+  union:  -0.66
+ unionC:  -0.65
+((foldr unionC) null):  -0.63
+unionHT:  -0.58
+      B:  -0.50
+explode:  -0.47
+ single:  -0.22
+((foldl (foldl unionHT)) null):  -0.20
+ latent:  -0.20
+ concat:  -0.03
+    map:  -0.02
+
+
+EM Planning Iteration: 7
+Action frontier sizes: 1000 1000
+Seed frontier sizes: 1000 1000
+Hit indep
+[(B explode),((foldr unionC) null)]		-5.439148714251646
+Hit latent
+[((B ((S unionHT) latentify)) ((foldr unionC) null))]		-4.2261119982547815
+Hit latentCommon
+[((foldl unionHT) latent)]		-4.035907382570372
+Hit chain
+[((foldr unionC) null)]		-1.2671726814061963
+Hit ring
+[(B ((S unionHT) explode)),((foldr unionC) null)]		-8.570195627894968
+Hit ising
+[((B ((foldr unionC) null)) (map ((foldr unionC) null)))]		-9.487831917125355
+Got partial credit for hmm
+[(B latentify),(B ((S unionHT) latentify)),((B ((S unionC) latentify)) ((foldl unionHT) null))]	-5.073654023437037
+Hit revHMM
+[(S ((B union) ((foldr unionC) null))),((B ((S unionC) latentify)) ((B explode) ((foldr unionC) null)))]		-22.179744001365908
+Got partial credit for cylinder
+[((C B) I),((B ((S unionC) latentify)) ((foldl unionHT) null))]	-2.7669261909239324
+Got partial credit for mrf
+[((C B) (map I)),((B ((S unionHT) latentify)) ((B ((S unionHT) latentify)) ((foldl (foldl unionHT)) null)))]	-5.073654023437037
+Got partial credit for EC
+[(((B (C B)) map) ((S unionC) latentify)),((foldr unionHT) latent)]	-5.073654023437037
+Got partial credit for deepCylinder
+[I,((B ((foldr unionC) null)) (map ((foldr unionC) null)))]	-2.7669261909239324
+Hit 7/12 tasks.
+Got 7 new productions.
+Grammar entropy: 3.3929049253851056 nats.
+      p:   0.35
+      K:  -2.44
+      I:  -1.54
+      C:  -1.45
+      S:  -1.28
+(B ((S unionC) latentify)):  -1.27
+latentify:  -1.16
+((foldr unionHT) null):  -1.02
+((foldl unionHT) null):  -1.01
+(B ((S unionHT) latentify)):  -0.91
+  foldr:  -0.85
+  foldl:  -0.84
+  (C B):  -0.80
+ unionD:  -0.67
+   null:  -0.67
+  union:  -0.66
+ unionC:  -0.64
+((foldr unionC) null):  -0.62
+unionHT:  -0.58
+      B:  -0.50
+explode:  -0.47
+ single:  -0.22
+((foldl (foldl unionHT)) null):  -0.20
+ latent:  -0.19
+ concat:  -0.03
+    map:  -0.02
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+UGM run with: 42 p 1.0 1.5 5000 100 1 experiments/UGM/flip5000
+EM Planning Iteration: 0
+Action frontier sizes: 5000 5000
+Seed frontier sizes: 5000 5000
+Hit indep
+[((foldr unionD) null)]		-7.640488239324077
+Hit latent
+[(B ((S unionHT) latentify)),((foldr unionHT) null)]		-18.44001230316034
+Hit latentCommon
+[((foldl unionHT) latent)]		-7.640488239324077
+Hit chain
+[((foldr unionHT) null)]		-7.640488239324077
+Hit ring
+[(B ((S unionHT) explode)),((foldr unionHT) null)]		-18.44001230316034
+Got partial credit for ising
+[I,((B ((foldl unionHT) null)) concat)]	-9.485599924429405
+Got partial credit for hmm
+[(S (K ((S unionHT) latentify))),((foldr unionHT) null)]	-5.073654023437037
+Got partial credit for revHMM
+[(S (K ((S unionHT) latentify))),((foldr unionHT) null)]	-5.073654023437037
+Got partial credit for cylinder
+[(B ((S unionC) latentify)),((foldr unionHT) null)]	-2.7669261909239324
+Missed mrf
+Got partial credit for EC
+[(S ((foldr (C (B unionHT))) latentify)),((foldl unionHT) ((unionC latent) latent))]	-6.232662093723661
+Got partial credit for deepCylinder
+[I,((B ((foldr unionHT) null)) concat)]	-5.073654023437037
+Hit 5/12 tasks.
+Got 6 new productions.
+Grammar entropy: 3.191827144210277 nats.
+      p:   0.38
+      K:  -2.35
+      C:  -1.73
+      B:  -1.58
+      S:  -1.56
+(B ((S unionHT) latentify)):  -1.49
+      I:  -1.44
+(B ((S unionC) latentify)):  -1.32
+unionHT:  -1.29
+ latent:  -1.22
+ unionC:  -1.10
+(foldr unionC):  -1.02
+(foldr unionHT):  -1.01
+  foldr:  -0.82
+latentify:  -0.80
+ unionD:  -0.79
+  union:  -0.79
+explode:  -0.77
+(unionC latent):  -0.56
+(foldl unionHT):  -0.52
+  foldl:  -0.42
+   null:  -0.20
+    map:  -0.05
+ single:  -0.05
+ concat:  -0.04
+
+
+EM Planning Iteration: 1
+Action frontier sizes: 5000 5000
+Seed frontier sizes: 5000 5000
+Hit indep
+[((foldl union) null)]		-6.074730737240182
+Hit latent
+[((B ((S unionC) latentify)) ((foldl unionHT) null))]		-6.968655897545201
+Hit latentCommon
+[((foldl unionHT) latent)]		-4.4878385507906025
+Hit chain
+[((foldl unionHT) null)]		-3.464576174093326
+Hit ring
+[(B ((S unionHT) explode)),((foldl unionHT) null)]		-11.541097961422171
+Hit ising
+[(((S B) map) ((foldr unionC) null))]		-12.853654581135434
+Got partial credit for hmm
+[I,((B ((S unionHT) latentify)) ((foldl union) null))]	-5.073654023437037
+Hit revHMM
+[(S ((B union) ((foldl unionHT) null))),((B ((S unionC) latentify)) ((foldl union) null))]		-23.35582905097528
+Got partial credit for cylinder
+[I,((B ((S unionC) latentify)) ((foldl unionHT) (latentify null)))]	-2.7669261909239324
+Got partial credit for mrf
+[I,(I ((B ((S unionHT) latentify)) ((foldl (foldl unionHT)) null)))]	-5.073654023437037
+Got partial credit for EC
+[((C B) (map ((S unionC) latentify))),((foldl unionHT) ((unionC latent) latent))]	-5.073654023437037
+Got partial credit for deepCylinder
+[(I I),(((S B) map) ((foldr unionC) null))]	-2.7669261909239324
+Hit 7/12 tasks.
+Got 6 new productions.
+Grammar entropy: 3.3080298888994895 nats.
+      p:   0.40
+      K:  -2.64
+      C:  -1.60
+      I:  -1.55
+      S:  -1.25
+  foldr:  -1.25
+((foldr unionHT) null):  -1.23
+(B ((S unionHT) latentify)):  -1.19
+(B ((S unionC) latentify)):  -1.08
+      B:  -1.03
+((foldr unionC) null):  -1.00
+latentify:  -1.00
+ unionC:  -0.98
+ latent:  -0.98
+((foldl unionHT) null):  -0.98
+unionHT:  -0.93
+explode:  -0.77
+ unionD:  -0.70
+  union:  -0.69
+(unionC latent):  -0.63
+  foldl:  -0.49
+   null:  -0.24
+ single:  -0.04
+ concat:  -0.04
+    map:  -0.03
+
+
+EM Planning Iteration: 2
+Action frontier sizes: 5000 5000
+Seed frontier sizes: 5000 5000
+Hit indep
+[(B explode),((foldl unionHT) null)]		-6.111592312160924
+Hit latent
+[((B ((S unionC) latentify)) ((foldl unionHT) null))]		-4.477458543683366
+Hit latentCommon
+[((foldl unionHT) latent)]		-4.408940098172801
+Hit chain
+[((foldl unionHT) null)]		-1.4120198930369927
+Hit ring
+[(B ((S unionHT) explode)),((foldl unionHT) null)]		-9.076598561909524
+Hit ising
+[(((S B) map) ((foldr unionC) null))]		-9.468343264416628
+Got partial credit for hmm
+[(S (C (foldl unionHT))),((B ((S unionHT) latentify)) ((foldr unionC) null))]	-5.073654023437037
+Hit revHMM
+[(S ((B union) ((foldl unionHT) null))),((B ((S unionC) latentify)) ((foldl union) null))]		-20.24156010386924
+Hit cylinder
+[((B ((S unionC) latentify)) ((B ((S unionHT) explode)) ((foldl unionHT) null)))]		-13.864683408041294
+Got partial credit for mrf
+[(B ((S unionHT) latentify)),((B ((S unionC) latentify)) ((B ((foldl unionHT) null)) concat))]	-5.073654023437037
+Got partial credit for EC
+[((C B) (map ((S unionHT) latentify))),((foldl unionHT) ((unionC latent) latent))]	-5.073654023437037
+Got partial credit for deepCylinder
+[I,(((S B) map) ((foldr unionC) null))]	-2.7669261909239324
+Hit 8/12 tasks.
+Got 6 new productions.
+Grammar entropy: 3.3115269528102753 nats.
+      p:   0.39
+      K:  -2.53
+      I:  -1.68
+      C:  -1.55
+  foldr:  -1.32
+      S:  -1.28
+latentify:  -1.20
+((foldr unionHT) null):  -1.17
+(B ((S unionHT) latentify)):  -1.04
+(B ((S unionC) latentify)):  -1.00
+((foldl unionHT) null):  -0.99
+ unionC:  -0.85
+((foldr unionC) null):  -0.81
+explode:  -0.76
+(unionC latent):  -0.74
+unionHT:  -0.73
+ unionD:  -0.68
+  union:  -0.67
+  foldl:  -0.67
+ latent:  -0.63
+      B:  -0.59
+   null:  -0.36
+ single:  -0.03
+ concat:  -0.03
+    map:  -0.03
+
+
+EM Planning Iteration: 3
+Action frontier sizes: 5000 5000
+Seed frontier sizes: 5000 5000
+Hit indep
+[(B explode),((foldr unionC) null)]		-5.658097836485252
+Hit latent
+[((B ((S unionC) latentify)) ((foldr unionC) null))]		-4.385231012328809
+Hit latentCommon
+[((foldl unionHT) latent)]		-4.135514935711983
+Hit chain
+[((foldr unionC) null)]		-1.3890399031242495
+Hit ring
+[(B ((S unionHT) explode)),((foldr unionC) null)]		-8.69666065953297
+Hit ising
+[(((S B) map) ((foldr unionC) null))]		-9.043308545978437
+Got partial credit for hmm
+[(B ((S unionHT) latentify)),((B ((S unionC) latentify)) ((B ((foldr unionC) null)) I))]	-5.073654023437037
+Hit revHMM
+[(S ((B union) ((foldr unionC) null))),((B ((S unionC) latentify)) ((foldl union) null))]		-20.416488871635003
+Hit cylinder
+[((B ((S unionC) latentify)) ((B ((S unionHT) explode)) ((foldr unionC) null)))]		-13.298736441389842
+Got partial credit for mrf
+[I,((B ((S unionC) latentify)) ((B ((foldr unionC) null)) concat))]	-5.073654023437037
+Got partial credit for EC
+[((C B) (map ((S unionHT) latentify))),((foldl unionHT) ((unionC latent) latent))]	-5.073654023437037
+Got partial credit for deepCylinder
+[I,((B ((foldr unionC) null)) (map ((foldr unionHT) null)))]	-2.7669261909239324
+Hit 8/12 tasks.
+Got 6 new productions.
+Grammar entropy: 3.3459607248802965 nats.
+      p:   0.38
+      K:  -2.51
+      I:  -1.78
+(B ((foldr unionC) null)):  -1.47
+      C:  -1.41
+      S:  -1.17
+  foldr:  -1.16
+latentify:  -1.15
+((foldr unionHT) null):  -1.11
+(B ((S unionC) latentify)):  -1.10
+(B ((S unionHT) latentify)):  -1.08
+((foldl unionHT) null):  -0.97
+ unionC:  -0.82
+(unionC latent):  -0.70
+ unionD:  -0.70
+  union:  -0.69
+unionHT:  -0.67
+  foldl:  -0.66
+explode:  -0.59
+      B:  -0.49
+ latent:  -0.48
+   null:  -0.44
+ single:  -0.04
+ concat:  -0.03
+    map:  -0.03
+
+
+EM Planning Iteration: 4
+Action frontier sizes: 5000 5000
+Seed frontier sizes: 5000 5000
+Hit indep
+[(B explode),((foldr unionC) null)]		-5.573689202782821
+Hit latent
+[((B ((S unionHT) latentify)) ((foldr unionC) null))]		-4.58194084555692
+Hit latentCommon
+[((foldl unionHT) latent)]		-4.101007501496491
+Hit chain
+[((foldr unionC) null)]		-1.4327667458443412
+Hit ring
+[(B ((S unionHT) explode)),((foldr unionC) null)]		-8.661512889579766
+Hit ising
+[((B ((foldr unionC) null)) (map ((foldr unionC) null)))]		-6.11310852747549
+Got partial credit for hmm
+[I,((I (B ((S unionHT) latentify))) ((foldr unionHT) null))]	-5.073654023437037
+Hit revHMM
+[(S ((B union) ((foldr unionC) null))),((B ((S unionC) latentify)) ((foldl union) null))]		-20.84832648160001
+Hit cylinder
+[(B ((S union) latentify)),((B ((S unionHT) ((S unionC) latentify))) ((foldr unionC) null))]		-21.596684315823516
+Got partial credit for mrf
+[(B ((S unionHT) latentify)),((B ((S unionC) latentify)) ((B ((foldr unionC) null)) (I concat)))]	-5.073654023437037
+Got partial credit for EC
+[I,((foldl ((B unionHT) (unionC latent))) latent)]	-5.073654023437037
+Got partial credit for deepCylinder
+[I,((B ((foldr unionC) null)) (map ((foldr unionC) null)))]	-2.7669261909239324
+Hit 8/12 tasks.
+Got 6 new productions.
+Grammar entropy: 3.353716713680363 nats.
+      p:   0.38
+      K:  -2.52
+      I:  -1.78
+(B ((S unionC) latentify)):  -1.25
+(B ((S unionHT) latentify)):  -1.19
+      C:  -1.11
+latentify:  -1.09
+((foldr unionHT) null):  -1.06
+(B ((foldr unionC) null)):  -1.04
+      S:  -1.03
+((foldl unionHT) null):  -0.95
+ unionC:  -0.77
+  foldr:  -0.70
+ unionD:  -0.67
+  union:  -0.66
+(unionC latent):  -0.65
+unionHT:  -0.61
+   null:  -0.57
+  foldl:  -0.55
+explode:  -0.50
+      B:  -0.34
+ latent:  -0.29
+    map:  -0.04
+ single:  -0.03
+ concat:  -0.03
+

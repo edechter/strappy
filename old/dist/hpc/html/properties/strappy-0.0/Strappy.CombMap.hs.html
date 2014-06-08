@@ -1,0 +1,127 @@
+<html><style type="text/css">
+span.lineno { color: white; background: #aaaaaa; border-right: solid white 12px }
+span.nottickedoff { background: yellow}
+span.istickedoff { background: white }
+span.tickonlyfalse { margin: -1px; border: 1px solid #f20913; background: #f20913 }
+span.tickonlytrue  { margin: -1px; border: 1px solid #60de51; background: #60de51 }
+span.funcount { font-size: small; color: orange; z-index: 2; position: absolute; right: 20 }
+span.decl { font-weight: bold }
+span.spaces    { background: white }
+</style>
+<pre>
+<span class="lineno">    1 </span>
+<span class="lineno">    2 </span>-- | This module supplies the CombMap alias for Map Comb by defining a
+<span class="lineno">    3 </span>-- Hashable instance for Comb.
+<span class="lineno">    4 </span>module Strappy.CombMap 
+<span class="lineno">    5 </span>(
+<span class="lineno">    6 </span>
+<span class="lineno">    7 </span> CombMap
+<span class="lineno">    8 </span>                    -- * Operators
+<span class="lineno">    9 </span>                    ,(!), (\\)
+<span class="lineno">   10 </span>
+<span class="lineno">   11 </span>                    -- * Query
+<span class="lineno">   12 </span>                    , null
+<span class="lineno">   13 </span>                    , size
+<span class="lineno">   14 </span>                    , member
+<span class="lineno">   15 </span>                    , notMember
+<span class="lineno">   16 </span>                    , lookup
+<span class="lineno">   17 </span>                    , findWithDefault
+<span class="lineno">   18 </span>
+<span class="lineno">   19 </span>                    -- * Construction
+<span class="lineno">   20 </span>                    , empty
+<span class="lineno">   21 </span>                    , singleton
+<span class="lineno">   22 </span>
+<span class="lineno">   23 </span>                    -- ** Insertion
+<span class="lineno">   24 </span>                    , insert
+<span class="lineno">   25 </span>                    , insertWith, insertWithKey, insertLookupWithKey
+<span class="lineno">   26 </span>
+<span class="lineno">   27 </span>                    -- ** Delete\/Update
+<span class="lineno">   28 </span>                    , delete
+<span class="lineno">   29 </span>                    , adjust
+<span class="lineno">   30 </span>                    , adjustWithKey
+<span class="lineno">   31 </span>                    , update
+<span class="lineno">   32 </span>                    , updateWithKey
+<span class="lineno">   33 </span>                    , updateLookupWithKey
+<span class="lineno">   34 </span>                    , alter
+<span class="lineno">   35 </span>
+<span class="lineno">   36 </span>                    -- * Combine
+<span class="lineno">   37 </span>
+<span class="lineno">   38 </span>                    -- ** Union
+<span class="lineno">   39 </span>                    , union
+<span class="lineno">   40 </span>                    , unionWith
+<span class="lineno">   41 </span>                    , unionWithKey
+<span class="lineno">   42 </span>                    , unions
+<span class="lineno">   43 </span>                    , unionsWith
+<span class="lineno">   44 </span>
+<span class="lineno">   45 </span>                    -- ** Difference
+<span class="lineno">   46 </span>                    , difference
+<span class="lineno">   47 </span>                    , differenceWith
+<span class="lineno">   48 </span>                    , differenceWithKey
+<span class="lineno">   49 </span>
+<span class="lineno">   50 </span>                    -- ** Intersection
+<span class="lineno">   51 </span>                    , intersection
+<span class="lineno">   52 </span>                    , intersectionWith
+<span class="lineno">   53 </span>                    , intersectionWithKey
+<span class="lineno">   54 </span>
+<span class="lineno">   55 </span>                    -- * Traversal
+<span class="lineno">   56 </span>                    -- ** Map
+<span class="lineno">   57 </span>                    , map
+<span class="lineno">   58 </span>                    , mapWithKey
+<span class="lineno">   59 </span>                    , mapAccum
+<span class="lineno">   60 </span>                    , mapAccumWithKey
+<span class="lineno">   61 </span>
+<span class="lineno">   62 </span>                    -- ** Fold
+<span class="lineno">   63 </span>                    , fold
+<span class="lineno">   64 </span>                    , foldWithKey
+<span class="lineno">   65 </span>
+<span class="lineno">   66 </span>                    -- * Conversion
+<span class="lineno">   67 </span>                    , elems
+<span class="lineno">   68 </span>                    , keys
+<span class="lineno">   69 </span>                    , keysSet
+<span class="lineno">   70 </span>                    , assocs
+<span class="lineno">   71 </span>
+<span class="lineno">   72 </span>                    -- ** Lists
+<span class="lineno">   73 </span>                    , toList
+<span class="lineno">   74 </span>                    , fromList
+<span class="lineno">   75 </span>                    , fromListWith
+<span class="lineno">   76 </span>                    , fromListWithKey
+<span class="lineno">   77 </span>
+<span class="lineno">   78 </span>                    -- * Filter
+<span class="lineno">   79 </span>                    , filter
+<span class="lineno">   80 </span>                    , filterWithKey
+<span class="lineno">   81 </span>                    , partition
+<span class="lineno">   82 </span>                    , partitionWithKey
+<span class="lineno">   83 </span>
+<span class="lineno">   84 </span>                    , mapMaybe
+<span class="lineno">   85 </span>                    , mapMaybeWithKey
+<span class="lineno">   86 </span>                    , mapEither
+<span class="lineno">   87 </span>                    , mapEitherWithKey
+<span class="lineno">   88 </span>
+<span class="lineno">   89 </span>                    -- * Submap
+<span class="lineno">   90 </span>                    , isSubmapOf, isSubmapOfBy
+<span class="lineno">   91 </span>                    , isProperSubmapOf, isProperSubmapOfBy
+<span class="lineno">   92 </span>
+<span class="lineno">   93 </span>, showCombMap
+<span class="lineno">   94 </span>) 
+<span class="lineno">   95 </span>where
+<span class="lineno">   96 </span>
+<span class="lineno">   97 </span>import Prelude hiding (lookup,map,filter,null)
+<span class="lineno">   98 </span>import qualified Prelude as Prelude
+<span class="lineno">   99 </span>import Data.HashMap 
+<span class="lineno">  100 </span>import Data.Hashable
+<span class="lineno">  101 </span>
+<span class="lineno">  102 </span>import Strappy.CL
+<span class="lineno">  103 </span>
+<span class="lineno">  104 </span>type CombMap a = Map Comb a
+<span class="lineno">  105 </span>
+<span class="lineno">  106 </span>instance Hashable Comb where
+<span class="lineno">  107 </span>    <span class="decl"><span class="nottickedoff">hash (CLeaf name _ _) = hash name</span>
+<span class="lineno">  108 </span><span class="spaces">    </span><span class="nottickedoff">hash CApp{lComb=cl, rComb=cr} = hash cl `hashWithSalt` hash cr</span></span>
+<span class="lineno">  109 </span>
+<span class="lineno">  110 </span>showCombMap :: Show a =&gt; CombMap a -&gt; String
+<span class="lineno">  111 </span><span class="decl"><span class="nottickedoff">showCombMap cm = unlines $ Prelude.map (\(k, a) -&gt; show k ++ &quot;: &quot; ++ show a ) </span>
+<span class="lineno">  112 </span><span class="spaces">                 </span><span class="nottickedoff">$ toList cm</span></span>
+<span class="lineno">  113 </span>
+
+</pre>
+</html>

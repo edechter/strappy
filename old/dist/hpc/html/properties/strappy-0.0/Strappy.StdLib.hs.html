@@ -1,0 +1,292 @@
+<html><style type="text/css">
+span.lineno { color: white; background: #aaaaaa; border-right: solid white 12px }
+span.nottickedoff { background: yellow}
+span.istickedoff { background: white }
+span.tickonlyfalse { margin: -1px; border: 1px solid #f20913; background: #f20913 }
+span.tickonlytrue  { margin: -1px; border: 1px solid #60de51; background: #60de51 }
+span.funcount { font-size: small; color: orange; z-index: 2; position: absolute; right: 20 }
+span.decl { font-weight: bold }
+span.spaces    { background: white }
+</style>
+<pre>
+<span class="lineno">    1 </span>-- StdLib (Standard Combinator Library)
+<span class="lineno">    2 </span>{-# Language BangPatterns #-}
+<span class="lineno">    3 </span>
+<span class="lineno">    4 </span>module Strappy.StdLib where
+<span class="lineno">    5 </span>import Debug.Trace
+<span class="lineno">    6 </span>
+<span class="lineno">    7 </span>import qualified Data.HashMap as HMap
+<span class="lineno">    8 </span>
+<span class="lineno">    9 </span>import qualified Strappy.CombMap as CM
+<span class="lineno">   10 </span>import Strappy.CombMap (CombMap)
+<span class="lineno">   11 </span>import Strappy.Type
+<span class="lineno">   12 </span>import Strappy.CL
+<span class="lineno">   13 </span>import Strappy.Expr
+<span class="lineno">   14 </span>import Strappy.Grammar
+<span class="lineno">   15 </span>import Strappy.Routers (cS, cB, cC, cSS, cSB, cSC, 
+<span class="lineno">   16 </span>                  cBS, cBB, cBC, cCS, cCB, cCC,
+<span class="lineno">   17 </span>                  cSSS, cBCB, routers)
+<span class="lineno">   18 </span>
+<span class="lineno">   19 </span>type NamedLib = HMap.Map String Comb
+<span class="lineno">   20 </span>
+<span class="lineno">   21 </span>-- | define some oft used type variables
+<span class="lineno">   22 </span><span class="decl"><span class="nottickedoff">t0 = mkTVar 0</span></span> 
+<span class="lineno">   23 </span><span class="decl"><span class="nottickedoff">t1 = mkTVar 1</span></span>
+<span class="lineno">   24 </span><span class="decl"><span class="nottickedoff">t2 = mkTVar 2</span></span>
+<span class="lineno">   25 </span><span class="decl"><span class="nottickedoff">t3 = mkTVar 3</span></span>
+<span class="lineno">   26 </span><span class="decl"><span class="nottickedoff">t4 = mkTVar 4</span></span>
+<span class="lineno">   27 </span><span class="decl"><span class="nottickedoff">t5 = mkTVar 5</span></span>
+<span class="lineno">   28 </span><span class="decl"><span class="nottickedoff">t6 = mkTVar 6</span></span>
+<span class="lineno">   29 </span><span class="decl"><span class="nottickedoff">t7 = mkTVar 7</span></span>
+<span class="lineno">   30 </span><span class="decl"><span class="nottickedoff">t8 = mkTVar 8</span></span>
+<span class="lineno">   31 </span>
+<span class="lineno">   32 </span> 
+<span class="lineno">   33 </span>-- | define common combinators
+<span class="lineno">   34 </span><span class="decl"><span class="istickedoff">cI = CLeaf <span class="nottickedoff">&quot;I&quot;</span> <span class="nottickedoff">(Func id)</span> <span class="nottickedoff">( t0 -&gt;- t0)</span></span></span>
+<span class="lineno">   35 </span><span class="decl"><span class="nottickedoff">cK = CLeaf &quot;K&quot; (Func $ \a -&gt; Func $ \b -&gt; a)   ( t0 -&gt;- t1 -&gt;- t0)</span></span>
+<span class="lineno">   36 </span>-- cS = CLeaf &quot;S&quot; (Func $ \f -&gt; Func $ \g -&gt; Func $ \x -&gt; (App (App f x) (App g x))) typeS 
+<span class="lineno">   37 </span>--     where typeS = (t2 -&gt;- t1 -&gt;- t0) -&gt;- (t2 -&gt;- t1) -&gt;- (t2 -&gt;- t0)
+<span class="lineno">   38 </span>
+<span class="lineno">   39 </span>-- cB = CLeaf &quot;B&quot; (Func $ \f -&gt; Func $ \g -&gt; Func $ \x -&gt; (App f (App g x))) typeB 
+<span class="lineno">   40 </span>--     where typeB = (t1 -&gt;- t0) -&gt;- (t2 -&gt;- t1) -&gt;- (t2 -&gt;- t0)
+<span class="lineno">   41 </span>
+<span class="lineno">   42 </span>-- cC = CLeaf &quot;C&quot; (Func $ \f -&gt; Func $ \g -&gt; Func $ \x -&gt; (App (App f x) g )) typeC 
+<span class="lineno">   43 </span>--     where typeC = (t1 -&gt;- t2 -&gt;- t0) -&gt;- (t2 -&gt;- t1 -&gt;- t0)
+<span class="lineno">   44 </span>
+<span class="lineno">   45 </span>-- cBCS = CLeaf &quot;BCS&quot; (Func $ \f 
+<span class="lineno">   46 </span>--                 -&gt; Func $ \g 
+<span class="lineno">   47 </span>--                 -&gt; Func $ \a 
+<span class="lineno">   48 </span>--                 -&gt; Func $ \b 
+<span class="lineno">   49 </span>--                 -&gt; Func $ \x 
+<span class="lineno">   50 </span>--                 -&gt; ((App (App f b) (App (App g a) x)))) tp 
+<span class="lineno">   51 </span>--     where tp = (t1 -&gt;- t2 -&gt;- t0) -&gt;- (t3 -&gt;- t4 -&gt;- t2) -&gt;- t3 -&gt;- t1 -&gt;- t4 -&gt;- t0
+<span class="lineno">   52 </span>
+<span class="lineno">   53 </span>-- cSS = CLeaf &quot;SS&quot; (Func $ \f 
+<span class="lineno">   54 </span>--                 -&gt; Func $ \g 
+<span class="lineno">   55 </span>--                 -&gt; Func $ \x1 
+<span class="lineno">   56 </span>--                 -&gt; Func $ \x2
+<span class="lineno">   57 </span>--                 -&gt; ((App (App x1 x2) (App x1 x2 )) tp 
+<span class="lineno">   58 </span>--     where tp = undefined
+<span class="lineno">   59 </span>
+<span class="lineno">   60 </span>-- cSS = CLeaf &quot;SR&quot; (Func $ \f 
+<span class="lineno">   61 </span>--                 -&gt; Func $ \g 
+<span class="lineno">   62 </span>--                 -&gt; Func $ \x1 
+<span class="lineno">   63 </span>--                 -&gt; Func $ \x2
+<span class="lineno">   64 </span>--                 -&gt; ((App (App x1 x2) (App x1 x2 )) tp 
+<span class="lineno">   65 </span>--     where tp = undefined
+<span class="lineno">   66 </span>
+<span class="lineno">   67 </span>-- cSS = CLeaf &quot;SS&quot; (Func $ \f 
+<span class="lineno">   68 </span>--                 -&gt; Func $ \g 
+<span class="lineno">   69 </span>--                 -&gt; Func $ \x1 
+<span class="lineno">   70 </span>--                 -&gt; Func $ \x2
+<span class="lineno">   71 </span>--                 -&gt; ((App (App x1 x2) (App x1 x2 )) tp 
+<span class="lineno">   72 </span>--     where tp = undefined
+<span class="lineno">   73 </span>
+<span class="lineno">   74 </span>-- cSS = CLeaf &quot;SS&quot; (Func $ \f 
+<span class="lineno">   75 </span>--                 -&gt; Func $ \g 
+<span class="lineno">   76 </span>--                 -&gt; Func $ \x1 
+<span class="lineno">   77 </span>--                 -&gt; Func $ \x2
+<span class="lineno">   78 </span>--                 -&gt; ((App (App x1 x2) (App x1 x2 )) tp 
+<span class="lineno">   79 </span>--     where tp = undefined
+<span class="lineno">   80 </span>
+<span class="lineno">   81 </span>-- cSS = CLeaf &quot;SS&quot; (Func $ \f 
+<span class="lineno">   82 </span>--                 -&gt; Func $ \g 
+<span class="lineno">   83 </span>--                 -&gt; Func $ \x1 
+<span class="lineno">   84 </span>--                 -&gt; Func $ \x2
+<span class="lineno">   85 </span>--                 -&gt; ((App (App x1 x2) (App x1 x2 )) tp 
+<span class="lineno">   86 </span>--     where tp = undefined
+<span class="lineno">   87 </span>
+<span class="lineno">   88 </span>-- cSS = CLeaf &quot;SS&quot; (Func $ \f 
+<span class="lineno">   89 </span>--                 -&gt; Func $ \g 
+<span class="lineno">   90 </span>--                 -&gt; Func $ \x1 
+<span class="lineno">   91 </span>--                 -&gt; Func $ \x2
+<span class="lineno">   92 </span>--                 -&gt; ((App (App x1 x2) (App x1 x2 )) tp 
+<span class="lineno">   93 </span>--     where tp = undefined
+<span class="lineno">   94 </span>
+<span class="lineno">   95 </span>
+<span class="lineno">   96 </span>
+<span class="lineno">   97 </span><span class="decl"><span class="nottickedoff">cPrim = CLeaf &quot;PrimRec&quot; prim primType</span>
+<span class="lineno">   98 </span><span class="spaces">        </span><span class="nottickedoff">where prim = Func $ \c -&gt; Func $ \f -&gt; Func $ \(N i) -&gt;</span>
+<span class="lineno">   99 </span><span class="spaces">                      </span><span class="nottickedoff">if</span>
+<span class="lineno">  100 </span><span class="spaces">                         </span><span class="nottickedoff">i &lt;= 0 </span>
+<span class="lineno">  101 </span><span class="spaces">                      </span><span class="nottickedoff">then c</span>
+<span class="lineno">  102 </span><span class="spaces">                      </span><span class="nottickedoff">else (App f (App (App (App prim c) f) (N $ i - 1)))</span>
+<span class="lineno">  103 </span><span class="spaces">              </span><span class="nottickedoff">primType = t0 -&gt;- ((t0 -&gt;- t0) -&gt;- tInt -&gt;- t0)</span></span>
+<span class="lineno">  104 </span>
+<span class="lineno">  105 </span>
+<span class="lineno">  106 </span>
+<span class="lineno">  107 </span>----- Boolean Functions ---------
+<span class="lineno">  108 </span>
+<span class="lineno">  109 </span>-- Cond, Not, And, Or, XOr, Any, All
+<span class="lineno">  110 </span>
+<span class="lineno">  111 </span><span class="decl"><span class="nottickedoff">cTrue = CLeaf &quot;True&quot; (B True) tBool</span></span>
+<span class="lineno">  112 </span><span class="decl"><span class="nottickedoff">cFalse = CLeaf &quot;False&quot; (B False) tBool</span></span>
+<span class="lineno">  113 </span>
+<span class="lineno">  114 </span><span class="decl"><span class="nottickedoff">cAnd = CLeaf &quot;&amp;&quot; expr tp</span>
+<span class="lineno">  115 </span><span class="spaces">    </span><span class="nottickedoff">where expr = Func $ \(B x) -&gt; Func $ \(B y) -&gt; B ( x &amp;&amp; y)</span>
+<span class="lineno">  116 </span><span class="spaces">          </span><span class="nottickedoff">tp = tBool -&gt;- tBool -&gt;- tBool</span></span>
+<span class="lineno">  117 </span><span class="decl"><span class="nottickedoff">cOr = CLeaf &quot;|&quot; expr tp</span>
+<span class="lineno">  118 </span><span class="spaces">    </span><span class="nottickedoff">where expr = Func $ \(B x) -&gt; Func $ \(B y) -&gt; B ( x || y)</span>
+<span class="lineno">  119 </span><span class="spaces">          </span><span class="nottickedoff">tp = tBool -&gt;- tBool -&gt;- tBool</span></span>
+<span class="lineno">  120 </span><span class="decl"><span class="nottickedoff">cNot = CLeaf &quot;not&quot; expr tp</span>
+<span class="lineno">  121 </span><span class="spaces">    </span><span class="nottickedoff">where expr = Func $ \(B x) -&gt; B ( not x)</span>
+<span class="lineno">  122 </span><span class="spaces">          </span><span class="nottickedoff">tp = tBool -&gt;- tBool</span></span>
+<span class="lineno">  123 </span><span class="decl"><span class="nottickedoff">cNand = CLeaf &quot;nand&quot; expr tp</span>
+<span class="lineno">  124 </span><span class="spaces">    </span><span class="nottickedoff">where expr = Func $ \(B x) -&gt; Func $ \(B y) -&gt; B ( not (x &amp;&amp; y))</span>
+<span class="lineno">  125 </span><span class="spaces">          </span><span class="nottickedoff">tp = tBool -&gt;- tBool -&gt;- tBool</span></span>
+<span class="lineno">  126 </span>
+<span class="lineno">  127 </span>
+<span class="lineno">  128 </span>               
+<span class="lineno">  129 </span><span class="decl"><span class="nottickedoff">cCond = CLeaf &quot;Cond&quot; expr tp</span>
+<span class="lineno">  130 </span><span class="spaces">    </span><span class="nottickedoff">where expr = Func $ \c -&gt; Func $ \t -&gt; Func $ \f</span>
+<span class="lineno">  131 </span><span class="spaces">                 </span><span class="nottickedoff">-&gt; case c of</span>
+<span class="lineno">  132 </span><span class="spaces">                      </span><span class="nottickedoff">(B True) -&gt; t</span>
+<span class="lineno">  133 </span><span class="spaces">                      </span><span class="nottickedoff">(B False) -&gt; f</span>
+<span class="lineno">  134 </span><span class="spaces">          </span><span class="nottickedoff">tp = tBool -&gt;- t0 -&gt;- t0 -&gt;- t0</span></span>
+<span class="lineno">  135 </span>
+<span class="lineno">  136 </span>----- Maybe Functions ----------
+<span class="lineno">  137 </span>
+<span class="lineno">  138 </span><span class="decl"><span class="nottickedoff">cJust = CLeaf &quot;Just&quot; (Const &quot;Just&quot;) tp</span>
+<span class="lineno">  139 </span><span class="spaces">    </span><span class="nottickedoff">where tp = t0 -&gt;- (TAp tMaybe t0)</span></span>
+<span class="lineno">  140 </span>        
+<span class="lineno">  141 </span><span class="decl"><span class="nottickedoff">cNothing = CLeaf &quot;Nothing&quot; (Const &quot;Nothing&quot;) tp</span>
+<span class="lineno">  142 </span><span class="spaces">    </span><span class="nottickedoff">where tp = (TAp tMaybe t0)</span></span>
+<span class="lineno">  143 </span>
+<span class="lineno">  144 </span><span class="decl"><span class="nottickedoff">cFromJust = CLeaf &quot;FromJust&quot; expr t0</span>
+<span class="lineno">  145 </span><span class="spaces">    </span><span class="nottickedoff">where expr = Func $ \e -&gt; case e of</span>
+<span class="lineno">  146 </span><span class="spaces">                                </span><span class="nottickedoff">App (Const &quot;Just&quot;) x -&gt; x</span>
+<span class="lineno">  147 </span><span class="spaces">                                </span><span class="nottickedoff">(Const &quot;Nothing&quot;) </span>
+<span class="lineno">  148 </span><span class="spaces">                                     </span><span class="nottickedoff">-&gt; ExprError &quot;FromJust applied to Nothing.&quot;</span></span>
+<span class="lineno">  149 </span>
+<span class="lineno">  150 </span>----- List Functions --------
+<span class="lineno">  151 </span>
+<span class="lineno">  152 </span>
+<span class="lineno">  153 </span><span class="decl"><span class="nottickedoff">cCons = CLeaf &quot;:&quot; (Const &quot;:&quot;) (t0 -&gt;- (TAp tList t0) -&gt;- (TAp tList t0))</span></span>
+<span class="lineno">  154 </span>
+<span class="lineno">  155 </span><span class="decl"><span class="nottickedoff">cHead = CLeaf &quot;head&quot; expr tp</span>
+<span class="lineno">  156 </span><span class="spaces">    </span><span class="nottickedoff">where expr = Func $ \xs -&gt; case xs of</span>
+<span class="lineno">  157 </span><span class="spaces">                                 </span><span class="nottickedoff">(App (App (Const &quot;:&quot;) x) y) -&gt; x</span>
+<span class="lineno">  158 </span><span class="spaces">                                 </span><span class="nottickedoff">Const &quot;[]&quot; </span>
+<span class="lineno">  159 </span><span class="spaces">                                     </span><span class="nottickedoff">-&gt; ExprError &quot;head applied to []&quot;</span>
+<span class="lineno">  160 </span><span class="spaces">          </span><span class="nottickedoff">tp = (TAp tList t0) -&gt;- t0</span></span>
+<span class="lineno">  161 </span>
+<span class="lineno">  162 </span><span class="decl"><span class="nottickedoff">cTail = CLeaf &quot;tail&quot; expr tp</span>
+<span class="lineno">  163 </span><span class="spaces">    </span><span class="nottickedoff">where expr = Func $ \xs -&gt; case xs of</span>
+<span class="lineno">  164 </span><span class="spaces">                                 </span><span class="nottickedoff">(App (App (Const &quot;:&quot;) x) y) -&gt; y</span>
+<span class="lineno">  165 </span><span class="spaces">                                 </span><span class="nottickedoff">Const &quot;[]&quot; </span>
+<span class="lineno">  166 </span><span class="spaces">                                     </span><span class="nottickedoff">-&gt; ExprError &quot;tail applied to []&quot;</span>
+<span class="lineno">  167 </span><span class="spaces">          </span><span class="nottickedoff">tp = (TAp tList t0) -&gt;- (TAp tList t0)</span></span>
+<span class="lineno">  168 </span>
+<span class="lineno">  169 </span><span class="decl"><span class="nottickedoff">cEmpty = CLeaf &quot;[]&quot; (Const &quot;[]&quot;) (TAp tList t0)</span></span>
+<span class="lineno">  170 </span>
+<span class="lineno">  171 </span>
+<span class="lineno">  172 </span><span class="decl"><span class="nottickedoff">cIsEmpty = CLeaf &quot;isEmpty&quot; expr tp</span>
+<span class="lineno">  173 </span><span class="spaces">    </span><span class="nottickedoff">where expr = Func $ \xs -&gt; case xs of</span>
+<span class="lineno">  174 </span><span class="spaces">                                 </span><span class="nottickedoff">Const &quot;[]&quot; -&gt; (B True)</span>
+<span class="lineno">  175 </span><span class="spaces">                                 </span><span class="nottickedoff">otherwise -&gt; (B False)</span>
+<span class="lineno">  176 </span><span class="spaces">          </span><span class="nottickedoff">tp = (TAp tList t0) -&gt;- tBool</span></span>
+<span class="lineno">  177 </span>
+<span class="lineno">  178 </span>
+<span class="lineno">  179 </span>------ Tuple Functions ----------
+<span class="lineno">  180 </span>
+<span class="lineno">  181 </span><span class="decl"><span class="nottickedoff">cPair = CLeaf &quot;pair&quot; (Const &quot;pair&quot;) (t0 -&gt;- t0 -&gt;- TAp tPair t0)</span></span>
+<span class="lineno">  182 </span><span class="decl"><span class="nottickedoff">cFst = CLeaf &quot;fst&quot; expr tp</span>
+<span class="lineno">  183 </span><span class="spaces">       </span><span class="nottickedoff">where expr = Func $ \pr -&gt; case pr of</span>
+<span class="lineno">  184 </span><span class="spaces">                                    </span><span class="nottickedoff">(App (App (Const &quot;pair&quot;) x) y) -&gt; x</span>
+<span class="lineno">  185 </span><span class="spaces">                                    </span><span class="nottickedoff">otherwise -&gt; error &quot;Error in cFst&quot;</span>
+<span class="lineno">  186 </span><span class="spaces">             </span><span class="nottickedoff">tp = (TAp tPair t0) -&gt;- t0</span></span>
+<span class="lineno">  187 </span>
+<span class="lineno">  188 </span><span class="decl"><span class="nottickedoff">cSnd = CLeaf &quot;snd&quot; expr tp</span>
+<span class="lineno">  189 </span><span class="spaces">       </span><span class="nottickedoff">where expr = Func $ \pr -&gt; case pr of</span>
+<span class="lineno">  190 </span><span class="spaces">                                    </span><span class="nottickedoff">(App (App (Const &quot;pair&quot;) x) y) -&gt; y</span>
+<span class="lineno">  191 </span><span class="spaces">                                    </span><span class="nottickedoff">otherwise -&gt; error &quot;Error in cFst&quot;</span>
+<span class="lineno">  192 </span><span class="spaces">             </span><span class="nottickedoff">tp = (TAp tPair t0) -&gt;- t0</span></span>
+<span class="lineno">  193 </span>
+<span class="lineno">  194 </span><span class="decl"><span class="nottickedoff">cTriple = CLeaf &quot;triple&quot; (Const &quot;triple&quot;) </span>
+<span class="lineno">  195 </span><span class="spaces">           </span><span class="nottickedoff">(t0 -&gt;- t0 -&gt;- t0 -&gt;- TAp tTriple t0)</span></span>
+<span class="lineno">  196 </span>
+<span class="lineno">  197 </span><span class="decl"><span class="nottickedoff">cFst3 = CLeaf &quot;fst3&quot; expr tp</span>
+<span class="lineno">  198 </span><span class="spaces">        </span><span class="nottickedoff">where expr = Func $ \tr -&gt; case tr of</span>
+<span class="lineno">  199 </span><span class="spaces">                                    </span><span class="nottickedoff">(App (App (App (Const &quot;triple&quot;) x) y) z) -&gt; x</span>
+<span class="lineno">  200 </span><span class="spaces">                                    </span><span class="nottickedoff">otherwise -&gt; error &quot;Error in cFst3&quot;</span>
+<span class="lineno">  201 </span><span class="spaces">              </span><span class="nottickedoff">tp = (TAp tTriple t0) -&gt;- t0</span></span>
+<span class="lineno">  202 </span><span class="decl"><span class="nottickedoff">cSnd3 = CLeaf &quot;snd3&quot; expr tp</span>
+<span class="lineno">  203 </span><span class="spaces">        </span><span class="nottickedoff">where expr = Func $ \tr -&gt; case tr of</span>
+<span class="lineno">  204 </span><span class="spaces">                                    </span><span class="nottickedoff">(App (App (App (Const &quot;triple&quot;) x) y) z) -&gt; y</span>
+<span class="lineno">  205 </span><span class="spaces">                                    </span><span class="nottickedoff">otherwise -&gt; error &quot;Error in cFst3&quot;</span>
+<span class="lineno">  206 </span><span class="spaces">              </span><span class="nottickedoff">tp = (TAp tTriple t0) -&gt;- t0</span></span>
+<span class="lineno">  207 </span><span class="decl"><span class="nottickedoff">cThrd3 = CLeaf &quot;thrd3&quot; expr tp</span>
+<span class="lineno">  208 </span><span class="spaces">        </span><span class="nottickedoff">where expr = Func $ \tr -&gt; case tr of</span>
+<span class="lineno">  209 </span><span class="spaces">                                    </span><span class="nottickedoff">(App (App (App (Const &quot;triple&quot;) x) y) z) -&gt; y</span>
+<span class="lineno">  210 </span><span class="spaces">                                    </span><span class="nottickedoff">otherwise -&gt; error &quot;Error in cThrd3&quot;</span>
+<span class="lineno">  211 </span><span class="spaces">              </span><span class="nottickedoff">tp = (TAp tTriple t0) -&gt;- t0</span></span>
+<span class="lineno">  212 </span>
+<span class="lineno">  213 </span><span class="decl"><span class="nottickedoff">cQuad = CLeaf &quot;quad&quot; (Const &quot;quad&quot;) </span>
+<span class="lineno">  214 </span><span class="spaces">           </span><span class="nottickedoff">(t0 -&gt;- t0 -&gt;- t0 -&gt;- TAp tTriple t0)</span></span>
+<span class="lineno">  215 </span><span class="decl"><span class="nottickedoff">cFst4 = CLeaf &quot;fst4&quot; expr tp</span>
+<span class="lineno">  216 </span><span class="spaces">        </span><span class="nottickedoff">where expr = Func $ \tr -&gt; case tr of</span>
+<span class="lineno">  217 </span><span class="spaces">                                    </span><span class="nottickedoff">(App (App (App (App (Const &quot;quad&quot;) x) y) z) w) -&gt; x</span>
+<span class="lineno">  218 </span><span class="spaces">                                    </span><span class="nottickedoff">otherwise -&gt; error &quot;Error in cFst4&quot;</span>
+<span class="lineno">  219 </span><span class="spaces">              </span><span class="nottickedoff">tp = (TAp tTriple t0) -&gt;- t0</span></span>
+<span class="lineno">  220 </span><span class="decl"><span class="nottickedoff">cSnd4 = CLeaf &quot;snd4&quot; expr tp</span>
+<span class="lineno">  221 </span><span class="spaces">        </span><span class="nottickedoff">where expr = Func $ \tr -&gt; case tr of</span>
+<span class="lineno">  222 </span><span class="spaces">                                    </span><span class="nottickedoff">(App (App (App (App (Const &quot;quad&quot;) x) y) z) w) -&gt; y</span>
+<span class="lineno">  223 </span><span class="spaces">                                    </span><span class="nottickedoff">otherwise -&gt; error &quot;Error in cSnd4&quot;</span>
+<span class="lineno">  224 </span><span class="spaces">              </span><span class="nottickedoff">tp = (TAp tTriple t0) -&gt;- t0</span></span>
+<span class="lineno">  225 </span><span class="decl"><span class="nottickedoff">cThrd4 = CLeaf &quot;thrd4&quot; expr tp</span>
+<span class="lineno">  226 </span><span class="spaces">        </span><span class="nottickedoff">where expr = Func $ \tr -&gt; case tr of</span>
+<span class="lineno">  227 </span><span class="spaces">                                    </span><span class="nottickedoff">(App (App (App (App (Const &quot;quad&quot;) x) y) z) w) -&gt; z</span>
+<span class="lineno">  228 </span><span class="spaces">                                    </span><span class="nottickedoff">otherwise -&gt; error &quot;Error in cThrd4&quot;</span>
+<span class="lineno">  229 </span><span class="spaces">              </span><span class="nottickedoff">tp = (TAp tTriple t0) -&gt;- t0</span></span>
+<span class="lineno">  230 </span><span class="decl"><span class="nottickedoff">cFrth4 = CLeaf &quot;frth4&quot; expr tp</span>
+<span class="lineno">  231 </span><span class="spaces">        </span><span class="nottickedoff">where expr = Func $ \tr -&gt; case tr of</span>
+<span class="lineno">  232 </span><span class="spaces">                                    </span><span class="nottickedoff">(App (App (App (App (Const &quot;quad&quot;) x) y) z) w) -&gt; w</span>
+<span class="lineno">  233 </span><span class="spaces">                                    </span><span class="nottickedoff">otherwise -&gt; error &quot;Error in cFrth4&quot;</span>
+<span class="lineno">  234 </span><span class="spaces">              </span><span class="nottickedoff">tp = (TAp tTriple t0) -&gt;- t0</span></span>
+<span class="lineno">  235 </span>
+<span class="lineno">  236 </span>stdlib' :: NamedLib
+<span class="lineno">  237 </span><span class="decl"><span class="istickedoff">stdlib' = (CM.fromList $ </span>
+<span class="lineno">  238 </span><span class="spaces">         </span><span class="istickedoff">[</span>
+<span class="lineno">  239 </span><span class="spaces">           </span><span class="istickedoff">(&quot;I&quot;, cI)</span>
+<span class="lineno">  240 </span><span class="spaces"></span><span class="istickedoff">--         , (&quot;K&quot;, cK)</span>
+<span class="lineno">  241 </span><span class="spaces"></span><span class="istickedoff">--         , (&quot;cond&quot;, cCond)</span>
+<span class="lineno">  242 </span><span class="spaces">        </span><span class="istickedoff">, (&quot;True&quot;, <span class="nottickedoff">cTrue</span>)</span>
+<span class="lineno">  243 </span><span class="spaces">        </span><span class="istickedoff">, (&quot;False&quot;, <span class="nottickedoff">cFalse</span>)</span>
+<span class="lineno">  244 </span><span class="spaces"></span><span class="istickedoff">--         , (&quot;|&quot;, cOr)</span>
+<span class="lineno">  245 </span><span class="spaces"></span><span class="istickedoff">--         , (&quot;&amp;&quot;, cAnd)</span>
+<span class="lineno">  246 </span><span class="spaces"></span><span class="istickedoff">--         , (&quot;not&quot;, cNot)</span>
+<span class="lineno">  247 </span><span class="spaces"></span><span class="istickedoff">--         , (&quot;&lt;&quot;, cLT)</span>
+<span class="lineno">  248 </span><span class="spaces"></span><span class="istickedoff">--         , (&quot;&gt;&quot;, cGT)</span>
+<span class="lineno">  249 </span><span class="spaces"></span><span class="istickedoff">--         , (&quot;==&quot;, cEQ)</span>
+<span class="lineno">  250 </span><span class="spaces">          </span><span class="istickedoff">, (&quot;+&quot;, <span class="nottickedoff">dOp2C &quot;+&quot; (+)</span>)</span>
+<span class="lineno">  251 </span><span class="spaces"></span><span class="istickedoff">--          , (&quot;-&quot;, dOp2C &quot;-&quot; (-))</span>
+<span class="lineno">  252 </span><span class="spaces">           </span><span class="istickedoff">, (&quot;*&quot;, <span class="nottickedoff">dOp2C &quot;*&quot; (*)</span>)</span>
+<span class="lineno">  253 </span><span class="spaces">          </span><span class="istickedoff">,  (&quot;0&quot;, <span class="nottickedoff">num2C 0</span>)</span>
+<span class="lineno">  254 </span><span class="spaces">          </span><span class="istickedoff">,  (&quot;1&quot;, num2C <span class="nottickedoff">1</span>)</span>
+<span class="lineno">  255 </span><span class="spaces"></span><span class="istickedoff">--          , (&quot;2&quot;, num2C 2)</span>
+<span class="lineno">  256 </span><span class="spaces"></span><span class="istickedoff">--         , (&quot;3&quot;, num2C 3)</span>
+<span class="lineno">  257 </span><span class="spaces"></span><span class="istickedoff">--         , (&quot;4&quot;, num2C 4)</span>
+<span class="lineno">  258 </span><span class="spaces"></span><span class="istickedoff">--           , (&quot;primRec&quot;, cPrim) </span>
+<span class="lineno">  259 </span><span class="spaces"></span><span class="istickedoff">--           , (&quot;:&quot;, cCons)</span>
+<span class="lineno">  260 </span><span class="spaces"></span><span class="istickedoff">--           , (&quot;[]&quot;, cEmpty)</span>
+<span class="lineno">  261 </span><span class="spaces"></span><span class="istickedoff">--            , (&quot;head&quot;, cHead)</span>
+<span class="lineno">  262 </span><span class="spaces"></span><span class="istickedoff">--            , (&quot;tail&quot;, cTail)</span>
+<span class="lineno">  263 </span><span class="spaces"></span><span class="istickedoff">--            , (&quot;isEmpty&quot;, cIsEmpty)</span>
+<span class="lineno">  264 </span><span class="spaces">          </span><span class="istickedoff">, (&quot;pair&quot;, <span class="nottickedoff">cPair</span>)</span>
+<span class="lineno">  265 </span><span class="spaces">          </span><span class="istickedoff">, (&quot;fst&quot;, <span class="nottickedoff">cFst</span>)</span>
+<span class="lineno">  266 </span><span class="spaces">          </span><span class="istickedoff">, (&quot;snd&quot;, <span class="nottickedoff">cSnd</span>)</span>
+<span class="lineno">  267 </span><span class="spaces">          </span><span class="istickedoff">, (&quot;triple&quot;, <span class="nottickedoff">cTriple</span>)</span>
+<span class="lineno">  268 </span><span class="spaces">          </span><span class="istickedoff">, (&quot;fst3&quot;, <span class="nottickedoff">cFst3</span>)</span>
+<span class="lineno">  269 </span><span class="spaces">          </span><span class="istickedoff">, (&quot;snd3&quot;, <span class="nottickedoff">cSnd3</span>)</span>
+<span class="lineno">  270 </span><span class="spaces">          </span><span class="istickedoff">, (&quot;thrd3&quot;, <span class="nottickedoff">cThrd3</span>)</span>
+<span class="lineno">  271 </span><span class="spaces">           </span><span class="istickedoff">]) </span>
+<span class="lineno">  272 </span><span class="spaces">           </span><span class="istickedoff">`CM.union` routers</span></span>
+<span class="lineno">  273 </span>
+<span class="lineno">  274 </span><span class="decl"><span class="nottickedoff">stdgrammar = Grammar lib c</span>
+<span class="lineno">  275 </span><span class="spaces">    </span><span class="nottickedoff">where lib  = CM.fromList $ [(c, (-3::Double)) | c &lt;- CM.elems stdlib']</span>
+<span class="lineno">  276 </span><span class="spaces">          </span><span class="nottickedoff">c = 0</span></span> -- (-2)
+<span class="lineno">  277 </span>
+<span class="lineno">  278 </span>
+
+</pre>
+</html>

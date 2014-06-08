@@ -1,0 +1,182 @@
+<html><style type="text/css">
+span.lineno { color: white; background: #aaaaaa; border-right: solid white 12px }
+span.nottickedoff { background: yellow}
+span.istickedoff { background: white }
+span.tickonlyfalse { margin: -1px; border: 1px solid #f20913; background: #f20913 }
+span.tickonlytrue  { margin: -1px; border: 1px solid #60de51; background: #60de51 }
+span.funcount { font-size: small; color: orange; z-index: 2; position: absolute; right: 20 }
+span.decl { font-weight: bold }
+span.spaces    { background: white }
+</style>
+<pre>
+<span class="lineno">    1 </span>-- Grammar.hs
+<span class="lineno">    2 </span>
+<span class="lineno">    3 </span>module Strappy.Grammar where
+<span class="lineno">    4 </span>
+<span class="lineno">    5 </span>import Data.List (intersect, sortBy)
+<span class="lineno">    6 </span>import Control.Monad.State
+<span class="lineno">    7 </span>import Debug.Trace
+<span class="lineno">    8 </span>import Data.Maybe
+<span class="lineno">    9 </span>
+<span class="lineno">   10 </span>import Strappy.CL 
+<span class="lineno">   11 </span>import Strappy.Type
+<span class="lineno">   12 </span>import qualified Strappy.CombMap as CM
+<span class="lineno">   13 </span>import Strappy.CombMap (CombMap)
+<span class="lineno">   14 </span>import Strappy.Compress
+<span class="lineno">   15 </span>import Strappy.Task
+<span class="lineno">   16 </span>
+<span class="lineno">   17 </span>
+<span class="lineno">   18 </span>
+<span class="lineno">   19 </span>data Grammar = Grammar { library :: CombMap Double, -- ^ neg log prob
+<span class="lineno">   20 </span>                         expansions :: Double -- ^ neg log prob
+<span class="lineno">   21 </span>                       } deriving <span class="decl"><span class="nottickedoff"><span class="decl"><span class="nottickedoff">Eq</span></span></span></span>
+<span class="lineno">   22 </span>
+<span class="lineno">   23 </span>showLibrary :: Show a =&gt; CombMap a  -&gt; String
+<span class="lineno">   24 </span><span class="decl"><span class="nottickedoff">showLibrary ct = unlines $ map (\(c, i) -&gt; show' c ++ &quot;: &quot; ++ </span>
+<span class="lineno">   25 </span><span class="spaces">                               </span><span class="nottickedoff">show i) (CM.toList ct)</span></span>
+<span class="lineno">   26 </span>
+<span class="lineno">   27 </span>instance Show Grammar where
+<span class="lineno">   28 </span>    <span class="decl"><span class="nottickedoff">show (Grammar lib c) = &quot;Grammar\n------------------------&quot; </span>
+<span class="lineno">   29 </span><span class="spaces">                           </span><span class="nottickedoff">++ &quot;\nExpansions: &quot; ++ show c</span>
+<span class="lineno">   30 </span><span class="spaces">                           </span><span class="nottickedoff">++ &quot;\n\nLibrary: \n-------\n&quot; </span>
+<span class="lineno">   31 </span><span class="spaces">                           </span><span class="nottickedoff">++ showLibrary lib</span></span>
+<span class="lineno">   32 </span>
+<span class="lineno">   33 </span>findCLeafInGrammar :: Grammar -&gt; Comb -&gt; Maybe Comb
+<span class="lineno">   34 </span><span class="decl"><span class="nottickedoff">findCLeafInGrammar gr c@CLeaf{cName=n} = lookup n asc</span>
+<span class="lineno">   35 </span><span class="spaces">    </span><span class="nottickedoff">where cs = CM.keys (library gr)</span>
+<span class="lineno">   36 </span><span class="spaces">          </span><span class="nottickedoff">asc = [(cName c, c) | c &lt;- cs, isCLeaf c]</span>
+<span class="lineno">   37 </span><span class="spaces"></span><span class="nottickedoff">findCLeafInGrammar gr c= error $ show c ++ &quot; is not a CLeaf.&quot;</span></span>
+<span class="lineno">   38 </span>
+<span class="lineno">   39 </span>refreshCombFromGrammar :: Grammar -&gt; Comb -&gt; Maybe Comb
+<span class="lineno">   40 </span><span class="decl"><span class="nottickedoff">refreshCombFromGrammar gr c@(CLeaf{cName=n}) = findCLeafInGrammar gr c</span>
+<span class="lineno">   41 </span><span class="spaces"></span><span class="nottickedoff">refreshCombFromGrammar gr c@CApp{lComb=cl, rComb=cr} = do cl' &lt;- refreshCombFromGrammar gr cl</span>
+<span class="lineno">   42 </span><span class="spaces">                                                          </span><span class="nottickedoff">cr'&lt;-  refreshCombFromGrammar gr cr</span>
+<span class="lineno">   43 </span><span class="spaces">                                                          </span><span class="nottickedoff">let c' = c{lComb=cl', rComb=cr'}</span>
+<span class="lineno">   44 </span><span class="spaces">                                                          </span><span class="nottickedoff">t &lt;- case getType c' of </span>
+<span class="lineno">   45 </span><span class="spaces">                                                                 </span><span class="nottickedoff">Right x -&gt; Just x</span>
+<span class="lineno">   46 </span><span class="spaces">                                                                 </span><span class="nottickedoff">Left _ -&gt; Nothing</span>
+<span class="lineno">   47 </span><span class="spaces">                                                          </span><span class="nottickedoff">return $ c'{cType=t}</span>
+<span class="lineno">   48 </span><span class="spaces"></span><span class="nottickedoff">refreshCombFromGrammar _ x = Just x</span></span>
+<span class="lineno">   49 </span>
+<span class="lineno">   50 </span>nullGrammar :: Grammar
+<span class="lineno">   51 </span><span class="decl"><span class="nottickedoff">nullGrammar = Grammar CM.empty 0</span></span>
+<span class="lineno">   52 </span>
+<span class="lineno">   53 </span><span class="decl"><span class="nottickedoff">logsumexp = log . sum . (map exp)</span></span>
+<span class="lineno">   54 </span>
+<span class="lineno">   55 </span>normalizeGrammar :: Grammar -&gt; Grammar 
+<span class="lineno">   56 </span><span class="decl"><span class="nottickedoff">normalizeGrammar (Grammar lib ex)</span>
+<span class="lineno">   57 </span><span class="spaces">    </span><span class="nottickedoff">= let logTotalMass = logsumexp $ (CM.elems lib)</span>
+<span class="lineno">   58 </span><span class="spaces">          </span><span class="nottickedoff">lib' = CM.map (+ (-logTotalMass)) lib</span>
+<span class="lineno">   59 </span><span class="spaces">          </span><span class="nottickedoff">ex' = ex - logTotalMass</span>
+<span class="lineno">   60 </span><span class="spaces">      </span><span class="nottickedoff">in Grammar lib'  0</span></span> -- ex'
+<span class="lineno">   61 </span>          
+<span class="lineno">   62 </span><span class="decl"><span class="nottickedoff">sum' (a, b) (c, d) = (a + b, c + d)</span></span>
+<span class="lineno">   63 </span>
+<span class="lineno">   64 </span>countExpansions :: Comb -&gt; Int
+<span class="lineno">   65 </span><span class="decl"><span class="nottickedoff">countExpansions (CLeaf{}) = 0</span>
+<span class="lineno">   66 </span><span class="spaces"></span><span class="nottickedoff">countExpansions CApp{lComb=l, rComb=r} = 1 + countExpansions l  + countExpansions r</span></span>
+<span class="lineno">   67 </span>
+<span class="lineno">   68 </span>countAlts :: [Comb] -&gt; Type -&gt; CombMap Int
+<span class="lineno">   69 </span><span class="decl"><span class="nottickedoff">countAlts cs tp = let ms = do tp' &lt;- freshInst tp</span>
+<span class="lineno">   70 </span><span class="spaces">                              </span><span class="nottickedoff">alt &lt;- filterCombinatorsByType cs tp'</span>
+<span class="lineno">   71 </span><span class="spaces">                              </span><span class="nottickedoff">return $ CM.singleton alt 1</span>
+<span class="lineno">   72 </span><span class="spaces">                  </span><span class="nottickedoff">in foldl (CM.unionWith (+)) CM.empty $ map fst $ runStateT ms 0</span></span>
+<span class="lineno">   73 </span>
+<span class="lineno">   74 </span>combineGrammars :: (Grammar, Double) -&gt; (Grammar, Double) -&gt; Grammar
+<span class="lineno">   75 </span>-- | Combine two grammars weighted by the number of observations (or
+<span class="lineno">   76 </span>-- pseudo-observations) each has.
+<span class="lineno">   77 </span><span class="decl"><span class="nottickedoff">combineGrammars (Grammar lib1 ex1, ob1) (Grammar lib2 ex2, ob2) = </span>
+<span class="lineno">   78 </span><span class="spaces">    </span><span class="nottickedoff">normalizeGrammar $ Grammar lib ex</span>
+<span class="lineno">   79 </span><span class="spaces">        </span><span class="nottickedoff">where lib = CM.unionWith (\a b -&gt; f a ob1 b ob2) lib1 lib2</span>
+<span class="lineno">   80 </span><span class="spaces">              </span><span class="nottickedoff">f lp1 n lp2 m = log $ ((exp lp1) * ( n) </span>
+<span class="lineno">   81 </span><span class="spaces">                               </span><span class="nottickedoff">+ (exp lp2) * ( m)) </span>
+<span class="lineno">   82 </span><span class="spaces">                              </span><span class="nottickedoff"></span>
+<span class="lineno">   83 </span><span class="spaces">              </span><span class="nottickedoff">ex = f ex1 ob1 ex2 ob2</span></span>
+<span class="lineno">   84 </span>
+<span class="lineno">   85 </span>bernLogProb :: Int -&gt; Int -&gt; Double
+<span class="lineno">   86 </span><span class="decl"><span class="nottickedoff">bernLogProb hits obs | obs &gt;= hits = logI hits - logI obs  where logI = log . fromIntegral</span>
+<span class="lineno">   87 </span><span class="spaces"></span><span class="nottickedoff">bernLogProb hits obs | otherwise =</span>
+<span class="lineno">   88 </span><span class="spaces">                         </span><span class="nottickedoff">error $ &quot;bernLogProb: # obs &quot; ++ show obs ++ </span>
+<span class="lineno">   89 </span><span class="spaces">                               </span><span class="nottickedoff">&quot; must be greater than # of hits &quot; ++ show hits</span></span>
+<span class="lineno">   90 </span>
+<span class="lineno">   91 </span><span class="decl"><span class="nottickedoff">showCombWType cs = unlines $ map show [(c, cType c) | c &lt;- cs]</span></span>
+<span class="lineno">   92 </span>
+<span class="lineno">   93 </span>estimateGrammar :: 
+<span class="lineno">   94 </span>    Grammar -- ^ prior
+<span class="lineno">   95 </span>    -&gt; Double -- ^ number of pseudo-observations by which to weight the prior 
+<span class="lineno">   96 </span>    -&gt; CombMap [Type] -- ^ primitive combinators and their occurance counts
+<span class="lineno">   97 </span>    -&gt; [(Task, Comb)]
+<span class="lineno">   98 </span>    -&gt; Grammar
+<span class="lineno">   99 </span><span class="decl"><span class="nottickedoff">estimateGrammar prior psObs ind xs = </span>
+<span class="lineno">  100 </span><span class="spaces">    </span><span class="nottickedoff">let ind' = (trace $ CM.showCombMap ind) $ CM.filter ((&gt; 1) . length) ind</span>
+<span class="lineno">  101 </span><span class="spaces">        </span><span class="nottickedoff">combs = map (fromJust . refreshCombFromGrammar prior) $ CM.keys ind'</span>
+<span class="lineno">  102 </span><span class="spaces">        </span><span class="nottickedoff">uses = CM.map length ind'</span>
+<span class="lineno">  103 </span><span class="spaces">        </span><span class="nottickedoff">exs = foldl (\i c -&gt; i + countExpansions c) 0 (combs)</span>
+<span class="lineno">  104 </span><span class="spaces">        </span><span class="nottickedoff">alts = foldl1 (CM.unionWith (+)) </span>
+<span class="lineno">  105 </span><span class="spaces">               </span><span class="nottickedoff">$ map (countAlts combs) (concat . CM.elems $ ind')</span>
+<span class="lineno">  106 </span><span class="spaces">        </span><span class="nottickedoff">logprobs =  CM.mapWithKey f uses</span>
+<span class="lineno">  107 </span><span class="spaces">            </span><span class="nottickedoff">where f c v = bernLogProb v w where</span>
+<span class="lineno">  108 </span><span class="spaces">                      </span><span class="nottickedoff">w = case (CM.lookup c alts) of </span>
+<span class="lineno">  109 </span><span class="spaces">                            </span><span class="nottickedoff">Nothing -&gt; error $ &quot;estimateGrammar: cannot find &quot;</span>
+<span class="lineno">  110 </span><span class="spaces">                                       </span><span class="nottickedoff">++ show c ++ &quot; in alternative map &quot; </span>
+<span class="lineno">  111 </span><span class="spaces">                                      </span><span class="nottickedoff">++ show alts</span>
+<span class="lineno">  112 </span><span class="spaces">                            </span><span class="nottickedoff">Just k -&gt; k</span>
+<span class="lineno">  113 </span><span class="spaces">        </span><span class="nottickedoff">nPossibleExs = exs + sum (CM.elems uses)</span>
+<span class="lineno">  114 </span><span class="spaces">        </span><span class="nottickedoff">logProbEx = bernLogProb exs nPossibleExs</span>
+<span class="lineno">  115 </span><span class="spaces">        </span><span class="nottickedoff">empiricalGr = Grammar logprobs 0 -- logProbEx</span>
+<span class="lineno">  116 </span><span class="spaces">    </span><span class="nottickedoff">in combineGrammars (normalizeGrammar prior, psObs) (normalizeGrammar empiricalGr, 1.0)</span></span>
+<span class="lineno">  117 </span>
+<span class="lineno">  118 </span>calcLogProb :: Grammar 
+<span class="lineno">  119 </span>            -&gt; Type
+<span class="lineno">  120 </span>            -&gt; Comb
+<span class="lineno">  121 </span>            -&gt; Double 
+<span class="lineno">  122 </span>-- | Returns the log probability of using the given
+<span class="lineno">  123 </span>-- combinator when prompted by the given type, as prescribed by the
+<span class="lineno">  124 </span>-- grammar.
+<span class="lineno">  125 </span><span class="decl"><span class="nottickedoff">calcLogProb gr tp c </span>
+<span class="lineno">  126 </span><span class="spaces">    </span><span class="nottickedoff">= let m = filterCombinatorsByType (CM.keys $ library gr) tp</span>
+<span class="lineno">  127 </span><span class="spaces">          </span><span class="nottickedoff">altCs = map fst $ runStateT m 0</span>
+<span class="lineno">  128 </span><span class="spaces">          </span><span class="nottickedoff">combLps = [exp $ (library gr) CM.! x | x &lt;- altCs] </span>
+<span class="lineno">  129 </span><span class="spaces">          </span><span class="nottickedoff">logProbAll = log $ sum combLps</span>
+<span class="lineno">  130 </span><span class="spaces">          </span><span class="nottickedoff">combLogProb = (library gr) CM.! c - logProbAll</span>
+<span class="lineno">  131 </span><span class="spaces">          </span><span class="nottickedoff">out = if length altCs &lt; 2 then log (0.5) else combLogProb</span>
+<span class="lineno">  132 </span><span class="spaces">      </span><span class="nottickedoff">in out</span></span>
+<span class="lineno">  133 </span>
+<span class="lineno">  134 </span>-- exLogProb :: Grammar -&gt; Type -&gt; Double
+<span class="lineno">  135 </span>-- exLogProb gr tp  
+<span class="lineno">  136 </span>--     = let m = filterCombinatorsByType (CM.keys $ library gr) tp
+<span class="lineno">  137 </span>--           altCs = map fst $ runStateT m 0
+<span class="lineno">  138 </span>--           combLps = [exp $ (library gr) CM.! x | x &lt;- altCs] 
+<span class="lineno">  139 </span>--           logProbAll = log $ exp (expansions gr) + sum combLps
+<span class="lineno">  140 </span>--           out = if null altCs then log (0.5)  -- ^ this log (0.5) is a
+<span class="lineno">  141 </span>--                                               -- hack. it should be 0,
+<span class="lineno">  142 </span>--                                               -- right? since there
+<span class="lineno">  143 </span>--                                               -- are no alternatives,
+<span class="lineno">  144 </span>--                                               -- the probability is
+<span class="lineno">  145 </span>--                                               -- 1. But this causes
+<span class="lineno">  146 </span>--                                               -- infinite expansions
+<span class="lineno">  147 </span>--                                               -- in the best-first search. 
+<span class="lineno">  148 </span>--                 else expansions gr  - logProbAll
+<span class="lineno">  149 </span>--       in  out
+<span class="lineno">  150 </span>
+<span class="lineno">  151 </span>
+<span class="lineno">  152 </span>
+<span class="lineno">  153 </span>
+<span class="lineno">  154 </span>truncateGrammar :: Grammar -&gt; Int -&gt; Grammar
+<span class="lineno">  155 </span><span class="decl"><span class="nottickedoff">truncateGrammar (Grammar lib _) n = Grammar lib' 0</span>
+<span class="lineno">  156 </span><span class="spaces">    </span><span class="nottickedoff">where xs = CM.toList lib</span>
+<span class="lineno">  157 </span><span class="spaces">          </span><span class="nottickedoff">xs' = take n $ sortBy (\(_, y) (_, x) -&gt; x `compare` y) xs</span>
+<span class="lineno">  158 </span><span class="spaces">          </span><span class="nottickedoff">lib' = CM.fromList xs'</span></span>
+<span class="lineno">  159 </span>          
+<span class="lineno">  160 </span>    
+<span class="lineno">  161 </span>                                
+<span class="lineno">  162 </span>                                       
+<span class="lineno">  163 </span>                      
+<span class="lineno">  164 </span>    
+<span class="lineno">  165 </span>
+<span class="lineno">  166 </span>          
+<span class="lineno">  167 </span>    
+<span class="lineno">  168 </span>    
+
+</pre>
+</html>
