@@ -1,5 +1,5 @@
 -- |
--- Module:      Numer.StatUtils
+-- Module:      Numeric.StatsUtils
 -- Copyright:   (c) Eyal Dechter
 -- License:     MIT
 -- Maintainer:  Eyal Dechter <edechter@mit.edu>
@@ -30,7 +30,8 @@ flipCoin :: (Num a, Ord a, Random a, MonadRandom m) => a -> m Bool
 flipCoin p = do r <- getRandomR (0, 1)
                 return $ r < p
 
--- | Sample from a multinomial probability distribution.
+-- | Sample from a multinomial probability
+distribution.
 -- The distribution is specified as a list of pairs (x, log p(x)) 
 sampleMultinomial :: MonadRandom m => [(b, Double)] -> m b
 sampleMultinomial dist = do r <- getRandomR (0, 1)
@@ -40,7 +41,7 @@ sampleMultinomial dist = do r <- getRandomR (0, 1)
 -- The distribution is specified as a list of pairs (x, log p(x))
 sampleMultinomialNogen :: [(b, Double)] -> Double -> b
 sampleMultinomialNogen dist rnd = sample rnd dist
-    where sample r ((a, p):rest) = if r <= exp p then a 
+    where sample r ((a, p):rest) = if r <= p then a 
                                       else sample (r - p) rest
           sample _ _ = error $ "Error when sampling from distribution: " ++ show (map snd dist)
 
@@ -58,15 +59,17 @@ logSumExp x y | x > y = x + log (1 + exp (y-x))
 logSumExp x y = y + log (1 + exp (x-y))
 
 isInvalidNum :: Double -> Bool
-isInvalidNum x = isNaN x || isInfinite x
+isInvalidNum x = isNaN x -- || isInfinite x
 
 
 -- | Calculates the entropy of a discrete distribution, given log
 -- probabilities
 entropyLogDist :: [Double] -> Double
 entropyLogDist ls =
-  let ls' = map snd $ normalizeDist $ map (undefined,) ls
-  in - (sum $ zipWith (*) ls' $ map exp ls')
+  let logZ = logSumExpList ls
+      ls' = [x - logZ | x <- ls]
+      ls'' = filter (not . isInfinite) ls' 
+  in negate $ sum $ [ exp logp * logp | logp <- ls'']
 
 -- | Normalize a discrete probability distribution, representing the
 -- probability in log units.
@@ -84,6 +87,8 @@ logistic a b x = 1 / (1 + exp (-b * (x - a)))
 
 -- | Natural logarithm of 2
 log2 = log 2.0
+
+
 
 
 
