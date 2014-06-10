@@ -30,8 +30,7 @@ flipCoin :: (Num a, Ord a, Random a, MonadRandom m) => a -> m Bool
 flipCoin p = do r <- getRandomR (0, 1)
                 return $ r < p
 
--- | Sample from a multinomial probability
-distribution.
+-- | Sample from a multinomial probability distribution.
 -- The distribution is specified as a list of pairs (x, log p(x)) 
 sampleMultinomial :: MonadRandom m => [(b, Double)] -> m b
 sampleMultinomial dist = do r <- getRandomR (0, 1)
@@ -59,7 +58,7 @@ logSumExp x y | x > y = x + log (1 + exp (y-x))
 logSumExp x y = y + log (1 + exp (x-y))
 
 isInvalidNum :: Double -> Bool
-isInvalidNum x = isNaN x -- || isInfinite x
+isInvalidNum x = isNaN x 
 
 
 -- | Calculates the entropy of a discrete distribution, given log

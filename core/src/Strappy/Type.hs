@@ -13,11 +13,9 @@ module Strappy.Type where
 --  standard library imports
 import qualified Data.Map as M
 import Data.List (nub)
-import Control.Monad (foldM)
 import Control.Monad.Identity
 import Control.Monad.Trans.Class
 import Control.Monad.Error
-import Control.Monad.Error.Class
 
 import Control.Monad.State
 import Control.Monad.Error
@@ -31,86 +29,93 @@ import Strappy.Response
 
 import Debug.Trace
 
-type Id = Int
+
+-- | A data type for polymorphic types
 data Type = TVar Int
           | TCon String [Type]
-            deriving(Ord, Eq)
+            deriving (Ord, Eq)
+
 infixr 6 ->-
+(->-) :: Type -> Type -> Type
 t1 ->- t2 = TCon "->" [t1,t2]
 
-data Context = Context {nextTVar :: Int, subst :: M.Map Int Type} deriving (Show, Eq)
+-- | A context maintains a substitution and the integer corresponding
+-- to the next unbound type variable.
+data Context = Context {nextTVar :: !Int, subst :: M.Map Int Type} deriving (Show, Eq)
+
+initContext :: Context
+initContext = Context 0 M.empty
+
 freshTVar :: Context -> (Type, Context)
 freshTVar (Context i subst) = (TVar i, Context (i+1) subst)
 
--- | type inference monad
-type TypeInference = StateT (Int, 
-                             M.Map Int Type) -- ^ Union-Find substitution
-runTI :: Monad m => TypeInference m a -> m a
-runTI = runTIVar 0
+-- | A type inference monad transformer. 
+type TypeInference = StateT Context -- ^ Union-Find substitution
 
-runTIVar :: Monad m => Int -> TypeInference m a -> m a
-runTIVar nextTVar m =
-  evalStateT m (nextTVar, M.empty)
+runTI :: Monad m => TypeInference m a -> m (a, Context)
+runTI m = runStateT m initContext 
 
-evalTIVar nextTVar m = 
-  runStateT m (nextTVar, M.empty)
+evalTI :: Monad m => TypeInference m a -> m a
+evalTI m = evalStateT m initContext 
 
-evalTI = evalTIVar 0 
-
-
--- Create an unbound type variable
+-- | Create a new unbound type variable
 mkTVar :: Monad m => TypeInference m Type
-mkTVar = do
-  (n, s) <- get
-  put (n+1, s)
-  return $ TVar n
+mkTVar = do ctx <- get
+            let (t, ctx') = freshTVar ctx
+            put ctx'
+            return $! t
   
--- Binds a type variable to a type
--- Does not check to see if the variable is not already bound
+-- | Binds a type variable to a type.
+-- Does not check to see if the variable is not already bound.
 bindTVar :: Monad m => Int -> Type -> TypeInference m ()
-bindTVar var ty = do
-  (n, s) <- get
-  put (n, M.insert var ty s)
+bindTVar var ty = modify $ \(Context n subst) ->
+  Context n (M.insert var ty subst)
 
--- Applies the current substitution to the type,
--- "chasing" bound type variables.
--- Performs path compression optimization.
--- The smaller-into-larger optimization does not apply.
+-- | Applies the current substitution to the "chasing" bound
+-- type. Performs path compression optimization. The
+-- smaller-into-larger optimization does not apply.
 applySub :: Monad m => Type -> TypeInference m Type
-applySub t@(TVar v) = do
-  (_, s) <- get
+applySub !t@(TVar v) = do
+  Context n s <- get
   case M.lookup v s of
     Just t' -> do t'' <- applySub t'
-                  (n', s') <- get
-                  put (n', M.insert v t'' s')
+                  Context n' s' <- get
+                  bindTVar v t''
                   return t''
     Nothing -> return t
-applySub (TCon k ts) =
+applySub !(TCon k ts) =
   mapM applySub ts >>= return . TCon k
 
 
--- | Debugging: ensure that the current substitution is not circular,
--- that is, it does not fail the occurs check.
-checkSubForCycles :: Monad m => TypeInference m Bool
-checkSubForCycles =
-  let notCyclic sub hist (TVar var) =
-        if var `elem` hist then False
-        else case M.lookup var sub of
-          Just t -> notCyclic sub (var:hist) t
-          Nothing -> True
-      notCyclic sub hist (TCon _ ts) = all (notCyclic sub hist) ts
-  in do (_, s) <- get
-        return $ all (notCyclic s [] . TVar) $ M.keys s
+-- TODO: This should go in testing, not here. And it should be
+-- non-monadic, since it doesn't change the context.
+-- -- | Debugging:
+-- -- ensure that the current substitution is not circular, that is, it
+-- -- does not fail the occurs check.
+-- checkSubForCycles :: Monad m => TypeInference m Bool
+-- checkSubForCycles =
+--   let notCyclic sub hist (TVar var) =
+--         if var `elem` hist then False
+--         else case M.lookup var sub of
+--           Just t -> notCyclic sub (var:hist) t
+--           Nothing -> True
+--       notCyclic sub hist (TCon _ ts) = all (notCyclic sub hist) ts
+--   in do (_, s) <- get
+--         return $ all (notCyclic s [] . TVar) $ M.keys s
 
--- Unification
--- Primed unify is for types that have already had the substitution applied
+-- | Unify two types in the type inference monad. Throw a string error on failure. 
 unify :: (IsString e, MonadError e m) => Type -> Type -> TypeInference m ()
+-- Note: IsString is a typeclass inhabited only by the String
+-- datatype. We use it here because we are not allowed to use
+-- typeclass constraints like (MonadError String m).
 {-# INLINE unify #-}
 unify t1 t2 = do
   t1' <- applySub t1
   t2' <- applySub t2
   unify' t1' t2'
 
+-- TODO: we should really have a TypeInferenceError datatype.
+-- | Unify two types, assuming that the current substitution has already been applied. 
 unify' ::  (IsString e, MonadError e m) => Type -> Type -> TypeInference m ()
 {-# INLINE unify' #-}
 unify' (TVar v) (TVar v') | v == v' = return ()
@@ -118,140 +123,29 @@ unify' (TVar v) t | occurs v t = lift $ throwError "Occurs check"
 unify' (TVar v) t = bindTVar v t
 unify' t (TVar v) | occurs v t = lift $ throwError "Occurs check"
 unify' t (TVar v) = bindTVar v t
-unify' (TCon k []) (TCon k' []) | k == k' = return ()
 unify' (TCon k ts) (TCon k' ts') | k == k' = do
   zipWithM_ unify ts ts'
-unify' _ _ = lift $ throwError "Could not unify"
+unify' _ _ = lift $ throwError "Type mismatch: Could not unify"
 
--- Occurs check: does the variable occur in the type?
+-- | Occurs check. @occurs i t@ is True if @i@ occurs in @t@.
 occurs :: Int -> Type -> Bool
 {-# INLINE occurs #-}
 occurs v (TVar v') = v == v'
 occurs v (TCon _ ts) = any (occurs v) ts
 
-
--- Checks to see if two types can unify, using current substitution
-canUnifyM :: Monad m => Type -> Type -> TypeInference m Bool
-{-# INLINE canUnifyM #-}
-canUnifyM t1 t2 = do
-  state <- get
-  case evalStateT (unify t1 t2) state of
-    Left _ -> return False
-    Right _ -> return True
-  
--- Non-monadic wrapper
-canUnify :: Type -> Type -> Bool
-canUnify t1 t2 =
-  -- Ensure no clashes between type variables
-  let t1' = normalizeTVars t1
-      t2' = normalizeTVars t2
-      t1Max = largestTVar t1'
-      t2Max = largestTVar t2'
-      t2'' = applyTVarSub (map (\v->(v,TVar (v+t1Max+10))) [0..t2Max]) t2'
-  in case runTIVar (t1Max+t2Max+10) (canUnifyM t1' t2'') of
-    Nothing -> False
-    Just x -> x
-
-canUnifyWithSomeRightTree :: Monad m 
-                          => Type -- tp1
-                          -> Type -- tp2
-                          -> TypeInference m Bool
--- Returns true if any right subtree of tp2 can unify with tp1
-canUnifyWithSomeRightTree tp1 tp2 = 
-    let rightDepth tp = go 0 tp 
-              where go !i tp = case tp of
-                                TCon con [t1, t2] | con == "->" -> go (i+1) t2
-                                _      -> i 
-    in do 
-     tp2' <- instantiateType tp2
-     let d = rightDepth tp2'
-
-     let loop 0 _ = return False
-         loop !d tp = do
-            st <- get 
-            b <- canUnifyM tp tp2' 
-            if b then (trace $ show tp2') return True
-                 else do put st
-                         s <- mkTVar 
-                         loop (d - 1) (s ->- tp)
-     s <- mkTVar 
-     loop d (s ->- tp1)
-
-
---heuristic :: Grammmar -> Type -> Context -> Double 
----- | a lower bound on the cost of a program with the requested type
---heuristic gr tp ctx = flip evalState (nTVar, subst) $ do 
-
-
-
--- | Fast types that hold an implicit substitution
--- Using IORef's is dirty, and I should be using STRef's,
--- but I had difficulty appeasing the type checker using STRef's
-data FType = FTVar (IORef (Maybe FType))
-           | FTCon String [FType]
-
--- Fast, imperative procedure for checking if two types can unify
-canUnifyFast :: Type -> Type -> Bool
-canUnifyFast t1 t2 | structureMismatch t1 t2 = False
-  where structureMismatch (TCon k xs) (TCon k' ys) = k /= k' || mismatchList xs ys
-        structureMismatch _ _ = False
-        mismatchList [] [] = False
-        mismatchList (x:xs) (y:ys) = structureMismatch x y || mismatchList xs ys
-        mismatchList _ _ = True
-canUnifyFast t1 t2 = unsafePerformIO $ do
-  (t1', _) <- mkFastType [] t1
-  (t2', _) <- mkFastType [] t2
-  uni t1' t2'
-  where mkFastType dict (TVar v) =
-          case lookup v dict of
-            Just r -> return $ (FTVar r, dict)
-            Nothing -> do r <- newIORef Nothing
-                          return $ (FTVar r, (v, r) : dict)
-        mkFastType dict (TCon k []) = return (FTCon k [], dict)
-        mkFastType dict (TCon k ts) = do (ts', dict') <- mkFastList dict ts
-                                         return (FTCon k ts', dict')
-        mkFastList dict [] = return ([], dict)
-        mkFastList dict (t:ts) = do
-          (t', dict') <- mkFastType dict t
-          (ts', dict'') <- mkFastList dict' ts
-          return (t' : ts', dict'')
-        
-        -- Assumes both t1 and t2 have had the current substitution applied
-        uni (FTVar v1) (FTVar v2) | v1 == v2 = return True
-        uni (FTVar v1) t2 = if fOccurs v1 t2 then return False else (writeIORef v1 (Just t2) >> return True)
-        uni t1 (FTVar v2) = if fOccurs v2 t1 then return False else (writeIORef v2 (Just t1) >> return True)
-        uni (FTCon k _) (FTCon k' _) | k /= k' = return False
-        uni (FTCon _ []) (FTCon _ []) = return True
-        uni (FTCon _ (x:xs)) (FTCon _ (y:ys)) = do
-          xy <- uni x y
-          if xy then uniList xs ys else return False
-        uniList [] [] = return True
-        uniList (x:xs) (y:ys) = do
-          x' <- traceVars x
-          y' <- traceVars y
-          xy <- uni x' y'
-          if xy then uniList xs ys else return False
-        traceVars tp@(FTVar ref) = do
-          sub <- readIORef ref
-          case sub of
-            Nothing -> return tp
-            Just tp' -> do tp'' <- traceVars tp'
-                           writeIORef ref (Just tp'')
-                           return tp''
-        traceVars (FTCon k xs) = mapM traceVars xs >>= return . FTCon k
-        fOccurs ref (FTVar ref') = ref == ref'
-        fOccurs _ (FTCon _ []) = False
-        fOccurs ref (FTCon _ xs) = any (fOccurs ref) xs
+-- | Return True if t1 and t2 can unify in the current context. 
+canUnify :: MonadError String m => Type -> Type -> TypeInference m Bool
+{-# INLINE canUnify #-}
+canUnify t1 t2 = catchError (unify t1 t2 >> return True) (const $ return False)
 
 
 -- Ground a universally quantified type by instantiating new type vars
-instantiateType :: Monad m => 
-                   Type -> TypeInference m Type
+instantiateType :: Monad m => Type -> TypeInference m Type
 instantiateType ty = do
   let tvars = nub $ getTVars ty
   newTVars <- mapM (const mkTVar) tvars
   return $ applyTVarSub (zip tvars newTVars) ty
-  
+
 getTVars :: Type -> [Int]
 getTVars (TVar v) = [v]
 getTVars (TCon _ ts) = concatMap getTVars ts
