@@ -30,8 +30,7 @@ flipCoin :: (Num a, Ord a, Random a, MonadRandom m) => a -> m Bool
 flipCoin p = do r <- getRandomR (0, 1)
                 return $ r < p
 
--- | Sample from a multinomial probability
-distribution.
+-- | Sample from a multinomial probability distribution.
 -- The distribution is specified as a list of pairs (x, log p(x)) 
 sampleMultinomial :: MonadRandom m => [(b, Double)] -> m b
 sampleMultinomial dist = do r <- getRandomR (0, 1)
