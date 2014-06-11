@@ -320,7 +320,7 @@ tBool = tGnd "Bool"
 tList t = TCon "[]" [t]
 tMaybe t = TCon "Maybe" [t]
 tPair a b = TCon "(,)" [a,b]
-tTriple a b c = TCon "(,,)" [a,b,c]
+tTriplet a b c = TCon "(,,)" [a,b,c]
 tQuad a b c d = TCon "(,,,)" [a,b,c,d]
 tQuint a b c d e = TCon "(,,,,)" [a,b,c,d,e]
 tResponse = TCon "Response" []
@@ -360,7 +360,7 @@ instance (Typeable a) => Typeable [a] where
 instance (Typeable a, Typeable b) => Typeable (a, b) where
     typeOf _ = tPair (typeOf (undefined :: a)) (typeOf (undefined :: b))
 instance (Typeable a, Typeable b, Typeable c) => Typeable (a, b, c) where
-    typeOf _ = tTriple (typeOf (undefined :: a)) (typeOf (undefined :: b)) (typeOf (undefined :: c))
+    typeOf _ = tTriplet (typeOf (undefined :: a)) (typeOf (undefined :: b)) (typeOf (undefined :: c))
 instance (Typeable a) => Typeable (Maybe a) where
     typeOf _ = tMaybe (typeOf (undefined :: a))
 instance Typeable (Response) where
