@@ -50,6 +50,7 @@ library
   -- Modules exported by the library.
   exposed-modules: Strappy.Type, 
                    Strappy.Expr,
+                   Strappy.Library,
                    Numeric.StatsUtils,
                    Numeric.ApproxEq
 

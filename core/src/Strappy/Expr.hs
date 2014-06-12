@@ -23,6 +23,8 @@ module Strappy.Expr (
   eval,
   timeLimitedEval,
   -- * Type inference
+  unifyExpr,
+  exprUnifies,
   typeOfApp,  
   doTypeInference,
   doTypeInferenceM,
@@ -156,6 +158,23 @@ doTypeInferenceM (App { eLeft = l, eRight = r }) = do
   unify rTp alpha
   applySub beta
 
+
+-- | Unify an expressions with a type in the TypeInference monad. 
+unifyExpr :: (MonadError String m) => Type -> Expr -> TypeInference m ()
+{-# INLINE unifyExpr #-}
+unifyExpr tp expr = do 
+    eTp <- instantiateType (eType expr)
+    unify tp eTp
+    
+
+-- | Return true if expression and type can be unified (in empty context). 
+exprUnifies :: Expr -> Type -> Bool
+exprUnifies e t = fromEither $ evalTI $ catchError (f >> return True) (const $ return False)
+  where f = do eTp <- doTypeInferenceM e
+               unify t eTp
+        fromEither (Right x) = x
+        fromEither (Left err) = error $ "exprUnifies: the impossible happened. exprUnifies returned an err: " ++ err
+               
 -- | Return true if the expression typechecks in a clean
 -- environment. Otherwise, false.
 typeChecks :: Expr -> Bool

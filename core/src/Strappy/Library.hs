@@ -1,14 +1,25 @@
-{-# Language TypeSynonymInstances, FlexibleInstances #-}
+-- Library.hs
+-- |
+-- Module:      Strappy.Core.Library
+-- Copyright:   (c) Eyal Dechter
+-- License:     MIT
+-- Maintainer:  Eyal Dechter <edechter@mit.edu>
+-- Stability:   experimental
+--
+-- | This module defines collections of standard primitives and types
+-- for our expression language.
 
 module Strappy.Library where
 
+-- External imports --
 import Control.Monad.Error.Class
 import Data.Maybe
 import qualified Data.List as List
 
-import Strappy.Expr
+-- Strappy imports -- 
 import Strappy.Type
-import Strappy.Utils
+import Strappy.Expr
+import Strappy.Grammar
 
 -- | COMBINATORS/PRIMITIVE EXPRESSIONS | ---------------------------------------
 -- In this file, we list a few primitives likely to be useful in many libraries.
