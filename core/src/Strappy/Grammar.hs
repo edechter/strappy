@@ -14,7 +14,7 @@ module Strappy.Grammar (
   Grammar(..),
   normalizeGrammar,
   getUnifyingPrims,
-  logLikelihoodExpr,
+  exprLogLikelihood,
   -- * ExprMap        
   ExprMap,
   showExprDistr,
@@ -85,12 +85,18 @@ getUnifyingPrims (Grammar gamma exprDistr) tp = do
   return $ do unifyExpr tp e
               return (e, w)
 
+-- | Return the loglikelihood that the given expression would be
+-- produced under the given grammar if an expresssion of the type
+-- argument were requested. Assumes an empty context.
+exprLogLikelihood :: MonadError String m => Grammar -> Type -> Expr -> m Double
+exprLogLikelihood gr tp expr = evalTI $ logLikelihoodExprM gr tp expr
+
 -- | Return the loglikelihood of producing the given expression. This
 -- is the calculation defined in the Dechter et. al, IJCAI paper.
-logLikelihoodExpr :: MonadError String m => Grammar -> Type -> Expr -> TypeInference m Double
-logLikelihoodExpr gr@(Grammar gamma _) tp expr = do
-  llPrim <- logLikelihoodPrim gr tp expr
-  llApp <- logLikelihoodApp gr tp expr
+logLikelihoodExprM :: MonadError String m => Grammar -> Type -> Expr -> TypeInference m Double
+logLikelihoodExprM gr@(Grammar gamma _) tp expr = do
+  llPrim <- logLikelihoodPrimM gr tp expr
+  llApp <- logLikelihoodAppM gr tp expr
   let logpNoApp = log (1 - exp gamma)
   return $ logSumExp ( logpNoApp + llPrim) (llApp + gamma)
   
@@ -98,8 +104,8 @@ logLikelihoodExpr gr@(Grammar gamma _) tp expr = do
 -- | Return the loglikelihood of returning a given primitive from the
 -- library given a current requested type, and conditioned on being
 -- asked for a primitive.
-logLikelihoodPrim :: MonadError String m => Grammar -> Type -> Expr -> TypeInference m Double
-logLikelihoodPrim gr@(Grammar gamma exprDistr) tp expr = do
+logLikelihoodPrimM :: MonadError String m => Grammar -> Type -> Expr -> TypeInference m Double
+logLikelihoodPrimM gr@(Grammar gamma exprDistr) tp expr = do
   (ctx :: Context) <- get
   let loop !acc [] = return $! acc
       loop !acc (x:xs) = do (_, w) <- x
@@ -114,12 +120,12 @@ logLikelihoodPrim gr@(Grammar gamma exprDistr) tp expr = do
 -- | Return the loglikelihood of returning a given expr from the
 -- library given a current requested type, and conditioned on being
 -- asked for an application.
-logLikelihoodApp :: MonadError String m => Grammar -> Type -> Expr -> TypeInference m Double
-logLikelihoodApp _ _ Term{} = return $! negInfty -- probability 0 of getting a terminal
-logLikelihoodApp gr@(Grammar gamma exprDistr) tp (App eL eR eTp) = do
+logLikelihoodAppM :: MonadError String m => Grammar -> Type -> Expr -> TypeInference m Double
+logLikelihoodAppM _ _ Term{} = return $! negInfty -- probability 0 of getting a terminal
+logLikelihoodAppM gr@(Grammar gamma exprDistr) tp (App eL eR eTp) = do
   do eta <- mkTVar
-     llL <- logLikelihoodExpr gr (eta ->- tp) eL
-     llR <- logLikelihoodExpr gr eta eR
+     llL <- logLikelihoodExprM gr (eta ->- tp) eL
+     llR <- logLikelihoodExprM gr eta eR
      return $ llL + llR
 
 negInfty :: Double
