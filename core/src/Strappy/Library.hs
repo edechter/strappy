@@ -35,8 +35,7 @@ import Control.Monad.Error.Class
 -- Strappy imports -- 
 import Strappy.Type
 import Strappy.Expr
-
-
+import Strappy.Grammar
 
 -- Removes new non-terminals and puts a uniform distribution over the productions
 blankLibrary :: Grammar -> Grammar
@@ -626,7 +625,7 @@ readExpr input = case parse parseComb "CL" input of
              tl <- many (letter <|> digit <|> symbol)
              let atom = hd:tl
              case hd of
-               '?' -> return $ mkTerm atom undefined undefined -- wildcard for pattern matching
+               '?' -> return $ Term atom undefined undefined -- wildcard for pattern matching
                _ ->
                  return $ case List.find (\c -> show c == atom) basicExprs of
                    Nothing -> error $ "Could not find in library: " ++ show atom
