@@ -2,650 +2,299 @@
 
 module Strappy.Library where
 
-import Control.Arrow (first)
 import Control.Monad.Error.Class
-import Control.Monad.Identity
-import Control.Monad.State
-import Data.Function (on)
-import Data.Hashable
 import Data.Maybe
-import Data.String (IsString)
-import Debug.Trace
-import GHC.Prim
-import System.Directory
-import Text.ParserCombinators.Parsec hiding (spaces)
-import Text.Printf
-import Unsafe.Coerce (unsafeCoerce)
 import qualified Data.List as List
-import qualified Data.Map as Map hiding ((\\))
-import qualified Data.Set as Set
 
-import Strappy.Type
 import Strappy.Expr
+import Strappy.Type
 import Strappy.Utils
-import Strappy.Config
-
--- | EXPRESSION DISTRIBUTIONS | ------------------------------------------------
-
--- | Type alias for hash table with keys as type-hidden expressions.
-type ExprMap a = Map.Map Expr a
-
--- | Type alias for distribution over expressions.
-type ExprDistr = ExprMap Double
-
-showExprDistr exprDistr  = unlines $ map showPairs pairs
-    where pairs = List.sortBy (compare `on` snd) $ Map.toList exprDistr
-          showPairs = (\(e, i) -> printf "%7s:%7.2f" (show e) i)
-
-showExprDistrLong exprDistr = unlines $ map showPairsLong pairs
-    where pairs = List.sortBy (compare `on` snd) $ Map.toList exprDistr
-          showPairsLong = (\(e, i) -> printf "%60s, %7.2f" (showExprLong e) i)
-
-mkExprDistr :: [Expr] -> ExprDistr
-mkExprDistr exprs = Map.adjust (const (-5)) cBottom
-                    $ Map.fromList [(e, 1) | e <- exprs]
-
--- | Initializing a TypeInference monad with a Library. We need to
--- grab all type variables in the library and make sure that the type
--- variable counter in the state of the TypeInference monad is greater
--- that that counter.
-initializeTI :: Monad m => ExprDistr -> TypeInference m ()
-initializeTI exprDistr = modify $ \(_, s) -> (i+1, s)
-    where i = maximum $
-              concatMap (getTVars . eType . fst) $
-              Map.toList exprDistr
-
-countSubtrees :: ExprMap Double -- <cnt>: Map of rules and associated counts.
-                 -> (Expr, Double) -- <expr>: the expression
-                 -> ExprMap Double
-countSubtrees cnt (expr@(App{eLeft=l, eRight=r}),wt) =
-  let cnt'   = incCount cnt (expr,wt)
-      cnt''  = countSubtrees cnt' (l,wt)
-      cnt''' = countSubtrees cnt'' (r,wt)
-  in
-   cnt'''
-countSubtrees cnt _ = cnt
-
-incCount :: ExprMap Double -> (Expr, Double)
-            -> ExprMap Double
-incCount cnt (expr@App{},wt) =
-  Map.insertWith (+) expr wt cnt
-incCount cnt _ = cnt
-
--- | Accumulates all of the subtrees in an expression in to a set
-collectSubtrees :: Set.Set Expr -> Expr -> Set.Set Expr
-collectSubtrees s e@(App { eLeft = l, eRight = r }) =
-  collectSubtrees (collectSubtrees (e `Set.insert` s) l) r
-collectSubtrees s e = e `Set.insert` s
-
--- | GRAMMARS | ----------------------------------------------------------------
-
--- | a stochastic grammar over programs.
-data Grammar = Grammar {grApp :: Double,          -- ^ log prob of application
-                        grExprDistr :: ExprDistr} -- ^ function distribution
-
-instance Show Grammar where
-  show = showGrammar
-
-showGrammar :: Grammar -> String
-showGrammar (Grammar p exprDistr) = printf
-    "%7s:%7.2f\n" "p" (exp p) ++
-    showExprDistr exprDistr
-
--- | re-weight the grammar to be a true probability distribution again
-normalizeGrammar :: Grammar -> Grammar
-normalizeGrammar gr@Grammar{grApp=p, grExprDistr=distr} =
-  let logTotalMass = logSumExpList $ Map.elems distr
-      distr' = Map.map (\x -> x - logTotalMass) distr
-  in gr { grExprDistr = distr' }
-
--- | Removes non-terminals and puts a uniform distribution over terminals
-blankLibrary :: Grammar -> Grammar
-blankLibrary (Grammar {grExprDistr = distr}) =
-  let leaves = filter isTerm $ Map.keys distr
-  in Grammar { grExprDistr = Map.fromList [ (l, 0.0) | l <- leaves ],
-               grApp = log 0.45}
-
--- | Save a grammar to a file
-saveGrammar :: String -> Grammar -> IO ()
-saveGrammar fname (Grammar papp distr) =
-  writeFile fname $ show papp ++ "\n" ++ prods
-  where prods = unlines $ map prodToString $ Map.toList distr
-        prodToString = (\(c, p) -> show p ++ " " ++ show c)
-
--- | Loads a grammar from a file
-loadGrammar :: String -> IO Grammar
-loadGrammar fname = do
-  fcontents <- readFile fname
-  let (papp : prods) = lines fcontents
-  let prods' = map (\ln ->
-                     let p = read $ takeWhile (/=' ') ln
-                         c = readExpr $ drop 1 $ dropWhile (/=' ') ln
-                         c' = c { eType = doTypeInference_ c }
-                     in (c', p)) prods
-  return $ Grammar { grApp = read papp,
-                     grExprDistr = Map.fromList prods' }
-
--- | Looks for largest file of the form grammar_#, returns (grammar, number)
-loadNextGrammar :: IO (Grammar, Int)
-loadNextGrammar = do
-  contents <- getDirectoryContents "."
-  let contents' = filter (\c -> take 8 c == "grammar_") contents
-  let latest = List.maximumBy (\c c' -> compare (read (drop 8 c)) 
-                                                ((read (drop 8 c)) :: Int)) 
-                              contents'
-  let num = read $ drop 8 latest
-  gr <- loadGrammar latest
-  return (gr, num)
-
--- | Use counts for productions in a grammar
-data Counts = Counts { appCounts :: Double,
-                       termCounts :: Double,
-                       useCounts :: ExprMap Double,
-                       possibleUseCounts :: ExprMap Double } deriving Show
-
--- | Iteratively performs the inside-out algorithm to a corpus, restimating the gramar
--- This assumes we're sampling from P(program | typed)
-iterateInOut :: Int -> Grammar -> Double -> [(Expr, Double)] -> Grammar
-iterateInOut k g prior obs =
-  foldl (\g' _ -> inoutEstimateGrammar g' prior obs) g [1..k]
-
--- | Uses the inside-out algorithm to find the production probabilities
-inoutEstimateGrammar :: Grammar -> Double -> [(Expr, Double)] -> Grammar
-inoutEstimateGrammar gr@Grammar{grExprDistr=distr, grApp = app} pseudocounts obs =
-  Grammar{grApp = appLogProb, grExprDistr = distr'}
-  where es = Map.toList distr -- [(Expr, Double)]
-        -- Updates expected counts
-        expectedCounts :: Double -> Counts -> Expr -> Counts
-        expectedCounts weight counts expr@(Term { eReqType = Just tp }) =
-          let uc' = Map.insertWith (+) expr weight $ useCounts counts
-              alts = filter (\(e', _) -> canUnifyFast tp (eType e')) es
-              pc = possibleUseCounts counts
-              pc' = foldl (\acc alt -> Map.insertWith (+) alt weight acc) pc $ map fst alts
-              logZ = if usePCFGWeighting then 0.0 else logSumExpList (map snd alts)
-              counts' = counts { termCounts = termCounts counts + weight,
-                                 useCounts = uc',
-                                 possibleUseCounts = pc' }
-          in counts'
-        expectedCounts weight counts expr@(App { eLeft = left,
-                                                 eRight = right,
-                                                 eReqType = Just tp }) | Map.member expr distr =
-          let alts = filter (\(e', _) -> canUnifyFast tp (eType e')) es
-              logZ = if usePCFGWeighting then 0.0 else logSumExpList (map snd alts)
-              leftLL  = fromJust $ eLogLikelihood left
-              rightLL = fromJust $ eLogLikelihood right
-              -- Find probability of having used an application vs a library procedure
-              logProbLib = distr Map.! expr + log (1 - exp app) - logZ
-              logProbApp = app + leftLL + rightLL
-              probUsedApp = exp $ logProbApp - logSumExp logProbApp logProbLib
-              probUsedLib = 1 - probUsedApp
-              -- Recurse on children
-              counts'  = expectedCounts (weight*probUsedApp) counts left
-              counts'' = expectedCounts (weight*probUsedApp) counts right
-              -- Add in counts for if we used a library procedure
-              uc' = Map.insertWith (+) expr (weight*probUsedLib) $ useCounts counts''
-              pc  = possibleUseCounts counts''
-              pc' = foldl (\acc alt -> Map.insertWith (+) alt (weight*probUsedLib) acc) pc $ map fst alts
-              counts''' = counts'' { appCounts = appCounts counts'' + weight * probUsedApp,
-                                     termCounts = termCounts counts'' + weight * probUsedLib,
-                                     useCounts = uc',
-                                     possibleUseCounts = pc' }
-          in counts'''
-        expectedCounts weight counts expr@(App { eLeft = left,
-                                                 eRight = right,
-                                                 eReqType = Just _}) =
-           let counts'   = counts { appCounts = appCounts counts + weight }
-               counts''  = expectedCounts weight counts' left
-               counts''' = expectedCounts weight counts'' right
-          in counts'''
-        obs' = map (\(e,w) -> (exprLogLikelihood gr e, w)) obs
-        counts = List.foldl' (\cts (e, w) -> expectedCounts w cts e) (Counts pseudocounts pseudocounts Map.empty Map.empty) obs'
-        uses' = List.foldl' (\cts e -> Map.insertWith (+) e pseudocounts cts) (useCounts counts) $ Map.keys distr
-        possibleUses' = List.foldl' (\cts e -> Map.insertWith (+) e pseudocounts cts)
-                                    (possibleUseCounts counts) $ Map.keys distr
-        logTotalUses = log $ sum $ Map.elems uses'
-        appLogProb = log (appCounts counts) - log (termCounts counts + appCounts counts)
-        distr' = Map.mapWithKey (\expr _ ->
-                                  if usePCFGWeighting
-                                  then case Map.lookup expr uses' of
-                                    Just u -> log u - logTotalUses
-                                    Nothing -> error "Should never occur: expr not in uses or possible uses"
-                                  else case (Map.lookup expr uses', Map.lookup expr possibleUses') of
-                                    (Just u, Just p) -> log u - log p
-                                    _ -> error "Should never occur: expr not in uses or possible uses") distr
-
--- | Grammars are in CNF, so each production is the product of two other production
--- Strips out all productions that are subproductions of some other production
--- This is purely for the purpose of making it easier for humans to read grammars
-removeSubProductions :: Grammar -> Grammar
-removeSubProductions gr@Grammar{grExprDistr = distr} =
-  let keys = Map.keys distr
-      prods = filter (not . isTerm) keys
-      subProductions = map eLeft prods ++ map eRight prods
-      prods' = List.nub $ filter (not . flip elem subProductions) prods
-      prods'' = prods' ++ filter isTerm keys
-  in gr { grExprDistr = Map.filterWithKey (\k v -> k `elem` prods'') distr }
-
--- | Removes productions that aren't used in the P(app)->0 regime
--- Using the old method of calculating probabilities, these productions wouldn't exist
-removeUnusedProductions :: Grammar -> [Expr] -> Grammar
-removeUnusedProductions (Grammar { grApp = pApp, grExprDistr = distr }) corpus =
-  let used = foldl (\acc -> Set.union acc . grUses) Set.empty corpus
-      distr' = Map.filterWithKey (\expr _ -> isTerm expr || expr `Set.member` used) distr
-  in Grammar pApp distr'
-  where grUses :: Expr -> Set.Set Expr
-        grUses expr | Map.member expr distr = Set.singleton expr
-        grUses (App { eLeft = l, eRight = r }) =
-          Set.union (grUses l) (grUses r)
-        grUses expr = error $ "grUses: terminal " ++ show expr ++ " not in library."
-
--- | LL OF EXPRESSION UNDER GRAMMAR | ------------------------------------------
-
--- | Methods for calculating the LL of an expression draw from grammar
--- If usePCFGWeighting is false, then requested types should be annotated
--- before invoking. This procedure returns the same expression, but with log
--- likelihoods annotated
-exprLogLikelihood :: Grammar -> Expr -> Expr
-exprLogLikelihood gr e = if usePCFGWeighting
-                         then pcfgLogLikelihood gr e
-                         else ijcaiLogLikelihood gr e
-
--- | Returns the log probability of producing the given expr tree
-pcfgLogLikelihood :: Grammar -> Expr -> Expr
-pcfgLogLikelihood (Grammar { grExprDistr = distr }) e@(Term { }) = e { eLogLikelihood = Just (distr Map.! e) }
-pcfgLogLikelihood gr@(Grammar { grExprDistr = distr, grApp = app }) e@(App { eLeft = l, eRight = r }) =
-  let l' = pcfgLogLikelihood gr l
-      r' = pcfgLogLikelihood gr r
-      lLL = fromJust $ eLogLikelihood l'
-      rLL = fromJust $ eLogLikelihood r'
-      eLL = logSumExp (app + lLL + rLL)
-                      (case Map.lookup e distr of
-                          Nothing -> log 0.0
-                          Just p -> p)
-  in e { eLeft = l', eRight = r', eLogLikelihood = Just eLL }
-
--- | Annotates log likelihood as done in IJCAI paper
-ijcaiLogLikelihood :: Grammar -> Expr -> Expr
-ijcaiLogLikelihood (Grammar { grApp = logApp, grExprDistr = distr }) e@(Term { eReqType = Just tp}) | not (Map.member e distr) =
-  error "ijcaiLogLikelihood: Terminal not in library"
-ijcaiLogLikelihood (Grammar { grApp = logApp, grExprDistr = distr }) e@(Term { eReqType = Just tp}) =
-  let alts = filter (\(e', _) -> canUnifyFast tp (eType e')) $ Map.toList distr
-      zT = logSumExpList $ map snd alts
-      logTerm = log (1 - exp logApp)
-      ll = (distr Map.! e) + logTerm - zT
-  in e { eLogLikelihood = Just ll }
-ijcaiLogLikelihood gr (Term { eReqType = Nothing }) =
-  error "ijcaiLogLikelihood called on Term without requested types annotated"
-ijcaiLogLikelihood gr@(Grammar { grApp = logApp, grExprDistr = distr }) e@(App { eLeft = l,
-                                                                                eRight = r,
-                                                                                eReqType = Just tp})
-  | Map.member e distr =
-    let alts = filter (\(e, _) -> canUnifyFast tp (eType e)) $ Map.toList distr
-        zA = logSumExpList $ map snd alts
-        logTerm = log (1 - exp logApp)
-        l' = ijcaiLogLikelihood gr l
-        r' = ijcaiLogLikelihood gr r
-        lLL = fromJust $ eLogLikelihood l'
-        rLL = fromJust $ eLogLikelihood r'
-        eLL = logSumExp ((distr Map.! e) + logTerm - zA)
-                        (lLL + rLL + logApp)
-    in e { eLeft = l', eRight = r', eLogLikelihood = Just eLL }
-ijcaiLogLikelihood _ (App { eReqType = Nothing }) =
-  error "ijcaiLogLikelihood called on App without requested types annotated"
-ijcaiLogLikelihood gr@(Grammar { grApp = logApp }) e@(App { eLeft = l, eRight = r}) =
-  let l' = ijcaiLogLikelihood gr l
-      r' = ijcaiLogLikelihood gr r
-      lLL = fromJust $ eLogLikelihood l'
-      rLL = fromJust $ eLogLikelihood r'
-      eLL = logApp + lLL + rLL
-  in e { eLeft = l', eRight = r', eLogLikelihood = Just eLL }
-
--- | TYPE ANNOTATIONS | --------------------------------------------------------
-
--- | Annotates the requested types
--- Takes as input the top-level type request
--- We need to do this after sampling, because, when we pull a tree out of the library,
--- all of its types (and requested types) could be more specific than what they are in the library.
--- If we were to decide to remove this production from the library, then we would need to know
--- the requested type information of all of the subtrees in order to re-estimate the production probabilities.
-annotateRequestedM :: (IsString e, MonadError e m) =>
-                     Type -> -- ^ Requested type of the expression
-                     Expr -> -- ^ The expression
-                     TypeInference m Expr -- ^ The freshly annotated expression
-annotateRequestedM tp e@(App { eLeft = l, eRight = r }) = do
-  t <- mkTVar
-  l' <- annotateRequestedM (t ->- tp) l
-  t' <- applySub t
-  r' <- annotateRequestedM t' r
-  tp' <- applySub tp
-  return e { eLeft = l', eRight = r', eType = tp', eReqType = Just tp }
-annotateRequestedM tp e@(Term { eType = eTp }) = do
-  eTp' <- instantiateType eTp
-  unify tp eTp'
-  return $ e { eReqType = Just tp }
-
--- | Non-monadic wrapper
--- Presumes no constraint on top-level type
-annotateRequested :: (IsString e, MonadError e m) =>  Expr -> m Expr
-annotateRequested expr = runTI $ do
-  tp <- mkTVar
-  annotateRequestedM tp expr
-
--- | Non-monadic wrapper that allows one to specify the type
-annotateRequested' :: (IsString e, MonadError e m) => Type -> Expr -> m Expr
-annotateRequested' tp expr = runTI $ do
-  tp' <- instantiateType tp
-  annotateRequestedM tp' expr
-
--- | EXPRESSION UTILITIES | ----------------------------------------------------
-
--- | compose epressions together
-compose :: [Expr] -> Expr
-compose = foldl1 (<>)
-
--- | Simplifies an expression
-simplifyExpr :: Expr -> Expr
-simplifyExpr expr =
-  let loop 0 expr = expr
-      loop n e@(Term {}) = e
-      loop n e@(App { eLeft = l, eRight = r }) =
-        let l' = simplifyExpr l
-            r' = simplifyExpr r
-            e' = l' <> r'
-            e'' = foldl (Prelude.flip ($)) e' patterns
-        in
-         if e' /= e''
-         then loop (n-1) e''
-         else e''
-  in loop 100 expr
-  where
-    patterns = map (\(str, proc) -> matchExpr (readExpr str) proc)
-                   [ -- Combinator identities
-                     ( "((K ?) ?)", \ [x, _] -> x),
-                     ( "(((B ?) ?) ?)", \ [f, g, x] -> f <> (g <> x)),
-                     ( "(((C ?) ?) ?)", \ [f, g, x] -> (f <> x) <> g),
-                     ( "(((S ?) ?) ?d)", \ [f, g, x] -> (f <> x) <> (g <> x)),
-                     ( "(I ?)", \ [x] -> x),
-                     -- Arithmetic identities
-                     ( "((+ 0) ?)", \ [x] -> x),
-                     ( "((+ ?) 0)", \ [x] -> x),
-                     ( "((* 1) ?)", \ [x] -> x),
-                     ( "((* ?) 1)", \ [x] -> x),
-                     ( "((* ?) 1)", \ [x] -> x),
-                     ( "((* 0) ?)", \ [_] -> cInt2Expr 0),
-                     ( "((* ?) 0)", \ [_] -> cInt2Expr 0),
-                     -- Evaluation
-                     ( "((+ ?t) ?t)", \ [x, y] -> cInt2Expr ((eval x) + (eval y))),
-                     ( "((* ?t) ?t)", \ [x, y] -> cInt2Expr ((eval x) * (eval y))) ]
-
--- | Simplifies terms in the grammar, subject to the constraint that it reduces description length
--- Does a greedy, best-first search
-simplifyLibrary :: [Expr] -> -- ^ library productions
-                   ([Expr], -- ^ new library productions
-                    [(Expr, Expr)]) -- ^ substitutions made
-simplifyLibrary prods =
-  let (newprods, subs) = simplify prods $ score prods
-      newprods' = Set.toList $ foldl (\acc prod -> collectSubtrees acc prod) Set.empty newprods
-  in (map (\prod -> prod { eType = doTypeInference_ prod}) newprods', subs)
-  where -- Score counts # unique subtrees
-        score = Set.size . foldl (\acc prod -> collectSubtrees acc prod) Set.empty
-        -- Takes as input a library and its score
-        simplify lib libScore =
-          let simplifiedLib = filter (\ (x, y) -> x /= y) $ map (\prod -> (prod, simplifyExpr prod)) lib
-              newLibs = map (\(prod, simpProd) -> let lib' = List.nub $ map (subExpr prod simpProd) lib
-                                                  in ((lib', (prod, simpProd)), score lib')) simplifiedLib
-              ((newLib, newSub), newScore) = List.minimumBy (compare `on` snd) newLibs
-          in
-           if newScore < libScore
-           then trace ("Improved score from " ++ show libScore ++ " to " ++ show newScore)
-                      (let (bestLib, bestSubs) = simplify newLib newScore in (bestLib, newSub:bestSubs))
-           else (lib, [])
-
-readExpr :: String -> Expr
-readExpr input = case parse parseComb "CL" input of
-     Left err -> error $ "No match: " ++ show err
-     Right val -> val
-     where symbol :: Parser Char
-           symbol = oneOf "!#$%&|*+-/:<=>?@^_~.[]?'"
-           parseAtom :: Parser Expr
-           parseAtom = do
-             hd <- letter <|> digit <|> symbol
-             tl <- many (letter <|> digit <|> symbol)
-             let atom = hd:tl
-             case hd of
-               '?' -> return $ mkTerm atom undefined undefined -- wildcard
-               _ ->
-                 return $ case List.find (\c -> show c == atom) basicExprs of
-                   Nothing -> error $ "Could not find in library: " ++ show atom
-                   Just e -> e
-           parseApp :: Parser Expr
-           parseApp = do
-             char '('
-             f <- parseComb
-             char ' '
-             a <- parseComb
-             char ')'
-             return $ f <> a
-           parseComb :: Parser Expr
-           parseComb = parseAtom <|> parseApp
 
 -- | COMBINATORS/PRIMITIVE EXPRESSIONS | ---------------------------------------
+-- In this file, we list a few primitives likely to be useful in many libraries.
 
--- | turn a Haskell type to Any.
-mkAny :: a -> Any
-mkAny = unsafeCoerce
+cBasicRouters = [cI, cS, cB, cC, cK]
 
--- | Basic combinators
-cBottom :: Expr
-cBottom = mkTerm "_|_" (TVar 0) (error "cBottom: this should never be called!")
+cI = Term { eName = "I",
+            eType = (t ->- t),
+            eThing = id }
 
-cI = mkTerm "I" (t ->- t) $ id
+cS = Term { eName  = "S",
+            eType  = ((t2 ->- t1 ->- t) ->- (t2 ->- t1) ->- t2 ->- t),
+            eThing = (\f g x -> f x (g x)) }
 
-cS = mkTerm "S" ((t2 ->- t1 ->- t) ->- (t2 ->- t1) ->- t2 ->- t) $
-     \f g x -> f x (g x)
+cB = Term { eName  = "B",
+            eType  = ((t1 ->- t) ->- (t2 ->- t1) ->- t2 ->- t),
+            eThing = (\f g x -> f (g x)) }
 
-cB = mkTerm "B" ((t1 ->- t) ->- (t2 ->- t1) ->- t2 ->- t) $
-     \f g x -> f (g x)
+cC = Term { eName  = "C",
+            eType  = ((t1 ->- t2 ->- t) ->- t2 ->- t1 ->- t),
+            eThing = (\f g x -> f x g) }
 
-cC = mkTerm "C" ((t1 ->- t2 ->- t) ->- t2 ->- t1 ->- t) $
-     \f g x -> f x g
+cK = Term { eName  = "K",
+            eType  = (t1 ->- t2 ->- t1),
+            eThing = (\x y -> x) }
 
-cK = mkTerm "K" (t1 ->- t2 ->- t1) $
-     \x y -> x
+cDualRouters = [cSS,cSB,cSC,cBS,cBB,cBC,cCS,cCB,cCC]
 
-cW = mkTerm "W" ((t1 ->- t1 ->- t) ->- t1 ->- t) $
-    \x y -> x y y
+-- | cSS = (cB <> cS <> (cB <> cS))
+cSS = Term { eName  = "SS",
+             eType  = ((t2 ->- t3 ->- t1 ->- t) ->-
+                      (t2 ->- t3 ->- t1) ->- t2 ->- t3 ->- t),
+             eThing = (\f g x1 x2 -> (f x1 x2) (g x1 x2)) }
 
-cSS = mkTerm "SS" ((t2 ->- t3 ->- t1 ->- t) ->- (t2 ->- t3 ->- t1) ->- t2 ->- t3 ->- t) $ \ f g x1 x2 -> (f x1 x2) (g x1 x2)
--- cSS = (cB <> cS <> (cB <> cS))
+-- | cSB = (cB <> cS <> (cB <> cB))
+cSB = Term { eName  = "SB",
+             eType  = ((t2 ->- t1 ->- t) ->-
+                      (t2 ->- t3 ->- t1) ->- t2 ->- t3 ->- t),
+             eThing = (\f g x1 x2 -> (f x1) (g x1 x2)) }
 
-cSB = mkTerm "SB" ((t2 ->- t1 ->- t) ->- (t2 ->- t3 ->- t1) ->- t2 ->- t3 ->- t) $ \ f g x1 x2 -> (f x1) (g x1 x2)
--- cSB = (cB <> cS <> (cB <> cB))
+-- | cSC = (cB <> cS <> (cB <> cC))
+cSC = Term { eName  = "SC",
+             eType  = ((t3 ->- t1 ->- t2 ->- t) ->-
+                       (t3 ->- t2) ->- t3 ->- t1 ->- t),
+             eThing = (\f g x1 x2 -> (f x1 x2) (g x1)) }
 
-cSC = mkTerm "SC" ((t3 ->- t1 ->- t2 ->- t) ->- (t3 ->- t2) ->- t3 ->- t1 ->- t) $ \ f g x1 x2 -> (f x1 x2) (g x1)
--- cSC = (cB <> cS <> (cB <> cC))
+-- | cBS = (cB <> cB <> cS)
+cBS = Term { eName  = "BS",
+             eType  = ((t3 ->- t1 ->- t) ->-
+                      (t2 ->- t3 ->- t1) ->- t2 ->- t3 ->- t),
+             eThing = (\f g x1 x2 -> (f x2) (g x1 x2)) }
 
-cBS = mkTerm "BS" ((t3 ->- t1 ->- t) ->- (t2 ->- t3 ->- t1) ->- t2 ->- t3 ->- t) $ \ f g x1 x2 -> (f x2) (g x1 x2)
--- cBS = (cB <> cB <> cS)
+-- | cBB = (cB <> cB <> cB)
+cBB = Term { eName  = "BB",
+             eType  = ((t1 ->- t) ->- (t2 ->- t3 ->- t1) ->- t2 ->- t3 ->- t),
+             eThing = (\f g x1 x2 -> f (g x1 x2)) }
 
-cBB = mkTerm "BB" ((t1 ->- t) ->- (t2 ->- t3 ->- t1) ->- t2 ->- t3 ->- t) $ \ f g x1 x2 -> f (g x1 x2)
--- cBB = (cB <> cB <> cB)
+-- | cBC = (cB <> cB <> cC)
+cBC = Term { eName  = "BC",
+             eType  = ((t1 ->- t2 ->- t) ->- (t3 ->- t2) ->- t3 ->- t1 ->- t),
+             eThing = (\f g x1 x2 -> (f x2) (g x1)) }
 
-cBC = mkTerm "BC" ((t1 ->- t2 ->- t) ->- (t3 ->- t2) ->- t3 ->- t1 ->- t) $ \ f g x1 x2 -> (f x2) (g x1)
--- cBC = (cB <> cB <> cC)
+-- | cCS = (cB <> cC <> (cB <> cS))
+cCS = Term { eName  = "CS",
+             eType  = ((t1 ->- t3 ->- t2 ->- t) ->-
+                      (t3 ->- t2) ->- t1 ->- t3 ->- t),
+             eThing = (\f g x1 x2 -> (f x1 x2) (g x2)) }
 
-cCS = mkTerm "CS" ((t1 ->- t3 ->- t2 ->- t) ->- (t3 ->- t2) ->- t1 ->- t3 ->- t) $ \ f g x1 x2 -> (f x1 x2) (g x2)
--- cCS = (cB <> cC <> (cB <> cS))
+-- | cCB = (cB <> cC <> (cB <> cB))
+cCB = Term { eName  = "CB",
+             eType  = ((t1 ->- t2 ->- t) ->- (t3 ->- t2) ->- t1 ->- t3 ->- t),
+             eThing = (\f g x1 x2 -> (f x1) (g x2)) }
 
-cCB = mkTerm "CB" ((t1 ->- t2 ->- t) ->- (t3 ->- t2) ->- t1 ->- t3 ->- t) $ \ f g x1 x2 -> (f x1) (g x2)
--- cCB = (cB <> cC <> (cB <> cB))
+-- | cCC = (cB <> cC <> (cB <> cC))
+cCC = Term { eName  = "CC",
+             eType  = ((t1 ->- t2 ->- t3 ->- t) ->- t3 ->- t1 ->- t2 ->- t),
+             eThing = (\f g x1 x2 -> (f x1 x2) (g)) }
 
-cCC = mkTerm "CC" ((t1 ->- t2 ->- t3 ->- t) ->- t3 ->- t1 ->- t2 ->- t) $ \ f g x1 x2 -> (f x1 x2) (g)
--- cCC = (cB <> cC <> (cB <> cC))
-
-cDualCombinators = [cSS,cSB,cSC,cBS,cBB,cBC,cCS,cCB,cCC]
+-- | Bottom
+cBottom = Term { eName  = "_|_",
+                 eType  = (TVar 0),
+                 eThing = (error "cBottom: this should never be called!") }
 
 -- | Holes
-cHole :: Expr
-cHole = mkTerm "H" tDouble $ error "Attempt to evaluate a hole"
+cHole = Term { eName  = "H",
+               eType  = tDouble,
+               eThing = (error "Attempt to evaluate a hole") }
 
--- | Pairs
-cPair = mkTerm "pair" (t1 ->- t2 ->- tPair t1 t2) (,)
 
-cFst = mkTerm "fst" (tPair t1 t2 ->- t1) fst
+cPairs = [cPair, cFst, cSnd, cOnFst, cOnSnd, cSwap]
 
-cSnd = mkTerm "snd" (tPair t1 t2 ->- t2) snd
+cPair = Term { eName  = "pair",
+               eType  = (t1 ->- t2 ->- tPair t1 t2),
+               eThing = (,) }
 
-cOnFst = mkTerm "onFst" ((t1 ->- t2) ->- (tPair t1 t) ->- (tPair t2 t)) $
-         \f (a,b) -> (f a, b)
+cFst = Term { eName  = "fst",
+              eType  = (tPair t1 t2 ->- t1),
+              eThing = fst }
 
-cOnSnd = mkTerm "onSnd" ((t1 ->- t2) ->- (tPair t t1) ->- (tPair t t2)) $
-    \f (a,b) -> (a, f b)
+cSnd = Term { eName  = "snd",
+              eType  = (tPair t1 t2 ->- t2),
+              eThing = snd }
 
-cSwap = mkTerm "Swap" ((tPair t1 t2) ->- (tPair t2 t1)) $ \(a,b) -> (b,a)
+cOnFst = Term { eName  = "onFst",
+                eType  = ((t1 ->- t2) ->- (tPair t1 t) ->- (tPair t2 t)),
+                eThing = (\f (a,b) -> (f a, b)) }
 
--- | Triplets
-cTriplet = mkTerm
-    "triple"
-    (t ->- t1 ->- t2 ->- tTriplet t t1 t2) $
-    \ x y z -> (x,y,z)
+cOnSnd = Term { eName  = "onSnd",
+                eType  = ((t1 ->- t2) ->- (tPair t t1) ->- (tPair t t2)),
+                eThing = (\f (a,b) -> (a, f b)) }
 
-c3Fst = mkTerm "3fst" (tTriplet t t1 t2 ->- t ) $ \(x,_,_) -> x
+cSwap = Term { eName  = "swap",
+               eType  = ((tPair t1 t2) ->- (tPair t2 t1)),
+               eThing = (\(a,b) -> (b,a)) }
 
-c3Snd = mkTerm "3snd" (tTriplet t t1 t2 ->- t1) $ \(_,x,_) -> x
+cTriplets = [cTriplet, cFst3, cSnd3, cTrd3]
 
-c3Trd = mkTerm "3trd" (tTriplet t t1 t2 ->- t2) $ \(_,_,x) -> x
+cTriplet = Term { eName  = "triplet",
+                  eType  = (t ->- t1 ->- t2 ->- tTriplet t t1 t2),
+                  eThing = (\x y z -> (x,y,z)) }
 
--- | Integer arithmetic
-cPlus = mkTerm "+" (tInt ->- tInt ->- tInt) $ (+)
+cFst3 = Term { eName  = "fst3",
+               eType  = (tTriplet t t1 t2 ->- t ),
+               eThing = (\(x,_,_) -> x) }
 
-cTimes = mkTerm "*" (tInt ->- tInt ->- tInt) $ (*)
+cSnd3 = Term { eName  = "snd3",
+               eType  = (tTriplet t t1 t2 ->- t1),
+               eThing = (\(_,x,_) -> x) }
 
-cMinus = mkTerm "-" (tInt ->- tInt ->- tInt) $ (-)
+cTrd3 = Term { eName  = "trd3",
+               eType  = (tTriplet t t1 t2 ->- t2),
+               eThing = (\(_,_,x) -> x) }
 
--- | Floating-point arithmetic
-cFPlus = mkTerm
-    "+."
-    (tDouble ->- tDouble ->- tDouble) $
-    ((+) :: Double -> Double -> Double)
+cIntOps = [cPlus, cTimes, cMinus]
 
-cFDiv = mkTerm
-    "/."
-    (tDouble ->- tDouble ->- tDouble) $
-    ((/) :: Double -> Double -> Double)
+cPlus = Term { eName  = "+",
+               eType  = (tInt ->- tInt ->- tInt),
+               eThing = (+) }
 
-cFTimes = mkTerm
-    "*."
-    (tDouble ->- tDouble ->- tDouble) $
-    ((*) :: Double -> Double -> Double)
+cTimes = Term { eName  = "*",
+                eType  = (tInt ->- tInt ->- tInt),
+                eThing = (*) }
 
-cFMinus = mkTerm
-    "-."
-    (tDouble ->- tDouble ->- tDouble) $
-    ((-) :: Double -> Double -> Double)
+cMinus = Term { eName  = "-",
+                eType  = (tInt ->- tInt ->- tInt),
+                eThing = (-) }
 
--- | Lists
-cCons = mkTerm ":"  (t ->- tList t ->- tList t) $ (:)
+cDoubleOps = [cFPlus, cFDiv, cFTimes, cFMinus] 
 
-cAppend = mkTerm "++" (tList t ->- tList t ->- tList t) $ (++)
+cFPlus = Term { eName  = "+.",
+                eType  = (tDouble ->- tDouble ->- tDouble),
+                eThing = ((+) :: Double -> Double -> Double) }
 
-cHead = mkTerm "head" (tList t ->- t) $ head
+cFDiv = Term { eName  = "/.",
+               eType  = (tDouble ->- tDouble ->- tDouble),
+               eThing = ((/) :: Double -> Double -> Double) }
 
-cTail = mkTerm "tail" (tList t ->- tList t) $ tail
+cFTimes = Term { eName  = "*.",
+                 eType  = (tDouble ->- tDouble ->- tDouble),
+                 eThing = ((*) :: Double -> Double -> Double) }
 
-cMap = mkTerm "map" ((t ->- t1) ->- tList t ->- tList t1) $ map
+cFMinus = Term { eName  = "-.",
+                 eType  = (tDouble ->- tDouble ->- tDouble),
+                 eThing = ((-) :: Double -> Double -> Double) }
 
-cFilter = mkTerm "filter" ((t ->- tBool) ->- tList t ->- tList t) $ filter
+cListOps = [cCons, cAppend, cHead, cTail, cMap, cFilter, cEmpty, cSingle, cRep,
+            cConcat, cReverse, cFoldl, cFoldr, cFoldl1, cFoldr1]
 
-cEmpty = mkTerm "[]" (tList t) $ []
+cCons = Term { eName  = ":",
+               eType  = (t ->- tList t ->- tList t),
+               eThing = (:) }
 
-cSingle = mkTerm "single" (t ->- tList t) $ \x -> [x]
+cAppend = Term { eName  = "++",
+                 eType  = (tList t ->- tList t ->- tList t),
+                 eThing = (++) }
 
-cRep = mkTerm "rep" (tInt ->- t ->- tList t) $ replicate
+cHead = Term { eName  = "head",
+               eType  = (tList t ->- t),
+               eThing = head }
 
-cConcat = mkTerm "concat" (tList (tList t) ->- tList t) concat
+cTail = Term { eName  = "tail",
+               eType  = (tList t ->- tList t),
+               eThing = tail }
 
-cReverse = mkTerm "reverse" (tList t ->- tList t) reverse
+cMap = Term { eName  = "map",
+              eType  = ((t ->- t1) ->- tList t ->- tList t1),
+              eThing = map }
 
-cFoldl = mkTerm
-    "foldl"
-    ((t ->- t1 ->- t) ->- t ->- tList t1 ->- t)
-    $ List.foldl'
+cFilter = Term { eName  = "filter",
+                 eType  = ((t ->- tBool) ->- tList t ->- tList t),
+                 eThing = filter }
 
-cFoldr = mkTerm
-    "foldr"
-    ((t1 ->- t2 ->- t2) ->- t2 ->- tList t1 ->- t2) $
-    List.foldr
+cEmpty = Term { eName  = "[]",
+                eType  = (tList t),
+                eThing = [] }
 
-cFoldl1 = mkTerm "foldl1" ((t ->- t ->- t) ->- tList t ->- t) $ foldl1
+cSingle = Term { eName  = "single",
+                 eType  = (t ->- tList t),
+                 eThing = (\x -> [x]) }
 
-cFoldr1 = mkTerm "foldr1" ((t ->- t ->- t) ->- tList t ->- t) $ foldr1
+cRep = Term { eName  = "rep",
+              eType  = (tInt ->- t ->- tList t),
+              eThing = replicate }
 
--- | Char, Int, and Double Values
-cInts =  [ cInt2Expr i | i <- [-10..10]]
+cConcat = Term { eName  = "concat",
+                 eType  = (tList (tList t) ->- tList t),
+                 eThing = concat }
 
-cDoubles =  [ cDouble2Expr i | i <- [-10..10]]
+cReverse = Term { eName  = "reverse",
+                  eType  = (tList t ->- tList t),
+                  eThing = reverse }
 
-cChars = [ cChar2Expr c | c <- ['a'..'z']]
+cFoldl = Term { eName  = "foldl",
+                eType  = ((t ->- t1 ->- t) ->- t ->- tList t1 ->- t),
+                eThing = List.foldl' }
 
--- | Bools
-cNand = mkTerm "nand" (tBool ->- tBool ->- tBool) $ \ x y -> not (x && y)
+cFoldr = Term { eName  = "foldr",
+                eType  = ((t1 ->- t2 ->- t2) ->- t2 ->- tList t1 ->- t2),
+                eThing = List.foldr }
 
-cAnd  = mkTerm "and"  (tBool ->- tBool ->- tBool) $ \ x y -> (x && y)
+cFoldl1 = Term { eName  = "foldl1",
+                 eType  = ((t ->- t ->- t) ->- tList t ->- t),
+                 eThing = foldl1 }
 
-cOr   = mkTerm "or"   (tBool ->- tBool ->- tBool) $ \ x y -> (x || y)
+cFoldr1 = Term { eName  = "foldr1",
+                 eType  = ((t ->- t ->- t) ->- tList t ->- t),
+                 eThing = foldr1 }
 
-cNot  = mkTerm "not"  (tBool ->- tBool) $ \ x -> not (x)
+cBoolOps = [cNand, cAnd, cOr, cNot, cIf]
 
--- | Conditional
-cIf = mkTerm "If" (tBool ->- t ->- t ->- t) $ \ p x y -> if p then x else y
+cNand = Term { eName  = "nand",
+               eType  = (tBool ->- tBool ->- tBool),
+               eThing = (\x y -> not (x && y)) }
 
--- | Maybe
-cJust = mkTerm "Just" (t ->- tMaybe t) $ Just
+cAnd  = Term { eName  = "and",
+               eType  = (tBool ->- tBool ->- tBool),
+               eThing = (&&) }
 
-cNothing = mkTerm "Nothing" (tMaybe t) $ Nothing
+cOr   = Term { eName  = "or",
+               eType  = (tBool ->- tBool ->- tBool),
+               eThing = (||) }
 
-cFromJust = mkTerm
-    "fromJust"
-    (tMaybe t ->- t)
-    (\ x -> safeFromJust "cFromJust applied to cNothing" x)
+cNot  = Term { eName  = "not",
+               eType  = (tBool ->- tBool),
+               eThing = not }
 
--- | EXAMPLE | -----------------------------------------------------------------
+cIf = Term { eName  = "If",
+             eType  = (tBool ->- t ->- t ->- t),
+             eThing = (\ p x y -> if p then x else y) }
 
--- | A basic Primitive Library
-basicExprs :: [Expr]
-basicExprs = [cI,
-              cS,
-              cB,
-              cC,
-              cK,
-              cPlus,
-              cTimes,
-              cFPlus,
-              cFMinus,
-              cFTimes,
-              cFDiv,
-              cCons,
-              cEmpty,
-              cAppend,
-              cHead,
-              cMap,
-              cFoldl,
-              cSingle,
-              cRep,
-              cTail,
-              cPair,
-              cFst,
-              cSnd,
-              cBool2Expr True,
-              cBool2Expr False,
-              cHole
-             ] ++ cInts ++ cDoubles ++ cChars ++ dualCombinators
+cMaybes = [cJust, cNothing, cFromJust, cMaybe]
 
--- | A basic expression distribution
-basicExprDistr :: ExprDistr
-basicExprDistr = mkExprDistr basicExprs
+cJust = Term { eName  = "Just",
+               eType  = (t ->- tMaybe t),
+               eThing = Just }
 
--- | A basic grammar
-basicGrammar :: Grammar
-basicGrammar = normalizeGrammar $ Grammar (log 0.3) basicExprDistr
+cNothing = Term { eName  = "Nothing",
+                  eType  = (tMaybe t),
+                  eThing = Nothing } 
+
+cFromJust = Term { eName  = "fromJust",
+                   eType  = (tMaybe t ->- t),
+                   eThing = (\ x -> safeFromJust "(cFromJust cNothing)" x) }
+
+cMaybe = Term { eName = "maybe",
+                eType = (t2 ->- (t1 ->- t2) ->- tMaybe t1 ->- t2),
+                eThing = maybe }
+
+cInts    = [intToExpr i | i <- [-10..10]]
+
+cDoubles = [doubleToExpr d | d <- [-10..10]]
+
+cChars   = [charToExpr c | c <- ['a'..'z']]
+
+cBools   = [(boolToExpr True), (boolToExpr False)]
+
+basicExprs = cBasicRouters ++
+             cDualRouters  ++
+             cIntOps       ++
+             cDoubleOps    ++
+             cListOps      ++
+             cBoolOps      ++
+             cPairs        ++
+             cTriplets     ++
+             cInts         ++
+             cDoubles      ++
+             cChars        ++
+             cBools        ++
+             [cHole]
