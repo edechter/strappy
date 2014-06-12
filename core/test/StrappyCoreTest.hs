@@ -1,5 +1,6 @@
 -- StrappyCoreTest.hs
 {-# OPTIONS_GHC -F -pgmF hspec-discover #-}
+
 -- |
 -- Module:      StrappyCoreTest
 -- Copyright:   (c) Eyal Dechter

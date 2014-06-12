@@ -6,40 +6,44 @@
 -- Maintainer:  Eyal Dechter <edechter@mit.edu>
 -- Stability:   experimental
 --
--- Types and methods for out expression language. 
+-- Types and methods for our expression language.
+--
+-- Expressions are either primitives, constructed with the @Term@
+-- constructor, or they are binary applications of expressions,
+-- constructed using the @Expr@ constructor. Expressions are typed,
+-- using the types defined in @Strappy.Type@.
 
 module Strappy.Expr (
-  -- * Expressions
+  -- * Types
   Expr(..),
+  -- * Constructors
   (<>),
   (<.>),
-  typeOfApp,
+  -- * Evaluation
   eval,
-  isTerm,
   timeLimitedEval,
+  -- * Type inference
+  typeOfApp,  
   doTypeInference,
   doTypeInferenceM,
   typeChecks,
+  -- * Misc
+  isTerm,  
   exprSize,
   getArity,
   subExpr
   ) where
 
 
--- system imports --------
+-- External Imports --------
 import Unsafe.Coerce (unsafeCoerce)
-import Control.Arrow (second)
 import Control.Monad
-import Control.Monad.Identity
 import Data.Hashable
-import Text.Printf
 import Control.Exception
 import Control.Monad.Error.Class
 import System.IO.Unsafe
 import Control.Concurrent.Timeout (timeout)
 import Data.Timeout (Timeout(..))
-import Control.DeepSeq (deepseq)
-import Data.Maybe
 import Data.String (IsString)
 import Criterion (nf, run)
 import Data.Word
@@ -60,13 +64,13 @@ data Expr = forall a.
                  eRight :: Expr,
                  eType  :: Type}
              
--- | smart constructor for applications
+-- | Smart constructor for non-monadic applications.
 (<>) :: Expr -> Expr -> Expr
-a <> b = App { eLeft = a, 
+a <> b = App { eLeft  = a, 
                eRight = b, 
-               eType = tp
+               eType  = tp
              }
-          where tp = case runTI $ typeOfApp a b of
+          where tp = case evalTI $ typeOfApp a b of
                       Left err  -> error err
                       Right t -> t
 
@@ -134,7 +138,7 @@ timeLimitedEval nanoSecs expr = unsafePerformIO $
 -- | Runs type inference on the given expression, returning its
 -- type. This completely recalculates from the primitives.
 doTypeInference :: (IsString e, MonadError e m) => Expr -> m Type
-doTypeInference expr = runTI $ doTypeInferenceM expr
+doTypeInference expr = evalTI $ doTypeInferenceM expr
 
 doTypeInference_ expr = case doTypeInference expr of 
     Right t -> t
@@ -155,7 +159,7 @@ doTypeInferenceM (App { eLeft = l, eRight = r }) = do
 -- | Return true if the expression typechecks in a clean
 -- environment. Otherwise, false.
 typeChecks :: Expr -> Bool
-typeChecks expr = case runTI $ doTypeInferenceM expr of 
+typeChecks expr = case evalTI $ doTypeInferenceM expr of 
         Left _ -> False
         Right _ -> True
 
@@ -204,28 +208,6 @@ countHoles (App { eLeft = l, eRight = r }) = countHoles l + countHoles r
 countHoles (Term { eName = "H" }) = 1
 countHoles (Term {}) = 0
 
--- | Samples values for the holes
-sampleHoles :: Expr -> IO Expr
-sampleHoles (Term { eName = "H" }) = do
-  h <- sampleMultinomial $ map (second log) [(0.0, 0.1::Double), (0.1, 0.1), (0.2, 0.1),
-                                             (0.3, 0.1), (0.4, 0.1), (0.5, 0.1),
-                                             (0.6, 0.1), (0.7, 0.1), (0.8, 0.1),
-                                             (0.9, 0.1)]
-  return $ doubleToExpr h
-sampleHoles e@(App { eLeft = l, eRight = r}) = do
-  l' <- sampleHoles l
-  r' <- sampleHoles r
-  return $ e { eLeft = l', eRight = r' }
-sampleHoles e = return e
-
--- | Does a monte carlo estimate of the expected likelihood of a probabilistic program
-expectedLikelihood :: (Expr -> IO Double) -> Int -> Expr -> IO Double
-expectedLikelihood ll _ e | countHoles e == 0 = ll e
-expectedLikelihood ll samples e = do
-  lls <- replicateM samples (sampleHoles e >>= ll)
-  let retval = logSumExpList lls - log (fromIntegral samples)
-  return retval
-
 ----------------------------------------
 -- Conversion functions ----------------
 ----------------------------------------
@@ -250,31 +232,6 @@ boolToExpr :: Bool -> Expr
 boolToExpr b = showableToExpr b tBool
 
 
--- TODO: what is this stuff used for?
--------------------------------------------
--- Pattern matching for combinators -------
--------------------------------------------
--- ? matches any expression
--- ?t matches terminals
--- ?a matches applications
--- ?d matches deterministic computations (no holes)
-matchExpr :: Expr  -- ^ Pattern
-             -> ([Expr] -> Expr) -- ^ Callback 
-             -> Expr -> Expr -- ^ Performs matching
-matchExpr pat proc e =
-  maybe e proc $ match pat e
-  where match (Term { eName = "?" }) t = return [t]
-        match (Term { eName = "?t" }) t@(Term {}) = return [t]
-        match (Term { eName = "?a" }) a@(App {}) = return [a]
-        match (Term { eName = "?d" }) d =
-          if countHoles d > 0 then Nothing else return [d]
-        match (App { eLeft = l, eRight = r }) (App { eLeft = l', eRight = r' }) = do
-          ls <- match l l'
-          rs <- match r r'
-          return $ ls ++ rs
-        match (Term { eName = n }) (Term { eName = n' }) | n == n' = return []
-        match _ _ = Nothing
-
 ----------------------------------------
 -- Hashable instance ------------------- 
 ----------------------------------------
@@ -282,15 +239,6 @@ instance Hashable Expr where
     hashWithSalt a (Term { eName = name }) = hash a `hashWithSalt` hash name                                                   
     hashWithSalt a (App { eLeft = left, eRight = right }) = 
       hash a `hashWithSalt` hash left `hashWithSalt` hash right
-
-----------------------------------------
--- Expressable typeclass -------------- 
-----------------------------------------
--- class Expressable a where
---        toExpr :: a -> Expr
-
--- instance (Show a, Typeable a) => Expressable a where
---        toExpr v = Term (show v) (typeOf v) v 
 
 
 

@@ -58,7 +58,7 @@ logSumExp x y | x > y = x + log (1 + exp (y-x))
 logSumExp x y = y + log (1 + exp (x-y))
 
 isInvalidNum :: Double -> Bool
-isInvalidNum x = isNaN x -- || isInfinite x
+isInvalidNum x = isNaN x 
 
 
 -- | Calculates the entropy of a discrete distribution, given log
