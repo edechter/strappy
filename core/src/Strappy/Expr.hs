@@ -33,11 +33,18 @@ module Strappy.Expr (
   isTerm,  
   exprSize,
   getArity,
-  subExpr
+  subExpr,
+  -- * Conversion
+  intListToExpr,
+  doubleListToExpr,
+  stringToExpr,
+  boolToExpr,
+  intToExpr,
+  doubleToExpr,
+  charToExpr
   ) where
 
-
--- External Imports --------
+-- | External Imports | --------------------------------------------------------
 import Unsafe.Coerce (unsafeCoerce)
 import Control.Monad
 import Data.Hashable
@@ -50,11 +57,11 @@ import Data.String (IsString)
 import Criterion (nf, run)
 import Data.Word
 
--- Strappy imports --------
+-- | Strappy Imports | ---------------------------------------------------------
 import Strappy.Type
 import Numeric.StatsUtils
 
--- | Main data type for expressions. 
+-- | Expression Data Type | ----------------------------------------------------
 data Expr = forall a.
             Term {eName  :: String, 
                   eType  :: Type, 
@@ -65,8 +72,33 @@ data Expr = forall a.
           | App {eLeft  :: Expr,
                  eRight :: Expr,
                  eType  :: Type}
+ 
+instance Show Expr where
+    show Term{eName=s} = s
+    show App{eLeft=el, eRight=er} = "(" ++ show el ++ " " ++  show er ++ ")"
+
+instance Eq Expr where
+  Term { eName = n } == Term { eName = n' } = n == n'
+  App { eLeft = l, eRight = r} == App { eLeft = l', eRight = r' } = l == l' && r == r'
+  _ == _ = False
+
+instance Ord Expr where
+    compare (Term {eName = n}) (Term {eName = n'}) = compare n n' 
+    compare (App {}) (Term {}) = LT
+    compare (Term {}) (App {}) = GT
+    compare (App { eLeft = l, eRight = r }) (App { eLeft = l', eRight = r' }) =
+      case compare l l' of
+        EQ -> compare r r'
+        cmp -> cmp
+
+instance Hashable Expr where
+    hashWithSalt a (Term { eName = name }) = hash a `hashWithSalt` hash name                                                   
+    hashWithSalt a (App { eLeft = left, eRight = right }) = 
+      hash a `hashWithSalt` hash left `hashWithSalt` hash right
              
--- | Smart constructor for non-monadic applications.
+-- | Expression Constructors | -------------------------------------------------
+
+-- | Smart infix constructor for non-monadic applications.
 (<>) :: Expr -> Expr -> Expr
 a <> b = App { eLeft  = a, 
                eRight = b, 
@@ -86,24 +118,45 @@ ma <.> mb = do a <- ma
                    b' = b{eType=tb}
                tp <- typeOfApp a' b'
                return App{eLeft = a', eRight = b', eType = tp}
- 
-instance Show Expr where
-    show Term{eName=s} = s
-    show App{eLeft=el, eRight=er} = "(" ++ show el ++ " " ++  show er ++ ")"
+  
+-- | HOLES | -------------------------------------------------------------------
 
-instance Eq Expr where
-  Term { eName = n } == Term { eName = n' } = n == n'
-  App { eLeft = l, eRight = r} == App { eLeft = l', eRight = r' } = l == l' && r == r'
-  _ == _ = False
+-- TODO: Holes should have their own constructors
+-- | Procedures for managing holes:
+-- | Returns the number of holes in an expression
+countHoles :: Expr -> Int
+countHoles (App { eLeft = l, eRight = r }) = countHoles l + countHoles r
+countHoles (Term { eName = "H" }) = 1
+countHoles (Term {}) = 0
 
-instance Ord Expr where
-    compare (Term {eName = n}) (Term {eName = n'}) = compare n n' 
-    compare (App {}) (Term {}) = LT
-    compare (Term {}) (App {}) = GT
-    compare (App { eLeft = l, eRight = r }) (App { eLeft = l', eRight = r' }) =
-      case compare l l' of
-        EQ -> compare r r'
-        cmp -> cmp
+-- | Conversion functions | ----------------------------------------------------
+
+-- | Convert any Showable Haskell object into an Expr.
+showableToExpr :: (Show a) => a -> Type -> Expr
+showableToExpr f tp = Term (show f) tp f
+
+intListToExpr :: [Int] -> Expr
+intListToExpr is = showableToExpr is (tList tInt)
+
+doubleListToExpr :: [Double] -> Expr
+doubleListToExpr ds = showableToExpr ds (tList tDouble)
+
+stringToExpr :: String -> Expr
+stringToExpr s = showableToExpr s (tList tChar)
+
+intToExpr :: Int -> Expr
+intToExpr d = showableToExpr d tInt
+
+doubleToExpr :: Double -> Expr
+doubleToExpr d = showableToExpr d tDouble
+
+charToExpr :: Char -> Expr
+charToExpr c = showableToExpr c tChar
+
+boolToExpr :: Bool -> Expr
+boolToExpr b = showableToExpr b tBool
+
+-- | UTILITIES | ---------------------------------------------------------------
 
 -- | @typeOfApp e1 e2@ returns the type of (App e1 e2) in in the current environment. 
 typeOfApp :: (IsString e, MonadError e m) => Expr -> Expr -> TypeInference m Type
@@ -214,51 +267,3 @@ subExpr old new target | target == old = new
 subExpr old new e@(App { eLeft = l, eRight = r }) =
   e { eLeft = subExpr old new l,
       eRight = subExpr old new r }
-  
-----------------------------------------
--- HOLES  ------------------------------
-----------------------------------------
-
--- TODO: Holes should have their own constructors
--- | Procedures for managing holes:
--- | Returns the number of holes in an expression
-countHoles :: Expr -> Int
-countHoles (App { eLeft = l, eRight = r }) = countHoles l + countHoles r
-countHoles (Term { eName = "H" }) = 1
-countHoles (Term {}) = 0
-
-----------------------------------------
--- Conversion functions ----------------
-----------------------------------------
-
-showableToExpr :: (Show a) => a -> Type -> Expr
--- | Convert any Showable Haskell object into an Expr.
-showableToExpr f tp = Term (show f) tp f
-
-intListToExpr :: [Int] -> Expr
-intListToExpr s = showableToExpr s (tList tInt)
-
-stringToExpr :: String -> Expr
-stringToExpr s = showableToExpr s (tList tChar)
-
-doubleToExpr :: Double -> Expr
-doubleToExpr d = showableToExpr d tDouble
-
-charToExpr :: Char -> Expr
-charToExpr c = showableToExpr c tChar
-
-boolToExpr :: Bool -> Expr
-boolToExpr b = showableToExpr b tBool
-
-
-----------------------------------------
--- Hashable instance ------------------- 
-----------------------------------------
-instance Hashable Expr where
-    hashWithSalt a (Term { eName = name }) = hash a `hashWithSalt` hash name                                                   
-    hashWithSalt a (App { eLeft = left, eRight = right }) = 
-      hash a `hashWithSalt` hash left `hashWithSalt` hash right
-
-
-
-
