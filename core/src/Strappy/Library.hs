@@ -1,4 +1,14 @@
-{-# Language TypeSynonymInstances, FlexibleInstances #-}
+-- Library.hs
+-- |
+-- Module:      Strappy.Core.Library
+-- Copyright:   (c) Eyal Dechter
+-- License:     MIT
+-- Maintainer:  Eyal Dechter <edechter@mit.edu>
+-- Stability:   experimental
+--
+-- | This module defines collections of standard primitives and types
+-- for our expression language.
+
 
 module Strappy.Library where
 
@@ -22,213 +32,10 @@ import System.Directory
 import Data.String (IsString)
 import Control.Monad.Error.Class
 
-
+-- Strappy imports -- 
 import Strappy.Type
 import Strappy.Expr
-import Strappy.Utils
-import Strappy.Config
-import Strappy.Response
-import Strappy.Case
 
--- | Type alias for hash table with keys as type-hidden expressions.
-type ExprMap a = Map.Map Expr a
-
--- | Type alias for distribution over expressions. 
-type ExprDistr = ExprMap Double 
-
-showExprDistr exprDistr  = unlines $ map (\(e, i) -> printf "%7s:%7.2f" (show e) i) pairs
-    where pairs = List.sortBy (compare `on` snd) $ Map.toList exprDistr
-                  
-showExprDistrLong exprDistr = unlines $ map (\(e, i) -> printf "%60s, %7.2f" (showExprLong e) i) pairs
-    where pairs = List.sortBy (compare `on` snd) $ Map.toList exprDistr
-
--- | Type for stochastic grammar over programs.
-data Grammar = Grammar {grApp :: Double, -- ^ log probability of application
-                        grExprDistr :: ExprDistr -- ^ distribution over functions
-                       }
-
-showGrammar (Grammar p exprDistr) = printf "%7s:%7.2f\n" "p" (exp p) ++ showExprDistr exprDistr
-
-instance Show Grammar where
-  show = showGrammar
-
-normalizeGrammar :: Grammar -> Grammar 
-normalizeGrammar gr@Grammar{grApp=p, grExprDistr=distr} =
-  let logTotalMass = logSumExpList $ Map.elems distr
-      distr' = Map.map (\x -> x - logTotalMass) distr
-  in gr { grExprDistr = distr' }
-
--- | Methods for calculating the loglikelihood of an expression draw from grammar
--- If usePCFGWeighting is false, then requested types should be annotated before invoking this procedure
--- Returns the same expression, but with log likelihoods annotated
-exprLogLikelihood :: Grammar -> Expr -> Expr
-exprLogLikelihood gr e = if usePCFGWeighting
-                         then pcfgLogLikelihood gr e
-                         else ijcaiLogLikelihood gr e
-
--- | Returns the log probability of producing the given expr tree
-pcfgLogLikelihood :: Grammar -> Expr -> Expr
-pcfgLogLikelihood (Grammar { grExprDistr = distr }) e@(Term { }) = e { eLogLikelihood = Just (distr Map.! e) }
-pcfgLogLikelihood gr@(Grammar { grExprDistr = distr, grApp = app }) e@(App { eLeft = l, eRight = r }) =
-  let l' = pcfgLogLikelihood gr l
-      r' = pcfgLogLikelihood gr r
-      lLL = fromJust $ eLogLikelihood l'
-      rLL = fromJust $ eLogLikelihood r'
-      eLL = logSumExp (app + lLL + rLL)
-                      (case Map.lookup e distr of
-                          Nothing -> log 0.0
-                          Just p -> p)
-  in e { eLeft = l', eRight = r', eLogLikelihood = Just eLL }
-
--- | Annotates log likelihood as done in IJCAI paper
-ijcaiLogLikelihood :: Grammar -> Expr -> Expr
-ijcaiLogLikelihood (Grammar { grApp = logApp, grExprDistr = distr }) e@(Term { eReqType = Just tp}) | not (Map.member e distr) =
-  error "ijcaiLogLikelihood: Terminal not in library"
-ijcaiLogLikelihood (Grammar { grApp = logApp, grExprDistr = distr }) e@(Term { eReqType = Just tp}) =
-  let alts = filter (\(e', _) -> canUnifyFast tp (eType e')) $ Map.toList distr
-      zT = logSumExpList $ map snd alts
-      logTerm = log (1 - exp logApp)
-      ll = (distr Map.! e) + logTerm - zT
-  in e { eLogLikelihood = Just ll }
-ijcaiLogLikelihood gr (Term { eReqType = Nothing }) =
-  error "ijcaiLogLikelihood called on Term without requested types annotated"
-ijcaiLogLikelihood gr@(Grammar { grApp = logApp, grExprDistr = distr }) e@(App { eLeft = l,
-                                                                                eRight = r,
-                                                                                eReqType = Just tp})
-  | Map.member e distr =
-    let alts = filter (\(e, _) -> canUnifyFast tp (eType e)) $ Map.toList distr
-        zA = logSumExpList $ map snd alts
-        logTerm = log (1 - exp logApp)
-        l' = ijcaiLogLikelihood gr l
-        r' = ijcaiLogLikelihood gr r
-        lLL = fromJust $ eLogLikelihood l'
-        rLL = fromJust $ eLogLikelihood r'
-        eLL = logSumExp ((distr Map.! e) + logTerm - zA)
-                        (lLL + rLL + logApp)
-    in e { eLeft = l', eRight = r', eLogLikelihood = Just eLL }
-ijcaiLogLikelihood _ (App { eReqType = Nothing }) =
-  error "ijcaiLogLikelihood called on App without requested types annotated"
-ijcaiLogLikelihood gr@(Grammar { grApp = logApp }) e@(App { eLeft = l, eRight = r}) =
-  let l' = ijcaiLogLikelihood gr l
-      r' = ijcaiLogLikelihood gr r
-      lLL = fromJust $ eLogLikelihood l'
-      rLL = fromJust $ eLogLikelihood r'
-      eLL = logApp + lLL + rLL
-  in e { eLeft = l', eRight = r', eLogLikelihood = Just eLL }
-
-  
-
--- | Annotates the requested types
--- Takes as input the top-level type request
--- We need to do this after sampling, because, when we pull a tree out of the library,
--- all of its types (and requested types) could be more specific than what they are in the library.
--- If we were to decide to remove this production from the library, then we would need to know
--- the requested type information of all of the subtrees in order to re-estimate the production probabilities.
-annotateRequestedM :: (IsString e, MonadError e m) => 
-                     Type -> -- ^ Requested type of the expression
-                     Expr -> -- ^ The expression
-                     TypeInference m Expr -- ^ The freshly annotated expression
-annotateRequestedM tp e@(App { eLeft = l, eRight = r }) = do
-  t <- mkTVar
-  l' <- annotateRequestedM (t ->- tp) l
-  t' <- applySub t
-  r' <- annotateRequestedM t' r
-  tp' <- applySub tp
-  return e { eLeft = l', eRight = r', eType = tp', eReqType = Just tp }
-annotateRequestedM tp e@(Term { eType = eTp }) = do
-  eTp' <- instantiateType eTp
-  unify tp eTp'
-  return $ e { eReqType = Just tp }
-
--- | Non-monadic wrapper
--- Presumes no constraint on top-level type
-annotateRequested :: (IsString e, MonadError e m) =>  Expr -> m Expr
-annotateRequested expr = runTI $ do
-  tp <- mkTVar
-  annotateRequestedM tp expr
-
--- | Non-monadic wrapper that allows one to specify the type
-annotateRequested' :: (IsString e, MonadError e m) => Type -> Expr -> m Expr
-annotateRequested' tp expr = runTI $ do
-  tp' <- instantiateType tp
-  annotateRequestedM tp' expr
-
-
-
-data Counts = Counts { appCounts :: Double,
-                       termCounts :: Double,
-                       useCounts :: ExprMap Double,
-                       possibleUseCounts :: ExprMap Double } deriving Show
-
--- | Iteratively performs the inside-out algorithm to a corpus, restimating the gramar
--- This assumes we're sampling from P(program | typed)
-iterateInOut :: Int -> Grammar -> Double -> [(Expr, Double)] -> Grammar
-iterateInOut k g prior obs =
-  foldl (\g' _ -> inoutEstimateGrammar g' prior obs) g [1..k]
-
--- | Uses the inside-out algorithm to find the production probabilities
-inoutEstimateGrammar :: Grammar -> Double -> [(Expr, Double)] -> Grammar
-inoutEstimateGrammar gr@Grammar{grExprDistr=distr, grApp = app} pseudocounts obs =
-  Grammar{grApp = appLogProb, grExprDistr = distr'}
-  where es = Map.toList distr -- [(Expr, Double)]
-        -- Updates expected counts
-        expectedCounts :: Double -> Counts -> Expr -> Counts
-        expectedCounts weight counts expr@(Term { eReqType = Just tp }) =
-          let uc' = Map.insertWith (+) expr weight $ useCounts counts
-              alts = filter (\(e', _) -> canUnifyFast tp (eType e')) es
-              pc = possibleUseCounts counts
-              pc' = foldl (\acc alt -> Map.insertWith (+) alt weight acc) pc $ map fst alts
-              logZ = if usePCFGWeighting then 0.0 else logSumExpList (map snd alts)
-              counts' = counts { termCounts = termCounts counts + weight,
-                                 useCounts = uc', 
-                                 possibleUseCounts = pc' }
-          in counts'
-        expectedCounts weight counts expr@(App { eLeft = left,
-                                                 eRight = right, 
-                                                 eReqType = Just tp }) | Map.member expr distr =
-          let alts = filter (\(e', _) -> canUnifyFast tp (eType e')) es
-              logZ = if usePCFGWeighting then 0.0 else logSumExpList (map snd alts)
-              leftLL  = fromJust $ eLogLikelihood left
-              rightLL = fromJust $ eLogLikelihood right
-              -- Find probability of having used an application vs a library procedure
-              logProbLib = distr Map.! expr + log (1 - exp app) - logZ
-              logProbApp = app + leftLL + rightLL
-              probUsedApp = exp $ logProbApp - logSumExp logProbApp logProbLib
-              probUsedLib = 1 - probUsedApp
-              -- Recurse on children
-              counts'  = expectedCounts (weight*probUsedApp) counts left
-              counts'' = expectedCounts (weight*probUsedApp) counts right
-              -- Add in counts for if we used a library procedure
-              uc' = Map.insertWith (+) expr (weight*probUsedLib) $ useCounts counts''
-              pc  = possibleUseCounts counts''
-              pc' = foldl (\acc alt -> Map.insertWith (+) alt (weight*probUsedLib) acc) pc $ map fst alts
-              counts''' = counts'' { appCounts = appCounts counts'' + weight * probUsedApp,
-                                     termCounts = termCounts counts'' + weight * probUsedLib, 
-                                     useCounts = uc', 
-                                     possibleUseCounts = pc' }
-          in counts'''
-        expectedCounts weight counts expr@(App { eLeft = left,
-                                                 eRight = right, 
-                                                 eReqType = Just _}) =
-           let counts'   = counts { appCounts = appCounts counts + weight }
-               counts''  = expectedCounts weight counts' left
-               counts''' = expectedCounts weight counts'' right
-          in counts'''
-        obs' = map (\(e,w) -> (exprLogLikelihood gr e, w)) obs
-        counts = List.foldl' (\cts (e, w) -> expectedCounts w cts e) (Counts pseudocounts pseudocounts Map.empty Map.empty) obs'
-        uses' = List.foldl' (\cts e -> Map.insertWith (+) e pseudocounts cts) (useCounts counts) $ Map.keys distr
-        possibleUses' = List.foldl' (\cts e -> Map.insertWith (+) e pseudocounts cts)
-                                    (possibleUseCounts counts) $ Map.keys distr
-        logTotalUses = log $ sum $ Map.elems uses'
-        appLogProb = log (appCounts counts) - log (termCounts counts + appCounts counts)
-        distr' = Map.mapWithKey (\expr _ ->
-                                  if usePCFGWeighting
-                                  then case Map.lookup expr uses' of
-                                    Just u -> log u - logTotalUses
-                                    Nothing -> error "Should never occur: expr not in uses or possible uses"
-                                  else case (Map.lookup expr uses', Map.lookup expr possibleUses') of 
-                                    (Just u, Just p) -> log u - log p
-                                    _ -> error "Should never occur: expr not in uses or possible uses") distr
 
 
 -- Removes new non-terminals and puts a uniform distribution over the productions
