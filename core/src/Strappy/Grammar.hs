@@ -105,17 +105,18 @@ logLikelihoodExprM gr@(Grammar gamma _) tp expr = do
 -- library given a current requested type, and conditioned on being
 -- asked for a primitive.
 logLikelihoodPrimM :: MonadError String m => Grammar -> Type -> Expr -> TypeInference m Double
-logLikelihoodPrimM gr@(Grammar gamma exprDistr) tp expr = do
-  (ctx :: Context) <- get
-  let loop !acc [] = return $! acc
-      loop !acc (x:xs) = do (_, w) <- x
-                            loop (w:acc) xs
-  w_alts <- lift $ loop [] [evalStateT m ctx | m <- getUnifyingPrims gr tp]
-  let logZ = logSumExpList w_alts
-  case Map.lookup expr exprDistr  of
-    Nothing -> return $! negInfty
-    Just ll  -> return $! ll - logZ
-
+logLikelihoodPrimM gr@(Grammar gamma exprDistr) tp expr =
+  flip catchError (\_ -> return $! negInfty) $ do
+          unifyExpr tp expr
+          (ctx :: Context) <- get
+          let loop !acc [] = return $! acc
+              loop !acc (x:xs) = do (_, w) <- x
+                                    loop (w:acc) xs
+          w_alts <- lift $ loop [] [evalStateT m ctx | m <- getUnifyingPrims gr tp]
+          let logZ = logSumExpList w_alts
+          case Map.lookup expr exprDistr  of
+            Nothing -> return $! negInfty
+            Just ll  -> return $! ll - logZ
   
 -- | Return the loglikelihood of returning a given expr from the
 -- library given a current requested type, and conditioned on being
