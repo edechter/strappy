@@ -1,10 +1,25 @@
-{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, FlexibleContexts, BangPatterns, TemplateHaskell #-}
+-- IterativeDeepening.hs
+-- |
+-- Module:      Strappy.Core.IterativeDeepening
+-- Copyright:   (c) Eyal Dechter
+-- License:     MIT
+-- Maintainer:  Eyal Dechter <edechter@mit.edu>
+-- Stability:   experimental
+--
+-- | This module implements Iterative Deepening A* (IDA*) for polymorphic
+-- functional programs.
+--
+-- References
+-- ----------
+-- [1] R. E. Korf. Depth-first iterative-deepening: An optimal admissible tree search. Artif. Intell., 27(1):97– 109, 1985.
+
+
 
 module Strappy.IterativeDeepening where
 
 import qualified Data.Map as Map
 import Control.Monad.Error
-import Control.Monad.Trans.Either
+-- import Control.Monad.Trans.Either
 import Control.Monad.List
 import Control.Arrow
 import Control.Monad.Identity
@@ -13,15 +28,14 @@ import Data.String (IsString)
 import Control.Monad.State
 import Data.Maybe
 
-import Strappy.Utils
+-- import Strappy.Utils
 import Strappy.Type hiding (unify, applySub, canUnifyWithSomeRightTree)
-import qualified Strappy.Type as Type (unify, applySub, canUnifyWithSomeRightTree)
+-- import qualified Strappy.Type as Type (unify, applySub, canUnifyWithSomeRightTree)
 import Strappy.Expr
 import Strappy.Library
 import Strappy.Config
 
 import Control.DeepSeq
-import Control.DeepSeq.TH
 import Criterion.Main
 
 import Control.Exception
@@ -82,12 +96,12 @@ applySub (Context nTVar subst) tp = (tp', Context nTVar' subst')
                                       (n, s) <- get
                                       return (tp', n, s)
 
-canUnifyWithSomeRightTree :: Context -> Type -> Type -> Bool
-canUnifyWithSomeRightTree (Context nTVar subst) t1 t2 = 
-  flip evalState (nTVar, subst) $ do 
-              t1' <- Type.applySub t1
-              t2' <- instantiateType t2 >>= Type.applySub
-              Type.canUnifyWithSomeRightTree t1' t2'
+-- canUnifyWithSomeRightTree :: Context -> Type -> Type -> Bool
+-- WithSomeRightTree (Context nTVar subst) t1 t2 = 
+--   flip evalState (nTVar, subst) $ do 
+--               t1' <- Type.applySub t1
+--               t2' <- instantiateType t2 >>= Type.applySub
+--               Type.canUnifyWithSomeRightTree t1' t2'
 
 
 cbSearch :: Grammar 
@@ -295,19 +309,19 @@ cbIterativeDeepening gr n tp = go 0
                             else trace ("Running Iterative Deepening with bound: " ++ show b' ++ "; num progs: " ++ show k ) $ go (b' + eps)
 
 
-tp = tTriple (tList tChar) (tList tChar) (tList tInt) ->- (tList tInt)
-tp' = (tList tChar) ->- (tList tChar) ->- (tList tInt) ->- (tList tInt)
---tp'' = tInt ->- tInt 
-main = do
-  let res = cbIterativeDeepening seedGrammar 20 tp
-  --let (res, mv) = cbSearchV4 seedGrammar 20 tp (Context 0  Map.empty) []
-  putStr $ showSearchResults res
-  --putStr $ showCbSearchResults (res, mv)
-  putStr $ "Number of programs: " ++ show (length res)
-  --defaultMain [
-  --  --bench "cbSearchV1" $ nf (showCbSearchResults . cbSearch seedGrammar 25 tInt) (Context 0  Map.empty),
-  --  --bench "cbSearchV2" $ nf (showCbSearchResults . cbSearchV2 seedGrammar 20 tInt) (Context 0  Map.empty),
-  --  bench "cbSearchV3" $ nf (showCbSearchResults . cbSearchV3 seedGrammar 20 tp) (Context 0  Map.empty),
-  --  bench "cbSearchV4" $ nf (showCbSearchResults . cbSearchV4 seedGrammar 20 tp (Context 0  Map.empty)) []
-  --  ]
+-- tp = tTriple (tList tChar) (tList tChar) (tList tInt) ->- (tList tInt)
+-- tp' = (tList tChar) ->- (tList tChar) ->- (tList tInt) ->- (tList tInt)
+-- --tp'' = tInt ->- tInt 
+-- main = do
+--   let res = cbIterativeDeepening seedGrammar 20 tp
+--   --let (res, mv) = cbSearchV4 seedGrammar 20 tp (Context 0  Map.empty) []
+--   putStr $ showSearchResults res
+--   --putStr $ showCbSearchResults (res, mv)
+--   putStr $ "Number of programs: " ++ show (length res)
+--   --defaultMain [
+--   --  --bench "cbSearchV1" $ nf (showCbSearchResults . cbSearch seedGrammar 25 tInt) (Context 0  Map.empty),
+--   --  --bench "cbSearchV2" $ nf (showCbSearchResults . cbSearchV2 seedGrammar 20 tInt) (Context 0  Map.empty),
+--   --  bench "cbSearchV3" $ nf (showCbSearchResults . cbSearchV3 seedGrammar 20 tp) (Context 0  Map.empty),
+--   --  bench "cbSearchV4" $ nf (showCbSearchResults . cbSearchV4 seedGrammar 20 tp (Context 0  Map.empty)) []
+--   --  ]
 
