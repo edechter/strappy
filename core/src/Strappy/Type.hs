@@ -1,7 +1,7 @@
 -- Type.hs
 -- Eyal Dechhter
-{-# Language GeneralizedNewtypeDeriving, BangPatterns,
-  DeriveFunctor, ScopedTypeVariables, TupleSections, GADTs #-}
+{-# LANGUAGE ScopedTypeVariables, TupleSections, GADTs #-}
+
 
 -- | This is a different approach to type inference.
 -- The type inference monad maintains a union-find data structure
@@ -18,7 +18,6 @@ import Control.Monad.Trans.Class
 import Control.Monad.Error
 
 import Control.Monad.State
-import Control.Monad.Error
 import Control.DeepSeq
 
 import Data.IORef
@@ -75,7 +74,7 @@ bindTVar var ty = modify $ \(Context n subst) ->
 -- type. Performs path compression optimization. The
 -- smaller-into-larger optimization does not apply.
 applySub :: Monad m => Type -> TypeInference m Type
-applySub !t@(TVar v) = do
+applySub t@(TVar v) = do
   Context n s <- get
   case M.lookup v s of
     Just t' -> do t'' <- applySub t'
@@ -83,7 +82,7 @@ applySub !t@(TVar v) = do
                   bindTVar v t''
                   return t''
     Nothing -> return t
-applySub !(TCon k ts) =
+applySub (TCon k ts) =
   mapM applySub ts >>= return . TCon k
 
 
@@ -123,8 +122,7 @@ unify' (TVar v) t | occurs v t = lift $ throwError "Occurs check"
 unify' (TVar v) t = bindTVar v t
 unify' t (TVar v) | occurs v t = lift $ throwError "Occurs check"
 unify' t (TVar v) = bindTVar v t
-unify' (TCon k ts) (TCon k' ts') | k == k' = do
-  zipWithM_ unify ts ts'
+unify' (TCon k ts) (TCon k' ts') | k == k' = zipWithM_ unify ts ts'
 unify' _ _ = lift $ throwError "Type mismatch: Could not unify"
 
 -- | Occurs check. @occurs i t@ is True if @i@ occurs in @t@.
