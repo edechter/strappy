@@ -44,7 +44,8 @@ module Strappy.Expr (
   charToExpr
   ) where
 
--- | External Imports | --------------------------------------------------------
+-- External Imports  --------------------------------------------------------
+
 import Unsafe.Coerce (unsafeCoerce)
 import Control.Monad
 import Data.Hashable
@@ -57,11 +58,11 @@ import Data.String (IsString)
 import Criterion (nf, run)
 import Data.Word
 
--- | Strappy Imports | ---------------------------------------------------------
+-- Strappy Imports ---------------------------------------------------------
 import Strappy.Type
 import Numeric.StatsUtils
 
--- | Expression Data Type | ----------------------------------------------------
+-- Expression Data Type ----------------------------------------------------
 data Expr = forall a.
             Term {eName  :: String, 
                   eType  :: Type, 
