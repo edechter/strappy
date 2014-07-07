@@ -47,10 +47,10 @@ cabal-version:       >=1.10
 
 library
   -- Modules exported by the library.
-  exposed-modules: Strappy.Type, 
-                   Strappy.Expr,
-                   Strappy.Library,
-                   Strappy.IterativeDeepening,
+  exposed-modules: Strappy.Core.Type, 
+                   Strappy.Core.Expr,
+                   Strappy.Core.Library,
+                   Strappy.Grammar,
                    Numeric.StatsUtils,
                    Numeric.ApproxEq
   
@@ -87,8 +87,12 @@ library
                   criterion        >= 0.6.0.0,
                   data-timeout     >= 0.3,
                   HUnit            >= 1.2.5.2,
-                  deepseq          >= 1.3.0.1
-  
+                  deepseq          >= 1.3.0.1,
+                  aeson            >= 0.7.0.6,
+                  text             >= 1.1.1.3,
+                  deepseq-th       >= 0.1.0.3,
+                  math-functions   >= 0.1.5.2                
+                  
   -- Directories containing source files.
   hs-source-dirs:      src
   
